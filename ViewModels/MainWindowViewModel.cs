@@ -300,6 +300,9 @@ namespace lingualink_client.ViewModels
             Application.Current.Dispatcher.Invoke(() => StatusText = $"状态：正在发送片段 ({e.TriggerReason})...");
 
             var waveFormat = new WaveFormat(AudioService.APP_SAMPLE_RATE, 16, AudioService.APP_CHANNELS);
+            
+            System.Diagnostics.Debug.WriteLine($"Target Languages: {_appSettings.TargetLanguages}");
+
             var (response, errorMessage) = await _translationService.TranslateAudioSegmentAsync(
                 e.AudioData,
                 waveFormat,

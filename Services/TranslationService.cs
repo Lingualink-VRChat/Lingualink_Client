@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 using NAudio.Wave;
 using System.Text.Json;
 using lingualink_client.Models;
+using System.Diagnostics;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace lingualink_client.Services
 {
@@ -25,7 +28,7 @@ namespace lingualink_client.Services
             byte[] audioData,
             WaveFormat waveFormat,
             string triggerReason,
-            string targetLanguages)
+            string targetLanguagesCsv)
         {
             if (audioData.Length == 0)
             {
@@ -47,7 +50,18 @@ namespace lingualink_client.Services
                     fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("audio/wav");
                     formData.Add(fileContent, "audio_file", Path.GetFileName(tempFilePath));
 
-                    formData.Add(new StringContent(targetLanguages ?? string.Empty), "target_languages");
+                    if (!string.IsNullOrWhiteSpace(targetLanguagesCsv))
+                    {
+                        var languagesList = targetLanguagesCsv.Split(',')
+                                                              .Select(lang => lang.Trim())
+                                                              .Where(lang => !string.IsNullOrWhiteSpace(lang));
+                        foreach (var lang in languagesList)
+                        {
+                            Debug.WriteLine($"[DEBUG] TranslationService: 添加 'target_languages' = '{lang}'");
+                            formData.Add(new StringContent(lang), "target_languages");
+                        }
+                    }
+
                     var httpResponse = await _httpClient.PostAsync(_serverUrl, formData);
                     var responseContentString = await httpResponse.Content.ReadAsStringAsync();
 
