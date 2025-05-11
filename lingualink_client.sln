@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35931.197 d17.13
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "lingualink_client", "lingualink_client.csproj", "{A0D1EC42-85F7-4E73-9511-13E1699E1464}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A0D1EC42-85F7-4E73-9511-13E1699E1464}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0D1EC42-85F7-4E73-9511-13E1699E1464}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A0D1EC42-85F7-4E73-9511-13E1699E1464}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A0D1EC42-85F7-4E73-9511-13E1699E1464}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0088A81E-DD65-4EA9-A88E-68A97B007CF7}
+	EndGlobalSection
+EndGlobal

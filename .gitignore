@@ -1,0 +1,56 @@
+# .gitignore for C#/.NET (Visual Studio/WPF) project
+
+# Ignore Visual Studio temporary files, build results, and
+# user-specific files
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Ignore build outputs
+[Bb]in/
+[Oo]bj/
+
+# NuGet packages
+packages/
+*.nupkg
+*.snupkg
+# Allow restoring packages via Package Restore
+!packages/**/*.props
+!packages/**/*.targets
+
+# Visual Studio Code workspace settings
+.vscode/
+
+# Rider project files
+.idea/
+*.sln.iml
+
+# Resharper files
+_ReSharper*/
+*.DotSettings.user
+
+# DotCover
+*.dotCover
+
+# Test results
+TestResults/
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# User-specific and temporary files
+*.log
+*.sqlite
+*.db
+*.db-shm
+*.db-wal
+
+# OS generated files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# JetBrains Rider local history
+.history/ 

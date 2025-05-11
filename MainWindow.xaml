@@ -1,0 +1,48 @@
+﻿<Window x:Class="lingualink_client.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:lingualink_client"
+        xmlns:vm="clr-namespace:lingualink_client.ViewModels"
+        mc:Ignorable="d"
+        Title="VRChat lingualink client" Height="500" Width="800"
+        Closed="MainWindow_Closed">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="0,0,0,10">
+            <Label Content="选择麦克风：" VerticalAlignment="Center"/>
+            <ComboBox Width="300" VerticalAlignment="Center" Margin="5,0,0,0"
+                      ItemsSource="{Binding Microphones}"
+                      SelectedItem="{Binding SelectedMicrophone}"
+                      DisplayMemberPath="FriendlyName" 
+                      IsEnabled="{Binding IsMicrophoneComboBoxEnabled}"/>
+            <Button Content="刷新" Margin="10,0,0,0" Padding="5,2" VerticalAlignment="Center"
+                    Command="{Binding RefreshMicrophonesCommand}"/>
+            <Button Content="设置" Margin="10,0,0,0" Padding="5,2" VerticalAlignment="Center"
+                    Command="{Binding OpenSettingsCommand}"/>
+        </StackPanel>
+
+        <Button Content="{Binding WorkButtonContent}" Grid.Row="1" HorizontalAlignment="Left" Padding="10,5"
+                Command="{Binding ToggleWorkCommand}"/>
+
+        <TextBlock Text="{Binding StatusText}" Grid.Row="2" Margin="0,10,0,10" FontSize="14"/>
+
+        <TextBox Grid.Row="3" Text="{Binding TranslationResultText, Mode=OneWay}" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" IsReadOnly="True" AcceptsReturn="True" Margin="0,0,0,10" />
+
+        <TextBlock Grid.Row="4" Text="提示：点击“开始工作”后，应用将持续监听麦克风进行VAD检测。" FontStyle="Italic" Foreground="Gray"/>
+        
+        <StatusBar Grid.Row="0" VerticalAlignment="Bottom" HorizontalAlignment="Right" Visibility="{Binding IsRefreshingMicrophones, Converter={StaticResource BooleanToVisibilityConverter}}" Opacity="0.7" Margin="0,0,180,0">
+            <StatusBarItem>
+                <TextBlock Text="正在刷新麦克风..."/>
+            </StatusBarItem>
+        </StatusBar>
+    </Grid>
+</Window>
