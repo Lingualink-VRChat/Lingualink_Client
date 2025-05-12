@@ -10,7 +10,6 @@
         Title="应用程序设置" Height="Auto" Width="450" SizeToContent="Height"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
     <Window.Resources>
-        <!-- Ensure BooleanToVisibilityConverter is available if not globally in App.xaml -->
         <!-- <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/> -->
     </Window.Resources>
     <Grid Margin="15">
@@ -22,10 +21,12 @@
             <RowDefinition Height="Auto"/> <!-- Server URL Label -->
             <RowDefinition Height="Auto"/> <!-- Server URL TextBox -->
             <RowDefinition Height="Auto"/> <!-- VAD Expander -->
+            <RowDefinition Height="Auto"/> <!-- OSC Expander -->
             <RowDefinition Height="*"/>    <!-- Spacer -->
             <RowDefinition Height="Auto"/> <!-- Save/Cancel Buttons -->
         </Grid.RowDefinitions>
 
+        <!-- Target Languages (Rows 0-2) and Server URL (Rows 4-5) remain the same -->
         <Label Grid.Row="0" Content="目标翻译语言:" Margin="0,0,0,2"/>
         
         <ItemsControl Grid.Row="1" ItemsSource="{Binding TargetLanguageItems}" Margin="0,0,0,5">
@@ -33,9 +34,9 @@
                 <DataTemplate DataType="{x:Type vm:SelectableTargetLanguageViewModel}">
                     <Grid Margin="0,3,0,3">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/> <!-- Label, e.g., "目标语言 1:" -->
-                            <ColumnDefinition Width="*"/>   <!-- ComboBox -->
-                            <ColumnDefinition Width="Auto"/> <!-- Remove Button -->
+                            <ColumnDefinition Width="Auto"/> 
+                            <ColumnDefinition Width="*"/>  
+                            <ColumnDefinition Width="Auto"/> 
                         </Grid.ColumnDefinitions>
                         
                         <TextBlock Grid.Column="0" Text="{Binding Label}" VerticalAlignment="Center" Margin="0,0,8,0"/>
@@ -58,25 +59,67 @@
                 Command="{Binding AddLanguageCommand}" 
                 HorizontalAlignment="Left" Margin="0,5,0,10" Padding="5,2"/>
         
-        <!-- Spacer, if needed, or adjust margins -->
         <Border Grid.Row="3" Height="10"/>
-
 
         <Label Grid.Row="4" Content="服务器 URL:"/>
         <TextBox Grid.Row="5" x:Name="ServerUrlTextBox" Text="{Binding ServerUrl, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10"/>
         
-        <Expander Grid.Row="6" Header="高级VAD设置" Margin="0,0,0,10" IsExpanded="True">
+        <Expander Grid.Row="6" Header="高级VAD设置" Margin="0,0,0,10" IsExpanded="False">
             <StackPanel Margin="10,5,0,0">
                 <Label Content="静音检测阈值 (秒):"/>
-                <TextBox x:Name="SilenceThresholdTextBox" Text="{Binding SilenceThresholdSeconds, UpdateSourceTrigger=PropertyChanged, StringFormat='N2'}" Margin="0,0,0,5"/>
+                <TextBox Text="{Binding SilenceThresholdSeconds, UpdateSourceTrigger=PropertyChanged, StringFormat='N2'}" Margin="0,0,0,5"/>
                 <Label Content="最小语音时长 (秒):"/>
-                <TextBox x:Name="MinVoiceDurationTextBox" Text="{Binding MinVoiceDurationSeconds, UpdateSourceTrigger=PropertyChanged, StringFormat='N2'}" Margin="0,0,0,5"/>
+                <TextBox Text="{Binding MinVoiceDurationSeconds, UpdateSourceTrigger=PropertyChanged, StringFormat='N2'}" Margin="0,0,0,5"/>
                 <Label Content="最大语音时长 (秒):"/>
-                <TextBox x:Name="MaxVoiceDurationTextBox" Text="{Binding MaxVoiceDurationSeconds, UpdateSourceTrigger=PropertyChanged, StringFormat='N2'}" Margin="0,0,0,5"/>
+                <TextBox Text="{Binding MaxVoiceDurationSeconds, UpdateSourceTrigger=PropertyChanged, StringFormat='N2'}" Margin="0,0,0,5"/>
+                
+                <Label Content="最小录音音量阈值 (0-100%):" Margin="0,5,0,0"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Slider Grid.Column="0" Minimum="0" Maximum="1.0" SmallChange="0.01" LargeChange="0.1" TickFrequency="0.05"
+                            Value="{Binding MinRecordingVolumeThreshold, UpdateSourceTrigger=PropertyChanged}" 
+                            VerticalAlignment="Center" Margin="0,0,5,5"/>
+                    <TextBox Grid.Column="1" 
+                             Text="{Binding MinRecordingVolumeThreshold, StringFormat='P0', UpdateSourceTrigger=PropertyChanged}" 
+                             Width="50" VerticalAlignment="Center" TextAlignment="Right" Margin="0,0,0,5"/>
+                </Grid>
+                <TextBlock Text="提示: 仅当麦克风输入音量高于此阈值时才开始处理语音。0% 表示禁用此过滤。" FontSize="10" FontStyle="Italic" Foreground="Gray" TextWrapping="Wrap"/>
             </StackPanel>
         </Expander>
 
-        <StackPanel Grid.Row="8" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+        <!-- OSC Expander (Row 7) remains the same -->
+        <Expander Grid.Row="7" Header="VRChat OSC 发送设置" Margin="0,0,0,10" IsExpanded="{Binding EnableOsc}">
+            <StackPanel Margin="10,5,0,0">
+                <CheckBox Content="启用 OSC 发送" IsChecked="{Binding EnableOsc}" Margin="0,0,0,5"/>
+                <Grid IsEnabled="{Binding EnableOsc}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Label Grid.Row="0" Grid.Column="0" Content="OSC IP 地址:" VerticalAlignment="Center"/>
+                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding OscIpAddress, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,5" VerticalAlignment="Center"/>
+
+                    <Label Grid.Row="1" Grid.Column="0" Content="OSC 端口:" VerticalAlignment="Center"/>
+                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding OscPort, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,5" VerticalAlignment="Center"/>
+                    
+                    <CheckBox Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Content="立即发送 (绕过键盘)" IsChecked="{Binding OscSendImmediately}" Margin="0,5,0,5"/>
+                    <CheckBox Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Content="播放通知音效" IsChecked="{Binding OscPlayNotificationSound}" Margin="0,0,0,5"/>
+                </Grid>
+            </StackPanel>
+        </Expander>
+
+
+        <StackPanel Grid.Row="9" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
             <Button Content="保存" Click="SaveButton_Click" Width="80" Margin="0,0,10,0" IsDefault="True"/>
             <Button Content="取消" Click="CancelButton_Click" Width="80" IsCancel="True"/>
         </StackPanel>

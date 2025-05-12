@@ -1,10 +1,10 @@
-// ViewModels/SettingsWindowViewModel.cs
 using System.Collections.ObjectModel;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using lingualink_client.Models;
 using System; // For Uri
+using System.Net; // For IPAddress
 
 namespace lingualink_client.ViewModels
 {
@@ -23,6 +23,25 @@ namespace lingualink_client.ViewModels
         public double MinVoiceDurationSeconds { get => _minVoiceDurationSeconds; set => SetProperty(ref _minVoiceDurationSeconds, value); }
         private double _maxVoiceDurationSeconds;
         public double MaxVoiceDurationSeconds { get => _maxVoiceDurationSeconds; set => SetProperty(ref _maxVoiceDurationSeconds, value); }
+        private double _minRecordingVolumeThreshold;
+        public double MinRecordingVolumeThreshold
+        {
+            get => _minRecordingVolumeThreshold;
+            set => SetProperty(ref _minRecordingVolumeThreshold, Math.Clamp(value, 0.0, 1.0));
+        }
+
+        // OSC Properties
+        private bool _enableOsc;
+        public bool EnableOsc { get => _enableOsc; set => SetProperty(ref _enableOsc, value); }
+        private string _oscIpAddress;
+        public string OscIpAddress { get => _oscIpAddress; set => SetProperty(ref _oscIpAddress, value); }
+        private int _oscPort;
+        public int OscPort { get => _oscPort; set => SetProperty(ref _oscPort, value); }
+        private bool _oscSendImmediately;
+        public bool OscSendImmediately { get => _oscSendImmediately; set => SetProperty(ref _oscSendImmediately, value); }
+        private bool _oscPlayNotificationSound;
+        public bool OscPlayNotificationSound { get => _oscPlayNotificationSound; set => SetProperty(ref _oscPlayNotificationSound, value); }
+
 
         public AppSettings? SavedAppSettings { get; private set; }
 
@@ -34,7 +53,7 @@ namespace lingualink_client.ViewModels
 
         public SettingsWindowViewModel(AppSettings currentSettings)
         {
-            _originalSettings = currentSettings;
+            _originalSettings = currentSettings; // Keep a copy for comparison or revert, though not used for revert here
             TargetLanguageItems = new ObservableCollection<SelectableTargetLanguageViewModel>();
             AddLanguageCommand = new DelegateCommand(ExecuteAddLanguage, CanExecuteAddLanguage);
             LoadSettingsFromModel(currentSettings);
@@ -47,9 +66,17 @@ namespace lingualink_client.ViewModels
             SilenceThresholdSeconds = settings.SilenceThresholdSeconds;
             MinVoiceDurationSeconds = settings.MinVoiceDurationSeconds;
             MaxVoiceDurationSeconds = settings.MaxVoiceDurationSeconds;
+            MinRecordingVolumeThreshold = settings.MinRecordingVolumeThreshold;
+
+            // Load OSC Settings
+            EnableOsc = settings.EnableOsc;
+            OscIpAddress = settings.OscIpAddress;
+            OscPort = settings.OscPort;
+            OscSendImmediately = settings.OscSendImmediately;
+            OscPlayNotificationSound = settings.OscPlayNotificationSound;
 
             var languagesFromSettings = string.IsNullOrWhiteSpace(settings.TargetLanguages)
-                ? new List<string>() // <--- 修改点：确保类型一致为 List<string>
+                ? new List<string>()
                 : settings.TargetLanguages.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
                                          .Select(s => s.Trim())
                                          .Where(s => AllSupportedLanguages.Contains(s)) 
@@ -107,12 +134,10 @@ namespace lingualink_client.ViewModels
 
         private void UpdateItemPropertiesAndAvailableLanguages()
         {
-            // var currentlySelectedGlobal = TargetLanguageItems.Select(item => item.SelectedLanguage).ToList(); // Not strictly needed here anymore
-
             for (int i = 0; i < TargetLanguageItems.Count; i++)
             {
                 var itemVm = TargetLanguageItems[i];
-                itemVm.Label = $"目标语言 {i + 1}:"; // Added colon for clarity
+                itemVm.Label = $"目标语言 {i + 1}:";
                 itemVm.CanRemove = TargetLanguageItems.Count > 1; 
 
                 var availableForThisDropdown = new ObservableCollection<string>();
@@ -124,13 +149,9 @@ namespace lingualink_client.ViewModels
                         availableForThisDropdown.Add(langOption);
                     }
                 }
-                // Ensure the currently selected language is in the available list,
-                // even if it was somehow filtered out (should not happen with current logic but good safety)
                 if (!string.IsNullOrEmpty(itemVm.SelectedLanguage) && !availableForThisDropdown.Contains(itemVm.SelectedLanguage))
                 {
                     availableForThisDropdown.Add(itemVm.SelectedLanguage); 
-                    // Consider sorting if you want a consistent order:
-                    // availableForThisDropdown = new ObservableCollection<string>(availableForThisDropdown.OrderBy(l => l));
                 }
                 itemVm.AvailableLanguages = availableForThisDropdown;
             }
@@ -159,6 +180,25 @@ namespace lingualink_client.ViewModels
             if (MinVoiceDurationSeconds <= 0) { MessageBox.Show("最小语音时长必须是正数。", "验证错误", MessageBoxButton.OK, MessageBoxImage.Error); return false; }
             if (MaxVoiceDurationSeconds <= 0) { MessageBox.Show("最大语音时长必须是正数。", "验证错误", MessageBoxButton.OK, MessageBoxImage.Error); return false; }
             if (MinVoiceDurationSeconds >= MaxVoiceDurationSeconds) { MessageBox.Show("最小语音时长必须小于最大语音时长。", "验证错误", MessageBoxButton.OK, MessageBoxImage.Error); return false; }
+            if (MinRecordingVolumeThreshold < 0.0 || MinRecordingVolumeThreshold > 1.0) { MessageBox.Show("录音音量阈值必须在 0.0 和 1.0 之间。", "验证错误", MessageBoxButton.OK, MessageBoxImage.Error); return false; }
+
+            // Validate OSC Settings
+            if (EnableOsc)
+            {
+                if (string.IsNullOrWhiteSpace(OscIpAddress) || Uri.CheckHostName(OscIpAddress) == UriHostNameType.Unknown)
+                {
+                     if (!IPAddress.TryParse(OscIpAddress, out _)) // Allow IP addresses
+                     {
+                        MessageBox.Show("OSC IP地址无效。", "验证错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return false;
+                     }
+                }
+                if (OscPort <= 0 || OscPort > 65535)
+                {
+                    MessageBox.Show("OSC端口号必须在 1-65535 之间。", "验证错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return false;
+                }
+            }
 
             SavedAppSettings = new AppSettings
             {
@@ -166,7 +206,14 @@ namespace lingualink_client.ViewModels
                 ServerUrl = this.ServerUrl,
                 SilenceThresholdSeconds = this.SilenceThresholdSeconds,
                 MinVoiceDurationSeconds = this.MinVoiceDurationSeconds,
-                MaxVoiceDurationSeconds = this.MaxVoiceDurationSeconds
+                MaxVoiceDurationSeconds = this.MaxVoiceDurationSeconds,
+                MinRecordingVolumeThreshold = this.MinRecordingVolumeThreshold,
+                // OSC Settings
+                EnableOsc = this.EnableOsc,
+                OscIpAddress = this.OscIpAddress,
+                OscPort = this.OscPort,
+                OscSendImmediately = this.OscSendImmediately,
+                OscPlayNotificationSound = this.OscPlayNotificationSound
             };
             return true;
         }
