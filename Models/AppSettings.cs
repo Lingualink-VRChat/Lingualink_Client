@@ -7,9 +7,9 @@ namespace lingualink_client.Models
 
         // VAD Parameters (defaults from your AudioService)
         public double SilenceThresholdSeconds { get; set; } = 0.8;
-        public double MinVoiceDurationSeconds { get; set; } = 1.3;
-        public double MaxVoiceDurationSeconds { get; set; } = 18.0;
-        public double MinRecordingVolumeThreshold { get; set; } = 0.01;
+        public double MinVoiceDurationSeconds { get; set; } = 0.8;
+        public double MaxVoiceDurationSeconds { get; set; } = 10.0;
+        public double MinRecordingVolumeThreshold { get; set; } = 0.05;
 
          // OSC Settings for VRChat
         public bool EnableOsc { get; set; } = false;
