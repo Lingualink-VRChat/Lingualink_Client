@@ -16,4 +16,8 @@
     <PackageReference Include="WPF-UI" Version="4.0.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Assets\" />
+  </ItemGroup>
+
 </Project>

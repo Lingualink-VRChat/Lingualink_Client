@@ -13,7 +13,7 @@ using lingualink_client.Services;
 
 namespace lingualink_client.ViewModels
 {
-    public class MainWindowViewModel : ViewModelBase, IDisposable
+    public class IndexWindowViewModel : ViewModelBase, IDisposable
     {
         private readonly MicrophoneManager _microphoneManager;
         private AudioService _audioService;
@@ -21,6 +21,13 @@ namespace lingualink_client.ViewModels
         private readonly SettingsService _settingsService;
         private OscService? _oscService; // Added OSC Service
         private AppSettings _appSettings;
+        private ObservableCollection<MenusBar> _menusBars;
+
+        public ObservableCollection<MenusBar> MenusBars
+        {
+            get => _menusBars;
+            set => SetProperty(ref _menusBars, value);
+        }
 
         private ObservableCollection<MMDeviceWrapper> _microphones = new ObservableCollection<MMDeviceWrapper>();
         public ObservableCollection<MMDeviceWrapper> Microphones
@@ -88,10 +95,15 @@ namespace lingualink_client.ViewModels
         public DelegateCommand ToggleWorkCommand { get; }
         public DelegateCommand OpenSettingsCommand { get; }
 
-        public MainWindowViewModel()
+        public IndexWindowViewModel()
         {
             _microphoneManager = new MicrophoneManager();
             _settingsService = new SettingsService();
+
+            _menusBars = [
+                new() { Name = "开始"},
+                new() { Name = "快捷键" },
+                new() { Name = "设置" }];
             
             RefreshMicrophonesCommand = new DelegateCommand(async _ => await ExecuteRefreshMicrophonesAsync(), _ => CanExecuteRefreshMicrophones());
             ToggleWorkCommand = new DelegateCommand(async _ => await ExecuteToggleWorkAsync(), _ => CanExecuteToggleWork());
@@ -256,10 +268,7 @@ namespace lingualink_client.ViewModels
         {
             var currentSettingsCopy = _settingsService.LoadSettings(); // Load fresh copy for editing
             
-            var settingsWindow = new SettingsWindow(currentSettingsCopy) 
-            {
-                Owner = Application.Current.MainWindow 
-            };
+            var settingsWindow = new SettingsWindow(currentSettingsCopy);
 
             if (settingsWindow.ShowDialog() == true) 
             {

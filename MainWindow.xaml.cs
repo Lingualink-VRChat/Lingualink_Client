@@ -1,27 +1,55 @@
-﻿using System;
+﻿using lingualink_client.Views;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
-using lingualink_client.ViewModels;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Forms;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
+using Wpf.Ui.Appearance;
+using Wpf.Ui.Controls;
 
 namespace lingualink_client
 {
-    public partial class MainWindow : Window
+    /// <summary>
+    /// MainWindow.xaml 的交互逻辑
+    /// </summary>
+    public partial class MainWindow
     {
-        private readonly MainWindowViewModel _viewModel;
-
         public MainWindow()
         {
             InitializeComponent();
-            _viewModel = new MainWindowViewModel();
-            DataContext = _viewModel;
-            // Loaded event is no longer strictly needed as ViewModel constructor handles init
+
+            this.Loaded += MainWindow_Loaded;
         }
 
-        private void MainWindow_Closed(object? sender, EventArgs e)
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            _viewModel.Dispose(); // Ensure ViewModel cleans up its resources
+            RootNavigation.Navigate(typeof(IndexPage));
         }
 
-        // Removed:
-        // - All service fields and event handlers; logic now in ViewModel
+        private void ThemesChanged(object sender, RoutedEventArgs e)
+        {
+            if (ApplicationThemeManager.GetAppTheme() is ApplicationTheme.Dark)
+            {
+                ApplicationThemeManager.Apply(ApplicationTheme.Light);
+            }
+            else
+            {
+                ApplicationThemeManager.Apply(ApplicationTheme.Dark);
+            }
+        }
+
+        private void MainWindow_Closed(object sender, EventArgs e)
+        {
+
+        }
     }
 }
