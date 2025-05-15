@@ -1,20 +1,17 @@
-﻿using lingualink_client.ViewModels;
+﻿using System.Windows; // Required for Application.Current
 using System.Windows.Controls;
 
-namespace lingualink_client.Views
+namespace lingualink_client.Views // Assuming this namespace based on your existing files
 {
-    /// <summary>
-    /// IndexPage.xaml 的交互逻辑
-    /// </summary>
     public partial class IndexPage : Page
     {
-        private readonly IndexWindowViewModel _viewModel;
+        // private readonly IndexWindowViewModel _viewModel; // This field is no longer needed here
 
         public IndexPage()
         {
             InitializeComponent();
-            _viewModel = new IndexWindowViewModel();
-            DataContext = _viewModel;
+            // Get the shared ViewModel from App.xaml.cs
+            DataContext = (Application.Current as App)?.SharedIndexWindowViewModel;
         }
     }
 }

@@ -4,10 +4,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Input;
 using lingualink_client.Models;
 using lingualink_client.Services;
 
@@ -19,15 +17,22 @@ namespace lingualink_client.ViewModels
         private AudioService _audioService;
         private TranslationService _translationService;
         private readonly SettingsService _settingsService;
-        private OscService? _oscService; // Added OSC Service
+        private OscService? _oscService;
         private AppSettings _appSettings;
-        private ObservableCollection<MenusBar> _menusBars;
+        
+        // Target Language Properties (moved from ServicePageViewModel)
+        public ObservableCollection<SelectableTargetLanguageViewModel> TargetLanguageItems { get; }
+        public DelegateCommand AddLanguageCommand { get; }
+        private static readonly List<string> AllSupportedLanguages = new List<string> 
+        { 
+            "英文", "日文", "法文", "中文", "韩文", "西班牙文", "俄文", "德文", "意大利文" 
+        };
+        private const int MaxTargetLanguages = 5;
 
-        public ObservableCollection<MenusBar> MenusBars
-        {
-            get => _menusBars;
-            set => SetProperty(ref _menusBars, value);
-        }
+        // Log Properties
+        public ObservableCollection<string> LogMessages { get; }
+        public DelegateCommand ClearLogCommand { get; }
+        private const int MaxLogEntries = 500;
 
         private ObservableCollection<MMDeviceWrapper> _microphones = new ObservableCollection<MMDeviceWrapper>();
         public ObservableCollection<MMDeviceWrapper> Microphones
@@ -93,43 +98,73 @@ namespace lingualink_client.ViewModels
 
         public DelegateCommand RefreshMicrophonesCommand { get; }
         public DelegateCommand ToggleWorkCommand { get; }
-        public DelegateCommand OpenSettingsCommand { get; }
 
         public IndexWindowViewModel()
         {
             _microphoneManager = new MicrophoneManager();
             _settingsService = new SettingsService();
+            
+            TargetLanguageItems = new ObservableCollection<SelectableTargetLanguageViewModel>();
+            AddLanguageCommand = new DelegateCommand(ExecuteAddLanguage, CanExecuteAddLanguage);
 
-            _menusBars = [
-                new() { Name = "开始"},
-                new() { Name = "快捷键" },
-                new() { Name = "设置" }];
+            LogMessages = new ObservableCollection<string>();
+            ClearLogCommand = new DelegateCommand(ExecuteClearLog);
             
             RefreshMicrophonesCommand = new DelegateCommand(async _ => await ExecuteRefreshMicrophonesAsync(), _ => CanExecuteRefreshMicrophones());
             ToggleWorkCommand = new DelegateCommand(async _ => await ExecuteToggleWorkAsync(), _ => CanExecuteToggleWork());
-            OpenSettingsCommand = new DelegateCommand(ExecuteOpenSettings, _ => CanExecuteOpenSettings());
 
             LoadSettingsAndInitializeServices(); 
+            SettingsChangedNotifier.SettingsChanged += OnGlobalSettingsChanged;
 
             _ = ExecuteRefreshMicrophonesAsync(); 
+        }
+        
+        private void OnGlobalSettingsChanged()
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                bool wasWorking = _audioService?.IsWorking ?? false;
+                LoadSettingsAndInitializeServices(true); // This will reload _appSettings and re-init services
+
+                // Smart status update logic (simplified, as LoadSettingsAndInitializeServices handles OSC status)
+                if (!wasWorking && !_audioService.IsWorking && !StatusText.Contains("OSC服务初始化失败") && !StatusText.Contains("正在刷新麦克风列表..."))
+                {
+                    StatusText = "状态：设置已更新。";
+                    if (!Microphones.Any() || SelectedMicrophone == null)
+                    {
+                        StatusText += " 请选择麦克风。";
+                    }
+                    else
+                    {
+                        StatusText += (_appSettings.EnableOsc && _oscService != null) ? " 可开始工作并发送至VRChat。" : " 可开始工作。";
+                    }
+                }
+                ToggleWorkCommand.RaiseCanExecuteChanged();
+                RefreshMicrophonesCommand.RaiseCanExecuteChanged();
+            });
         }
 
         private void LoadSettingsAndInitializeServices(bool reattachAudioEvents = false)
         {
-            _appSettings = _settingsService.LoadSettings();
+            bool wasWorking = _audioService?.IsWorking ?? false;
+            int? previouslySelectedMicDeviceNumber = wasWorking ? SelectedMicrophone?.WaveInDeviceIndex : null;
 
-            // Dispose and re-initialize services that depend on settings
+            _appSettings = _settingsService.LoadSettings(); // Load latest settings
+
+            // Load target languages into UI
+            LoadTargetLanguagesFromSettings(_appSettings);
+
             if (reattachAudioEvents && _audioService != null)
             {
                 _audioService.AudioSegmentReady -= OnAudioSegmentReadyForTranslation;
                 _audioService.StatusUpdated -= OnAudioServiceStatusUpdate;
             }
             _translationService?.Dispose();
-            _audioService?.Dispose();
-            _oscService?.Dispose(); // Dispose existing OSC service
+            _audioService?.Dispose(); 
+            _oscService?.Dispose(); 
 
             _translationService = new TranslationService(_appSettings.ServerUrl);
-            _audioService = new AudioService(_appSettings);
+            _audioService = new AudioService(_appSettings); // AudioService uses VAD params from _appSettings
 
             _audioService.AudioSegmentReady += OnAudioSegmentReadyForTranslation;
             _audioService.StatusUpdated += OnAudioServiceStatusUpdate;
@@ -139,29 +174,47 @@ namespace lingualink_client.ViewModels
                 try
                 {
                     _oscService = new OscService(_appSettings.OscIpAddress, _appSettings.OscPort);
-                    StatusText = $"状态：OSC服务已启用 ({_appSettings.OscIpAddress}:{_appSettings.OscPort})";
+                     if(!wasWorking && !StatusText.Contains("正在刷新麦克风列表...") && !StatusText.Contains("设置已更新"))
+                        StatusText = $"状态：OSC服务已启用 ({_appSettings.OscIpAddress}:{_appSettings.OscPort})";
                 }
                 catch (Exception ex)
                 {
                     _oscService = null;
                     StatusText = $"状态：OSC服务初始化失败: {ex.Message}";
+                    AddLogMessage($"OSC服务初始化失败: {ex.Message}");
                     System.Diagnostics.Debug.WriteLine($"OSC Service Init Error: {ex.Message}");
-                    // Optionally, show a message box or disable OSC in current session's _appSettings
-                    // _appSettings.EnableOsc = false; // To prevent further attempts this session
                 }
             }
             else
             {
-                _oscService = null; // Ensure it's null if not enabled
+                _oscService = null;
+            }
+
+            if (wasWorking && previouslySelectedMicDeviceNumber.HasValue && SelectedMicrophone?.WaveInDeviceIndex == previouslySelectedMicDeviceNumber)
+            {
+                if (_audioService.Start(previouslySelectedMicDeviceNumber.Value))
+                {
+                    WorkButtonContent = "停止工作";
+                    IsMicrophoneComboBoxEnabled = false;
+                }
+                else 
+                {
+                    WorkButtonContent = "开始工作";
+                    IsMicrophoneComboBoxEnabled = true;
+                }
+            } else if (wasWorking) 
+            {
+                 WorkButtonContent = "开始工作";
+                 IsMicrophoneComboBoxEnabled = true;
             }
 
             RefreshMicrophonesCommand.RaiseCanExecuteChanged();
             ToggleWorkCommand.RaiseCanExecuteChanged();
-            OpenSettingsCommand.RaiseCanExecuteChanged();
         }
 
         private async Task ExecuteRefreshMicrophonesAsync()
         {
+            // ... (method remains the same)
             IsRefreshingMicrophones = true;
             StatusText = "状态：正在刷新麦克风列表...";
             IsMicrophoneComboBoxEnabled = false;
@@ -182,11 +235,12 @@ namespace lingualink_client.ViewModels
                 if (Microphones.Any()) SelectedMicrophone = defaultMic ?? Microphones.First();
                 else SelectedMicrophone = null;
                 
-                OnSelectedMicrophoneChanged(); // Update status based on selection
+                OnSelectedMicrophoneChanged(); 
             }
             catch (Exception ex)
             {
                 StatusText = $"状态：刷新麦克风列表失败: {ex.Message}";
+                 AddLogMessage($"刷新麦克风列表失败: {ex.Message}");
                 System.Diagnostics.Debug.WriteLine($"RefreshMicrophones Error: {ex.ToString()}");
             }
             finally
@@ -204,11 +258,13 @@ namespace lingualink_client.ViewModels
 
         private void OnSelectedMicrophoneChanged()
         {
-            if (_selectedMicrophone != null)
+            // ... (method remains largely the same, status updates might be more nuanced)
+             if (_selectedMicrophone != null)
             {
                 if (_selectedMicrophone.WaveInDeviceIndex != -1 && _selectedMicrophone.WaveInDeviceIndex < WaveIn.DeviceCount)
                 {
-                     if (!StatusText.Contains("OSC服务")) // Preserve OSC status if it was just set
+                     // Avoid overriding more important status messages
+                     if (!StatusText.Contains("OSC服务") && !StatusText.Contains("设置已更新") && !StatusText.Contains("正在刷新") && !_audioService.IsWorking)
                         StatusText = $"状态：已选择麦克风: {_selectedMicrophone.FriendlyName}";
                 }
                 else
@@ -230,6 +286,7 @@ namespace lingualink_client.ViewModels
 
         private async Task ExecuteToggleWorkAsync()
         {
+            // ... (method remains the same)
             if (!_audioService.IsWorking)
             {
                 if (SelectedMicrophone?.WaveInDeviceIndex != -1)
@@ -242,7 +299,6 @@ namespace lingualink_client.ViewModels
                         WorkButtonContent = "停止工作";
                         IsMicrophoneComboBoxEnabled = false;
                     }
-                    // StatusText will be updated by AudioService.StatusUpdated event
                 }
                 else
                 {
@@ -259,108 +315,76 @@ namespace lingualink_client.ViewModels
 
             RefreshMicrophonesCommand.RaiseCanExecuteChanged();
             ToggleWorkCommand.RaiseCanExecuteChanged();
-            OpenSettingsCommand.RaiseCanExecuteChanged();
         }
 
         private bool CanExecuteToggleWork() => SelectedMicrophone != null && SelectedMicrophone.WaveInDeviceIndex != -1 && !IsRefreshingMicrophones;
 
-        private void ExecuteOpenSettings(object? parameter)
-        {
-            var currentSettingsCopy = _settingsService.LoadSettings(); // Load fresh copy for editing
-            
-            var settingsWindow = new SettingsWindow(currentSettingsCopy);
-
-            if (settingsWindow.ShowDialog() == true) 
-            {
-                if (settingsWindow.UpdatedSettings != null)
-                {
-                    _settingsService.SaveSettings(settingsWindow.UpdatedSettings);
-                    string oldStatus = StatusText; // Preserve status if it's about listening
-                    LoadSettingsAndInitializeServices(true); 
-                    
-                    // Smart status update
-                    if (oldStatus.Contains("监听") && _audioService.IsWorking) StatusText = oldStatus; // Keep listening status
-                    else if (!StatusText.Contains("OSC服务初始化失败")) StatusText = "状态：设置已更新。";
-
-                    if (!Microphones.Any() || SelectedMicrophone == null && !StatusText.Contains("OSC服务初始化失败"))
-                    {
-                        StatusText += " 请选择麦克风。";
-                    }
-                    else if (!_audioService.IsWorking && !StatusText.Contains("OSC服务初始化失败"))
-                    {
-                         StatusText += (_appSettings.EnableOsc && _oscService != null) ? " 可开始工作并发送至VRChat。" : " 可开始工作。";
-                    }
-                }
-                else
-                {
-                    StatusText = "状态：设置保存时出现意外错误。";
-                }
-            }
-        }
-        private bool CanExecuteOpenSettings() => !_audioService.IsWorking;
-
-
         private void OnAudioServiceStatusUpdate(object? sender, string status)
         {
-            Application.Current.Dispatcher.Invoke(() => StatusText = $"状态：{status}");
+            Application.Current.Dispatcher.Invoke(() => {
+                StatusText = $"状态：{status}";
+                // Optionally add to log, but might be too noisy
+                // AddLogMessage($"AudioService: {status}");
+            });
         }
 
         private async void OnAudioSegmentReadyForTranslation(object? sender, AudioSegmentEventArgs e)
         {
-            string currentStatus = $"状态：正在发送片段 ({e.TriggerReason})...";
-            Application.Current.Dispatcher.Invoke(() => StatusText = currentStatus);
+            string currentUiStatus = $"状态：正在发送片段 ({e.TriggerReason})...";
+            Application.Current.Dispatcher.Invoke(() => StatusText = currentUiStatus);
+            AddLogMessage($"发送片段 ({e.TriggerReason}, {e.AudioData.Length} bytes) at {DateTime.Now:HH:mm:ss}");
+
 
             var waveFormat = new WaveFormat(AudioService.APP_SAMPLE_RATE, 16, AudioService.APP_CHANNELS);
-            
-            System.Diagnostics.Debug.WriteLine($"Target Languages for translation: {_appSettings.TargetLanguages}");
-
             var (response, errorMessage) = await _translationService.TranslateAudioSegmentAsync(
                 e.AudioData, waveFormat, e.TriggerReason, _appSettings.TargetLanguages
             );
 
-            string translatedTextForOsc = string.Empty; // Store the text to send via OSC
+            string translatedTextForOsc = string.Empty;
+            string logEntry;
 
-            Application.Current.Dispatcher.Invoke(() =>
+            if (errorMessage != null)
             {
-                var sb = new StringBuilder(TranslationResultText);
-                if (sb.Length > 0 && !sb.ToString().EndsWith(Environment.NewLine)) sb.AppendLine(); 
-
-                if (errorMessage != null)
+                currentUiStatus = "状态：翻译请求失败。";
+                TranslationResultText = $"错误: {errorMessage}";
+                logEntry = $"翻译错误 ({e.TriggerReason}): {errorMessage}";
+            }
+            else if (response != null)
+            {
+                if (response.Status == "success" && response.Data != null && !string.IsNullOrEmpty(response.Data.Raw_Text))
                 {
-                    StatusText = "状态：翻译请求失败。";
-                    sb.AppendLine($"翻译错误 ({e.TriggerReason}): {errorMessage}");
+                    currentUiStatus = "状态：翻译成功！";
+                    TranslationResultText = response.Data.Raw_Text; // Overwrite, no duration
+                    translatedTextForOsc = response.Data.Raw_Text;
+                    logEntry = $"翻译成功 ({e.TriggerReason}): \"{response.Data.Raw_Text}\" (LLM: {response.Duration_Seconds:F2}s)";
                 }
-                else if (response != null)
+                else if (response.Status == "success" && (response.Data == null || string.IsNullOrEmpty(response.Data.Raw_Text)))
                 {
-                    if (response.Status == "success" && response.Data != null && !string.IsNullOrEmpty(response.Data.Raw_Text))
-                    {
-                        StatusText = "状态：翻译成功！";
-                        sb.AppendLine(response.Data.Raw_Text);
-                        sb.AppendLine($"(LLM处理耗时: {response.Duration_Seconds:F2}s)");
-                        translatedTextForOsc = response.Data.Raw_Text; // Get text for OSC
-                    }
-                    else if (response.Status == "success" && (response.Data == null || string.IsNullOrEmpty(response.Data.Raw_Text)))
-                    {
-                        StatusText = "状态：翻译成功，但无文本内容。";
-                        sb.AppendLine("(服务器返回成功，但 raw_text 为空)");
-                        sb.AppendLine($"(LLM处理耗时: {response.Duration_Seconds:F2}s)");
-                    }
-                    else
-                    {
-                        StatusText = "状态：翻译失败 (服务器)。";
-                        sb.AppendLine($"服务器处理错误 ({e.TriggerReason}): {response.Message ?? "未知错误"}");
-                        if(response.Details != null) sb.AppendLine($"详情: {response.Details.Content ?? "N/A"}");
-                    }
+                    currentUiStatus = "状态：翻译成功，但无文本内容。";
+                    TranslationResultText = "(服务器返回成功，但无文本内容)";
+                    logEntry = $"翻译成功但无文本 ({e.TriggerReason}). (LLM: {response.Duration_Seconds:F2}s)";
                 }
                 else
                 {
-                    StatusText = "状态：收到空响应。";
-                    sb.AppendLine($"收到空响应 ({e.TriggerReason})");
+                    currentUiStatus = "状态：翻译失败 (服务器)。";
+                    TranslationResultText = $"服务器错误: {response.Message ?? "未知错误"}";
+                    logEntry = $"服务器处理错误 ({e.TriggerReason}): {response.Message ?? "未知错误"}";
+                    if(response.Details != null) logEntry += $" | 详情: {response.Details.Content ?? "N/A"}";
                 }
-                TranslationResultText = sb.ToString();
+            }
+            else
+            {
+                currentUiStatus = "状态：收到空响应。";
+                TranslationResultText = "错误: 服务器空响应";
+                logEntry = $"收到空响应 ({e.TriggerReason})";
+            }
+            
+            Application.Current.Dispatcher.Invoke(() => {
+                StatusText = currentUiStatus;
+                AddLogMessage(logEntry);
             });
 
-            // OSC Sending Logic (outside of UI thread Dispatcher for the await)
+
             if (_appSettings.EnableOsc && _oscService != null && !string.IsNullOrEmpty(translatedTextForOsc))
             {
                 Application.Current.Dispatcher.Invoke(() => StatusText = "状态：翻译成功！正在发送到VRChat...");
@@ -373,37 +397,152 @@ namespace lingualink_client.ViewModels
                     );
                     Application.Current.Dispatcher.Invoke(() => {
                         StatusText = "状态：翻译成功！已发送到VRChat。";
-                         var sb = new StringBuilder(TranslationResultText);
-                         if (sb.Length > 0 && !sb.ToString().EndsWith(Environment.NewLine)) sb.AppendLine();
-                         sb.AppendLine("--- [OSC] Message sent to VRChat ---");
-                         TranslationResultText = sb.ToString();
+                        AddLogMessage($"[OSC] 消息已发送到VRChat: \"{translatedTextForOsc.Split('\n')[0]}...\"");
                     });
                 }
                 catch (Exception ex)
                 {
                     System.Diagnostics.Debug.WriteLine($"OSC Send Error: {ex.Message}");
                     Application.Current.Dispatcher.Invoke(() => {
-                        StatusText = $"状态：翻译成功！但VRChat发送失败: {ex.Message.Split('\n')[0]}"; // Show first line of error
-                        var sb = new StringBuilder(TranslationResultText);
-                        if (sb.Length > 0 && !sb.ToString().EndsWith(Environment.NewLine)) sb.AppendLine();
-                        sb.AppendLine($"--- [OSC ERROR] Failed to send: {ex.Message} ---");
-                        TranslationResultText = sb.ToString();
+                        string oscErrorMsg = $"状态：翻译成功！但VRChat发送失败: {ex.Message.Split('\n')[0]}";
+                        StatusText = oscErrorMsg;
+                        AddLogMessage($"[OSC ERROR] 发送失败: {ex.Message}");
                     });
                 }
             }
 
-            // Reset status if still working and no critical error occurred
             Application.Current.Dispatcher.Invoke(() =>
             {
-                if (_audioService.IsWorking && !StatusText.Contains("检测到语音") && !StatusText.Contains("失败"))
+                if (_audioService.IsWorking && !StatusText.Contains("检测到语音") && !StatusText.Contains("失败") && !StatusText.Contains("VRChat"))
                 {
                     StatusText = "状态：正在监听...";
                 }
             });
         }
 
+        // --- Target Language Management ---
+        private void LoadTargetLanguagesFromSettings(AppSettings settings)
+        {
+            TargetLanguageItems.Clear();
+            var languagesFromSettings = string.IsNullOrWhiteSpace(settings.TargetLanguages)
+                ? new List<string>()
+                : settings.TargetLanguages.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                                         .Select(s => s.Trim())
+                                         .Where(s => AllSupportedLanguages.Contains(s)) 
+                                         .Distinct() 
+                                         .ToList();
+
+            if (!languagesFromSettings.Any())
+            {
+                languagesFromSettings.Add(AllSupportedLanguages.FirstOrDefault() ?? "英文");
+            }
+
+            foreach (var lang in languagesFromSettings.Take(MaxTargetLanguages)) 
+            {
+                var newItem = new SelectableTargetLanguageViewModel(this, lang, new List<string>(AllSupportedLanguages));
+                TargetLanguageItems.Add(newItem);
+            }
+            UpdateItemPropertiesAndAvailableLanguages();
+            AddLanguageCommand.RaiseCanExecuteChanged();
+        }
+        
+        private void ExecuteAddLanguage(object? parameter)
+        {
+            if (!CanExecuteAddLanguage(parameter)) return;
+            string defaultNewLang = AllSupportedLanguages.FirstOrDefault(l => !TargetLanguageItems.Any(item => item.SelectedLanguage == l))
+                                    ?? AllSupportedLanguages.First(); 
+            var newItem = new SelectableTargetLanguageViewModel(this, defaultNewLang, new List<string>(AllSupportedLanguages));
+            TargetLanguageItems.Add(newItem);
+            UpdateItemPropertiesAndAvailableLanguages();
+            AddLanguageCommand.RaiseCanExecuteChanged();
+            SaveCurrentSettings(); // Save when target languages change
+        }
+
+        private bool CanExecuteAddLanguage(object? parameter)
+        {
+            return TargetLanguageItems.Count < MaxTargetLanguages;
+        }
+
+        public void RemoveLanguageItem(SelectableTargetLanguageViewModel itemToRemove)
+        {
+            if (TargetLanguageItems.Contains(itemToRemove))
+            {
+                TargetLanguageItems.Remove(itemToRemove);
+                UpdateItemPropertiesAndAvailableLanguages();
+                AddLanguageCommand.RaiseCanExecuteChanged();
+                SaveCurrentSettings(); // Save when target languages change
+            }
+        }
+
+        public void OnLanguageSelectionChanged(SelectableTargetLanguageViewModel changedItem)
+        {
+            UpdateItemPropertiesAndAvailableLanguages();
+            SaveCurrentSettings(); // Save when target languages change
+        }
+
+        private void UpdateItemPropertiesAndAvailableLanguages()
+        {
+            for (int i = 0; i < TargetLanguageItems.Count; i++)
+            {
+                var itemVm = TargetLanguageItems[i];
+                itemVm.Label = $"目标 {i + 1}:"; // Shortened Label
+                itemVm.CanRemove = TargetLanguageItems.Count > 1; 
+                var availableForThisDropdown = new ObservableCollection<string>();
+                foreach (var langOption in AllSupportedLanguages)
+                {
+                    if (langOption == itemVm.SelectedLanguage || 
+                        !TargetLanguageItems.Where(it => it != itemVm).Any(it => it.SelectedLanguage == langOption))
+                    {
+                        availableForThisDropdown.Add(langOption);
+                    }
+                }
+                if (!string.IsNullOrEmpty(itemVm.SelectedLanguage) && !availableForThisDropdown.Contains(itemVm.SelectedLanguage))
+                {
+                    availableForThisDropdown.Add(itemVm.SelectedLanguage); 
+                }
+                itemVm.AvailableLanguages = availableForThisDropdown;
+            }
+        }
+
+        private void SaveCurrentSettings()
+        {
+            // Update _appSettings with current target languages
+            var selectedLangsList = TargetLanguageItems
+                .Select(item => item.SelectedLanguage)
+                .Where(lang => !string.IsNullOrWhiteSpace(lang) && AllSupportedLanguages.Contains(lang))
+                .Distinct()
+                .ToList();
+            _appSettings.TargetLanguages = string.Join(",", selectedLangsList);
+
+            // Save all current settings (including those from ServicePage that are in _appSettings)
+            _settingsService.SaveSettings(_appSettings);
+            SettingsChangedNotifier.RaiseSettingsChanged(); // Notify other parts of the app
+            AddLogMessage("目标语言设置已更新并保存。");
+        }
+
+        // --- Log Management ---
+        private void AddLogMessage(string message)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                string timestampedMessage = $"{DateTime.Now:HH:mm:ss.fff} - {message}";
+                LogMessages.Add(timestampedMessage);
+                while (LogMessages.Count > MaxLogEntries)
+                {
+                    LogMessages.RemoveAt(0);
+                }
+            });
+        }
+
+        private void ExecuteClearLog(object? parameter)
+        {
+            LogMessages.Clear();
+            AddLogMessage("日志已清除。");
+        }
+
         public void Dispose()
         {
+            SettingsChangedNotifier.SettingsChanged -= OnGlobalSettingsChanged;
             if (_audioService != null)
             {
                 _audioService.AudioSegmentReady -= OnAudioSegmentReadyForTranslation;
@@ -411,7 +550,7 @@ namespace lingualink_client.ViewModels
                 _audioService.Dispose();
             }
             _translationService?.Dispose();
-            _oscService?.Dispose(); // Dispose OSC Service
+            _oscService?.Dispose(); 
             GC.SuppressFinalize(this);
         }
     }

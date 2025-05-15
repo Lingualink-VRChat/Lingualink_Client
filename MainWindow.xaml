@@ -27,7 +27,7 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <ui:TitleBar Title="VRChat LinGuaLink - Client" Grid.Row="0">
+        <ui:TitleBar Title="VRChat LinguaLink - Client" Grid.Row="0">
             <ui:TitleBar.TrailingContent>
                 <ToggleButton
                     VerticalAlignment="Top"
@@ -42,12 +42,10 @@
         <ui:NavigationView
             x:Name="RootNavigation"
             Grid.Row="1"
+            IsBackButtonVisible="Collapsed"
             OpenPaneLength="150">
             <ui:NavigationView.Header>
-                <ui:BreadcrumbBar
-                    Margin="42,32,0,0"
-                    FontSize="28"
-                    FontWeight="DemiBold" />
+                <ui:BreadcrumbBar Margin="42,32,0,0" FontSize="28" FontWeight="DemiBold" />
             </ui:NavigationView.Header>
             <ui:NavigationView.MenuItems>
                 <ui:NavigationViewItem
@@ -64,6 +62,14 @@
                     TargetPageType="{x:Type pages:ServicePage}">
                     <ui:NavigationViewItem.Icon>
                         <ui:SymbolIcon Symbol="ServerSurfaceMultiple16" />
+                    </ui:NavigationViewItem.Icon>
+                </ui:NavigationViewItem>
+                <ui:NavigationViewItem
+                    Content="日志"
+                    NavigationCacheMode="Enabled" 
+                    TargetPageType="{x:Type pages:LogPage}">
+                    <ui:NavigationViewItem.Icon>
+                        <ui:SymbolIcon Symbol="TextBulletListLtr24" />
                     </ui:NavigationViewItem.Icon>
                 </ui:NavigationViewItem>
             </ui:NavigationView.MenuItems>

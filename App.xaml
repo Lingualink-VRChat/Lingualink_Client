@@ -13,6 +13,7 @@
                 <ui:ControlsDictionary />
             </ResourceDictionary.MergedDictionaries>
             <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+            <converters:StringJoinConverter x:Key="StringJoinConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>
