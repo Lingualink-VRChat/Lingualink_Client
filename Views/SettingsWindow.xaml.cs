@@ -8,13 +8,12 @@ namespace lingualink_client
     {
         private readonly SettingsWindowViewModel _viewModel;
 
-        // This public property allows MainWindowViewModel to retrieve the settings
+        // This public property allows IndexWindowViewModel to retrieve the settings
         public AppSettings? UpdatedSettings => _viewModel.SavedAppSettings; 
 
         public SettingsWindow(AppSettings currentSettings)
         {
             InitializeComponent();
-            Owner = Application.Current.MainWindow;
             _viewModel = new SettingsWindowViewModel(currentSettings);
             DataContext = _viewModel;
         }
