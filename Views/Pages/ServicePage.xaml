@@ -89,7 +89,7 @@
                 <StackPanel Margin="10,5,0,0">
                     <CheckBox
                         Margin="0,0,0,5"
-                        Content="启用 OSC 发送 (勾选后下方设置生效)"
+                        Content="启用 OSC 发送"
                         IsChecked="{Binding EnableOsc}" />
                     <Grid IsEnabled="{Binding EnableOsc}"> 
                         <Grid.RowDefinitions>

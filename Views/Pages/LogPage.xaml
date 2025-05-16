@@ -27,6 +27,6 @@
                  TextWrapping="Wrap"
                  VerticalScrollBarVisibility="Auto"
                  Text="{Binding LogMessages, Converter={StaticResource StringJoinConverter}, Mode=OneWay}" 
-                 FontFamily="Consolas" FontSize="12"/> <!-- Monospaced font for logs is common -->
+                 FontFamily="Consolas" FontSize="12"/>
     </Grid>
 </Page>

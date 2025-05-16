@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using lingualink_client.Models;
 using lingualink_client.Services;
+using System.Diagnostics; // Add this for Debug.WriteLine
 
 namespace lingualink_client.ViewModels
 {
@@ -108,6 +109,8 @@ namespace lingualink_client.ViewModels
             AddLanguageCommand = new DelegateCommand(ExecuteAddLanguage, CanExecuteAddLanguage);
 
             LogMessages = new ObservableCollection<string>();
+            LogMessages.Add($"[{DateTime.Now:HH:mm:ss.fff}] IndexWindowViewModel Constructor: Log Initialized.");
+            Debug.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] IndexWindowViewModel Constructor: Log Initialized. Count: {LogMessages.Count}");
             ClearLogCommand = new DelegateCommand(ExecuteClearLog);
             
             RefreshMicrophonesCommand = new DelegateCommand(async _ => await ExecuteRefreshMicrophonesAsync(), _ => CanExecuteRefreshMicrophones());
@@ -323,8 +326,7 @@ namespace lingualink_client.ViewModels
         {
             Application.Current.Dispatcher.Invoke(() => {
                 StatusText = $"状态：{status}";
-                // Optionally add to log, but might be too noisy
-                // AddLogMessage($"AudioService: {status}");
+                AddLogMessage($"AudioService Status: {status}");
             });
         }
 
@@ -523,10 +525,12 @@ namespace lingualink_client.ViewModels
         // --- Log Management ---
         private void AddLogMessage(string message)
         {
+            Debug.WriteLine($"AddLogMessage INVOKED with: \"{message}\". Current LogMessages count before add: {LogMessages.Count}");
             Application.Current.Dispatcher.Invoke(() =>
             {
                 string timestampedMessage = $"{DateTime.Now:HH:mm:ss.fff} - {message}";
                 LogMessages.Add(timestampedMessage);
+                Debug.WriteLine($"LogMessages UPDATED. New count: {LogMessages.Count}. Last message: \"{LogMessages.LastOrDefault()}\"");
                 while (LogMessages.Count > MaxLogEntries)
                 {
                     LogMessages.RemoveAt(0);
@@ -536,7 +540,9 @@ namespace lingualink_client.ViewModels
 
         private void ExecuteClearLog(object? parameter)
         {
+            Debug.WriteLine($"ExecuteClearLog INVOKED. LogMessages count BEFORE clear: {LogMessages.Count}");
             LogMessages.Clear();
+            Debug.WriteLine($"ExecuteClearLog: LogMessages.Clear() called. LogMessages count AFTER clear: {LogMessages.Count}");
             AddLogMessage("日志已清除。");
         }
 
