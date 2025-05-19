@@ -25,7 +25,6 @@
             x:Name="LanguageComboBox"
             Grid.Row="1"
             VerticalAlignment="Stretch"
-            SelectedIndex="0"
             SelectionChanged="OnLanguageChanged">
             <ComboBox.ItemTemplate>
                 <DataTemplate>
