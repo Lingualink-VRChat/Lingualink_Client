@@ -8,7 +8,6 @@
     xmlns:pages="clr-namespace:lingualink_client.Views"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     Title="LinguaLink - Client"
-    Icon="/Assets/Icons/icon_128x128.ico"
     Width="1100"
     Height="650"
     d:DesignHeight="450"
@@ -18,6 +17,7 @@
     Closed="MainWindow_Closed"
     ExtendsContentIntoTitleBar="True"
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    Icon="/Assets/Icons/icon_128x128.ico"
     WindowBackdropType="Mica"
     WindowCornerPreference="Round"
     WindowStartupLocation="CenterScreen"
@@ -28,7 +28,10 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <ui:TitleBar Title="VRChat LinguaLink - Client" Grid.Row="0">
+        <ui:TitleBar
+            Title="VRChat LinguaLink - Client"
+            Grid.Row="0"
+            Icon="{ui:ImageIcon 'pack://application:,,,/lingualink_client;component/Assets/Icons/icon_128x128.ico'}">
             <ui:TitleBar.TrailingContent>
                 <ToggleButton
                     VerticalAlignment="Top"
@@ -46,11 +49,14 @@
             IsBackButtonVisible="Collapsed"
             OpenPaneLength="150">
             <ui:NavigationView.Header>
-                <ui:BreadcrumbBar Margin="42,32,0,0" FontSize="28" FontWeight="DemiBold" />
+                <ui:BreadcrumbBar
+                    Margin="42,32,0,0"
+                    FontSize="28"
+                    FontWeight="DemiBold" />
             </ui:NavigationView.Header>
             <ui:NavigationView.MenuItems>
                 <ui:NavigationViewItem
-                    Content="启动"
+                    Content="{Binding Start}"
                     NavigationCacheMode="Enabled"
                     TargetPageType="{x:Type pages:IndexPage}">
                     <ui:NavigationViewItem.Icon>
@@ -58,7 +64,7 @@
                     </ui:NavigationViewItem.Icon>
                 </ui:NavigationViewItem>
                 <ui:NavigationViewItem
-                    Content="服务"
+                    Content="{Binding Service}"
                     NavigationCacheMode="Enabled"
                     TargetPageType="{x:Type pages:ServicePage}">
                     <ui:NavigationViewItem.Icon>
@@ -66,8 +72,8 @@
                     </ui:NavigationViewItem.Icon>
                 </ui:NavigationViewItem>
                 <ui:NavigationViewItem
-                    Content="日志"
-                    NavigationCacheMode="Enabled" 
+                    Content="{Binding Log}"
+                    NavigationCacheMode="Enabled"
                     TargetPageType="{x:Type pages:LogPage}">
                     <ui:NavigationViewItem.Icon>
                         <ui:SymbolIcon Symbol="TextBulletListLtr24" />
@@ -76,7 +82,7 @@
             </ui:NavigationView.MenuItems>
             <ui:NavigationView.FooterMenuItems>
                 <ui:NavigationViewItem
-                    Content="设置"
+                    Content="{Binding Settings}"
                     NavigationCacheMode="Disabled"
                     TargetPageType="{x:Type pages:SettingPage}">
                     <ui:NavigationViewItem.Icon>

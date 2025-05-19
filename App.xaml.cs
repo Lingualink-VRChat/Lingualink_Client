@@ -11,6 +11,11 @@ namespace lingualink_client
         {
             base.OnStartup(e);
             SharedIndexWindowViewModel = new IndexWindowViewModel();
+            
+            // 设置默认语言
+            var culture = new System.Globalization.CultureInfo("zh-CN");
+            System.Threading.Thread.CurrentThread.CurrentUICulture = culture;
+            System.Threading.Thread.CurrentThread.CurrentCulture = culture;
         }
 
         protected override void OnExit(ExitEventArgs e)

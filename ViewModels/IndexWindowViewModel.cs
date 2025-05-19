@@ -72,6 +72,15 @@ namespace lingualink_client.ViewModels
             set => SetProperty(ref _translationResultText, value);
         }
 
+        public string WorkButtonContentLabel => LanguageManager.GetString("WorkButtonContent");
+        public string SelectMicrophoneLabel => LanguageManager.GetString("SelectMicrophone");
+        public string RefreshLabel => LanguageManager.GetString("Refresh");
+        public string RefreshingMicrophonesLabel => LanguageManager.GetString("RefreshingMicrophones");
+        public string TargetLanguagesLabel => LanguageManager.GetString("TargetLanguages");
+        public string AddLanguageLabel => LanguageManager.GetString("AddLanguage");
+        public string RemoveLabel => LanguageManager.GetString("Remove");
+        public string WorkHintLabel => LanguageManager.GetString("WorkHint");
+
         private string _workButtonContent = "开始工作";
         public string WorkButtonContent
         {
@@ -122,7 +131,16 @@ namespace lingualink_client.ViewModels
             LoadSettingsAndInitializeServices(); 
             SettingsChangedNotifier.SettingsChanged += OnGlobalSettingsChanged;
 
-            _ = ExecuteRefreshMicrophonesAsync(); 
+            _ = ExecuteRefreshMicrophonesAsync();
+
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(WorkButtonContentLabel));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(SelectMicrophoneLabel));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(RefreshLabel));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(RefreshingMicrophonesLabel));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(TargetLanguagesLabel));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(AddLanguageLabel));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(RemoveLabel));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(WorkHintLabel));
         }
 
         private void OnLogMessagesChanged(object? sender, NotifyCollectionChangedEventArgs e)

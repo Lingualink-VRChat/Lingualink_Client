@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Collections.Generic; // For List<string>
+using lingualink_client.Services;
 
 namespace lingualink_client.ViewModels
 {
@@ -27,6 +28,8 @@ namespace lingualink_client.ViewModels
             get => _availableLanguages;
             set => SetProperty(ref _availableLanguages, value);
         }
+
+        public string LabelText => LanguageManager.GetString("TargetLanguageLabel");
 
         private string _label;
         public string Label
@@ -61,6 +64,8 @@ namespace lingualink_client.ViewModels
                 _ => ParentViewModel.RemoveLanguageItem(this),
                 _ => CanRemove
             );
+
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(LabelText));
         }
     }
 }

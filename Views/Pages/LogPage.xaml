@@ -4,28 +4,47 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:vm="clr-namespace:lingualink_client.ViewModels"
-    mc:Ignorable="d"
+    Title="LogPage"
     d:DataContext="{d:DesignInstance Type=vm:IndexWindowViewModel}"
-    Title="LogPage">
+    mc:Ignorable="d">
 
-    <Grid Margin="15"> <!-- Increased margin for a page view -->
+    <Grid Margin="15">
+        <!--  Increased margin for a page view  -->
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" /> <!-- Log Label & Clear Button -->
-            <RowDefinition Height="*" />   <!-- Log TextBox -->
+            <RowDefinition Height="Auto" />
+            <!--  Log Label & Clear Button  -->
+            <RowDefinition Height="*" />
+            <!--  Log TextBox  -->
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10"> 
-            <Label Content="运行日志:" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
-            <Button Content="清除日志" Command="{Binding ClearLogCommand}" HorizontalAlignment="Right" Margin="15,0,0,0" Padding="8,4" VerticalAlignment="Center"/>
+        <StackPanel
+            Grid.Row="0"
+            Margin="0,0,0,10"
+            Orientation="Horizontal">
+            <Label
+                VerticalAlignment="Center"
+                Content="{Binding RunningLogLabel}"
+                FontSize="16"
+                FontWeight="SemiBold" />
+            <ui:Button
+                Margin="15,0,0,0"
+                Padding="8,4"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Center"
+                Command="{Binding ClearLogCommand}"
+                Content="{Binding ClearLogLabel}" />
         </StackPanel>
-        
-        <TextBox Grid.Row="1"
-                 IsReadOnly="True"
-                 AcceptsReturn="True"
-                 TextWrapping="Wrap"
-                 VerticalScrollBarVisibility="Auto"
-                 Text="{Binding FormattedLogMessages, Mode=OneWay}" 
-                 FontFamily="Consolas" FontSize="12"/>
+
+        <ui:TextBox
+            Grid.Row="1"
+            AcceptsReturn="True"
+            FontFamily="Consolas"
+            FontSize="12"
+            IsReadOnly="True"
+            Text="{Binding FormattedLogMessages, Mode=OneWay}"
+            TextWrapping="Wrap"
+            VerticalScrollBarVisibility="Auto" />
     </Grid>
 </Page>

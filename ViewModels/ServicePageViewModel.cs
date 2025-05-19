@@ -17,30 +17,43 @@ namespace lingualink_client.ViewModels
         public DelegateCommand SaveCommand { get; }
         public DelegateCommand RevertCommand { get; }
 
+        public string ServerUrlLabel => LanguageManager.GetString("ServerUrl");
+        public string SilenceThresholdLabel => LanguageManager.GetString("SilenceThreshold");
+        public string MinVoiceDurationLabel => LanguageManager.GetString("MinVoiceDuration");
+        public string MaxVoiceDurationLabel => LanguageManager.GetString("MaxVoiceDuration");
+        public string MinVolumeThresholdLabel => LanguageManager.GetString("MinVolumeThreshold");
+        public string EnableOscLabel => LanguageManager.GetString("EnableOsc");
+        public string OscIpAddressLabel => LanguageManager.GetString("OscIpAddress");
+        public string OscPortLabel => LanguageManager.GetString("OscPort");
+        public string SendImmediatelyLabel => LanguageManager.GetString("SendImmediately");
+        public string PlayNotificationSoundLabel => LanguageManager.GetString("PlayNotificationSound");
+        public string SaveLabel => LanguageManager.GetString("Save");
+        public string RevertLabel => LanguageManager.GetString("Revert");
+
         private string _serverUrl;
-        public string ServerUrl { get => _serverUrl; set => SetProperty(ref _serverUrl, value); }
         private double _silenceThresholdSeconds;
-        public double SilenceThresholdSeconds { get => _silenceThresholdSeconds; set => SetProperty(ref _silenceThresholdSeconds, value); }
         private double _minVoiceDurationSeconds;
-        public double MinVoiceDurationSeconds { get => _minVoiceDurationSeconds; set => SetProperty(ref _minVoiceDurationSeconds, value); }
         private double _maxVoiceDurationSeconds;
-        public double MaxVoiceDurationSeconds { get => _maxVoiceDurationSeconds; set => SetProperty(ref _maxVoiceDurationSeconds, value); }
         private double _minRecordingVolumeThreshold;
+        private bool _enableOsc;
+        private string _oscIpAddress;
+        private int _oscPort;
+        private bool _oscSendImmediately;
+        private bool _oscPlayNotificationSound;
+        public string ServerUrl { get => _serverUrl; set => SetProperty(ref _serverUrl, value); }
+        public double SilenceThresholdSeconds { get => _silenceThresholdSeconds; set => SetProperty(ref _silenceThresholdSeconds, value); }
+        public double MinVoiceDurationSeconds { get => _minVoiceDurationSeconds; set => SetProperty(ref _minVoiceDurationSeconds, value); }
+        public double MaxVoiceDurationSeconds { get => _maxVoiceDurationSeconds; set => SetProperty(ref _maxVoiceDurationSeconds, value); }
         public double MinRecordingVolumeThreshold
         {
             get => _minRecordingVolumeThreshold;
             set => SetProperty(ref _minRecordingVolumeThreshold, Math.Clamp(value, 0.0, 1.0));
         }
 
-        private bool _enableOsc;
         public bool EnableOsc { get => _enableOsc; set => SetProperty(ref _enableOsc, value); }
-        private string _oscIpAddress;
         public string OscIpAddress { get => _oscIpAddress; set => SetProperty(ref _oscIpAddress, value); }
-        private int _oscPort;
         public int OscPort { get => _oscPort; set => SetProperty(ref _oscPort, value); }
-        private bool _oscSendImmediately;
         public bool OscSendImmediately { get => _oscSendImmediately; set => SetProperty(ref _oscSendImmediately, value); }
-        private bool _oscPlayNotificationSound;
         public bool OscPlayNotificationSound { get => _oscPlayNotificationSound; set => SetProperty(ref _oscPlayNotificationSound, value); }
         
         // Target language related properties and commands are removed
@@ -54,6 +67,19 @@ namespace lingualink_client.ViewModels
             RevertCommand = new DelegateCommand(ExecuteRevertSettings);
 
             LoadSettingsFromModel(_currentSettings);
+
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(ServerUrlLabel));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(SilenceThresholdLabel));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(MinVoiceDurationLabel));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(MaxVoiceDurationLabel));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(MinVolumeThresholdLabel));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(EnableOscLabel));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(OscIpAddressLabel));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(OscPortLabel));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(SendImmediatelyLabel));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(PlayNotificationSoundLabel));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(SaveLabel));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(RevertLabel));
         }
 
         private void LoadSettingsFromModel(AppSettings settings)
