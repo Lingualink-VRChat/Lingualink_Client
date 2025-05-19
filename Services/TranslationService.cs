@@ -1,4 +1,3 @@
-// lingualink_client.Services.TranslationService.cs
 using System;
 using System.IO;
 using System.Net.Http;
@@ -24,7 +23,8 @@ namespace lingualink_client.Services
             _httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
         }
 
-        public async Task<(ServerResponse? Response, string? ErrorMessage)> TranslateAudioSegmentAsync(
+        // Modified return type
+        public async Task<(ServerResponse? Response, string? RawJsonResponse, string? ErrorMessage)> TranslateAudioSegmentAsync(
             byte[] audioData,
             WaveFormat waveFormat,
             string triggerReason,
@@ -32,10 +32,11 @@ namespace lingualink_client.Services
         {
             if (audioData.Length == 0)
             {
-                return (null, "Audio data is empty.");
+                return (null, null, "Audio data is empty.");
             }
 
             string tempFilePath = Path.Combine(Path.GetTempPath(), $"segment_{DateTime.Now:yyyyMMddHHmmssfff}_{triggerReason}.wav");
+            string? responseContentString = null; // To store raw JSON
             try
             {
                 await using (var writer = new WaveFileWriter(tempFilePath, waveFormat))
@@ -63,18 +64,18 @@ namespace lingualink_client.Services
                     }
 
                     var httpResponse = await _httpClient.PostAsync(_serverUrl, formData);
-                    var responseContentString = await httpResponse.Content.ReadAsStringAsync();
+                    responseContentString = await httpResponse.Content.ReadAsStringAsync(); // Get raw JSON
 
                     if (httpResponse.IsSuccessStatusCode)
                     {
                         try
                         {
                             var serverResponse = JsonSerializer.Deserialize<ServerResponse>(responseContentString, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                            return (serverResponse, null);
+                            return (serverResponse, responseContentString, null); // Return raw JSON
                         }
                         catch (JsonException ex)
                         {
-                            return (null, $"Failed to deserialize server success response: {ex.Message}. Response: {responseContentString}");
+                            return (null, responseContentString, $"Failed to deserialize server success response: {ex.Message}. Response: {responseContentString}");
                         }
                     }
                     else
@@ -84,25 +85,25 @@ namespace lingualink_client.Services
                             var errorResponse = JsonSerializer.Deserialize<ServerResponse>(responseContentString, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                             if (errorResponse != null && !string.IsNullOrEmpty(errorResponse.Message))
                             {
-                                return (errorResponse, $"Server error ({httpResponse.StatusCode}): {errorResponse.Message}");
+                                return (errorResponse, responseContentString, $"Server error ({httpResponse.StatusCode}): {errorResponse.Message}");
                             }
                         }
                         catch { }
-                        return (null, $"Server error ({httpResponse.StatusCode}): {responseContentString}");
+                        return (null, responseContentString, $"Server error ({httpResponse.StatusCode}): {responseContentString}");
                     }
                 }
             }
             catch (TaskCanceledException ex)
             {
-                return (null, $"Network request timed out: {ex.Message}");
+                return (null, responseContentString, $"Network request timed out: {ex.Message}");
             }
             catch (HttpRequestException ex)
             {
-                return (null, $"Network request error: {ex.Message}");
+                return (null, responseContentString, $"Network request error: {ex.Message}");
             }
             catch (Exception ex)
             {
-                return (null, $"Error processing/sending segment: {ex.Message}");
+                return (null, responseContentString, $"Error processing/sending segment: {ex.Message}");
             }
             finally
             {

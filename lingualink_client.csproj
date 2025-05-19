@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <ApplicationIcon>Assets/Icons/icon_128x128.ico</ApplicationIcon>
     <AssemblyName>lingualink_client</AssemblyName>
   </PropertyGroup>
 
@@ -18,6 +19,10 @@
 
   <ItemGroup>
     <Folder Include="Assets\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets/Icons/icon_128x128.ico" />
   </ItemGroup>
 
 </Project>

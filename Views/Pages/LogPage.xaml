@@ -5,7 +5,6 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="clr-namespace:lingualink_client.ViewModels"
-    xmlns:converters="clr-namespace:lingualink_client.Converters"
     mc:Ignorable="d"
     d:DataContext="{d:DesignInstance Type=vm:IndexWindowViewModel}"
     Title="LogPage">
@@ -16,7 +15,7 @@
             <RowDefinition Height="*" />   <!-- Log TextBox -->
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10"> <!-- Adjusted margin -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10"> 
             <Label Content="运行日志:" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
             <Button Content="清除日志" Command="{Binding ClearLogCommand}" HorizontalAlignment="Right" Margin="15,0,0,0" Padding="8,4" VerticalAlignment="Center"/>
         </StackPanel>
@@ -26,7 +25,7 @@
                  AcceptsReturn="True"
                  TextWrapping="Wrap"
                  VerticalScrollBarVisibility="Auto"
-                 Text="{Binding LogMessages, Converter={StaticResource StringJoinConverter}, Mode=OneWay}" 
+                 Text="{Binding FormattedLogMessages, Mode=OneWay}" 
                  FontFamily="Consolas" FontSize="12"/>
     </Grid>
 </Page>
