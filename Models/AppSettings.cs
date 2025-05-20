@@ -2,6 +2,8 @@ namespace lingualink_client.Models
 {
     public class AppSettings
     {
+        public string GlobalLanguage { get; set; } = "en";
+
         public string TargetLanguages { get; set; } = "英文,日文"; // Default: English, Japanese
         public string ServerUrl { get; set; } = "http://localhost:5000/translate_audio";
 

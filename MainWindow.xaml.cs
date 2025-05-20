@@ -1,20 +1,9 @@
-﻿using lingualink_client.Views;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using lingualink_client.Services;
+using lingualink_client.ViewModels;
+using lingualink_client.Views;
+using System.Globalization;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Forms;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using Wpf.Ui.Appearance;
-using Wpf.Ui.Controls;
 
 namespace lingualink_client
 {
@@ -23,9 +12,19 @@ namespace lingualink_client
     /// </summary>
     public partial class MainWindow
     {
+        private readonly MainWindowViewModel _viewModel;
+
+        private readonly SettingsService _settingsService;
+
         public MainWindow()
         {
             InitializeComponent();
+
+            _viewModel = new MainWindowViewModel();
+
+            _settingsService = new SettingsService();
+
+            DataContext = _viewModel;
 
             this.Loaded += MainWindow_Loaded;
         }
@@ -33,6 +32,10 @@ namespace lingualink_client
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             RootNavigation.Navigate(typeof(IndexPage));
+
+            var appSettings = _settingsService.LoadSettings();
+
+            LanguageManager.ChangeLanguage(appSettings.GlobalLanguage);
         }
 
         private void ThemesChanged(object sender, RoutedEventArgs e)

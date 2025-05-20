@@ -5,8 +5,10 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:lingualink_client.Views"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:vm="clr-namespace:lingualink_client.ViewModels"
     Title="SettingPage"
+    d:DataContext="{d:DesignInstance Type=vm:SettingPageViewModel}"
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d">
@@ -14,24 +16,21 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
-            <RowDefinition />
+            <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
 
-        <Label Content="界面语言：" />
+        <Label Content="{Binding InterfaceLanguage}" />
 
         <ComboBox
+            x:Name="LanguageComboBox"
             Grid.Row="1"
             VerticalAlignment="Stretch"
-            SelectedIndex="0">
-            <ComboBoxItem>
-                <TextBlock Text="中文" />
-            </ComboBoxItem>
-            <ComboBoxItem>
-                <TextBlock Text="英文" />
-            </ComboBoxItem>
-            <ComboBoxItem>
-                <TextBlock Text="日语" />
-            </ComboBoxItem>
+            SelectionChanged="OnLanguageChanged">
+            <ComboBox.ItemTemplate>
+                <DataTemplate>
+                    <ui:TextBlock Text="{Binding NativeName}" />
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
         </ComboBox>
     </Grid>
 

@@ -3,6 +3,7 @@ using lingualink_client.Services; // For SettingsService
 using lingualink_client.ViewModels;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace lingualink_client.Views
 {
@@ -17,6 +18,5 @@ namespace lingualink_client.Views
             _viewModel = new ServicePageViewModel(new SettingsService());
             DataContext = _viewModel;
         }
-
     }
 }
