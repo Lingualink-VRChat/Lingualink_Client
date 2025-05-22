@@ -1,27 +1,11 @@
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
+using CommunityToolkit.Mvvm.ComponentModel; // 添加此 using
 
 namespace lingualink_client.ViewModels
 {
-    public abstract class ViewModelBase : INotifyPropertyChanged
+    // 继承 ObservableObject，并将其声明为 partial 类以允许源生成器添加代码
+    public abstract partial class ViewModelBase : ObservableObject
     {
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        protected bool SetProperty<T>(ref T storage, T value, [CallerMemberName] string? propertyName = null)
-        {
-            if (Equals(storage, value))
-            {
-                return false;
-            }
-
-            storage = value;
-            OnPropertyChanged(propertyName);
-            return true;
-        }
+        // OnPropertyChanged 和 SetProperty 方法现在由 CommunityToolkit.Mvvm 的源生成器自动处理
+        // 你不再需要在这里手动实现它们。
     }
 }

@@ -186,4 +186,7 @@
   <data name="Settings" xml:space="preserve">
     <value>设置</value>
   </data>
+  <data name="TargetLanguageLabel" xml:space="preserve">
+    <value>目标语言</value>
+  </data>
 </root>

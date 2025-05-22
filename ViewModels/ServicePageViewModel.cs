@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel; // Not needed for TargetLanguageItems anymore
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -6,17 +5,21 @@ using lingualink_client.Models;
 using lingualink_client.Services;
 using System; 
 using System.Net;
+using CommunityToolkit.Mvvm.ComponentModel; // 添加
+using CommunityToolkit.Mvvm.Input;       // 添加
 
 namespace lingualink_client.ViewModels
 {
-    public class ServicePageViewModel : ViewModelBase
+    public partial class ServicePageViewModel : ViewModelBase // 声明为 partial
     {
         private readonly SettingsService _settingsService;
         private AppSettings _currentSettings; 
 
-        public DelegateCommand SaveCommand { get; }
-        public DelegateCommand RevertCommand { get; }
+        // SaveCommand 和 RevertCommand 将被 [RelayCommand] 生成
+        // public DelegateCommand SaveCommand { get; } // 移除此行
+        // public DelegateCommand RevertCommand { get; } // 移除此行
 
+        // 语言相关的标签仍然是计算属性
         public string ServerUrlLabel => LanguageManager.GetString("ServerUrl");
         public string SilenceThresholdLabel => LanguageManager.GetString("SilenceThreshold");
         public string MinVoiceDurationLabel => LanguageManager.GetString("MinVoiceDuration");
@@ -30,44 +33,30 @@ namespace lingualink_client.ViewModels
         public string SaveLabel => LanguageManager.GetString("Save");
         public string RevertLabel => LanguageManager.GetString("Revert");
 
-        private string _serverUrl;
-        private double _silenceThresholdSeconds;
-        private double _minVoiceDurationSeconds;
-        private double _maxVoiceDurationSeconds;
+        // 将属性转换为 [ObservableProperty]
+        [ObservableProperty] private string _serverUrl;
+        [ObservableProperty] private double _silenceThresholdSeconds;
+        [ObservableProperty] private double _minVoiceDurationSeconds;
+        [ObservableProperty] private double _maxVoiceDurationSeconds;
+        [ObservableProperty]
         private double _minRecordingVolumeThreshold;
-        private bool _enableOsc;
-        private string _oscIpAddress;
-        private int _oscPort;
-        private bool _oscSendImmediately;
-        private bool _oscPlayNotificationSound;
-        public string ServerUrl { get => _serverUrl; set => SetProperty(ref _serverUrl, value); }
-        public double SilenceThresholdSeconds { get => _silenceThresholdSeconds; set => SetProperty(ref _silenceThresholdSeconds, value); }
-        public double MinVoiceDurationSeconds { get => _minVoiceDurationSeconds; set => SetProperty(ref _minVoiceDurationSeconds, value); }
-        public double MaxVoiceDurationSeconds { get => _maxVoiceDurationSeconds; set => SetProperty(ref _maxVoiceDurationSeconds, value); }
-        public double MinRecordingVolumeThreshold
-        {
-            get => _minRecordingVolumeThreshold;
-            set => SetProperty(ref _minRecordingVolumeThreshold, Math.Clamp(value, 0.0, 1.0));
-        }
-
-        public bool EnableOsc { get => _enableOsc; set => SetProperty(ref _enableOsc, value); }
-        public string OscIpAddress { get => _oscIpAddress; set => SetProperty(ref _oscIpAddress, value); }
-        public int OscPort { get => _oscPort; set => SetProperty(ref _oscPort, value); }
-        public bool OscSendImmediately { get => _oscSendImmediately; set => SetProperty(ref _oscSendImmediately, value); }
-        public bool OscPlayNotificationSound { get => _oscPlayNotificationSound; set => SetProperty(ref _oscPlayNotificationSound, value); }
+        [ObservableProperty] private bool _enableOsc;
+        [ObservableProperty] private string _oscIpAddress;
+        [ObservableProperty] private int _oscPort;
+        [ObservableProperty] private bool _oscSendImmediately;
+        [ObservableProperty] private bool _oscPlayNotificationSound;
         
-        // Target language related properties and commands are removed
-
         public ServicePageViewModel(SettingsService settingsService)
         {
             _settingsService = settingsService;
             _currentSettings = _settingsService.LoadSettings();
             
-            SaveCommand = new DelegateCommand(ExecuteSaveSettings);
-            RevertCommand = new DelegateCommand(ExecuteRevertSettings);
+            // 命令不再需要手动初始化
+            // No need to initialize SaveCommand, RevertCommand here
 
             LoadSettingsFromModel(_currentSettings);
 
+            // 订阅语言变化，更新依赖语言管理器字符串的属性
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(ServerUrlLabel));
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(SilenceThresholdLabel));
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(MinVoiceDurationLabel));
@@ -82,9 +71,19 @@ namespace lingualink_client.ViewModels
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(RevertLabel));
         }
 
+        // MinRecordingVolumeThreshold 属性的 OnChanged 回调
+        partial void OnMinRecordingVolumeThresholdChanged(double oldValue, double newValue)
+        {
+            // 在属性值设置后，如果超出范围则进行限制，并再次通知属性变更以更新 UI
+            if (newValue < 0.0 || newValue > 1.0)
+            {
+                _minRecordingVolumeThreshold = Math.Clamp(newValue, 0.0, 1.0); // 直接更新 backing field
+                OnPropertyChanged(nameof(MinRecordingVolumeThreshold)); // 通知属性变更
+            }
+        }
+
         private void LoadSettingsFromModel(AppSettings settings)
         {
-            // TargetLanguages no longer loaded/managed here
             ServerUrl = settings.ServerUrl;
             SilenceThresholdSeconds = settings.SilenceThresholdSeconds;
             MinVoiceDurationSeconds = settings.MinVoiceDurationSeconds;
@@ -98,27 +97,20 @@ namespace lingualink_client.ViewModels
             OscPlayNotificationSound = settings.OscPlayNotificationSound;
         }
 
-        // Removed ExecuteAddLanguage, CanExecuteAddLanguage, RemoveLanguageItem, OnLanguageSelectionChanged, UpdateItemPropertiesAndAvailableLanguages
-
         private bool ValidateAndBuildSettings(out AppSettings? updatedSettings)
         {
             updatedSettings = _settingsService.LoadSettings(); // Load existing settings to preserve TargetLanguages
-
-            // No longer validating TargetLanguages here
-            // if (!selectedLangsList.Any()) { ... return false; }
 
             if (string.IsNullOrWhiteSpace(ServerUrl) || !Uri.TryCreate(ServerUrl, UriKind.Absolute, out _))
             {
                 MessageBox.Show("服务器URL无效。", "验证错误", MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }
-            // ... other validations remain the same ...
             if (SilenceThresholdSeconds <= 0) { MessageBox.Show("静音检测阈值必须是正数。", "验证错误", MessageBoxButton.OK, MessageBoxImage.Error); return false; }
             if (MinVoiceDurationSeconds <= 0) { MessageBox.Show("最小语音时长必须是正数。", "验证错误", MessageBoxButton.OK, MessageBoxImage.Error); return false; }
             if (MaxVoiceDurationSeconds <= 0) { MessageBox.Show("最大语音时长必须是正数。", "验证错误", MessageBoxButton.OK, MessageBoxImage.Error); return false; }
             if (MinVoiceDurationSeconds >= MaxVoiceDurationSeconds) { MessageBox.Show("最小语音时长必须小于最大语音时长。", "验证错误", MessageBoxButton.OK, MessageBoxImage.Error); return false; }
-            if (MinRecordingVolumeThreshold < 0.0 || MinRecordingVolumeThreshold > 1.0) { MessageBox.Show("录音音量阈值必须在 0.0 和 1.0 之间。", "验证错误", MessageBoxButton.OK, MessageBoxImage.Error); return false; }
-
+            // MinRecordingVolumeThreshold 的验证现在由 OnChanged 方法处理，这里不需要重复进行硬性检查
 
             if (EnableOsc)
             {
@@ -137,10 +129,9 @@ namespace lingualink_client.ViewModels
                 }
             }
             
-            // Update only the settings managed by this page
             if (updatedSettings == null) updatedSettings = new AppSettings(); // Should not happen if LoadSettings worked
 
-            // updatedSettings.TargetLanguages remains as loaded from file (managed by IndexPage now)
+            // 更新只由当前页面管理的设置
             updatedSettings.ServerUrl = this.ServerUrl;
             updatedSettings.SilenceThresholdSeconds = this.SilenceThresholdSeconds;
             updatedSettings.MinVoiceDurationSeconds = this.MinVoiceDurationSeconds;
@@ -155,7 +146,9 @@ namespace lingualink_client.ViewModels
             return true;
         }
 
-        private void ExecuteSaveSettings(object? parameter)
+        // RelayCommand 方法
+        [RelayCommand] // 标记为 RelayCommand
+        private void ExecuteSaveSettings() // 方法名与命令名对应，无需参数
         {
             if (ValidateAndBuildSettings(out AppSettings? updatedSettingsFromThisPage))
             {
@@ -163,15 +156,17 @@ namespace lingualink_client.ViewModels
                 {
                     _settingsService.SaveSettings(updatedSettingsFromThisPage);
                     _currentSettings = updatedSettingsFromThisPage; // Update local copy with the combined settings
-                    SettingsChangedNotifier.RaiseSettingsChanged();
+                    SettingsChangedNotifier.RaiseSettingsChanged(); // 通知其他部分设置已更改
                     MessageBox.Show("服务相关设置已保存。", "成功", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
         }
 
-        private void ExecuteRevertSettings(object? parameter)
+        // RelayCommand 方法
+        [RelayCommand] // 标记为 RelayCommand
+        private void ExecuteRevertSettings() // 方法名与命令名对应，无需参数
         {
-            // Reload all settings, including TargetLanguages potentially changed by IndexPage
+            // 重新加载所有设置，包括可能由 IndexPage 更改的目标语言
             _currentSettings = _settingsService.LoadSettings();
             LoadSettingsFromModel(_currentSettings); // This will only load service-specific parts into UI
             MessageBox.Show("更改已撤销，设置已从上次保存的状态重新加载。", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
