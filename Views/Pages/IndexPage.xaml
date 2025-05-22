@@ -100,7 +100,7 @@
                                         Margin="8,0,0,0"
                                         Padding="5,2"
                                         VerticalAlignment="Center"
-                                        Command="{Binding RemoveCommand}"
+                                        Command="{Binding RemoveItemCommand}"
                                         Content="{Binding RemoveLabel}"
                                         Visibility="{Binding CanRemove, Converter={StaticResource BooleanToVisibilityConverter}}" />
                                 </Grid>
@@ -122,7 +122,7 @@
                 Padding="10,5"
                 HorizontalAlignment="Left"
                 Command="{Binding ToggleWorkCommand}"
-                Content="{Binding WorkButtonContentLabel}" />
+                Content="{Binding WorkButtonContent}" />
 
             <ui:TextBlock
                 Grid.Row="3"

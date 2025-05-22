@@ -82,7 +82,7 @@
                         FontSize="10"
                         FontStyle="Italic"
                         Foreground="Gray"
-                        Text="提示: 仅当麦克风输入音量高于此阈值时才开始处理语音。0% 表示禁用此过滤。"
+                        Text="{Binding VolumeThresholdHint}"
                         TextWrapping="Wrap" />
                 </StackPanel>
             </ui:CardExpander>

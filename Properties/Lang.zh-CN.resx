@@ -1,64 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
-  <!-- 
-    Microsoft ResX Schema 
-    
-    Version 2.0
-    
-    The primary goals of this format is to allow a simple XML format 
-    that is mostly human readable. The generation and parsing of the 
-    various data types are done through the TypeConverter classes 
-    associated with the data types.
-    
-    Example:
-    
-    ... ado.net/XML headers & schema ...
-    <resheader name="resmimetype">text/microsoft-resx</resheader>
-    <resheader name="version">2.0</resheader>
-    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
-    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
-    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
-    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
-    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
-        <value>[base64 mime encoded serialized .NET Framework object]</value>
-    </data>
-    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
-        <comment>This is a comment</comment>
-    </data>
-                
-    There are any number of "resheader" rows that contain simple 
-    name/value pairs.
-    
-    Each data row contains a name, and value. The row also contains a 
-    type or mimetype. Type corresponds to a .NET class that support 
-    text/value conversion through the TypeConverter architecture. 
-    Classes that don't support this are serialized and stored with the 
-    mimetype set.
-    
-    The mimetype is used for serialized objects, and tells the 
-    ResXResourceReader how to depersist the object. This is currently not 
-    extensible. For a given mimetype the value must be set accordingly:
-    
-    Note - application/x-microsoft.net.object.binary.base64 is the format 
-    that the ResXResourceWriter will generate, however the reader can 
-    read any of the formats listed below.
-    
-    mimetype: application/x-microsoft.net.object.binary.base64
-    value   : The object must be serialized with 
-            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
-            : and then encoded with base64 encoding.
-    
-    mimetype: application/x-microsoft.net.object.soap.base64
-    value   : The object must be serialized with 
-            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
-            : and then encoded with base64 encoding.
-
-    mimetype: application/x-microsoft.net.object.bytearray.base64
-    value   : The object must be serialized into a byte array 
-            : using a System.ComponentModel.TypeConverter
-            : and then encoded with base64 encoding.
-    -->
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
@@ -188,5 +129,246 @@
   </data>
   <data name="TargetLanguageLabel" xml:space="preserve">
     <value>目标语言</value>
+  </data>
+
+  <!-- Newly Added/Modified Strings -->
+  <data name="StartWork" xml:space="preserve">
+    <value>开始工作</value>
+  </data>
+  <data name="StopWork" xml:space="preserve">
+    <value>停止工作</value>
+  </data>
+  <data name="VolumeThresholdHint" xml:space="preserve">
+    <value>提示: 仅当麦克风输入音量高于此阈值时才开始处理语音。0% 表示禁用此过滤。</value>
+  </data>
+  <data name="AppTitle" xml:space="preserve">
+    <value>凌语连声 - 客户端</value>
+  </data>
+  <data name="AppTitleBar" xml:space="preserve">
+    <value>VRChat 凌语连声 - 客户端</value>
+  </data>
+
+  <!-- Status Messages (IndexWindowViewModel) -->
+  <data name="StatusInitializing" xml:space="preserve">
+    <value>状态：正在初始化...</value>
+  </data>
+  <data name="StatusSettingsUpdated" xml:space="preserve">
+    <value>状态：设置已更新。</value>
+  </data>
+  <data name="StatusPleaseSelectMic" xml:space="preserve">
+    <value>请选择麦克风。</value>
+  </data>
+  <data name="StatusReadyWithOsc" xml:space="preserve">
+    <value>可开始工作并发送至VRChat。</value>
+  </data>
+  <data name="StatusReadyWithoutOsc" xml:space="preserve">
+    <value>可开始工作。</value>
+  </data>
+  <data name="StatusOscEnabled" xml:space="preserve">
+    <value>状态：OSC服务已启用 ({0}:{1})。</value>
+  </data>
+  <data name="StatusOscInitFailed" xml:space="preserve">
+    <value>状态：OSC服务初始化失败: {0}</value>
+  </data>
+  <data name="LogOscInitFailed" xml:space="preserve">
+    <value>OSC服务初始化失败: {0}</value>
+  </data>
+  <data name="StatusRefreshingMics" xml:space="preserve">
+    <value>状态：正在刷新麦克风列表...</value>
+  </data>
+  <data name="StatusRefreshMicsFailed" xml:space="preserve">
+    <value>状态：刷新麦克风列表失败: {0}</value>
+  </data>
+  <data name="LogRefreshMicsFailed" xml:space="preserve">
+    <value>刷新麦克风列表失败: {0}</value>
+  </data>
+  <data name="StatusNoMicFound" xml:space="preserve">
+    <value>状态：未找到可用的麦克风设备！</value>
+  </data>
+  <data name="StatusMicsRefreshed" xml:space="preserve">
+    <value>状态：麦克风列表已刷新。</value>
+  </data>
+  <data name="StatusMicSelected" xml:space="preserve">
+    <value>状态：已选择麦克风: {0}</value>
+  </data>
+  <data name="StatusMicSelectedFallback" xml:space="preserve">
+    <value>状态：已选择麦克风 (回退索引): {0}</value>
+  </data>
+  <data name="StatusMicInvalid" xml:space="preserve">
+    <value>状态：麦克风 '{0}' 无效。</value>
+  </data>
+  <data name="StatusNoMicFoundRefreshCheck" xml:space="preserve">
+    <value>状态：未找到可用的麦克风设备。请刷新或检查设备。</value>
+  </data>
+  <data name="StatusStopped" xml:space="preserve">
+    <value>状态：已停止。</value>
+  </data>
+  <data name="StatusSendingSegment" xml:space="preserve">
+    <value>状态：正在发送片段 ({0})...</value>
+  </data>
+  <data name="LogSendingSegment" xml:space="preserve">
+    <value>发送片段 ({0}, {1} bytes) at {2:HH:mm:ss}</value>
+  </data>
+  <data name="LogServerRawResponse" xml:space="preserve">
+    <value>服务端原始响应 ({0}): {1}</value>
+  </data>
+  <data name="StatusTranslationFailed" xml:space="preserve">
+    <value>状态：翻译请求失败。</value>
+  </data>
+  <data name="TranslationError" xml:space="preserve">
+    <value>错误: {0}</value>
+  </data>
+  <data name="LogTranslationError" xml:space="preserve">
+    <value>翻译错误 ({0}): {1}</value>
+  </data>
+  <data name="StatusTranslationSuccess" xml:space="preserve">
+    <value>状态：翻译成功！</value>
+  </data>
+  <data name="LogTranslationSuccess" xml:space="preserve">
+    <value>翻译成功 ({0}): "{1}" (LLM: {2:F2}s)</value>
+  </data>
+  <data name="StatusTranslationSuccessNoText" xml:space="preserve">
+    <value>状态：翻译成功，但无文本内容。</value>
+  </data>
+  <data name="TranslationSuccessNoTextPlaceholder" xml:space="preserve">
+    <value>(服务器返回成功，但无文本内容)</value>
+  </data>
+  <data name="LogTranslationSuccessNoText" xml:space="preserve">
+    <value>翻译成功但无文本 ({0}). (LLM: {1:F2}s)</value>
+  </data>
+  <data name="StatusTranslationFailedServer" xml:space="preserve">
+    <value>状态：翻译失败 (服务器)。</value>
+  </data>
+  <data name="TranslationServerError" xml:space="preserve">
+    <value>服务器错误: {0}</value>
+  </data>
+  <data name="LogServerError" xml:space="preserve">
+    <value>服务器处理错误 ({0}): {1}</value>
+  </data>
+  <data name="LogServerErrorDetails" xml:space="preserve">
+    <value> | 详情: {0}</value>
+  </data>
+  <data name="StatusEmptyResponse" xml:space="preserve">
+    <value>状态：收到空响应。</value>
+  </data>
+  <data name="TranslationEmptyResponseError" xml:space="preserve">
+    <value>错误: 服务器空响应</value>
+  </data>
+  <data name="LogEmptyResponse" xml:space="preserve">
+    <value>收到空响应 ({0})</value>
+  </data>
+  <data name="StatusSendingToVRChat" xml:space="preserve">
+    <value>状态：翻译成功！正在发送到VRChat...</value>
+  </data>
+  <data name="LogOscSent" xml:space="preserve">
+    <value>[OSC] 消息已发送到VRChat: "{0}..."</value>
+  </data>
+  <data name="StatusOscSendFailed" xml:space="preserve">
+    <value>状态：翻译成功！但VRChat发送失败: {0}</value>
+  </data>
+  <data name="LogOscSendFailed" xml:space="preserve">
+    <value>[OSC ERROR] 发送失败: {0}</value>
+  </data>
+  <data name="StatusListening" xml:space="preserve">
+    <value>状态：正在监听...</value>
+  </data>
+  <data name="LogCleared" xml:space="preserve">
+    <value>日志已清除。</value>
+  </data>
+  <data name="LogTargetLangsSaved" xml:space="preserve">
+    <value>目标语言设置已更新并保存。</value>
+  </data>
+  <data name="IndexVmCtorLogInit" xml:space="preserve">
+    <value>IndexWindowViewModel Constructor: 日志已初始化。</value>
+  </data>
+  <data name="UnknownError" xml:space="preserve">
+    <value>未知错误</value>
+  </data>
+  <data name="DefaultEnglishLanguageName" xml:space="preserve">
+    <value>英文</value>
+  </data>
+
+  <!-- AudioService Status Messages -->
+  <data name="AudioStatusListening" xml:space="preserve">
+    <value>正在监听...</value>
+  </data>
+  <data name="AudioStatusStartFailed" xml:space="preserve">
+    <value>启动监听失败: {0}</value>
+  </data>
+  <data name="AudioStatusSpeechDetected" xml:space="preserve">
+    <value>检测到语音...</value>
+  </data>
+  <data name="AudioStatusSpeechDetectedSplit" xml:space="preserve">
+    <value>检测到语音 (已切分)...</value>
+  </data>
+  <data name="AudioStatusSilenceDetectedProcess" xml:space="preserve">
+    <value>检测到静音，准备处理...</value>
+  </data>
+  <data name="AudioStatusSegmentTooShort" xml:space="preserve">
+    <value>语音片段过短，已忽略。正在监听...</value>
+  </data>
+  <data name="AudioStatusFatalError" xml:space="preserve">
+    <value>监听时发生严重错误: {0}</value>
+  </data>
+
+  <!-- ServicePageViewModel Validation/Confirmation Messages -->
+  <data name="ValidationErrorTitle" xml:space="preserve">
+    <value>验证错误</value>
+  </data>
+  <data name="ValidationServerUrlInvalid" xml:space="preserve">
+    <value>服务器URL无效。</value>
+  </data>
+  <data name="ValidationSilenceThresholdInvalid" xml:space="preserve">
+    <value>静音检测阈值必须是正数。</value>
+  </data>
+  <data name="ValidationMinVoiceDurationInvalid" xml:space="preserve">
+    <value>最小语音时长必须是正数。</value>
+  </data>
+  <data name="ValidationMaxVoiceDurationInvalid" xml:space="preserve">
+    <value>最大语音时长必须是正数。</value>
+  </data>
+  <data name="ValidationMinMaxVoiceDuration" xml:space="preserve">
+    <value>最小语音时长必须小于最大语音时长。</value>
+  </data>
+  <data name="ValidationOscIpInvalid" xml:space="preserve">
+    <value>OSC IP地址无效。</value>
+  </data>
+  <data name="ValidationOscPortInvalid" xml:space="preserve">
+    <value>OSC端口号必须在 1-65535 之间。</value>
+  </data>
+  <data name="SuccessTitle" xml:space="preserve">
+    <value>成功</value>
+  </data>
+  <data name="SettingsSavedSuccess" xml:space="preserve">
+    <value>服务相关设置已保存。</value>
+  </data>
+  <data name="InfoTitle" xml:space="preserve">
+    <value>提示</value>
+  </data>
+  <data name="SettingsReverted" xml:space="preserve">
+    <value>更改已撤销，设置已从上次保存的状态重新加载。</value>
+  </data>
+
+  <!-- TranslationService Error Messages -->
+  <data name="ErrorAudioEmpty" xml:space="preserve">
+    <value>音频数据为空。</value>
+  </data>
+  <data name="ErrorDeserializingSuccessResponse" xml:space="preserve">
+    <value>反序列化服务器成功响应失败: {0}。响应: {1}</value>
+  </data>
+  <data name="ErrorServer" xml:space="preserve">
+    <value>服务器错误 ({0}): {1}</value>
+  </data>
+  <data name="ErrorNetworkTimeout" xml:space="preserve">
+    <value>网络请求超时: {0}</value>
+  </data>
+  <data name="ErrorNetworkRequest" xml:space="preserve">
+    <value>网络请求错误: {0}</value>
+  </data>
+  <data name="ErrorProcessingSendingSegment" xml:space="preserve">
+    <value>处理/发送片段出错: {0}</value>
+  </data>
+  <data name="ErrorEmptyServerResponse" xml:space="preserve">
+    <value>错误: 服务器空响应</value>
   </data>
 </root>

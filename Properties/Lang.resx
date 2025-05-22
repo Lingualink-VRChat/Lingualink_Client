@@ -1,64 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
-  <!-- 
-    Microsoft ResX Schema 
-    
-    Version 2.0
-    
-    The primary goals of this format is to allow a simple XML format 
-    that is mostly human readable. The generation and parsing of the 
-    various data types are done through the TypeConverter classes 
-    associated with the data types.
-    
-    Example:
-    
-    ... ado.net/XML headers & schema ...
-    <resheader name="resmimetype">text/microsoft-resx</resheader>
-    <resheader name="version">2.0</resheader>
-    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
-    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
-    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
-    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
-    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
-        <value>[base64 mime encoded serialized .NET Framework object]</value>
-    </data>
-    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
-        <comment>This is a comment</comment>
-    </data>
-                
-    There are any number of "resheader" rows that contain simple 
-    name/value pairs.
-    
-    Each data row contains a name, and value. The row also contains a 
-    type or mimetype. Type corresponds to a .NET class that support 
-    text/value conversion through the TypeConverter architecture. 
-    Classes that don't support this are serialized and stored with the 
-    mimetype set.
-    
-    The mimetype is used for serialized objects, and tells the 
-    ResXResourceReader how to depersist the object. This is currently not 
-    extensible. For a given mimetype the value must be set accordingly:
-    
-    Note - application/x-microsoft.net.object.binary.base64 is the format 
-    that the ResXResourceWriter will generate, however the reader can 
-    read any of the formats listed below.
-    
-    mimetype: application/x-microsoft.net.object.binary.base64
-    value   : The object must be serialized with 
-            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
-            : and then encoded with base64 encoding.
-    
-    mimetype: application/x-microsoft.net.object.soap.base64
-    value   : The object must be serialized with 
-            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
-            : and then encoded with base64 encoding.
-
-    mimetype: application/x-microsoft.net.object.bytearray.base64
-    value   : The object must be serialized into a byte array 
-            : using a System.ComponentModel.TypeConverter
-            : and then encoded with base64 encoding.
-    -->
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
@@ -188,5 +129,246 @@
   </data>
   <data name="TargetLanguageLabel" xml:space="preserve">
     <value>Target Language</value>
+  </data>
+
+  <!-- Newly Added/Modified Strings -->
+  <data name="StartWork" xml:space="preserve">
+    <value>Start Work</value>
+  </data>
+  <data name="StopWork" xml:space="preserve">
+    <value>Stop Work</value>
+  </data>
+  <data name="VolumeThresholdHint" xml:space="preserve">
+    <value>Hint: Audio will only be processed if microphone input volume exceeds this threshold. 0% disables this filtering.</value>
+  </data>
+  <data name="AppTitle" xml:space="preserve">
+    <value>LinguaLink - Client</value>
+  </data>
+  <data name="AppTitleBar" xml:space="preserve">
+    <value>VRChat LinguaLink - Client</value>
+  </data>
+
+  <!-- Status Messages (IndexWindowViewModel) -->
+  <data name="StatusInitializing" xml:space="preserve">
+    <value>Status: Initializing...</value>
+  </data>
+  <data name="StatusSettingsUpdated" xml:space="preserve">
+    <value>Status: Settings updated.</value>
+  </data>
+  <data name="StatusPleaseSelectMic" xml:space="preserve">
+    <value>Please select a microphone.</value>
+  </data>
+  <data name="StatusReadyWithOsc" xml:space="preserve">
+    <value>Ready to start working and send to VRChat.</value>
+  </data>
+  <data name="StatusReadyWithoutOsc" xml:space="preserve">
+    <value>Ready to start working.</value>
+  </data>
+  <data name="StatusOscEnabled" xml:space="preserve">
+    <value>Status: OSC service enabled ({0}:{1}).</value>
+  </data>
+  <data name="StatusOscInitFailed" xml:space="preserve">
+    <value>Status: OSC service initialization failed: {0}</value>
+  </data>
+  <data name="LogOscInitFailed" xml:space="preserve">
+    <value>OSC service initialization failed: {0}</value>
+  </data>
+  <data name="StatusRefreshingMics" xml:space="preserve">
+    <value>Status: Refreshing microphone list...</value>
+  </data>
+  <data name="StatusRefreshMicsFailed" xml:space="preserve">
+    <value>Status: Failed to refresh microphone list: {0}</value>
+  </data>
+  <data name="LogRefreshMicsFailed" xml:space="preserve">
+    <value>Failed to refresh microphone list: {0}</value>
+  </data>
+  <data name="StatusNoMicFound" xml:space="preserve">
+    <value>Status: No microphone devices found!</value>
+  </data>
+  <data name="StatusMicsRefreshed" xml:space="preserve">
+    <value>Status: Microphone list refreshed.</value>
+  </data>
+  <data name="StatusMicSelected" xml:space="preserve">
+    <value>Status: Microphone selected: {0}</value>
+  </data>
+  <data name="StatusMicSelectedFallback" xml:space="preserve">
+    <value>Status: Microphone selected (fallback index): {0}</value>
+  </data>
+  <data name="StatusMicInvalid" xml:space="preserve">
+    <value>Status: Microphone '{0}' is invalid.</value>
+  </data>
+  <data name="StatusNoMicFoundRefreshCheck" xml:space="preserve">
+    <value>Status: No microphone devices found. Please refresh or check devices.</value>
+  </data>
+  <data name="StatusStopped" xml:space="preserve">
+    <value>Status: Stopped.</value>
+  </data>
+  <data name="StatusSendingSegment" xml:space="preserve">
+    <value>Status: Sending segment ({0})...</value>
+  </data>
+  <data name="LogSendingSegment" xml:space="preserve">
+    <value>Sending segment ({0}, {1} bytes) at {2:HH:mm:ss}</value>
+  </data>
+  <data name="LogServerRawResponse" xml:space="preserve">
+    <value>Server raw response ({0}): {1}</value>
+  </data>
+  <data name="StatusTranslationFailed" xml:space="preserve">
+    <value>Status: Translation request failed.</value>
+  </data>
+  <data name="TranslationError" xml:space="preserve">
+    <value>Error: {0}</value>
+  </data>
+  <data name="LogTranslationError" xml:space="preserve">
+    <value>Translation error ({0}): {1}</value>
+  </data>
+  <data name="StatusTranslationSuccess" xml:space="preserve">
+    <value>Status: Translation successful!</value>
+  </data>
+  <data name="LogTranslationSuccess" xml:space="preserve">
+    <value>Translation successful ({0}): "{1}" (LLM: {2:F2}s)</value>
+  </data>
+  <data name="StatusTranslationSuccessNoText" xml:space="preserve">
+    <value>Status: Translation successful, but no text content.</value>
+  </data>
+  <data name="TranslationSuccessNoTextPlaceholder" xml:space="preserve">
+    <value>(Server returned success, but no text content)</value>
+  </data>
+  <data name="LogTranslationSuccessNoText" xml:space="preserve">
+    <value>Translation successful but no text ({0}). (LLM: {1:F2}s)</value>
+  </data>
+  <data name="StatusTranslationFailedServer" xml:space="preserve">
+    <value>Status: Translation failed (server error).</value>
+  </data>
+  <data name="TranslationServerError" xml:space="preserve">
+    <value>Server error: {0}</value>
+  </data>
+  <data name="LogServerError" xml:space="preserve">
+    <value>Server processing error ({0}): {1}</value>
+  </data>
+  <data name="LogServerErrorDetails" xml:space="preserve">
+    <value> | Details: {0}</value>
+  </data>
+  <data name="StatusEmptyResponse" xml:space="preserve">
+    <value>Status: Received empty response.</value>
+  </data>
+  <data name="TranslationEmptyResponseError" xml:space="preserve">
+    <value>Error: Empty server response</value>
+  </data>
+  <data name="LogEmptyResponse" xml:space="preserve">
+    <value>Received empty response ({0})</value>
+  </data>
+  <data name="StatusSendingToVRChat" xml:space="preserve">
+    <value>Status: Translation successful! Sending to VRChat...</value>
+  </data>
+  <data name="LogOscSent" xml:space="preserve">
+    <value>[OSC] Message sent to VRChat: "{0}..."</value>
+  </data>
+  <data name="StatusOscSendFailed" xml:space="preserve">
+    <value>Status: Translation successful! But VRChat send failed: {0}</value>
+  </data>
+  <data name="LogOscSendFailed" xml:space="preserve">
+    <value>[OSC ERROR] Send failed: {0}</value>
+  </data>
+  <data name="StatusListening" xml:space="preserve">
+    <value>Status: Listening...</value>
+  </data>
+  <data name="LogCleared" xml:space="preserve">
+    <value>Log cleared.</value>
+  </data>
+  <data name="LogTargetLangsSaved" xml:space="preserve">
+    <value>Target language settings updated and saved.</value>
+  </data>
+  <data name="IndexVmCtorLogInit" xml:space="preserve">
+    <value>IndexWindowViewModel Constructor: Log Initialized.</value>
+  </data>
+  <data name="UnknownError" xml:space="preserve">
+    <value>Unknown error</value>
+  </data>
+  <data name="DefaultEnglishLanguageName" xml:space="preserve">
+    <value>English</value>
+  </data>
+
+  <!-- AudioService Status Messages -->
+  <data name="AudioStatusListening" xml:space="preserve">
+    <value>Listening...</value>
+  </data>
+  <data name="AudioStatusStartFailed" xml:space="preserve">
+    <value>Failed to start listening: {0}</value>
+  </data>
+  <data name="AudioStatusSpeechDetected" xml:space="preserve">
+    <value>Speech detected...</value>
+  </data>
+  <data name="AudioStatusSpeechDetectedSplit" xml:space="preserve">
+    <value>Speech detected (split)...</value>
+  </data>
+  <data name="AudioStatusSilenceDetectedProcess" xml:space="preserve">
+    <value>Silence detected, preparing to process...</value>
+  </data>
+  <data name="AudioStatusSegmentTooShort" xml:space="preserve">
+    <value>Audio segment too short, ignored. Listening...</value>
+  </data>
+  <data name="AudioStatusFatalError" xml:space="preserve">
+    <value>Fatal error during listening: {0}</value>
+  </data>
+
+  <!-- ServicePageViewModel Validation/Confirmation Messages -->
+  <data name="ValidationErrorTitle" xml:space="preserve">
+    <value>Validation Error</value>
+  </data>
+  <data name="ValidationServerUrlInvalid" xml:space="preserve">
+    <value>Server URL is invalid.</value>
+  </data>
+  <data name="ValidationSilenceThresholdInvalid" xml:space="preserve">
+    <value>Silence detection threshold must be a positive number.</value>
+  </data>
+  <data name="ValidationMinVoiceDurationInvalid" xml:space="preserve">
+    <value>Minimum voice duration must be a positive number.</value>
+  </data>
+  <data name="ValidationMaxVoiceDurationInvalid" xml:space="preserve">
+    <value>Maximum voice duration must be a positive number.</value>
+  </data>
+  <data name="ValidationMinMaxVoiceDuration" xml:space="preserve">
+    <value>Minimum voice duration must be less than maximum voice duration.</value>
+  </data>
+  <data name="ValidationOscIpInvalid" xml:space="preserve">
+    <value>OSC IP Address is invalid.</value>
+  </data>
+  <data name="ValidationOscPortInvalid" xml:space="preserve">
+    <value>OSC Port number must be between 1-65535.</value>
+  </data>
+  <data name="SuccessTitle" xml:space="preserve">
+    <value>Success</value>
+  </data>
+  <data name="SettingsSavedSuccess" xml:space="preserve">
+    <value>Service-related settings saved successfully.</value>
+  </data>
+  <data name="InfoTitle" xml:space="preserve">
+    <value>Info</value>
+  </data>
+  <data name="SettingsReverted" xml:space="preserve">
+    <value>Changes reverted, settings reloaded from last saved state.</value>
+  </data>
+
+  <!-- TranslationService Error Messages -->
+  <data name="ErrorAudioEmpty" xml:space="preserve">
+    <value>Audio data is empty.</value>
+  </data>
+  <data name="ErrorDeserializingSuccessResponse" xml:space="preserve">
+    <value>Failed to deserialize server success response: {0}. Response: {1}</value>
+  </data>
+  <data name="ErrorServer" xml:space="preserve">
+    <value>Server error ({0}): {1}</value>
+  </data>
+  <data name="ErrorNetworkTimeout" xml:space="preserve">
+    <value>Network request timed out: {0}</value>
+  </data>
+  <data name="ErrorNetworkRequest" xml:space="preserve">
+    <value>Network request error: {0}</value>
+  </data>
+  <data name="ErrorProcessingSendingSegment" xml:space="preserve">
+    <value>Error processing/sending segment: {0}</value>
+  </data>
+  <data name="ErrorEmptyServerResponse" xml:space="preserve">
+    <value>Error: Empty server response</value>
   </data>
 </root>

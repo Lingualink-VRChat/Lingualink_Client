@@ -32,7 +32,7 @@ namespace lingualink_client.Services
         {
             if (audioData.Length == 0)
             {
-                return (null, null, "Audio data is empty.");
+                return (null, null, LanguageManager.GetString("ErrorAudioEmpty"));
             }
 
             string tempFilePath = Path.Combine(Path.GetTempPath(), $"segment_{DateTime.Now:yyyyMMddHHmmssfff}_{triggerReason}.wav");
@@ -75,7 +75,7 @@ namespace lingualink_client.Services
                         }
                         catch (JsonException ex)
                         {
-                            return (null, responseContentString, $"Failed to deserialize server success response: {ex.Message}. Response: {responseContentString}");
+                            return (null, responseContentString, string.Format(LanguageManager.GetString("ErrorDeserializingSuccessResponse"), ex.Message, responseContentString));
                         }
                     }
                     else
@@ -85,25 +85,25 @@ namespace lingualink_client.Services
                             var errorResponse = JsonSerializer.Deserialize<ServerResponse>(responseContentString, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                             if (errorResponse != null && !string.IsNullOrEmpty(errorResponse.Message))
                             {
-                                return (errorResponse, responseContentString, $"Server error ({httpResponse.StatusCode}): {errorResponse.Message}");
+                                return (errorResponse, responseContentString, string.Format(LanguageManager.GetString("ErrorServer"), (int)httpResponse.StatusCode, errorResponse.Message));
                             }
                         }
                         catch { }
-                        return (null, responseContentString, $"Server error ({httpResponse.StatusCode}): {responseContentString}");
+                        return (null, responseContentString, string.Format(LanguageManager.GetString("ErrorServer"), (int)httpResponse.StatusCode, responseContentString));
                     }
                 }
             }
             catch (TaskCanceledException ex)
             {
-                return (null, responseContentString, $"Network request timed out: {ex.Message}");
+                return (null, responseContentString, string.Format(LanguageManager.GetString("ErrorNetworkTimeout"), ex.Message));
             }
             catch (HttpRequestException ex)
             {
-                return (null, responseContentString, $"Network request error: {ex.Message}");
+                return (null, responseContentString, string.Format(LanguageManager.GetString("ErrorNetworkRequest"), ex.Message));
             }
             catch (Exception ex)
             {
-                return (null, responseContentString, $"Error processing/sending segment: {ex.Message}");
+                return (null, responseContentString, string.Format(LanguageManager.GetString("ErrorProcessingSendingSegment"), ex.Message));
             }
             finally
             {

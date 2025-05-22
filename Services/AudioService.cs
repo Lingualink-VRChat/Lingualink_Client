@@ -22,7 +22,7 @@ namespace lingualink_client.Services
         private readonly double _silenceThresholdSeconds;
         private readonly double _minVoiceDurationSeconds;
         private readonly double _maxVoiceDurationSeconds;
-        private readonly double _minRecordingVolumeThreshold; // New volume threshold
+        private readonly double _minRecordingVolumeThreshold;
 
         // --- VAD 状态变量 ---
         private bool _isSpeaking = false;
@@ -43,7 +43,7 @@ namespace lingualink_client.Services
             _silenceThresholdSeconds = settings.SilenceThresholdSeconds;
             _minVoiceDurationSeconds = settings.MinVoiceDurationSeconds;
             _maxVoiceDurationSeconds = settings.MaxVoiceDurationSeconds;
-            _minRecordingVolumeThreshold = settings.MinRecordingVolumeThreshold; // Store the threshold
+            _minRecordingVolumeThreshold = settings.MinRecordingVolumeThreshold;
         }
 
         public bool IsWorking => _isCurrentlyWorking;
@@ -59,7 +59,7 @@ namespace lingualink_client.Services
             {
                 _vadInstance = new WebRtcVad
                 {
-                    OperatingMode = OperatingMode.Aggressive, // You might want to experiment with different modes
+                    OperatingMode = OperatingMode.Aggressive,
                     FrameLength = VAD_FRAME_LENGTH,
                     SampleRate = VAD_SAMPLE_RATE_ENUM
                 };
@@ -74,12 +74,12 @@ namespace lingualink_client.Services
                 _waveSource.RecordingStopped += OnRecordingStoppedHandler;
                 _waveSource.StartRecording();
                 _isCurrentlyWorking = true;
-                StatusUpdated?.Invoke(this, "正在监听...");
+                StatusUpdated?.Invoke(this, LanguageManager.GetString("AudioStatusListening")); // 修改点
                 return true;
             }
             catch (Exception ex)
             {
-                StatusUpdated?.Invoke(this, $"启动监听失败: {ex.Message}");
+                StatusUpdated?.Invoke(this, string.Format(LanguageManager.GetString("AudioStatusStartFailed"), ex.Message)); // 修改点
                 System.Diagnostics.Debug.WriteLine($"AudioService Start Error: {ex.Message}");
                 Stop(true); 
                 return false;
@@ -116,7 +116,7 @@ namespace lingualink_client.Services
             if (pcm16BitAudioFrame == null || bytesToProcess == 0)
                 return 0.0;
 
-            short maxSampleMagnitude = 0; // 存储样本的最大幅度
+            short maxSampleMagnitude = 0;
 
             for (int i = 0; i < bytesToProcess; i += 2)
             {
@@ -127,7 +127,6 @@ namespace lingualink_client.Services
 
                     if (sample == short.MinValue)
                     {
-                        // 特殊处理：short.MinValue 的幅度视为 short.MaxValue
                         currentMagnitude = short.MaxValue;
                     }
                     else
@@ -141,7 +140,6 @@ namespace lingualink_client.Services
                     }
                 }
             }
-            // 使用 short.MaxValue 进行归一化
             return (double)maxSampleMagnitude / short.MaxValue;
         }
 
@@ -155,32 +153,24 @@ namespace lingualink_client.Services
                 int bytesInCurrentVadFrame = Math.Min(_vadFrameSizeInBytes, e.BytesRecorded - offset);
                 if (bytesInCurrentVadFrame < _vadFrameSizeInBytes && bytesInCurrentVadFrame > 0)
                 {
-                    // Partial frame at the end, typically small, VAD might not like it.
-                    // For simplicity, we are requiring full VAD frames.
-                    // System.Diagnostics.Debug.WriteLine($"Partial frame ({bytesInCurrentVadFrame} bytes), skipping.");
                     break; 
                 }
                 if (bytesInCurrentVadFrame == 0) break;
 
 
-                byte[] frameForVad = new byte[_vadFrameSizeInBytes]; // VAD needs exact frame size
-                // We must copy from e.Buffer with the correct offset for the current VAD frame
+                byte[] frameForVad = new byte[_vadFrameSizeInBytes];
                 Buffer.BlockCopy(e.Buffer, offset, frameForVad, 0, _vadFrameSizeInBytes);
 
                 bool voiceDetectedThisFrame;
 
-                // 1. Volume Check
-                // Use frameForVad for volume calculation as it's the exact data VAD will see
                 double peakVolume = CalculatePeakVolume(frameForVad, _vadFrameSizeInBytes);
 
-                if (peakVolume < _minRecordingVolumeThreshold && _minRecordingVolumeThreshold > 0) // Only apply if threshold > 0
+                if (peakVolume < _minRecordingVolumeThreshold && _minRecordingVolumeThreshold > 0)
                 {
-                    voiceDetectedThisFrame = false; // Force silence if below volume threshold
-                    // System.Diagnostics.Debug.WriteLineIf(peakVolume > 0, $"Vol: {peakVolume:F3} < Thresh: {_minRecordingVolumeThreshold:F3}. Forced silence.");
+                    voiceDetectedThisFrame = false;
                 }
                 else
                 {
-                    // 2. VAD Check (if volume is sufficient or threshold is zero)
                     try
                     {
                         voiceDetectedThisFrame = _vadInstance.HasSpeech(frameForVad);
@@ -199,16 +189,9 @@ namespace lingualink_client.Services
                         if (!_isSpeaking)
                         {
                             _isSpeaking = true;
-                            // Clear any short, quiet segment that might have accumulated before real speech
-                            if (GetSegmentDurationSeconds(_currentAudioSegment.Count) < _minVoiceDurationSeconds * 0.5)
-                            {
-                                // If a tiny bit of noise got in before this loud frame, clear it.
-                                // This is optional, depends on desired behavior.
-                                // _currentAudioSegment.Clear(); 
-                            }
-                            StatusUpdated?.Invoke(this, "检测到语音...");
+                            StatusUpdated?.Invoke(this, LanguageManager.GetString("AudioStatusSpeechDetected")); // 修改点
                         }
-                        _currentAudioSegment.AddRange(frameForVad); // Add the VAD-processed frame
+                        _currentAudioSegment.AddRange(frameForVad);
                         _lastVoiceActivityTime = DateTime.UtcNow;
 
                         if (GetSegmentDurationSeconds(_currentAudioSegment.Count) >= _maxVoiceDurationSeconds)
@@ -217,21 +200,11 @@ namespace lingualink_client.Services
                             _currentAudioSegment.Clear();
                             _lastVoiceActivityTime = DateTime.UtcNow; 
                             AudioSegmentReady?.Invoke(this, new AudioSegmentEventArgs(segmentData, "max_duration_split"));
-                            if (_isCurrentlyWorking && _isSpeaking) StatusUpdated?.Invoke(this, "检测到语音 (已切分)...");
+                            if (_isCurrentlyWorking && _isSpeaking) StatusUpdated?.Invoke(this, LanguageManager.GetString("AudioStatusSpeechDetectedSplit")); // 修改点
                         }
                     }
-                    else // No voice (either by VAD or volume threshold)
+                    else
                     {
-                        if (_isSpeaking)
-                        {
-                            // Voice just ended or was filtered out.
-                            // Add the current (silent) frame to the segment for a small tail, if desired.
-                            // This can help avoid cutting off words abruptly.
-                            // _currentAudioSegment.AddRange(frameForVad); // Optional: add tail
-                            // _lastVoiceActivityTime would still be the last time actual voice was detected.
-                            // The CheckSilenceTimeout will handle the end of speech.
-                        }
-                        // If not _isSpeaking, and this frame is silent, do nothing with _currentAudioSegment.
                     }
                 }
             }
@@ -246,23 +219,21 @@ namespace lingualink_client.Services
             {
                 if (_isSpeaking && (DateTime.UtcNow - _lastVoiceActivityTime).TotalSeconds >= _silenceThresholdSeconds)
                 {
-                    _isSpeaking = false; // Voice has ended due to silence
+                    _isSpeaking = false;
                     var segmentData = _currentAudioSegment.ToArray();
                     _currentAudioSegment.Clear();
 
-                    StatusUpdated?.Invoke(this, "检测到静音，准备处理...");
+                    StatusUpdated?.Invoke(this, LanguageManager.GetString("AudioStatusSilenceDetectedProcess")); // 修改点
 
                     if (segmentData.Length > 0 && GetSegmentDurationSeconds(segmentData.Length) >= _minVoiceDurationSeconds)
                     {
                         AudioSegmentReady?.Invoke(this, new AudioSegmentEventArgs(segmentData, "silence_timeout"));
-                        if (_isCurrentlyWorking && !_isSpeaking) StatusUpdated?.Invoke(this, "正在监听...");
+                        if (_isCurrentlyWorking && !_isSpeaking) StatusUpdated?.Invoke(this, LanguageManager.GetString("AudioStatusListening")); // 修改点
                     }
                     else if (segmentData.Length > 0)
                     {
-                         // System.Diagnostics.Debug.WriteLine($"Segment too short ({GetSegmentDurationSeconds(segmentData.Length)}s) after silence, discarding.");
-                        StatusUpdated?.Invoke(this, "语音片段过短，已忽略。正在监听...");
+                        StatusUpdated?.Invoke(this, LanguageManager.GetString("AudioStatusSegmentTooShort")); // 修改点
                     }
-                    // If segmentData.Length is 0, it means only filtered noise was seen, then silence.
                 }
             }
         }
@@ -272,7 +243,7 @@ namespace lingualink_client.Services
             CleanupWaveSourceResources(); 
             if (e.Exception != null)
             {
-                StatusUpdated?.Invoke(this, $"监听时发生严重错误: {e.Exception.Message}");
+                StatusUpdated?.Invoke(this, string.Format(LanguageManager.GetString("AudioStatusFatalError"), e.Exception.Message)); // 修改点
                 _isCurrentlyWorking = false; 
             }
         }

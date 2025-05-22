@@ -32,6 +32,7 @@ namespace lingualink_client.ViewModels
         public string PlayNotificationSoundLabel => LanguageManager.GetString("PlayNotificationSound");
         public string SaveLabel => LanguageManager.GetString("Save");
         public string RevertLabel => LanguageManager.GetString("Revert");
+        public string VolumeThresholdHint => LanguageManager.GetString("VolumeThresholdHint");
 
         // 将属性转换为 [ObservableProperty]
         [ObservableProperty] private string _serverUrl;
@@ -69,6 +70,7 @@ namespace lingualink_client.ViewModels
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(PlayNotificationSoundLabel));
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(SaveLabel));
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(RevertLabel));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(VolumeThresholdHint));
         }
 
         // MinRecordingVolumeThreshold 属性的 OnChanged 回调
@@ -103,13 +105,13 @@ namespace lingualink_client.ViewModels
 
             if (string.IsNullOrWhiteSpace(ServerUrl) || !Uri.TryCreate(ServerUrl, UriKind.Absolute, out _))
             {
-                MessageBox.Show("服务器URL无效。", "验证错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(LanguageManager.GetString("ValidationServerUrlInvalid"), LanguageManager.GetString("ValidationErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }
-            if (SilenceThresholdSeconds <= 0) { MessageBox.Show("静音检测阈值必须是正数。", "验证错误", MessageBoxButton.OK, MessageBoxImage.Error); return false; }
-            if (MinVoiceDurationSeconds <= 0) { MessageBox.Show("最小语音时长必须是正数。", "验证错误", MessageBoxButton.OK, MessageBoxImage.Error); return false; }
-            if (MaxVoiceDurationSeconds <= 0) { MessageBox.Show("最大语音时长必须是正数。", "验证错误", MessageBoxButton.OK, MessageBoxImage.Error); return false; }
-            if (MinVoiceDurationSeconds >= MaxVoiceDurationSeconds) { MessageBox.Show("最小语音时长必须小于最大语音时长。", "验证错误", MessageBoxButton.OK, MessageBoxImage.Error); return false; }
+            if (SilenceThresholdSeconds <= 0) { MessageBox.Show(LanguageManager.GetString("ValidationSilenceThresholdInvalid"), LanguageManager.GetString("ValidationErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error); return false; }
+            if (MinVoiceDurationSeconds <= 0) { MessageBox.Show(LanguageManager.GetString("ValidationMinVoiceDurationInvalid"), LanguageManager.GetString("ValidationErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error); return false; }
+            if (MaxVoiceDurationSeconds <= 0) { MessageBox.Show(LanguageManager.GetString("ValidationMaxVoiceDurationInvalid"), LanguageManager.GetString("ValidationErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error); return false; }
+            if (MinVoiceDurationSeconds >= MaxVoiceDurationSeconds) { MessageBox.Show(LanguageManager.GetString("ValidationMinMaxVoiceDuration"), LanguageManager.GetString("ValidationErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error); return false; }
             // MinRecordingVolumeThreshold 的验证现在由 OnChanged 方法处理，这里不需要重复进行硬性检查
 
             if (EnableOsc)
@@ -118,13 +120,13 @@ namespace lingualink_client.ViewModels
                 {
                      if (!IPAddress.TryParse(OscIpAddress, out _)) 
                      {
-                        MessageBox.Show("OSC IP地址无效。", "验证错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show(LanguageManager.GetString("ValidationOscIpInvalid"), LanguageManager.GetString("ValidationErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
                         return false;
                      }
                 }
                 if (OscPort <= 0 || OscPort > 65535)
                 {
-                    MessageBox.Show("OSC端口号必须在 1-65535 之间。", "验证错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show(LanguageManager.GetString("ValidationOscPortInvalid"), LanguageManager.GetString("ValidationErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
                     return false;
                 }
             }
@@ -156,8 +158,8 @@ namespace lingualink_client.ViewModels
                 {
                     _settingsService.SaveSettings(updatedSettingsFromThisPage);
                     _currentSettings = updatedSettingsFromThisPage; // Update local copy with the combined settings
-                    SettingsChangedNotifier.RaiseSettingsChanged(); // 通知其他部分设置已更改
-                    MessageBox.Show("服务相关设置已保存。", "成功", MessageBoxButton.OK, MessageBoxImage.Information);
+                    SettingsChangedNotifier.RaiseSettingsChanged();
+                    MessageBox.Show(LanguageManager.GetString("SettingsSavedSuccess"), LanguageManager.GetString("SuccessTitle"), MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
         }
@@ -168,8 +170,8 @@ namespace lingualink_client.ViewModels
         {
             // 重新加载所有设置，包括可能由 IndexPage 更改的目标语言
             _currentSettings = _settingsService.LoadSettings();
-            LoadSettingsFromModel(_currentSettings); // This will only load service-specific parts into UI
-            MessageBox.Show("更改已撤销，设置已从上次保存的状态重新加载。", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+            LoadSettingsFromModel(_currentSettings);
+            MessageBox.Show(LanguageManager.GetString("SettingsReverted"), LanguageManager.GetString("InfoTitle"), MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 }
