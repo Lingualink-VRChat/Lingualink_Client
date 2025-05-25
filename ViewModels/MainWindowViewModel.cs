@@ -13,12 +13,17 @@ namespace lingualink_client.ViewModels
 
         public MainWindowViewModel()
         {
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(Start));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(MessageTemplates));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(Service));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(Settings));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(AppTitle));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(AppTitleBar));
+            LanguageManager.LanguageChanged += RefreshLanguageBindings;
+        }
+
+        public void RefreshLanguageBindings()
+        {
+            OnPropertyChanged(nameof(Start));
+            OnPropertyChanged(nameof(MessageTemplates));
+            OnPropertyChanged(nameof(Service));
+            OnPropertyChanged(nameof(Settings));
+            OnPropertyChanged(nameof(AppTitle));
+            OnPropertyChanged(nameof(AppTitleBar));
         }
     }
 }

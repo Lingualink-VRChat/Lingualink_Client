@@ -20,6 +20,25 @@ namespace lingualink_client.Services
             };
         }
 
+        /// <summary>
+        /// 检测系统语言并返回合适的默认语言
+        /// </summary>
+        /// <returns>如果系统语言是中文（简体或繁体），返回"zh-CN"，否则返回"en"</returns>
+        public static string DetectSystemLanguage()
+        {
+            var systemCulture = CultureInfo.CurrentUICulture;
+            
+            // 检查是否为中文（简体中文、繁体中文等）
+            if (systemCulture.TwoLetterISOLanguageName.Equals("zh", StringComparison.OrdinalIgnoreCase) ||
+                systemCulture.Name.StartsWith("zh-", StringComparison.OrdinalIgnoreCase))
+            {
+                return "zh-CN";
+            }
+            
+            // 其他语言默认使用英文
+            return "en";
+        }
+
         public static void ChangeLanguage(string cultureName)
         {
             var culture = new CultureInfo(cultureName);

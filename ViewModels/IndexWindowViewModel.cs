@@ -48,6 +48,7 @@ namespace lingualink_client.ViewModels
 
         [ObservableProperty] private string _statusText = string.Empty; // 在构造函数中初始化
         [ObservableProperty] private string _translationResultText = string.Empty;
+        [ObservableProperty] private string _vrcOutputText = string.Empty; // 显示实际发送到VRChat的内容
         [ObservableProperty] private string _workButtonContent = string.Empty; // 在构造函数中初始化
         [ObservableProperty] private bool _isMicrophoneComboBoxEnabled = true;
 
@@ -66,6 +67,8 @@ namespace lingualink_client.ViewModels
         // Added for LogPage
         public string RunningLogLabel => LanguageManager.GetString("RunningLog");
         public string ClearLogLabel => LanguageManager.GetString("ClearLog");
+        public string VrcOutputLabel => LanguageManager.GetString("VrcOutput");
+        public string OriginalResponseLabel => LanguageManager.GetString("OriginalResponse");
 
 
         public IndexWindowViewModel()
@@ -111,6 +114,8 @@ namespace lingualink_client.ViewModels
             OnPropertyChanged(nameof(WorkHintLabel));
             OnPropertyChanged(nameof(RunningLogLabel));
             OnPropertyChanged(nameof(ClearLogLabel));
+            OnPropertyChanged(nameof(VrcOutputLabel));
+            OnPropertyChanged(nameof(OriginalResponseLabel));
             
             // Update dynamic button text on language change
             WorkButtonContent = _audioService?.IsWorking == true ? LanguageManager.GetString("StopWork") : LanguageManager.GetString("StartWork");
@@ -409,6 +414,15 @@ namespace lingualink_client.ViewModels
             
             Application.Current.Dispatcher.Invoke(() => {
                 StatusText = currentUiStatus;
+                // Update VRC output display in UI thread
+                if (!string.IsNullOrEmpty(translatedTextForOsc))
+                {
+                    VrcOutputText = translatedTextForOsc;
+                }
+                else
+                {
+                    VrcOutputText = ""; // Clear VRC output when no content to send
+                }
                 AddLogMessage(logEntry);
             });
 

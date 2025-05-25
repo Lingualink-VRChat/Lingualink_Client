@@ -27,7 +27,7 @@ namespace lingualink_client.Services
                 {
                     string json = File.ReadAllText(_settingsFilePath);
                     var settings = JsonSerializer.Deserialize<AppSettings>(json);
-                    return settings ?? new AppSettings(); // Return default if deserialization fails
+                    return settings ?? CreateDefaultSettings(); // Return default if deserialization fails
                 }
             }
             catch (Exception ex)
@@ -35,7 +35,19 @@ namespace lingualink_client.Services
                 System.Diagnostics.Debug.WriteLine($"Error loading settings: {ex.Message}");
                 // Fallback to default settings
             }
-            return new AppSettings(); // Default if file not found or error
+            
+            // 首次运行，创建默认设置并保存
+            var defaultSettings = CreateDefaultSettings();
+            SaveSettings(defaultSettings);
+            return defaultSettings;
+        }
+
+        private AppSettings CreateDefaultSettings()
+        {
+            var settings = new AppSettings();
+            // 确保使用系统语言检测
+            settings.GlobalLanguage = LanguageManager.DetectSystemLanguage();
+            return settings;
         }
 
         public void SaveSettings(AppSettings settings)

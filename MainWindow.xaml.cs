@@ -35,7 +35,11 @@ namespace lingualink_client
 
             var appSettings = _settingsService.LoadSettings();
 
+            // 确保语言设置正确应用
             LanguageManager.ChangeLanguage(appSettings.GlobalLanguage);
+            
+            // 强制刷新UI以确保语言更改生效
+            _viewModel.RefreshLanguageBindings();
         }
 
         private void ThemesChanged(object sender, RoutedEventArgs e)

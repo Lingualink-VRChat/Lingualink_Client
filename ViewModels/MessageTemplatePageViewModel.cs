@@ -131,6 +131,8 @@ namespace lingualink_client.ViewModels
             // 确保保存当前的界面语言，避免语言切换bug
             _appSettings.GlobalLanguage = System.Threading.Thread.CurrentThread.CurrentUICulture.Name;
             _settingsService.SaveSettings(_appSettings);
+            // 通知其他组件设置已更改
+            SettingsChangedNotifier.RaiseSettingsChanged();
         }
 
         public void RefreshSettings()

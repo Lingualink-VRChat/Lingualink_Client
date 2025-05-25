@@ -131,14 +131,49 @@
                 FontSize="14"
                 Text="{Binding StatusText}" />
 
-            <ui:TextBox
-                Grid.Row="4"
-                Margin="0,0,0,10"
-                AcceptsReturn="True"
-                IsReadOnly="True"
-                Text="{Binding TranslationResultText, Mode=OneWay}"
-                TextWrapping="Wrap"
-                VerticalScrollBarVisibility="Auto" />
+            <!-- Translation Results Section -->
+            <Grid Grid.Row="4" Margin="0,0,0,10">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- Original Server Response -->
+                <ui:TextBlock
+                    Grid.Row="0"
+                    Margin="0,0,0,5"
+                    FontWeight="SemiBold"
+                    Text="{Binding OriginalResponseLabel}" />
+                <ui:TextBox
+                    Grid.Row="1"
+                    Margin="0,0,0,10"
+                    AcceptsReturn="True"
+                    IsReadOnly="True"
+                    Text="{Binding TranslationResultText, Mode=OneWay}"
+                    TextWrapping="Wrap"
+                    VerticalScrollBarVisibility="Auto"
+                    MinHeight="80" />
+
+                <!-- VRChat Output -->
+                <ui:TextBlock
+                    Grid.Row="2"
+                    Margin="0,0,0,5"
+                    FontWeight="SemiBold"
+                    Text="{Binding VrcOutputLabel}" />
+                <ui:TextBox
+                    Grid.Row="3"
+                    AcceptsReturn="True"
+                    IsReadOnly="True"
+                    Text="{Binding VrcOutputText, Mode=OneWay}"
+                    TextWrapping="Wrap"
+                    VerticalScrollBarVisibility="Auto"
+                    MinHeight="80"
+                    Background="#F8F9FA"
+                    BorderBrush="#28A745"
+                    BorderThickness="2" />
+            </Grid>
 
             <ui:TextBlock
                 Grid.Row="5"

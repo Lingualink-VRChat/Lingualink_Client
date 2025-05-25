@@ -472,4 +472,10 @@
   <data name="MessageTemplates" xml:space="preserve">
     <value>Message Templates</value>
   </data>
+  <data name="VrcOutput" xml:space="preserve">
+    <value>Sent to VRChat</value>
+  </data>
+  <data name="OriginalResponse" xml:space="preserve">
+    <value>Original Server Response</value>
+  </data>
 </root>
