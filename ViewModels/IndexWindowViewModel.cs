@@ -27,10 +27,7 @@ namespace lingualink_client.ViewModels
         // Target Language Properties
         public ObservableCollection<SelectableTargetLanguageViewModel> TargetLanguageItems { get; }
 
-        private static readonly List<string> AllSupportedLanguages = new List<string> 
-        { 
-            "英文", "日文", "法文", "中文", "韩文", "西班牙文", "俄文", "德文", "意大利文" 
-        };
+        private static readonly List<string> AllSupportedLanguages = LanguageDisplayHelper.BackendLanguageNames;
         private const int MaxTargetLanguages = 5;
 
         // Log Properties
@@ -90,23 +87,32 @@ namespace lingualink_client.ViewModels
             _ = RefreshMicrophonesAsync();
 
             // Subscribe to language changes, update properties that depend on LanguageManager strings
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(SelectMicrophoneLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(RefreshLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(RefreshingMicrophonesLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(TargetLanguagesLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(AddLanguageLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(RemoveLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(WorkHintLabel));
-            // Added for LogPage
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(RunningLogLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(ClearLogLabel));
-            // Update dynamic button text on language change
-            LanguageManager.LanguageChanged += () => WorkButtonContent = _audioService.IsWorking ? LanguageManager.GetString("StopWork") : LanguageManager.GetString("StartWork");
+            LanguageManager.LanguageChanged += OnLanguageChanged;
         }
 
         private void OnLogMessagesChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
             OnPropertyChanged(nameof(FormattedLogMessages));
+        }
+
+        private void OnLanguageChanged()
+        {
+            // Update all language-dependent labels
+            OnPropertyChanged(nameof(SelectMicrophoneLabel));
+            OnPropertyChanged(nameof(RefreshLabel));
+            OnPropertyChanged(nameof(RefreshingMicrophonesLabel));
+            OnPropertyChanged(nameof(TargetLanguagesLabel));
+            OnPropertyChanged(nameof(AddLanguageLabel));
+            OnPropertyChanged(nameof(RemoveLabel));
+            OnPropertyChanged(nameof(WorkHintLabel));
+            OnPropertyChanged(nameof(RunningLogLabel));
+            OnPropertyChanged(nameof(ClearLogLabel));
+            
+            // Update dynamic button text on language change
+            WorkButtonContent = _audioService?.IsWorking == true ? LanguageManager.GetString("StopWork") : LanguageManager.GetString("StartWork");
+            
+            // Update target language items
+            UpdateItemPropertiesAndAvailableLanguages();
         }
         
         private void OnGlobalSettingsChanged()
@@ -489,22 +495,29 @@ namespace lingualink_client.ViewModels
             for (int i = 0; i < TargetLanguageItems.Count; i++)
             {
                 var itemVm = TargetLanguageItems[i];
-                itemVm.Label = $"目标 {i + 1}:"; // This string could also be localized if "目标" is dynamic, but for now it's fine.
+                // 使用本地化的目标标签
+                itemVm.Label = $"{LanguageManager.GetString("TargetLabel")} {i + 1}:";
                 itemVm.CanRemove = TargetLanguageItems.Count > 1; 
-                var availableForThisDropdown = new ObservableCollection<string>();
+                
+                // 构建这个下拉框可用的语言选项（排除其他下拉框已选中的选项）
+                var availableBackendLanguages = new List<string>();
                 foreach (var langOption in AllSupportedLanguages)
                 {
                     if (langOption == itemVm.SelectedLanguage || 
                         !TargetLanguageItems.Where(it => it != itemVm).Any(it => it.SelectedLanguage == langOption))
                     {
-                        availableForThisDropdown.Add(langOption);
+                        availableBackendLanguages.Add(langOption);
                     }
                 }
-                if (!string.IsNullOrEmpty(itemVm.SelectedLanguage) && !availableForThisDropdown.Contains(itemVm.SelectedLanguage))
+                
+                // 确保当前选中的语言在列表中
+                if (!string.IsNullOrEmpty(itemVm.SelectedLanguage) && !availableBackendLanguages.Contains(itemVm.SelectedLanguage))
                 {
-                    availableForThisDropdown.Add(itemVm.SelectedLanguage); 
+                    availableBackendLanguages.Add(itemVm.SelectedLanguage); 
                 }
-                itemVm.AvailableLanguages = availableForThisDropdown;
+                
+                // 更新可用语言列表
+                itemVm.UpdateAvailableLanguages(availableBackendLanguages);
             }
         }
 

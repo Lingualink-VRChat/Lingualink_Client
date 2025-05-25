@@ -97,6 +97,9 @@
   <data name="UndoChanges" xml:space="preserve">
     <value>撤销更改</value>
   </data>
+  <data name="Revert" xml:space="preserve">
+    <value>撤销</value>
+  </data>
   <data name="RunningLog" xml:space="preserve">
     <value>运行日志</value>
   </data>
@@ -129,6 +132,15 @@
   </data>
   <data name="TargetLanguageLabel" xml:space="preserve">
     <value>目标语言</value>
+  </data>
+  <data name="TargetLanguages" xml:space="preserve">
+    <value>目标语言</value>
+  </data>
+  <data name="RefreshingMicrophones" xml:space="preserve">
+    <value>刷新中...</value>
+  </data>
+  <data name="WorkHint" xml:space="preserve">
+    <value>点击"开始工作"来开始录音和翻译</value>
   </data>
 
   <!-- Newly Added/Modified Strings -->
@@ -370,5 +382,47 @@
   </data>
   <data name="ErrorEmptyServerResponse" xml:space="preserve">
     <value>错误: 服务器空响应</value>
+  </data>
+
+  <!-- Message Box Titles and Content -->
+  <data name="MsgBoxSelectValidMicTitle" xml:space="preserve">
+    <value>无效麦克风</value>
+  </data>
+  <data name="MsgBoxSelectValidMicContent" xml:space="preserve">
+    <value>请在开始工作前选择一个有效的麦克风。</value>
+  </data>
+
+  <!-- Target Language Labels -->
+  <data name="TargetLabel" xml:space="preserve">
+    <value>目标</value>
+  </data>
+
+  <!-- Language Names for Display -->
+  <data name="Lang_英文" xml:space="preserve">
+    <value>英文</value>
+  </data>
+  <data name="Lang_日文" xml:space="preserve">
+    <value>日文</value>
+  </data>
+  <data name="Lang_法文" xml:space="preserve">
+    <value>法文</value>
+  </data>
+  <data name="Lang_中文" xml:space="preserve">
+    <value>中文</value>
+  </data>
+  <data name="Lang_韩文" xml:space="preserve">
+    <value>韩文</value>
+  </data>
+  <data name="Lang_西班牙文" xml:space="preserve">
+    <value>西班牙文</value>
+  </data>
+  <data name="Lang_俄文" xml:space="preserve">
+    <value>俄文</value>
+  </data>
+  <data name="Lang_德文" xml:space="preserve">
+    <value>德文</value>
+  </data>
+  <data name="Lang_意大利文" xml:space="preserve">
+    <value>意大利文</value>
   </data>
 </root>

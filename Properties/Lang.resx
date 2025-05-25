@@ -97,6 +97,9 @@
   <data name="UndoChanges" xml:space="preserve">
     <value>Undo Changes</value>
   </data>
+  <data name="Revert" xml:space="preserve">
+    <value>Revert</value>
+  </data>
   <data name="RunningLog" xml:space="preserve">
     <value>Running Log</value>
   </data>
@@ -129,6 +132,15 @@
   </data>
   <data name="TargetLanguageLabel" xml:space="preserve">
     <value>Target Language</value>
+  </data>
+  <data name="TargetLanguages" xml:space="preserve">
+    <value>Target Languages</value>
+  </data>
+  <data name="RefreshingMicrophones" xml:space="preserve">
+    <value>Refreshing...</value>
+  </data>
+  <data name="WorkHint" xml:space="preserve">
+    <value>Click "Start Work" to begin voice recording and translation</value>
   </data>
 
   <!-- Newly Added/Modified Strings -->
@@ -370,5 +382,47 @@
   </data>
   <data name="ErrorEmptyServerResponse" xml:space="preserve">
     <value>Error: Empty server response</value>
+  </data>
+
+  <!-- Message Box Titles and Content -->
+  <data name="MsgBoxSelectValidMicTitle" xml:space="preserve">
+    <value>Invalid Microphone</value>
+  </data>
+  <data name="MsgBoxSelectValidMicContent" xml:space="preserve">
+    <value>Please select a valid microphone before starting work.</value>
+  </data>
+
+  <!-- Target Language Labels -->
+  <data name="TargetLabel" xml:space="preserve">
+    <value>Target</value>
+  </data>
+
+  <!-- Language Names for Display -->
+  <data name="Lang_英文" xml:space="preserve">
+    <value>English</value>
+  </data>
+  <data name="Lang_日文" xml:space="preserve">
+    <value>Japanese</value>
+  </data>
+  <data name="Lang_法文" xml:space="preserve">
+    <value>French</value>
+  </data>
+  <data name="Lang_中文" xml:space="preserve">
+    <value>Chinese</value>
+  </data>
+  <data name="Lang_韩文" xml:space="preserve">
+    <value>Korean</value>
+  </data>
+  <data name="Lang_西班牙文" xml:space="preserve">
+    <value>Spanish</value>
+  </data>
+  <data name="Lang_俄文" xml:space="preserve">
+    <value>Russian</value>
+  </data>
+  <data name="Lang_德文" xml:space="preserve">
+    <value>German</value>
+  </data>
+  <data name="Lang_意大利文" xml:space="preserve">
+    <value>Italian</value>
   </data>
 </root>

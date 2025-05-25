@@ -94,7 +94,8 @@
                                         MaxWidth="200"
                                         HorizontalAlignment="Stretch"
                                         ItemsSource="{Binding AvailableLanguages}"
-                                        SelectedItem="{Binding SelectedLanguage}" />
+                                        SelectedItem="{Binding SelectedDisplayLanguage}"
+                                        DisplayMemberPath="DisplayName" />
                                     <ui:Button
                                         Grid.Column="2"
                                         Margin="8,0,0,0"
