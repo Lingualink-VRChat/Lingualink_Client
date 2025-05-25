@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Generic; // For List<string>
 using System.Linq;
 using lingualink_client.Services;
+using lingualink_client.ViewModels.Managers;
 using CommunityToolkit.Mvvm.ComponentModel; // 添加
 using CommunityToolkit.Mvvm.Input;       // 添加
 
@@ -9,7 +10,7 @@ namespace lingualink_client.ViewModels
 {
     public partial class SelectableTargetLanguageViewModel : ViewModelBase // 声明为 partial
     {
-        public IndexWindowViewModel ParentViewModel { get; }
+        public ITargetLanguageManager LanguageManager { get; }
         
         // 添加初始化标志，防止在初始化期间触发事件回调
         private bool _isInitializing = true;
@@ -34,8 +35,8 @@ namespace lingualink_client.ViewModels
 
         [ObservableProperty] private string _label = string.Empty; // Backing field for Label
 
-        public string LabelText => LanguageManager.GetString("TargetLanguageLabel"); // 这是一个计算属性，不是 [ObservableProperty]
-        public string RemoveLabel => LanguageManager.GetString("Remove"); // 移除按钮的标签
+        public string LabelText => Services.LanguageManager.GetString("TargetLanguageLabel"); // 这是一个计算属性，不是 [ObservableProperty]
+        public string RemoveLabel => Services.LanguageManager.GetString("Remove"); // 移除按钮的标签
 
         [ObservableProperty]
         private bool _canRemove;
@@ -52,10 +53,16 @@ namespace lingualink_client.ViewModels
             set => SelectedBackendLanguage = value; 
         }
 
-        public SelectableTargetLanguageViewModel(IndexWindowViewModel parent, string initialBackendLanguage, List<string> allBackendLangsSeed)
+        // 构造函数 - 使用TargetLanguageManager
+        public SelectableTargetLanguageViewModel(ITargetLanguageManager manager, string initialBackendLanguage, List<string> allBackendLangsSeed)
         {
-            ParentViewModel = parent;
+            LanguageManager = manager;
             
+            InitializeCommon(initialBackendLanguage, allBackendLangsSeed);
+        }
+
+        private void InitializeCommon(string initialBackendLanguage, List<string> allBackendLangsSeed)
+        {
             // 初始化空的可用语言列表
             AvailableLanguages = new ObservableCollection<LanguageDisplayItem>();
             
@@ -71,7 +78,7 @@ namespace lingualink_client.ViewModels
             // RemoveCommand 不再需要手动初始化，由 [RelayCommand] 生成
             // No need to initialize RemoveCommand here
 
-            LanguageManager.LanguageChanged += OnLanguageChanged;
+            Services.LanguageManager.LanguageChanged += OnLanguageChanged;
             
             // 初始化完成，允许触发事件回调
             _isInitializing = false;
@@ -131,10 +138,10 @@ namespace lingualink_client.ViewModels
         // SelectedBackendLanguage 属性的 OnChanged 回调
         partial void OnSelectedBackendLanguageChanged(string? oldValue, string newValue)
         {
-            // 只有在非初始化状态时才通知父级视图模型
+            // 只有在非初始化状态时才通知管理器
             if (!_isInitializing)
             {
-                ParentViewModel?.OnLanguageSelectionChanged(this);
+                ((TargetLanguageManager)LanguageManager).OnLanguageSelectionChanged(this);
             }
         }
 
@@ -159,7 +166,7 @@ namespace lingualink_client.ViewModels
         [RelayCommand(CanExecute = nameof(CanRemove))] // 绑定 CanExecute 方法
         private void RemoveItem() // 方法名与命令名对应
         {
-            ParentViewModel.RemoveLanguageItem(this);
+            LanguageManager.RemoveLanguage(this);
         }
     }
 }

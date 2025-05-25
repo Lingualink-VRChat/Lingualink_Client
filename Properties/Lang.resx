@@ -461,7 +461,10 @@
     <value>New Template Name</value>
   </data>
   <data name="TemplateHint" xml:space="preserve">
-    <value>Use placeholders like {原文}, {英文}, {日文} to customize the output format. Disable custom template to show the complete server response.</value>
+    <value>Use placeholders like {原文} (Original), {英文} (English), {日文} (Japanese) to customize the output format. Disable custom template to show the complete server response.</value>
+  </data>
+  <data name="TemplateActiveHint" xml:space="preserve">
+    <value>When custom template is enabled, target languages are determined by the template placeholders (max 5 languages). Target language selection is disabled.</value>
   </data>
   <data name="GeneralSettings" xml:space="preserve">
     <value>General Settings</value>

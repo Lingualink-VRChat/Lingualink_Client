@@ -53,6 +53,7 @@ namespace lingualink_client.Models
         public string? 德文 { get; set; }
         public string? 西班牙文 { get; set; }
         public string? 俄文 { get; set; }
+        public string? 意大利文 { get; set; }
 
         // Legacy fields for backward compatibility
         public string? Original_Language { get; set; }
@@ -75,6 +76,7 @@ namespace lingualink_client.Models
             if (!string.IsNullOrEmpty(德文)) fields["德文"] = 德文;
             if (!string.IsNullOrEmpty(西班牙文)) fields["西班牙文"] = 西班牙文;
             if (!string.IsNullOrEmpty(俄文)) fields["俄文"] = 俄文;
+            if (!string.IsNullOrEmpty(意大利文)) fields["意大利文"] = 意大利文;
 
             // Add any additional dynamic fields
             foreach (var kvp in _languageFields)
@@ -109,6 +111,7 @@ namespace lingualink_client.Models
                 case "德文": return 德文;
                 case "西班牙文": return 西班牙文;
                 case "俄文": return 俄文;
+                case "意大利文": return 意大利文;
                 default:
                     return _languageFields.TryGetValue(language, out var value) ? value : null;
             }
@@ -189,6 +192,9 @@ namespace lingualink_client.Models
                                 case "俄文":
                                     data.俄文 = value;
                                     break;
+                                case "意大利文":
+                                    data.意大利文 = value;
+                                    break;
                                 default:
                                     // Store any other language fields dynamically
                                     if (!string.IsNullOrEmpty(value))
@@ -238,6 +244,9 @@ namespace lingualink_client.Models
             
             if (value.俄文 != null)
                 writer.WriteString("俄文", value.俄文);
+            
+            if (value.意大利文 != null)
+                writer.WriteString("意大利文", value.意大利文);
 
             // Write legacy fields
             if (value.Original_Language != null)
@@ -345,22 +354,25 @@ namespace lingualink_client.Models
                     "{法文}",
                     "{德文}",
                     "{西班牙文}",
-                    "{俄文}"
+                    "{俄文}",
+                    "{意大利文}"
                 });
             }
             else // English and other languages
             {
+                // Use localized placeholder names for display
                 placeholders.AddRange(new[]
                 {
-                    "{原文}",
-                    "{英文}",
-                    "{日文}",
-                    "{中文}",
-                    "{韩文}",
-                    "{法文}",
-                    "{德文}",
-                    "{西班牙文}",
-                    "{俄文}"
+                    "{原文} (Original)",
+                    "{英文} (English)",
+                    "{日文} (Japanese)",
+                    "{中文} (Chinese)",
+                    "{韩文} (Korean)",
+                    "{法文} (French)",
+                    "{德文} (German)",
+                    "{西班牙文} (Spanish)",
+                    "{俄文} (Russian)",
+                    "{意大利文} (Italian)"
                 });
             }
 
@@ -370,7 +382,7 @@ namespace lingualink_client.Models
                 foreach (var language in languageFields.Keys)
                 {
                     string placeholder = $"{{{language}}}";
-                    if (!placeholders.Contains(placeholder))
+                    if (!placeholders.Any(p => p.StartsWith(placeholder)))
                     {
                         placeholders.Add(placeholder);
                     }
@@ -412,6 +424,53 @@ namespace lingualink_client.Models
                     new MessageTemplate("Custom Format", "Original: {原文}\nEnglish: {英文}\nJapanese: {日文}", "Formatted display with labels")
                 };
             }
+        }
+
+        /// <summary>
+        /// Create sample data for template preview with multiple languages
+        /// </summary>
+        public static TranslationData CreateSamplePreviewData()
+        {
+            return new TranslationData
+            {
+                Raw_Text = "原文：你好世界\n英文：Hello World\n日文：こんにちは世界\n法文：Bonjour le monde\n德文：Hallo Welt\n西班牙文：Hola Mundo\n韩文：안녕하세요 세계\n俄文：Привет мир",
+                原文 = "你好世界",
+                英文 = "Hello World",
+                日文 = "こんにちは世界",
+                法文 = "Bonjour le monde",
+                德文 = "Hallo Welt",
+                西班牙文 = "Hola Mundo",
+                韩文 = "안녕하세요 세계",
+                俄文 = "Привет мир",
+                中文 = "你好世界",
+                意大利文 = "Ciao mondo"
+            };
+        }
+
+        /// <summary>
+        /// Extract unique language placeholders from a template string
+        /// </summary>
+        /// <param name="template">Template string to analyze</param>
+        /// <returns>List of unique language names (max 5) found in the template</returns>
+        public static List<string> ExtractLanguagesFromTemplate(string template)
+        {
+            if (string.IsNullOrEmpty(template))
+                return new List<string>();
+
+            var languages = new HashSet<string>();
+            var availableLanguages = new[] { "原文", "英文", "日文", "中文", "韩文", "法文", "德文", "西班牙文", "俄文", "意大利文" };
+
+            foreach (var lang in availableLanguages)
+            {
+                if (template.Contains($"{{{lang}}}"))
+                {
+                    languages.Add(lang);
+                    if (languages.Count >= 5) // Limit to 5 languages for VRChat OSC
+                        break;
+                }
+            }
+
+            return languages.ToList();
         }
     }
 }

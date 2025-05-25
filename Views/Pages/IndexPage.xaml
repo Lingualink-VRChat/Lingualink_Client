@@ -9,7 +9,7 @@
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:vm="clr-namespace:lingualink_client.ViewModels"
     Title="IndexPage"
-    d:DataContext="{d:DesignInstance Type=vm:IndexWindowViewModel}"
+    d:DataContext="{d:DesignInstance Type=vm:IndexContainerViewModel}"
     mc:Ignorable="d">
 
     <Grid Margin="10">
@@ -36,10 +36,12 @@
                 <!--  Hint  -->
             </Grid.RowDefinitions>
 
+            <!-- 麦克风选择组件 -->
             <StackPanel
                 Grid.Row="0"
                 Margin="0,0,0,10"
-                Orientation="Horizontal">
+                Orientation="Horizontal"
+                DataContext="{Binding MicrophoneSelection}">
                 <Label VerticalAlignment="Center" Content="{Binding SelectMicrophoneLabel}" />
                 <ComboBox
                     Width="200"
@@ -68,13 +70,24 @@
                 </StatusBar>
             </StackPanel>
 
+            <!-- 目标语言组件 -->
             <ui:CardExpander
                 Grid.Row="1"
                 Margin="0,0,0,10"
+                DataContext="{Binding TargetLanguage}"
                 Header="{Binding TargetLanguagesLabel}"
                 IsExpanded="True">
                 <StackPanel Margin="10,5,0,0">
-                    <ItemsControl ItemsSource="{Binding TargetLanguageItems}">
+                    <!-- Template Active Hint -->
+                    <ui:TextBlock
+                        Margin="0,0,0,10"
+                        FontStyle="Italic"
+                        Foreground="Orange"
+                        Text="{Binding TemplateActiveHintLabel}"
+                        TextWrapping="Wrap"
+                        Visibility="{Binding AreLanguagesEnabled, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Invert}" />
+                    
+                    <ItemsControl ItemsSource="{Binding LanguageItems}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate DataType="{x:Type vm:SelectableTargetLanguageViewModel}">
                                 <Grid Margin="0,3,0,3">
@@ -95,7 +108,8 @@
                                         HorizontalAlignment="Stretch"
                                         ItemsSource="{Binding AvailableLanguages}"
                                         SelectedItem="{Binding SelectedDisplayLanguage}"
-                                        DisplayMemberPath="DisplayName" />
+                                        DisplayMemberPath="DisplayName"
+                                        IsEnabled="{Binding DataContext.AreLanguagesEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ui:CardExpander}}}" />
                                     <ui:Button
                                         Grid.Column="2"
                                         Margin="8,0,0,0"
@@ -103,6 +117,7 @@
                                         VerticalAlignment="Center"
                                         Command="{Binding RemoveItemCommand}"
                                         Content="{Binding RemoveLabel}"
+                                        IsEnabled="{Binding DataContext.AreLanguagesEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ui:CardExpander}}}"
                                         Visibility="{Binding CanRemove, Converter={StaticResource BooleanToVisibilityConverter}}" />
                                 </Grid>
                             </DataTemplate>
@@ -113,26 +128,26 @@
                         Padding="5,2"
                         HorizontalAlignment="Left"
                         Command="{Binding AddLanguageCommand}"
-                        Content="{Binding AddLanguageLabel}" />
+                        Content="{Binding AddLanguageLabel}"
+                        IsEnabled="{Binding AreLanguagesEnabled}" />
                 </StackPanel>
             </ui:CardExpander>
 
-            <ui:Button
-                Grid.Row="2"
-                Margin="0,0,0,10"
-                Padding="10,5"
-                HorizontalAlignment="Left"
-                Command="{Binding ToggleWorkCommand}"
-                Content="{Binding WorkButtonContent}" />
+            <!-- 主控制组件 -->
+            <StackPanel Grid.Row="2" Margin="0,0,0,10" DataContext="{Binding MainControl}">
+                <ui:Button
+                    Padding="10,5"
+                    HorizontalAlignment="Left"
+                    Command="{Binding ToggleWorkCommand}"
+                    Content="{Binding WorkButtonContent}" />
+                <ui:TextBlock
+                    Margin="0,10,0,0"
+                    FontSize="14"
+                    Text="{Binding StatusText}" />
+            </StackPanel>
 
-            <ui:TextBlock
-                Grid.Row="3"
-                Margin="0,0,0,10"
-                FontSize="14"
-                Text="{Binding StatusText}" />
-
-            <!-- Translation Results Section -->
-            <Grid Grid.Row="4" Margin="0,0,0,10">
+            <!-- 翻译结果组件 -->
+            <Grid Grid.Row="4" Margin="0,0,0,10" DataContext="{Binding TranslationResult}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
@@ -151,7 +166,7 @@
                     Margin="0,0,0,10"
                     AcceptsReturn="True"
                     IsReadOnly="True"
-                    Text="{Binding TranslationResultText, Mode=OneWay}"
+                    Text="{Binding OriginalText, Mode=OneWay}"
                     TextWrapping="Wrap"
                     VerticalScrollBarVisibility="Auto"
                     MinHeight="80" />
@@ -166,7 +181,7 @@
                     Grid.Row="3"
                     AcceptsReturn="True"
                     IsReadOnly="True"
-                    Text="{Binding VrcOutputText, Mode=OneWay}"
+                    Text="{Binding ProcessedText, Mode=OneWay}"
                     TextWrapping="Wrap"
                     VerticalScrollBarVisibility="Auto"
                     MinHeight="80"
@@ -179,7 +194,7 @@
                 Grid.Row="5"
                 FontStyle="Italic"
                 Foreground="Gray"
-                Text="{Binding WorkHintLabel}" />
+                Text="{Binding MainControl.WorkHintLabel}" />
         </Grid>
 
         <!--  GridSplitter and Right Column for Log REMOVED  -->

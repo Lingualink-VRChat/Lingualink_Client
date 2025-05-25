@@ -97,23 +97,26 @@ namespace lingualink_client.ViewModels
                 return;
             }
 
-            // Create sample data for preview
-            var sampleData = new TranslationData
-            {
-                Raw_Text = "原文：你好世界\n英文：Hello World\n日文：こんにちは世界",
-                原文 = "你好世界",
-                英文 = "Hello World",
-                日文 = "こんにちは世界"
-            };
-
+            // Use the enhanced sample data with multiple languages
+            var sampleData = TemplateProcessor.CreateSamplePreviewData();
             TemplatePreview = TemplateProcessor.ProcessTemplate(CustomTemplateText, sampleData);
         }
 
         [RelayCommand]
         private void ResetTemplate()
         {
-            // Reset to a simple template showing original and main translations
-            CustomTemplateText = "{原文}\n{英文}\n{日文}";
+            // Reset to a simple template showing original and main translations based on current language
+            var currentLanguage = System.Threading.Thread.CurrentThread.CurrentUICulture.Name;
+            
+            if (currentLanguage.StartsWith("zh")) // Chinese
+            {
+                CustomTemplateText = "{原文}\n{英文}\n{日文}";
+            }
+            else // English and other languages
+            {
+                CustomTemplateText = "{原文}\n{英文}\n{日文}";
+            }
+            
             SaveSettings();
         }
 
@@ -123,7 +126,14 @@ namespace lingualink_client.ViewModels
             if (string.IsNullOrEmpty(placeholder))
                 return;
 
-            CustomTemplateText += placeholder;
+            // Extract the actual placeholder from display text (e.g., "{原文} (Original)" -> "{原文}")
+            string actualPlaceholder = placeholder;
+            if (placeholder.Contains(" (") && placeholder.EndsWith(")"))
+            {
+                actualPlaceholder = placeholder.Substring(0, placeholder.IndexOf(" ("));
+            }
+
+            CustomTemplateText += actualPlaceholder;
         }
 
         private void SaveSettings()

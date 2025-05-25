@@ -1,17 +1,16 @@
 ﻿using System.Windows; // Required for Application.Current
 using System.Windows.Controls;
+using lingualink_client.ViewModels;
 
 namespace lingualink_client.Views // Assuming this namespace based on your existing files
 {
     public partial class IndexPage : Page
     {
-        // private readonly IndexWindowViewModel _viewModel; // This field is no longer needed here
-
         public IndexPage()
         {
             InitializeComponent();
-            // Get the shared ViewModel from App.xaml.cs
-            DataContext = (Application.Current as App)?.SharedIndexWindowViewModel;
+            // 使用新的容器ViewModel实现数据驱动模式
+            DataContext = new IndexWindowViewModel();
         }
     }
 }

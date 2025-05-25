@@ -1,4 +1,5 @@
 ﻿using lingualink_client.Services;
+using lingualink_client.Services.Interfaces;
 using lingualink_client.Models;
 using System;
 using System.Collections.Generic;
@@ -16,6 +17,7 @@ namespace lingualink_client.ViewModels
     {
         private readonly SettingsService _settingsService;
         private AppSettings _appSettings;
+        private readonly ILoggingManager _loggingManager;
 
         public string PageTitle => LanguageManager.GetString("GeneralSettings");
         public string InterfaceLanguage => LanguageManager.GetString("InterfaceLanguage");
@@ -23,15 +25,14 @@ namespace lingualink_client.ViewModels
         public string RunningLogLabel => LanguageManager.GetString("RunningLog");
         public string ClearLogLabel => LanguageManager.GetString("ClearLog");
 
-        // Log Properties - shared with IndexWindowViewModel
-        public ObservableCollection<string> LogMessages => 
-            ((App)Application.Current).SharedIndexWindowViewModel.LogMessages;
-        public string FormattedLogMessages => 
-            ((App)Application.Current).SharedIndexWindowViewModel.FormattedLogMessages;
+        // Log Properties - 现在从ILoggingManager获取
+        public ObservableCollection<string> LogMessages => _loggingManager.LogMessages;
+        public string FormattedLogMessages => _loggingManager.FormattedLogMessages;
 
         public SettingPageViewModel()
         {
             _settingsService = new SettingsService();
+            _loggingManager = ServiceContainer.Resolve<ILoggingManager>(); // 从容器解析中央日志管理器
             _appSettings = _settingsService.LoadSettings();
             
             LanguageManager.LanguageChanged += () => {
@@ -42,14 +43,17 @@ namespace lingualink_client.ViewModels
                 OnPropertyChanged(nameof(ClearLogLabel));
             };
 
-            // Subscribe to log changes
-            LogMessages.CollectionChanged += (s, e) => OnPropertyChanged(nameof(FormattedLogMessages));
+            // 订阅日志变化以更新FormattedLogMessages
+            _loggingManager.LogMessages.CollectionChanged += (s, e) => OnPropertyChanged(nameof(FormattedLogMessages));
+            
+            // 初始属性通知
+            OnPropertyChanged(nameof(FormattedLogMessages));
         }
 
         [RelayCommand]
         private void ClearLog()
         {
-            ((App)Application.Current).SharedIndexWindowViewModel.ClearLogCommand.Execute(null);
+            _loggingManager.ClearMessages(); // 直接调用管理器的清除方法
         }
 
         public void RefreshSettings()

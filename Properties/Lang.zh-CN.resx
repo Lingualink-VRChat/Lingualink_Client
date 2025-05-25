@@ -463,6 +463,9 @@
   <data name="TemplateHint" xml:space="preserve">
     <value>使用占位符如 {原文}、{英文}、{日文} 来自定义输出格式。关闭自定义模板时将显示完整的服务器响应。</value>
   </data>
+  <data name="TemplateActiveHint" xml:space="preserve">
+    <value>启用自定义模板时，目标语言由模板中的占位符决定（最多5种语言）。目标语言选择将被禁用。</value>
+  </data>
   <data name="GeneralSettings" xml:space="preserve">
     <value>通用设置</value>
   </data>

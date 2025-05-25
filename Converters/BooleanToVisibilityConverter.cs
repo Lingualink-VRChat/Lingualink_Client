@@ -12,12 +12,12 @@ namespace lingualink_client.Converters
         {
             if (value is bool boolValue)
             {
-                // Optional: Check parameter to invert logic if needed later
-                // string? param = parameter as string;
-                // if (!string.IsNullOrEmpty(param) && (param.Equals("invert", StringComparison.OrdinalIgnoreCase) || param.Equals("inverted", StringComparison.OrdinalIgnoreCase)))
-                // {
-                //     boolValue = !boolValue;
-                // }
+                // Check parameter to invert logic if needed
+                string? param = parameter as string;
+                if (!string.IsNullOrEmpty(param) && (param.Equals("invert", StringComparison.OrdinalIgnoreCase) || param.Equals("inverted", StringComparison.OrdinalIgnoreCase)))
+                {
+                    boolValue = !boolValue;
+                }
                 return boolValue ? Visibility.Visible : Visibility.Collapsed;
             }
             // Default to Collapsed if the value is not a boolean or is null
