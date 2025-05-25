@@ -261,7 +261,6 @@ namespace lingualink_client.Services
 
         private double GetSegmentDurationSeconds(int byteCount)
         {
-            if (APP_SAMPLE_RATE == 0 || APP_CHANNELS == 0 || APP_BITS_PER_SAMPLE == 0) return 0;
             return (double)byteCount / (APP_SAMPLE_RATE * (APP_BITS_PER_SAMPLE / 8) * APP_CHANNELS);
         }
 

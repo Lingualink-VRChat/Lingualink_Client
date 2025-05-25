@@ -35,14 +35,14 @@ namespace lingualink_client.ViewModels
         public string VolumeThresholdHint => LanguageManager.GetString("VolumeThresholdHint");
 
         // 将属性转换为 [ObservableProperty]
-        [ObservableProperty] private string _serverUrl;
+        [ObservableProperty] private string _serverUrl = string.Empty;
         [ObservableProperty] private double _silenceThresholdSeconds;
         [ObservableProperty] private double _minVoiceDurationSeconds;
         [ObservableProperty] private double _maxVoiceDurationSeconds;
         [ObservableProperty]
         private double _minRecordingVolumeThreshold;
         [ObservableProperty] private bool _enableOsc;
-        [ObservableProperty] private string _oscIpAddress;
+        [ObservableProperty] private string _oscIpAddress = string.Empty;
         [ObservableProperty] private int _oscPort;
         [ObservableProperty] private bool _oscSendImmediately;
         [ObservableProperty] private bool _oscPlayNotificationSound;
@@ -150,7 +150,7 @@ namespace lingualink_client.ViewModels
 
         // RelayCommand 方法
         [RelayCommand] // 标记为 RelayCommand
-        private void ExecuteSaveSettings() // 方法名与命令名对应，无需参数
+        private void Save() // 方法名与命令名对应，无需参数
         {
             if (ValidateAndBuildSettings(out AppSettings? updatedSettingsFromThisPage))
             {
@@ -166,7 +166,7 @@ namespace lingualink_client.ViewModels
 
         // RelayCommand 方法
         [RelayCommand] // 标记为 RelayCommand
-        private void ExecuteRevertSettings() // 方法名与命令名对应，无需参数
+        private void Revert() // 方法名与命令名对应，无需参数
         {
             // 重新加载所有设置，包括可能由 IndexPage 更改的目标语言
             _currentSettings = _settingsService.LoadSettings();

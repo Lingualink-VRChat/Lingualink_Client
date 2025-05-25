@@ -5,7 +5,7 @@ namespace lingualink_client
 {
     public partial class App : Application
     {
-        public IndexWindowViewModel SharedIndexWindowViewModel { get; private set; }
+        public IndexWindowViewModel SharedIndexWindowViewModel { get; private set; } = null!;
 
         protected override void OnStartup(StartupEventArgs e)
         {

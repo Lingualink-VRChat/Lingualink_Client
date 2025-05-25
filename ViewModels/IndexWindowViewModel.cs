@@ -18,12 +18,15 @@ namespace lingualink_client.ViewModels
     public partial class IndexWindowViewModel : ViewModelBase, IDisposable
     {
         private readonly MicrophoneManager _microphoneManager;
-        private AudioService _audioService;
-        private TranslationService _translationService;
+        private AudioService _audioService = null!;
+        private TranslationService _translationService = null!;
         private readonly SettingsService _settingsService;
         private OscService? _oscService;
-        private AppSettings _appSettings;
+        private AppSettings _appSettings = null!;
         
+        // 添加标志防止在设置加载期间触发设置保存，避免循环调用
+        private bool _isLoadingSettings = false;
+
         // Target Language Properties
         public ObservableCollection<SelectableTargetLanguageViewModel> TargetLanguageItems { get; }
 
@@ -42,9 +45,9 @@ namespace lingualink_client.ViewModels
         [ObservableProperty]
         private MMDeviceWrapper? _selectedMicrophone;
 
-        [ObservableProperty] private string _statusText; // 在构造函数中初始化
+        [ObservableProperty] private string _statusText = string.Empty; // 在构造函数中初始化
         [ObservableProperty] private string _translationResultText = string.Empty;
-        [ObservableProperty] private string _workButtonContent; // 在构造函数中初始化
+        [ObservableProperty] private string _workButtonContent = string.Empty; // 在构造函数中初始化
         [ObservableProperty] private bool _isMicrophoneComboBoxEnabled = true;
 
         [ObservableProperty]
@@ -124,7 +127,7 @@ namespace lingualink_client.ViewModels
 
                 // Only update status if not currently working and not already showing a specific status like "refreshing mics"
                 // Checking for parts of localized strings, e.g., "OSC服务初始化失败" (StatusOscInitFailed)
-                if (!wasWorking && !_audioService.IsWorking && !StatusText.Contains(LanguageManager.GetString("StatusOscInitFailed").Split(':')[0]) && !StatusText.Contains(LanguageManager.GetString("StatusRefreshingMics").Split(':')[0]))
+                if (!wasWorking && !(_audioService?.IsWorking ?? false) && !StatusText.Contains(LanguageManager.GetString("StatusOscInitFailed").Split(':')[0]) && !StatusText.Contains(LanguageManager.GetString("StatusRefreshingMics").Split(':')[0]))
                 {
                     StatusText = LanguageManager.GetString("StatusSettingsUpdated");
                     if (!Microphones.Any() || SelectedMicrophone == null)
@@ -293,7 +296,7 @@ namespace lingualink_client.ViewModels
                 if (SelectedMicrophone?.WaveInDeviceIndex != -1)
                 {
                     bool success = false;
-                    await Task.Run(() => success = _audioService.Start(SelectedMicrophone.WaveInDeviceIndex));
+                    await Task.Run(() => success = _audioService.Start(SelectedMicrophone!.WaveInDeviceIndex));
 
                     if (success)
                     {
@@ -323,9 +326,9 @@ namespace lingualink_client.ViewModels
         private void OnAudioServiceStatusUpdate(object? sender, string status)
         {
             Application.Current.Dispatcher.Invoke(() => {
-                // AudioService's 'status' is already localized, just append it to the main status text if desired.
-                // Or simply set StatusText directly to the localized status from AudioService.
-                StatusText = LanguageManager.GetString("StatusListening").Split(':')[0] + ": " + status; // Example: "状态: 正在监听..."
+                // AudioService发送的status是纯状态描述（如"正在监听..."、"检测到语音..."）
+                // 需要在前面加上本地化的"状态:"前缀
+                StatusText = string.Format(LanguageManager.GetString("StatusPrefix"), status);
                 AddLogMessage($"AudioService Status: {status}"); // Keep raw status in detailed logs
             });
         }
@@ -432,27 +435,35 @@ namespace lingualink_client.ViewModels
         // --- Target Language Management ---
         private void LoadTargetLanguagesFromSettings(AppSettings settings)
         {
-            TargetLanguageItems.Clear();
-            var languagesFromSettings = string.IsNullOrWhiteSpace(settings.TargetLanguages)
-                ? new List<string>()
-                : settings.TargetLanguages.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-                                         .Select(s => s.Trim())
-                                         .Where(s => AllSupportedLanguages.Contains(s)) 
-                                         .Distinct() 
-                                         .ToList();
-
-            if (!languagesFromSettings.Any())
+            _isLoadingSettings = true; // 设置标志，防止触发设置保存
+            try
             {
-                languagesFromSettings.Add(AllSupportedLanguages.FirstOrDefault() ?? LanguageManager.GetString("DefaultEnglishLanguageName"));
-            }
+                TargetLanguageItems.Clear();
+                var languagesFromSettings = string.IsNullOrWhiteSpace(settings.TargetLanguages)
+                    ? new List<string>()
+                    : settings.TargetLanguages.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                                             .Select(s => s.Trim())
+                                             .Where(s => AllSupportedLanguages.Contains(s)) 
+                                             .Distinct() 
+                                             .ToList();
 
-            foreach (var lang in languagesFromSettings.Take(MaxTargetLanguages)) 
-            {
-                var newItem = new SelectableTargetLanguageViewModel(this, lang, new List<string>(AllSupportedLanguages));
-                TargetLanguageItems.Add(newItem);
+                if (!languagesFromSettings.Any())
+                {
+                    languagesFromSettings.Add(AllSupportedLanguages.FirstOrDefault() ?? LanguageManager.GetString("DefaultEnglishLanguageName"));
+                }
+
+                foreach (var lang in languagesFromSettings.Take(MaxTargetLanguages)) 
+                {
+                    var newItem = new SelectableTargetLanguageViewModel(this, lang, new List<string>(AllSupportedLanguages));
+                    TargetLanguageItems.Add(newItem);
+                }
+                UpdateItemPropertiesAndAvailableLanguages();
+                AddLanguageCommand.NotifyCanExecuteChanged();
             }
-            UpdateItemPropertiesAndAvailableLanguages();
-            AddLanguageCommand.NotifyCanExecuteChanged();
+            finally
+            {
+                _isLoadingSettings = false; // 确保在所有情况下都重置标志
+            }
         }
         
         [RelayCommand(CanExecute = nameof(CanExecuteAddLanguage))]
@@ -487,7 +498,12 @@ namespace lingualink_client.ViewModels
         public void OnLanguageSelectionChanged(SelectableTargetLanguageViewModel changedItem)
         {
             UpdateItemPropertiesAndAvailableLanguages();
-            SaveCurrentSettings();
+            
+            // 只有在不是加载设置期间才保存当前设置，避免循环调用
+            if (!_isLoadingSettings)
+            {
+                SaveCurrentSettings();
+            }
         }
 
         private void UpdateItemPropertiesAndAvailableLanguages()

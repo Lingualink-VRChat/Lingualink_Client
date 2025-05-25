@@ -10,18 +10,21 @@ namespace lingualink_client.ViewModels
     public partial class SelectableTargetLanguageViewModel : ViewModelBase // 声明为 partial
     {
         public IndexWindowViewModel ParentViewModel { get; }
+        
+        // 添加初始化标志，防止在初始化期间触发事件回调
+        private bool _isInitializing = true;
 
         /// <summary>
         /// 后端使用的语言名称（中文，用于存储和传参）
         /// </summary>
         [ObservableProperty]
-        private string _selectedBackendLanguage;
+        private string _selectedBackendLanguage = string.Empty;
 
         /// <summary>
         /// 界面显示的语言项目集合
         /// </summary>
         [ObservableProperty]
-        private ObservableCollection<LanguageDisplayItem> _availableLanguages;
+        private ObservableCollection<LanguageDisplayItem> _availableLanguages = new();
 
         /// <summary>
         /// 当前选中的显示语言项目
@@ -29,7 +32,7 @@ namespace lingualink_client.ViewModels
         [ObservableProperty]
         private LanguageDisplayItem? _selectedDisplayLanguage;
 
-        [ObservableProperty] private string _label; // Backing field for Label
+        [ObservableProperty] private string _label = string.Empty; // Backing field for Label
 
         public string LabelText => LanguageManager.GetString("TargetLanguageLabel"); // 这是一个计算属性，不是 [ObservableProperty]
         public string RemoveLabel => LanguageManager.GetString("Remove"); // 移除按钮的标签
@@ -52,7 +55,6 @@ namespace lingualink_client.ViewModels
         public SelectableTargetLanguageViewModel(IndexWindowViewModel parent, string initialBackendLanguage, List<string> allBackendLangsSeed)
         {
             ParentViewModel = parent;
-            SelectedBackendLanguage = initialBackendLanguage;
             
             // 初始化空的可用语言列表
             AvailableLanguages = new ObservableCollection<LanguageDisplayItem>();
@@ -60,6 +62,9 @@ namespace lingualink_client.ViewModels
             // 初始化可用语言列表
             UpdateAvailableLanguages(allBackendLangsSeed);
 
+            // 设置初始选中的语言，这里会触发OnSelectedBackendLanguageChanged，但由于_isInitializing为true，不会调用父级方法
+            SelectedBackendLanguage = initialBackendLanguage;
+            
             // 设置初始选中的显示语言
             SelectedDisplayLanguage = AvailableLanguages.FirstOrDefault(item => item.BackendName == initialBackendLanguage);
 
@@ -67,6 +72,9 @@ namespace lingualink_client.ViewModels
             // No need to initialize RemoveCommand here
 
             LanguageManager.LanguageChanged += OnLanguageChanged;
+            
+            // 初始化完成，允许触发事件回调
+            _isInitializing = false;
         }
 
         /// <summary>
@@ -76,18 +84,30 @@ namespace lingualink_client.ViewModels
         {
             var currentSelectedBackend = SelectedBackendLanguage;
             
-            AvailableLanguages = new ObservableCollection<LanguageDisplayItem>();
-            foreach (var backendLang in backendLanguages)
-            {
-                AvailableLanguages.Add(new LanguageDisplayItem
-                {
-                    BackendName = backendLang,
-                    DisplayName = LanguageDisplayHelper.GetDisplayName(backendLang)
-                });
-            }
+            // 临时设置标志，防止在更新时触发回调
+            bool wasInitializing = _isInitializing;
+            _isInitializing = true;
             
-            // 恢复选中状态
-            SelectedDisplayLanguage = AvailableLanguages.FirstOrDefault(item => item.BackendName == currentSelectedBackend);
+            try
+            {
+                AvailableLanguages = new ObservableCollection<LanguageDisplayItem>();
+                foreach (var backendLang in backendLanguages)
+                {
+                    AvailableLanguages.Add(new LanguageDisplayItem
+                    {
+                        BackendName = backendLang,
+                        DisplayName = LanguageDisplayHelper.GetDisplayName(backendLang)
+                    });
+                }
+                
+                // 恢复选中状态
+                SelectedDisplayLanguage = AvailableLanguages.FirstOrDefault(item => item.BackendName == currentSelectedBackend);
+            }
+            finally
+            {
+                // 恢复原来的标志状态
+                _isInitializing = wasInitializing;
+            }
         }
 
         /// <summary>
@@ -109,9 +129,13 @@ namespace lingualink_client.ViewModels
         }
 
         // SelectedBackendLanguage 属性的 OnChanged 回调
-        partial void OnSelectedBackendLanguageChanged(string oldValue, string newValue)
+        partial void OnSelectedBackendLanguageChanged(string? oldValue, string newValue)
         {
-            ParentViewModel?.OnLanguageSelectionChanged(this);
+            // 只有在非初始化状态时才通知父级视图模型
+            if (!_isInitializing)
+            {
+                ParentViewModel?.OnLanguageSelectionChanged(this);
+            }
         }
 
         // SelectedDisplayLanguage 属性的 OnChanged 回调
@@ -121,7 +145,7 @@ namespace lingualink_client.ViewModels
             {
                 SelectedBackendLanguage = newValue.BackendName;
                 OnPropertyChanged(nameof(SelectedLanguage));
-                ParentViewModel?.OnLanguageSelectionChanged(this);
+                // 这里会通过OnSelectedBackendLanguageChanged来处理父级通知，不需要重复调用
             }
         }
 

@@ -26,7 +26,7 @@ namespace lingualink_client.Services
         {
             private readonly string _ipAddress;
             private readonly int _port;
-            private System.Net.Sockets.UdpClient _udpClient;
+            private System.Net.Sockets.UdpClient? _udpClient;
 
 
             public OscSender(string ipAddress, int port)
@@ -198,7 +198,7 @@ namespace lingualink_client.Services
             // var disposableSender = _sender as IDisposable;
             // disposableSender?.Dispose();
             _sender?.Dispose(); // Call if the mock/actual OscSender has Dispose
-            _sender = null;
+            _sender = null!;
             System.Diagnostics.Debug.WriteLine("OscService disposed.");
         }
     }

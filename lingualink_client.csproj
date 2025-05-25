@@ -8,6 +8,8 @@
     <UseWPF>true</UseWPF>
     <ApplicationIcon>Assets/Icons/icon_128x128.ico</ApplicationIcon>
     <AssemblyName>lingualink_client</AssemblyName>
+    <Platform>x64</Platform>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
 
   <ItemGroup>

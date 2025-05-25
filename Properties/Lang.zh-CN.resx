@@ -284,6 +284,9 @@
   <data name="StatusListening" xml:space="preserve">
     <value>状态：正在监听...</value>
   </data>
+  <data name="StatusPrefix" xml:space="preserve">
+    <value>状态：{0}</value>
+  </data>
   <data name="LogCleared" xml:space="preserve">
     <value>日志已清除。</value>
   </data>

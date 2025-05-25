@@ -284,6 +284,9 @@
   <data name="StatusListening" xml:space="preserve">
     <value>Status: Listening...</value>
   </data>
+  <data name="StatusPrefix" xml:space="preserve">
+    <value>Status: {0}</value>
+  </data>
   <data name="LogCleared" xml:space="preserve">
     <value>Log cleared.</value>
   </data>
