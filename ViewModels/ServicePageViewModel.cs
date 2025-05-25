@@ -156,6 +156,9 @@ namespace lingualink_client.ViewModels
             {
                 if (updatedSettingsFromThisPage != null)
                 {
+                    // 确保保存当前的界面语言，避免语言切换bug
+                    updatedSettingsFromThisPage.GlobalLanguage = System.Threading.Thread.CurrentThread.CurrentUICulture.Name;
+                    
                     _settingsService.SaveSettings(updatedSettingsFromThisPage);
                     _currentSettings = updatedSettingsFromThisPage; // Update local copy with the combined settings
                     SettingsChangedNotifier.RaiseSettingsChanged();

@@ -12,26 +12,82 @@
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d">
-    <Grid Margin="15,0">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-        </Grid.RowDefinitions>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Grid Margin="15,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
 
-        <Label Content="{Binding InterfaceLanguage}" />
+            <!-- Page Title -->
+            <TextBlock 
+                Grid.Row="0" 
+                Text="{Binding PageTitle}" 
+                FontSize="18" 
+                FontWeight="Bold" 
+                Margin="0,0,0,20" />
 
-        <ComboBox
-            x:Name="LanguageComboBox"
-            Grid.Row="1"
-            VerticalAlignment="Stretch"
-            SelectionChanged="OnLanguageChanged">
-            <ComboBox.ItemTemplate>
-                <DataTemplate>
-                    <ui:TextBlock Text="{Binding NativeName}" />
-                </DataTemplate>
-            </ComboBox.ItemTemplate>
-        </ComboBox>
-    </Grid>
+            <!-- Interface Language Section -->
+            <StackPanel Grid.Row="1" Margin="0,0,0,30">
+                <Label Content="{Binding InterfaceLanguage}" FontWeight="Bold" FontSize="14" />
+                <ComboBox
+                    x:Name="LanguageComboBox"
+                    VerticalAlignment="Stretch"
+                    SelectionChanged="OnLanguageChanged"
+                    Margin="0,5,0,0">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <ui:TextBlock Text="{Binding NativeName}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <TextBlock 
+                    Text="{Binding LanguageHint}"
+                    TextWrapping="Wrap"
+                    Margin="0,5,0,0"
+                    FontStyle="Italic"
+                    Foreground="Gray"
+                    FontSize="11" />
+            </StackPanel>
 
+            <!-- Running Log Section -->
+            <StackPanel Grid.Row="2" Margin="0,0,0,20">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    
+                    <Label Grid.Column="0" Content="{Binding RunningLogLabel}" FontWeight="Bold" FontSize="14" />
+                    <Button 
+                        Grid.Column="1"
+                        Content="{Binding ClearLogLabel}"
+                        Command="{Binding ClearLogCommand}"
+                        Padding="10,5"
+                        Margin="5,0,0,0" />
+                </Grid>
+                
+                <Border 
+                    BorderBrush="Gray" 
+                    BorderThickness="1" 
+                    Background="White" 
+                    Margin="0,5,0,0">
+                    <ScrollViewer 
+                        Height="300"
+                        VerticalScrollBarVisibility="Auto"
+                        HorizontalScrollBarVisibility="Auto">
+                        <TextBlock 
+                            Text="{Binding FormattedLogMessages}"
+                            TextWrapping="NoWrap"
+                            FontFamily="Consolas"
+                            FontSize="10"
+                            Foreground="DarkBlue"
+                            Padding="5" />
+                    </ScrollViewer>
+                </Border>
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
 </Page>

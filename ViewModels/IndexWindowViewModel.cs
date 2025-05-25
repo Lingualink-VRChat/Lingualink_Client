@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using lingualink_client.Models;
@@ -365,7 +366,24 @@ namespace lingualink_client.ViewModels
                 {
                     currentUiStatus = LanguageManager.GetString("StatusTranslationSuccess");
                     TranslationResultText = response.Data.Raw_Text;
-                    translatedTextForOsc = response.Data.Raw_Text;
+                    
+                    // Use template system to generate text for OSC
+                    if (_appSettings.UseCustomTemplate)
+                    {
+                        var selectedTemplate = _appSettings.GetSelectedTemplate();
+                        translatedTextForOsc = TemplateProcessor.ProcessTemplate(selectedTemplate.Template, response.Data);
+                        
+                        // If template processing results in empty text, fallback to raw text
+                        if (string.IsNullOrWhiteSpace(translatedTextForOsc))
+                        {
+                            translatedTextForOsc = response.Data.Raw_Text;
+                        }
+                    }
+                    else
+                    {
+                        translatedTextForOsc = response.Data.Raw_Text;
+                    }
+                    
                     logEntry = string.Format(LanguageManager.GetString("LogTranslationSuccess"), e.TriggerReason, response.Data.Raw_Text, response.Duration_Seconds);
                 }
                 else if (response.Status == "success" && (response.Data == null || string.IsNullOrEmpty(response.Data.Raw_Text)))
@@ -545,6 +563,9 @@ namespace lingualink_client.ViewModels
                 .Distinct()
                 .ToList();
             _appSettings.TargetLanguages = string.Join(",", selectedLangsList);
+
+            // 确保保存当前的界面语言，避免语言切换bug
+            _appSettings.GlobalLanguage = Thread.CurrentThread.CurrentUICulture.Name;
 
             _settingsService.SaveSettings(_appSettings);
             SettingsChangedNotifier.RaiseSettingsChanged();

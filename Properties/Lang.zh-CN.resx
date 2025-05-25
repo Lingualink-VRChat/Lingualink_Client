@@ -428,4 +428,48 @@
   <data name="Lang_意大利文" xml:space="preserve">
     <value>意大利文</value>
   </data>
+
+  <!-- Message Template Settings -->
+  <data name="MessageTemplateSettings" xml:space="preserve">
+    <value>消息模板设置</value>
+  </data>
+  <data name="UseCustomTemplate" xml:space="preserve">
+    <value>使用自定义模板</value>
+  </data>
+  <data name="SelectedTemplate" xml:space="preserve">
+    <value>选择模板</value>
+  </data>
+  <data name="CustomTemplateText" xml:space="preserve">
+    <value>模板内容</value>
+  </data>
+  <data name="AvailablePlaceholders" xml:space="preserve">
+    <value>可用占位符</value>
+  </data>
+  <data name="PreviewTemplate" xml:space="preserve">
+    <value>模板预览</value>
+  </data>
+  <data name="AddTemplate" xml:space="preserve">
+    <value>添加模板</value>
+  </data>
+  <data name="RemoveTemplate" xml:space="preserve">
+    <value>删除模板</value>
+  </data>
+  <data name="ResetToDefaults" xml:space="preserve">
+    <value>重置为默认</value>
+  </data>
+  <data name="NewTemplateName" xml:space="preserve">
+    <value>新模板名称</value>
+  </data>
+  <data name="TemplateHint" xml:space="preserve">
+    <value>使用占位符如 {原文}、{英文}、{日文} 来自定义输出格式。关闭自定义模板时将显示完整的服务器响应。</value>
+  </data>
+  <data name="GeneralSettings" xml:space="preserve">
+    <value>通用设置</value>
+  </data>
+  <data name="LanguageHint" xml:space="preserve">
+    <value>选择您偏好的界面语言。这会影响所有UI文本和默认模板。</value>
+  </data>
+  <data name="MessageTemplates" xml:space="preserve">
+    <value>消息模板</value>
+  </data>
 </root>

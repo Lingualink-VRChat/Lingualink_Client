@@ -428,4 +428,48 @@
   <data name="Lang_意大利文" xml:space="preserve">
     <value>Italian</value>
   </data>
+
+  <!-- Message Template Settings -->
+  <data name="MessageTemplateSettings" xml:space="preserve">
+    <value>Message Template Settings</value>
+  </data>
+  <data name="UseCustomTemplate" xml:space="preserve">
+    <value>Use Custom Template</value>
+  </data>
+  <data name="SelectedTemplate" xml:space="preserve">
+    <value>Selected Template</value>
+  </data>
+  <data name="CustomTemplateText" xml:space="preserve">
+    <value>Template Content</value>
+  </data>
+  <data name="AvailablePlaceholders" xml:space="preserve">
+    <value>Available Placeholders</value>
+  </data>
+  <data name="PreviewTemplate" xml:space="preserve">
+    <value>Template Preview</value>
+  </data>
+  <data name="AddTemplate" xml:space="preserve">
+    <value>Add Template</value>
+  </data>
+  <data name="RemoveTemplate" xml:space="preserve">
+    <value>Remove Template</value>
+  </data>
+  <data name="ResetToDefaults" xml:space="preserve">
+    <value>Reset to Defaults</value>
+  </data>
+  <data name="NewTemplateName" xml:space="preserve">
+    <value>New Template Name</value>
+  </data>
+  <data name="TemplateHint" xml:space="preserve">
+    <value>Use placeholders like {原文}, {英文}, {日文} to customize the output format. Disable custom template to show the complete server response.</value>
+  </data>
+  <data name="GeneralSettings" xml:space="preserve">
+    <value>General Settings</value>
+  </data>
+  <data name="LanguageHint" xml:space="preserve">
+    <value>Select your preferred interface language. This affects all UI text and default templates.</value>
+  </data>
+  <data name="MessageTemplates" xml:space="preserve">
+    <value>Message Templates</value>
+  </data>
 </root>

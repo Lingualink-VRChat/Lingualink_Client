@@ -64,19 +64,19 @@
                     </ui:NavigationViewItem.Icon>
                 </ui:NavigationViewItem>
                 <ui:NavigationViewItem
+                    Content="{Binding MessageTemplates}"
+                    NavigationCacheMode="Enabled"
+                    TargetPageType="{x:Type pages:MessageTemplatePage}">
+                    <ui:NavigationViewItem.Icon>
+                        <ui:SymbolIcon Symbol="TextEditStyle24" />
+                    </ui:NavigationViewItem.Icon>
+                </ui:NavigationViewItem>
+                <ui:NavigationViewItem
                     Content="{Binding Service}"
                     NavigationCacheMode="Enabled"
                     TargetPageType="{x:Type pages:ServicePage}">
                     <ui:NavigationViewItem.Icon>
                         <ui:SymbolIcon Symbol="ServerSurfaceMultiple16" />
-                    </ui:NavigationViewItem.Icon>
-                </ui:NavigationViewItem>
-                <ui:NavigationViewItem
-                    Content="{Binding Log}"
-                    NavigationCacheMode="Enabled"
-                    TargetPageType="{x:Type pages:LogPage}">
-                    <ui:NavigationViewItem.Icon>
-                        <ui:SymbolIcon Symbol="TextBulletListLtr24" />
                     </ui:NavigationViewItem.Icon>
                 </ui:NavigationViewItem>
             </ui:NavigationView.MenuItems>

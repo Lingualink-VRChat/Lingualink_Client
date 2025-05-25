@@ -26,9 +26,7 @@ namespace lingualink_client.Views
     public partial class SettingPage : Page
     {
         private readonly SettingPageViewModel _viewModel;
-
         private readonly SettingsService _settingsService;
-
         private AppSettings _appSettings;
 
         public List<CultureInfo> Languages { get; set; }
@@ -40,9 +38,7 @@ namespace lingualink_client.Views
             this.Loaded += SettingPage_Loaded;
 
             _viewModel = new SettingPageViewModel();
-
             _settingsService = new SettingsService();
-
             _appSettings = _settingsService.LoadSettings();
 
             DataContext = _viewModel;
@@ -51,7 +47,6 @@ namespace lingualink_client.Views
             LanguageComboBox.ItemsSource = Languages;
 
             var currentCulture = Thread.CurrentThread.CurrentUICulture;
-
             LanguageComboBox.SelectedItem = LanguageManager.GetAvailableLanguages()
                 .FirstOrDefault(c => c.Name == _appSettings.GlobalLanguage);
         }
@@ -59,6 +54,7 @@ namespace lingualink_client.Views
         private void SettingPage_Loaded(object sender, RoutedEventArgs e)
         {
             _appSettings = _settingsService.LoadSettings();
+            _viewModel.RefreshSettings();
         }
 
         private void OnLanguageChanged(object sender, SelectionChangedEventArgs e)
@@ -68,7 +64,6 @@ namespace lingualink_client.Views
                 LanguageManager.ChangeLanguage(cultureInfo.Name);
 
                 _appSettings.GlobalLanguage = cultureInfo.Name;
-
                 _settingsService.SaveSettings(_appSettings);
             }
         }
