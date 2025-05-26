@@ -185,8 +185,8 @@
                     TextWrapping="Wrap"
                     VerticalScrollBarVisibility="Auto"
                     MinHeight="80"
-                    Background="#F8F9FA"
-                    BorderBrush="#28A745"
+                    Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
+                    BorderBrush="{DynamicResource AccentTextFillColorPrimaryBrush}"
                     BorderThickness="2" />
             </Grid>
 

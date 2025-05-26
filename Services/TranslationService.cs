@@ -14,13 +14,26 @@ namespace lingualink_client.Services
     public class TranslationService : IDisposable
     {
         private readonly string _serverUrl;
+        private readonly string _apiKey;
+        private readonly bool _authEnabled;
+        private readonly string _userPrompt;
         private readonly HttpClient _httpClient;
         private bool _disposed = false;
 
-        public TranslationService(string serverUrl)
+        public TranslationService(string serverUrl, string apiKey = "", bool authEnabled = true, string userPrompt = "请处理下面的音频。")
         {
             _serverUrl = serverUrl;
+            _apiKey = apiKey;
+            _authEnabled = authEnabled;
+            _userPrompt = userPrompt;
             _httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+            
+            // Set up authentication headers if enabled
+            if (_authEnabled && !string.IsNullOrEmpty(_apiKey))
+            {
+                // Use X-API-Key header (preferred by the new backend)
+                _httpClient.DefaultRequestHeaders.Add("X-API-Key", _apiKey);
+            }
         }
 
         // Modified return type
@@ -51,6 +64,13 @@ namespace lingualink_client.Services
                     fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("audio/wav");
                     formData.Add(fileContent, "audio_file", Path.GetFileName(tempFilePath));
 
+                    // Add user_prompt field as required by new API
+                    if (!string.IsNullOrWhiteSpace(_userPrompt))
+                    {
+                        formData.Add(new StringContent(_userPrompt), "user_prompt");
+                        Debug.WriteLine($"[DEBUG] TranslationService: 添加 'user_prompt' = '{_userPrompt}'");
+                    }
+
                     if (!string.IsNullOrWhiteSpace(targetLanguagesCsv))
                     {
                         var languagesList = targetLanguagesCsv.Split(',')
@@ -80,6 +100,12 @@ namespace lingualink_client.Services
                     }
                     else
                     {
+                        // Handle authentication errors specifically
+                        if (httpResponse.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                        {
+                            return (null, responseContentString, string.Format(LanguageManager.GetString("ErrorAuthentication"), responseContentString));
+                        }
+                        
                         try
                         {
                             var errorResponse = JsonSerializer.Deserialize<ServerResponse>(responseContentString, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });

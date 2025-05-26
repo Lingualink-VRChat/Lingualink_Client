@@ -461,10 +461,10 @@
     <value>新模板名称</value>
   </data>
   <data name="TemplateHint" xml:space="preserve">
-    <value>使用占位符如 {原文}、{英文}、{日文} 来自定义输出格式。关闭自定义模板时将显示完整的服务器响应。</value>
+    <value>使用占位符如 {英文}、{日文}、{中文} 来自定义输出格式。关闭自定义模板时将显示完整的服务器响应。</value>
   </data>
   <data name="TemplateActiveHint" xml:space="preserve">
-    <value>启用自定义模板时，目标语言由模板中的占位符决定（最多5种语言）。目标语言选择将被禁用。</value>
+    <value>启用自定义模板时，目标语言由模板中的占位符决定（最多3种语言）。目标语言选择将被禁用。</value>
   </data>
   <data name="GeneralSettings" xml:space="preserve">
     <value>通用设置</value>
@@ -480,5 +480,25 @@
   </data>
   <data name="OriginalResponse" xml:space="preserve">
     <value>服务器原始响应</value>
+  </data>
+
+  <!-- API Authentication Settings -->
+  <data name="ApiAuthentication" xml:space="preserve">
+    <value>API 认证</value>
+  </data>
+  <data name="EnableAuthentication" xml:space="preserve">
+    <value>启用认证</value>
+  </data>
+  <data name="ApiKey" xml:space="preserve">
+    <value>API 密钥</value>
+  </data>
+  <data name="UserPrompt" xml:space="preserve">
+    <value>用户提示</value>
+  </data>
+  <data name="ValidationApiKeyRequired" xml:space="preserve">
+    <value>启用认证时需要提供 API 密钥。</value>
+  </data>
+  <data name="ErrorAuthentication" xml:space="preserve">
+    <value>认证失败。请检查您的 API 密钥: {0}</value>
   </data>
 </root>

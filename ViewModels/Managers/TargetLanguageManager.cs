@@ -39,7 +39,7 @@ namespace lingualink_client.ViewModels.Managers
             }
         }
         
-        public int MaxLanguageCount { get; } = 5; // VRChat OSC限制
+        public int MaxLanguageCount { get; } = 3; // VRChat OSC限制，最多3种语言以确保更好的性能
         
         public int CurrentLanguageCount => LanguageItems.Count;
         

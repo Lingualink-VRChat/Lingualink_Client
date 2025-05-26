@@ -31,7 +31,11 @@ namespace lingualink_client.Services.Managers
             _appSettings = appSettings;
             _loggingManager = loggingManager;
 
-            _translationService = new TranslationService(_appSettings.ServerUrl);
+            _translationService = new TranslationService(
+                _appSettings.ServerUrl, 
+                _appSettings.ApiKey, 
+                _appSettings.AuthEnabled, 
+                _appSettings.UserPrompt);
             _audioService = new AudioService(_appSettings);
 
             // 初始化OSC服务
@@ -142,12 +146,17 @@ namespace lingualink_client.Services.Managers
                     if (_appSettings.UseCustomTemplate)
                     {
                         var selectedTemplate = _appSettings.GetSelectedTemplate();
-                        translatedTextForOsc = TemplateProcessor.ProcessTemplate(selectedTemplate.Template, response.Data);
+                        var validatedText = TemplateProcessor.ProcessTemplateWithValidation(selectedTemplate.Template, response.Data);
                         
-                        // 如果模板处理结果为空，回退到原始文本
-                        if (string.IsNullOrWhiteSpace(translatedTextForOsc))
+                        if (validatedText != null)
                         {
-                            translatedTextForOsc = response.Data.Raw_Text;
+                            translatedTextForOsc = validatedText;
+                        }
+                        else
+                        {
+                            // Template contains unreplaced placeholders, skip OSC sending
+                            translatedTextForOsc = string.Empty;
+                            _loggingManager.AddMessage(string.Format("Template processing failed - contains unreplaced placeholders. Skipping OSC send for trigger: {0}", e.TriggerReason));
                         }
                     }
                     else

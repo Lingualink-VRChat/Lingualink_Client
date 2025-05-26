@@ -335,18 +335,58 @@ namespace lingualink_client.Models
             return result;
         }
 
+        /// <summary>
+        /// Check if the processed template still contains unreplaced placeholders
+        /// </summary>
+        /// <param name="processedText">Text after template processing</param>
+        /// <returns>True if there are still unreplaced placeholders, false otherwise</returns>
+        public static bool ContainsUnreplacedPlaceholders(string processedText)
+        {
+            if (string.IsNullOrEmpty(processedText))
+                return false;
+
+            var availableLanguages = new[] { "原文", "英文", "日文", "中文", "韩文", "法文", "德文", "西班牙文", "俄文", "意大利文" };
+            
+            foreach (var lang in availableLanguages)
+            {
+                if (processedText.Contains($"{{{lang}}}"))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Process template and return null if the result contains unreplaced placeholders
+        /// </summary>
+        /// <param name="template">Template string</param>
+        /// <param name="data">Translation data</param>
+        /// <returns>Processed text or null if unreplaced placeholders remain</returns>
+        public static string? ProcessTemplateWithValidation(string template, TranslationData data)
+        {
+            var processedText = ProcessTemplate(template, data);
+            
+            if (ContainsUnreplacedPlaceholders(processedText))
+            {
+                return null; // Indicate that this should not be sent
+            }
+            
+            return processedText;
+        }
+
         public static List<string> GetAvailablePlaceholders(TranslationData? sampleData = null)
         {
             var placeholders = new List<string>();
             
-            // Add localized placeholders based on current UI language
+            // Check current UI language to determine display format
             var currentLanguage = System.Threading.Thread.CurrentThread.CurrentUICulture.Name;
             
-            if (currentLanguage.StartsWith("zh")) // Chinese
+            if (currentLanguage.StartsWith("zh")) // Chinese - show only Chinese placeholders
             {
                 placeholders.AddRange(new[]
                 {
-                    "{原文}",
                     "{英文}",
                     "{日文}",
                     "{中文}",
@@ -358,21 +398,19 @@ namespace lingualink_client.Models
                     "{意大利文}"
                 });
             }
-            else // English and other languages
+            else // English and other languages - show English labels but keep Chinese placeholders for backend
             {
-                // Use localized placeholder names for display
                 placeholders.AddRange(new[]
                 {
-                    "{原文} (Original)",
-                    "{英文} (English)",
-                    "{日文} (Japanese)",
-                    "{中文} (Chinese)",
-                    "{韩文} (Korean)",
-                    "{法文} (French)",
-                    "{德文} (German)",
-                    "{西班牙文} (Spanish)",
-                    "{俄文} (Russian)",
-                    "{意大利文} (Italian)"
+                    "English ({英文})",
+                    "Japanese ({日文})",
+                    "Chinese ({中文})",
+                    "Korean ({韩文})",
+                    "French ({法文})",
+                    "German ({德文})",
+                    "Spanish ({西班牙文})",
+                    "Russian ({俄文})",
+                    "Italian ({意大利文})"
                 });
             }
 
@@ -382,7 +420,7 @@ namespace lingualink_client.Models
                 foreach (var language in languageFields.Keys)
                 {
                     string placeholder = $"{{{language}}}";
-                    if (!placeholders.Any(p => p.StartsWith(placeholder)))
+                    if (!placeholders.Any(p => p.Contains(placeholder)))
                     {
                         placeholders.Add(placeholder);
                     }
@@ -401,13 +439,13 @@ namespace lingualink_client.Models
                 return new List<MessageTemplate>
                 {
                     new MessageTemplate("完整文本", "{raw_text}", "显示服务器返回的完整原始文本", true),
-                    new MessageTemplate("仅原文", "{原文}", "只显示原文内容"),
-                    new MessageTemplate("原文+英文", "{原文}\n{英文}", "显示原文和英文翻译"),
-                    new MessageTemplate("原文+日文", "{原文}\n{日文}", "显示原文和日文翻译"),
-                    new MessageTemplate("三语对照", "{原文}\n{英文}\n{日文}", "显示原文、英文和日文"),
+                    new MessageTemplate("英文+日文", "{英文}\n{日文}", "显示英文和日文翻译"),
+                    new MessageTemplate("英文+中文", "{英文}\n{中文}", "显示英文和中文翻译"),
+                    new MessageTemplate("三语对照", "{英文}\n{日文}\n{中文}", "显示英文、日文和中文"),
                     new MessageTemplate("英文优先", "{英文}", "只显示英文翻译"),
                     new MessageTemplate("日文优先", "{日文}", "只显示日文翻译"),
-                    new MessageTemplate("自定义格式", "原文: {原文}\n英文: {英文}\n日文: {日文}", "带标签的格式化显示")
+                    new MessageTemplate("中文优先", "{中文}", "只显示中文翻译"),
+                    new MessageTemplate("自定义格式", "英文: {英文}\n日文: {日文}\n中文: {中文}", "带标签的格式化显示")
                 };
             }
             else // English and other languages
@@ -415,13 +453,13 @@ namespace lingualink_client.Models
                 return new List<MessageTemplate>
                 {
                     new MessageTemplate("Full Text", "{raw_text}", "Show complete server response", true),
-                    new MessageTemplate("Original Only", "{原文}", "Show original text only"),
-                    new MessageTemplate("Original + English", "{原文}\n{英文}", "Show original and English translation"),
-                    new MessageTemplate("Original + Japanese", "{原文}\n{日文}", "Show original and Japanese translation"),
-                    new MessageTemplate("Three Languages", "{原文}\n{英文}\n{日文}", "Show original, English and Japanese"),
+                    new MessageTemplate("English + Japanese", "{英文}\n{日文}", "Show English and Japanese translation"),
+                    new MessageTemplate("English + Chinese", "{英文}\n{中文}", "Show English and Chinese translation"),
+                    new MessageTemplate("Three Languages", "{英文}\n{日文}\n{中文}", "Show English, Japanese and Chinese"),
                     new MessageTemplate("English Only", "{英文}", "Show English translation only"),
                     new MessageTemplate("Japanese Only", "{日文}", "Show Japanese translation only"),
-                    new MessageTemplate("Custom Format", "Original: {原文}\nEnglish: {英文}\nJapanese: {日文}", "Formatted display with labels")
+                    new MessageTemplate("Chinese Only", "{中文}", "Show Chinese translation only"),
+                    new MessageTemplate("Custom Format", "English: {英文}\nJapanese: {日文}\nChinese: {中文}", "Formatted display with labels")
                 };
             }
         }
@@ -451,7 +489,7 @@ namespace lingualink_client.Models
         /// Extract unique language placeholders from a template string
         /// </summary>
         /// <param name="template">Template string to analyze</param>
-        /// <returns>List of unique language names (max 5) found in the template</returns>
+        /// <returns>List of unique language names (max 3) found in the template</returns>
         public static List<string> ExtractLanguagesFromTemplate(string template)
         {
             if (string.IsNullOrEmpty(template))
@@ -465,7 +503,7 @@ namespace lingualink_client.Models
                 if (template.Contains($"{{{lang}}}"))
                 {
                     languages.Add(lang);
-                    if (languages.Count >= 5) // Limit to 5 languages for VRChat OSC
+                    if (languages.Count >= 3) // Limit to 3 languages for VRChat OSC
                         break;
                 }
             }

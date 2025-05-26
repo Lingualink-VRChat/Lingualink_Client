@@ -7,7 +7,12 @@ namespace lingualink_client.Models
         public string GlobalLanguage { get; set; } = Services.LanguageManager.DetectSystemLanguage();
 
         public string TargetLanguages { get; set; } = "英文,日文"; // Default: English, Japanese
-        public string ServerUrl { get; set; } = "http://localhost:5000/translate_audio";
+        public string ServerUrl { get; set; } = "http://localhost:5000/api/v1/translate_audio";
+
+        // API Authentication Settings
+        public string ApiKey { get; set; } = "";
+        public bool AuthEnabled { get; set; } = true;
+        public string UserPrompt { get; set; } = "请处理下面的音频。";
 
         // VAD Parameters (defaults from your AudioService)
         public double SilenceThresholdSeconds { get; set; } = 0.7;
@@ -27,7 +32,7 @@ namespace lingualink_client.Models
         public List<MessageTemplate> CustomTemplates { get; set; } = new List<MessageTemplate>();
         public string SelectedTemplateName { get; set; } = "完整文本"; // Default template name
         public bool UseCustomTemplate { get; set; } = false; // Whether to use template system or raw text
-        public string UserCustomTemplateText { get; set; } = "{原文}\n{英文}\n{日文}"; // User's custom template text that persists
+        public string UserCustomTemplateText { get; set; } = "{英文}\n{日文}\n{中文}"; // User's custom template text that persists
 
         // Initialize default templates if custom templates list is empty
         public void EnsureDefaultTemplates()

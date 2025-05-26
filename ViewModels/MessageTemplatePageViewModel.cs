@@ -27,7 +27,7 @@ namespace lingualink_client.ViewModels
         [ObservableProperty] private string _customTemplateText = "";
         [ObservableProperty] private string _templatePreview = "";
 
-        public List<string> PlaceholderList { get; } = new();
+        public ObservableCollection<string> PlaceholderList { get; } = new();
 
         public MessageTemplatePageViewModel()
         {
@@ -105,16 +105,16 @@ namespace lingualink_client.ViewModels
         [RelayCommand]
         private void ResetTemplate()
         {
-            // Reset to a simple template showing original and main translations based on current language
+            // Reset to a simple template showing main translations based on current language
             var currentLanguage = System.Threading.Thread.CurrentThread.CurrentUICulture.Name;
             
             if (currentLanguage.StartsWith("zh")) // Chinese
             {
-                CustomTemplateText = "{原文}\n{英文}\n{日文}";
+                CustomTemplateText = "{英文}\n{日文}\n{中文}";
             }
             else // English and other languages
             {
-                CustomTemplateText = "{原文}\n{英文}\n{日文}";
+                CustomTemplateText = "{英文}\n{日文}\n{中文}";
             }
             
             SaveSettings();
@@ -126,10 +126,23 @@ namespace lingualink_client.ViewModels
             if (string.IsNullOrEmpty(placeholder))
                 return;
 
-            // Extract the actual placeholder from display text (e.g., "{原文} (Original)" -> "{原文}")
             string actualPlaceholder = placeholder;
-            if (placeholder.Contains(" (") && placeholder.EndsWith(")"))
+            
+            // Extract the actual Chinese placeholder from display text
+            // For English mode: "English ({英文})" -> "{英文}"
+            // For Chinese mode: "{英文}" -> "{英文}"
+            if (placeholder.Contains("({") && placeholder.Contains("})"))
             {
+                var startIndex = placeholder.IndexOf("({");
+                var endIndex = placeholder.IndexOf("})", startIndex);
+                if (startIndex >= 0 && endIndex > startIndex)
+                {
+                    actualPlaceholder = placeholder.Substring(startIndex + 1, endIndex - startIndex);
+                }
+            }
+            else if (placeholder.Contains(" (") && placeholder.EndsWith(")"))
+            {
+                // Legacy format support (shouldn't be used anymore, but just in case)
                 actualPlaceholder = placeholder.Substring(0, placeholder.IndexOf(" ("));
             }
 

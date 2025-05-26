@@ -461,10 +461,10 @@
     <value>New Template Name</value>
   </data>
   <data name="TemplateHint" xml:space="preserve">
-    <value>Use placeholders like {原文} (Original), {英文} (English), {日文} (Japanese) to customize the output format. Disable custom template to show the complete server response.</value>
+    <value>Use placeholders like {英文}, {日文}, {中文} to customize the output format. Disable custom template to show the complete server response.</value>
   </data>
   <data name="TemplateActiveHint" xml:space="preserve">
-    <value>When custom template is enabled, target languages are determined by the template placeholders (max 5 languages). Target language selection is disabled.</value>
+    <value>When custom template is enabled, target languages are determined by the template placeholders (max 3 languages). Target language selection is disabled.</value>
   </data>
   <data name="GeneralSettings" xml:space="preserve">
     <value>General Settings</value>
@@ -480,5 +480,25 @@
   </data>
   <data name="OriginalResponse" xml:space="preserve">
     <value>Original Server Response</value>
+  </data>
+
+  <!-- API Authentication Settings -->
+  <data name="ApiAuthentication" xml:space="preserve">
+    <value>API Authentication</value>
+  </data>
+  <data name="EnableAuthentication" xml:space="preserve">
+    <value>Enable Authentication</value>
+  </data>
+  <data name="ApiKey" xml:space="preserve">
+    <value>API Key</value>
+  </data>
+  <data name="UserPrompt" xml:space="preserve">
+    <value>User Prompt</value>
+  </data>
+  <data name="ValidationApiKeyRequired" xml:space="preserve">
+    <value>API Key is required when authentication is enabled.</value>
+  </data>
+  <data name="ErrorAuthentication" xml:space="preserve">
+    <value>Authentication failed. Please check your API key: {0}</value>
   </data>
 </root>
