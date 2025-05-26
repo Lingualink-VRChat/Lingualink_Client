@@ -22,7 +22,7 @@ LinguaLink Client 已更新以支持新的 LinguaLink Server 后端，该后端�
 - 示例: `lls_1234567890abcdef`
 
 ### 3. 新增请求字段
-- **user_prompt**: 用户自定义提示，用于指导 AI 处理音频
+- **user_prompt**: 系统发送固定提示，用于指导 AI 处理音频
 - **target_languages**: 支持多个目标语言的数组形式
 
 ## 客户端配置
@@ -33,13 +33,12 @@ LinguaLink Client 已更新以支持新的 LinguaLink Server 后端，该后端�
 
 1. **启用认证**: 开启/关闭 API 密钥认证
 2. **API 密钥**: 输入从后端获取的 API 密钥
-3. **用户提示**: 自定义发送给 AI 的处理指令
 
 ### 默认配置
 - **服务器 URL**: `http://localhost:5000/api/v1/translate_audio`
 - **启用认证**: `true` (默认启用)
 - **API 密钥**: 空 (需要用户配置)
-- **用户提示**: `"请处理下面的音频。"`
+- **系统提示**: `"请处理下面的音频。"` (固定值)
 
 ## 配置步骤
 
@@ -64,14 +63,13 @@ python -m src.lingualink.utils.key_generator --name "lingualink-client"
 3. 在"API 认证"区域：
    - 确保"启用认证"已勾选
    - 在"API 密钥"字段输入获取的密钥
-   - 根据需要修改"用户提示"
 
 ### 3. 验证配置
 
 保存设置后，客户端将：
 - 自动使用新的 API 端点
 - 在请求中包含 API 密钥
-- 发送用户提示到后端
+- 在请求中包含固定的用户提示
 
 ## 兼容性
 
@@ -101,7 +99,6 @@ python -m src.lingualink.utils.key_generator --name "lingualink-client"
 3. **翻译失败**
    - 检查目标语言设置
    - 验证音频格式是否支持
-   - 确认用户提示是否合理
 
 ### 调试建议
 
@@ -159,7 +156,6 @@ curl -X POST "http://localhost:5000/api/v1/translate_audio" \
 ### v2.0.0 (2024-01-XX)
 - 添加 API 密钥鉴权支持
 - 更新 API 端点到 v1
-- 增加用户提示配置
 - 改进错误处理和日志记录
 - 支持新的后端响应格式
 

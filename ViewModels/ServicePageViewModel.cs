@@ -24,7 +24,6 @@ namespace lingualink_client.ViewModels
         public string ApiAuthLabel => LanguageManager.GetString("ApiAuthentication");
         public string AuthEnabledLabel => LanguageManager.GetString("EnableAuthentication");
         public string ApiKeyLabel => LanguageManager.GetString("ApiKey");
-        public string UserPromptLabel => LanguageManager.GetString("UserPrompt");
         public string SilenceThresholdLabel => LanguageManager.GetString("SilenceThreshold");
         public string MinVoiceDurationLabel => LanguageManager.GetString("MinVoiceDuration");
         public string MaxVoiceDurationLabel => LanguageManager.GetString("MaxVoiceDuration");
@@ -42,7 +41,6 @@ namespace lingualink_client.ViewModels
         [ObservableProperty] private string _serverUrl = string.Empty;
         [ObservableProperty] private bool _authEnabled = true;
         [ObservableProperty] private string _apiKey = string.Empty;
-        [ObservableProperty] private string _userPrompt = "请处理下面的音频。";
         [ObservableProperty] private double _silenceThresholdSeconds;
         [ObservableProperty] private double _minVoiceDurationSeconds;
         [ObservableProperty] private double _maxVoiceDurationSeconds;
@@ -69,7 +67,6 @@ namespace lingualink_client.ViewModels
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(ApiAuthLabel));
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(AuthEnabledLabel));
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(ApiKeyLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(UserPromptLabel));
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(SilenceThresholdLabel));
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(MinVoiceDurationLabel));
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(MaxVoiceDurationLabel));
@@ -100,7 +97,6 @@ namespace lingualink_client.ViewModels
             ServerUrl = settings.ServerUrl;
             AuthEnabled = settings.AuthEnabled;
             ApiKey = settings.ApiKey;
-            UserPrompt = settings.UserPrompt;
             SilenceThresholdSeconds = settings.SilenceThresholdSeconds;
             MinVoiceDurationSeconds = settings.MinVoiceDurationSeconds;
             MaxVoiceDurationSeconds = settings.MaxVoiceDurationSeconds;
@@ -158,7 +154,6 @@ namespace lingualink_client.ViewModels
             updatedSettings.ServerUrl = this.ServerUrl;
             updatedSettings.AuthEnabled = this.AuthEnabled;
             updatedSettings.ApiKey = this.ApiKey;
-            updatedSettings.UserPrompt = this.UserPrompt;
             updatedSettings.SilenceThresholdSeconds = this.SilenceThresholdSeconds;
             updatedSettings.MinVoiceDurationSeconds = this.MinVoiceDurationSeconds;
             updatedSettings.MaxVoiceDurationSeconds = this.MaxVoiceDurationSeconds;

@@ -492,9 +492,6 @@
   <data name="ApiKey" xml:space="preserve">
     <value>API 密钥</value>
   </data>
-  <data name="UserPrompt" xml:space="preserve">
-    <value>用户提示</value>
-  </data>
   <data name="ValidationApiKeyRequired" xml:space="preserve">
     <value>启用认证时需要提供 API 密钥。</value>
   </data>

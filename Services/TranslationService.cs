@@ -16,16 +16,14 @@ namespace lingualink_client.Services
         private readonly string _serverUrl;
         private readonly string _apiKey;
         private readonly bool _authEnabled;
-        private readonly string _userPrompt;
         private readonly HttpClient _httpClient;
         private bool _disposed = false;
 
-        public TranslationService(string serverUrl, string apiKey = "", bool authEnabled = true, string userPrompt = "请处理下面的音频。")
+        public TranslationService(string serverUrl, string apiKey = "", bool authEnabled = true)
         {
             _serverUrl = serverUrl;
             _apiKey = apiKey;
             _authEnabled = authEnabled;
-            _userPrompt = userPrompt;
             _httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
             
             // Set up authentication headers if enabled
@@ -65,11 +63,8 @@ namespace lingualink_client.Services
                     formData.Add(fileContent, "audio_file", Path.GetFileName(tempFilePath));
 
                     // Add user_prompt field as required by new API
-                    if (!string.IsNullOrWhiteSpace(_userPrompt))
-                    {
-                        formData.Add(new StringContent(_userPrompt), "user_prompt");
-                        Debug.WriteLine($"[DEBUG] TranslationService: 添加 'user_prompt' = '{_userPrompt}'");
-                    }
+                    formData.Add(new StringContent("请处理下面的音频。"), "user_prompt");
+                    Debug.WriteLine($"[DEBUG] TranslationService: 添加 'user_prompt' = '请处理下面的音频。'");
 
                     if (!string.IsNullOrWhiteSpace(targetLanguagesCsv))
                     {

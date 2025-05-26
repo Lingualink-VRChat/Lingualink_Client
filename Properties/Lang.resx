@@ -492,9 +492,6 @@
   <data name="ApiKey" xml:space="preserve">
     <value>API Key</value>
   </data>
-  <data name="UserPrompt" xml:space="preserve">
-    <value>User Prompt</value>
-  </data>
   <data name="ValidationApiKeyRequired" xml:space="preserve">
     <value>API Key is required when authentication is enabled.</value>
   </data>

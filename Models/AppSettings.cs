@@ -7,12 +7,11 @@ namespace lingualink_client.Models
         public string GlobalLanguage { get; set; } = Services.LanguageManager.DetectSystemLanguage();
 
         public string TargetLanguages { get; set; } = "英文,日文"; // Default: English, Japanese
-        public string ServerUrl { get; set; } = "http://localhost:5000/api/v1/translate_audio";
+        public string ServerUrl { get; set; } = "https://api.lingualink.aiatechco.com/api/v1/translate_audio";
 
         // API Authentication Settings
         public string ApiKey { get; set; } = "";
         public bool AuthEnabled { get; set; } = true;
-        public string UserPrompt { get; set; } = "请处理下面的音频。";
 
         // VAD Parameters (defaults from your AudioService)
         public double SilenceThresholdSeconds { get; set; } = 0.7;
