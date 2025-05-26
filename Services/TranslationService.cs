@@ -15,19 +15,17 @@ namespace lingualink_client.Services
     {
         private readonly string _serverUrl;
         private readonly string _apiKey;
-        private readonly bool _authEnabled;
         private readonly HttpClient _httpClient;
         private bool _disposed = false;
-
-        public TranslationService(string serverUrl, string apiKey = "", bool authEnabled = true)
+ 
+        public TranslationService(string serverUrl, string apiKey = "")
         {
             _serverUrl = serverUrl;
             _apiKey = apiKey;
-            _authEnabled = authEnabled;
             _httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
             
-            // Set up authentication headers if enabled
-            if (_authEnabled && !string.IsNullOrEmpty(_apiKey))
+            // Always attempt to set up authentication headers if an API key is provided
+            if (!string.IsNullOrEmpty(_apiKey))
             {
                 // Use X-API-Key header (preferred by the new backend)
                 _httpClient.DefaultRequestHeaders.Add("X-API-Key", _apiKey);

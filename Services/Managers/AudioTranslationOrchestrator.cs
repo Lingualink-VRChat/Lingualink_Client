@@ -32,9 +32,8 @@ namespace lingualink_client.Services.Managers
             _loggingManager = loggingManager;
 
             _translationService = new TranslationService(
-                _appSettings.ServerUrl, 
-                _appSettings.ApiKey, 
-                _appSettings.AuthEnabled);
+                _appSettings.ServerUrl,
+                _appSettings.ApiKey);
             _audioService = new AudioService(_appSettings);
 
             // 初始化OSC服务

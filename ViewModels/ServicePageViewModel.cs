@@ -22,7 +22,6 @@ namespace lingualink_client.ViewModels
         // 语言相关的标签仍然是计算属性
         public string ServerUrlLabel => LanguageManager.GetString("ServerUrl");
         public string ApiAuthLabel => LanguageManager.GetString("ApiAuthentication");
-        public string AuthEnabledLabel => LanguageManager.GetString("EnableAuthentication");
         public string ApiKeyLabel => LanguageManager.GetString("ApiKey");
         public string SilenceThresholdLabel => LanguageManager.GetString("SilenceThreshold");
         public string MinVoiceDurationLabel => LanguageManager.GetString("MinVoiceDuration");
@@ -39,7 +38,6 @@ namespace lingualink_client.ViewModels
 
         // 将属性转换为 [ObservableProperty]
         [ObservableProperty] private string _serverUrl = string.Empty;
-        [ObservableProperty] private bool _authEnabled = true;
         [ObservableProperty] private string _apiKey = string.Empty;
         [ObservableProperty] private double _silenceThresholdSeconds;
         [ObservableProperty] private double _minVoiceDurationSeconds;
@@ -65,7 +63,6 @@ namespace lingualink_client.ViewModels
             // 订阅语言变化，更新依赖语言管理器字符串的属性
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(ServerUrlLabel));
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(ApiAuthLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(AuthEnabledLabel));
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(ApiKeyLabel));
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(SilenceThresholdLabel));
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(MinVoiceDurationLabel));
@@ -95,7 +92,6 @@ namespace lingualink_client.ViewModels
         private void LoadSettingsFromModel(AppSettings settings)
         {
             ServerUrl = settings.ServerUrl;
-            AuthEnabled = settings.AuthEnabled;
             ApiKey = settings.ApiKey;
             SilenceThresholdSeconds = settings.SilenceThresholdSeconds;
             MinVoiceDurationSeconds = settings.MinVoiceDurationSeconds;
@@ -120,7 +116,7 @@ namespace lingualink_client.ViewModels
             }
             
             // Validate API authentication settings
-            if (AuthEnabled && string.IsNullOrWhiteSpace(ApiKey))
+            if (string.IsNullOrWhiteSpace(ApiKey))
             {
                 MessageBox.Show(LanguageManager.GetString("ValidationApiKeyRequired"), LanguageManager.GetString("ValidationErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
@@ -152,7 +148,6 @@ namespace lingualink_client.ViewModels
 
             // 更新只由当前页面管理的设置
             updatedSettings.ServerUrl = this.ServerUrl;
-            updatedSettings.AuthEnabled = this.AuthEnabled;
             updatedSettings.ApiKey = this.ApiKey;
             updatedSettings.SilenceThresholdSeconds = this.SilenceThresholdSeconds;
             updatedSettings.MinVoiceDurationSeconds = this.MinVoiceDurationSeconds;
