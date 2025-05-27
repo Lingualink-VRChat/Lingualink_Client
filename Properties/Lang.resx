@@ -498,4 +498,33 @@
   <data name="ErrorAuthentication" xml:space="preserve">
     <value>Authentication failed. Please check your API key: {0}</value>
   </data>
+
+  <!-- Audio Encoding Settings -->
+  <data name="AudioEncoding" xml:space="preserve">
+    <value>Audio Encoding</value>
+  </data>
+  <data name="UseOpusEncoding" xml:space="preserve">
+    <value>Use Opus Encoding</value>
+  </data>
+  <data name="OpusBitrate" xml:space="preserve">
+    <value>Opus Bitrate (bps)</value>
+  </data>
+  <data name="OpusComplexity" xml:space="preserve">
+    <value>Opus Complexity (0-5)</value> <!-- CHANGED: Updated max value -->
+  </data>
+  <data name="OpusEncodingHint" xml:space="preserve">
+    <value>Opus encoding significantly reduces bandwidth usage by compressing audio data. Recommended for slower internet connections.</value>
+  </data>
+  <data name="OpusBitrateHint" xml:space="preserve">
+    <value>Lower bitrates save more bandwidth but may reduce audio quality. 32kbps is recommended for voice.</value> <!-- CHANGED: Emphasized 32kbps as max/recommended -->
+  </data>
+  <data name="OpusComplexityHint" xml:space="preserve">
+    <value>Higher complexity improves compression but increases CPU usage. 5 is a good balance.</value> <!-- CHANGED: Emphasized 5 as max/good balance -->
+  </data>
+  <data name="ValidationOpusBitrateInvalid" xml:space="preserve">
+    <value>Opus bitrate must be between 8000-32000 bps.</value> <!-- CHANGED: Updated max value -->
+  </data>
+  <data name="ValidationOpusComplexityInvalid" xml:space="preserve">
+    <value>Opus complexity must be between 0-5.</value> <!-- CHANGED: Updated max value -->
+  </data>
 </root>

@@ -498,4 +498,33 @@
   <data name="ErrorAuthentication" xml:space="preserve">
     <value>认证失败。请检查您的 API 密钥: {0}</value>
   </data>
+
+  <!-- Audio Encoding Settings -->
+  <data name="AudioEncoding" xml:space="preserve">
+    <value>音频编码</value>
+  </data>
+  <data name="UseOpusEncoding" xml:space="preserve">
+    <value>使用 Opus 编码</value>
+  </data>
+  <data name="OpusBitrate" xml:space="preserve">
+    <value>Opus 比特率 (bps)</value>
+  </data>
+  <data name="OpusComplexity" xml:space="preserve">
+    <value>Opus 复杂度 (0-5)</value> <!-- CHANGED: Updated max value -->
+  </data>
+  <data name="OpusEncodingHint" xml:space="preserve">
+    <value>Opus 编码可显著减少带宽使用，通过压缩音频数据。建议网络较慢时使用。</value>
+  </data>
+  <data name="OpusBitrateHint" xml:space="preserve">
+    <value>较低的比特率可节省更多带宽，但可能降低音频质量。推荐语音使用 32kbps。</value> <!-- CHANGED: Emphasized 32kbps as max/recommended -->
+  </data>
+  <data name="OpusComplexityHint" xml:space="preserve">
+    <value>更高的复杂度可改善压缩效果，但会增加 CPU 使用率。5 是很好的平衡选择。</value> <!-- CHANGED: Emphasized 5 as max/good balance -->
+  </data>
+  <data name="ValidationOpusBitrateInvalid" xml:space="preserve">
+    <value>Opus比特率必须在8000-32000之间。</value> <!-- CHANGED: Updated max value -->
+  </data>
+  <data name="ValidationOpusComplexityInvalid" xml:space="preserve">
+    <value>Opus复杂度必须在0-5之间。</value> <!-- CHANGED: Updated max value -->
+  </data>
 </root>

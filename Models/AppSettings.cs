@@ -33,6 +33,11 @@ namespace lingualink_client.Models
         public bool UseCustomTemplate { get; set; } = false; // Whether to use template system or raw text
         public string UserCustomTemplateText { get; set; } = "{英文}\n{日文}\n{中文}"; // User's custom template text that persists
 
+        // Audio Encoding Settings
+        public bool UseOpusEncoding { get; set; } = true; // 默认使用Opus编码以减少带宽
+        public int OpusBitrate { get; set; } = 32000; // Opus比特率 (32kbps是语音的好选择)
+        public int OpusComplexity { get; set; } = 5; // 编码复杂度 (0-10, 5是平衡选择)
+
         // Initialize default templates if custom templates list is empty
         public void EnsureDefaultTemplates()
         {

@@ -35,6 +35,15 @@ namespace lingualink_client.ViewModels
         public string SaveLabel => LanguageManager.GetString("Save");
         public string RevertLabel => LanguageManager.GetString("Revert");
         public string VolumeThresholdHint => LanguageManager.GetString("VolumeThresholdHint");
+        
+        // 音频编码相关标签
+        public string UseOpusEncodingLabel => LanguageManager.GetString("UseOpusEncoding");
+        public string OpusBitrateLabel => LanguageManager.GetString("OpusBitrate");
+        public string OpusComplexityLabel => LanguageManager.GetString("OpusComplexity");
+        public string AudioEncodingLabel => LanguageManager.GetString("AudioEncoding");
+        public string OpusEncodingHint => LanguageManager.GetString("OpusEncodingHint");
+        public string OpusBitrateHint => LanguageManager.GetString("OpusBitrateHint");
+        public string OpusComplexityHint => LanguageManager.GetString("OpusComplexityHint");
 
         // 将属性转换为 [ObservableProperty]
         [ObservableProperty] private string _serverUrl = string.Empty;
@@ -49,6 +58,11 @@ namespace lingualink_client.ViewModels
         [ObservableProperty] private int _oscPort;
         [ObservableProperty] private bool _oscSendImmediately;
         [ObservableProperty] private bool _oscPlayNotificationSound;
+        
+        // 音频编码相关属性
+        [ObservableProperty] private bool _useOpusEncoding;
+        [ObservableProperty] private int _opusBitrate;
+        [ObservableProperty] private int _opusComplexity;
         
         public ServicePageViewModel(SettingsService settingsService)
         {
@@ -76,6 +90,13 @@ namespace lingualink_client.ViewModels
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(SaveLabel));
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(RevertLabel));
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(VolumeThresholdHint));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(UseOpusEncodingLabel));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(OpusBitrateLabel));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(OpusComplexityLabel));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(AudioEncodingLabel));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(OpusEncodingHint));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(OpusBitrateHint));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(OpusComplexityHint));
         }
 
         // MinRecordingVolumeThreshold 属性的 OnChanged 回调
@@ -86,6 +107,28 @@ namespace lingualink_client.ViewModels
             {
                 _minRecordingVolumeThreshold = Math.Clamp(newValue, 0.0, 1.0); // 直接更新 backing field
                 OnPropertyChanged(nameof(MinRecordingVolumeThreshold)); // 通知属性变更
+            }
+        }
+
+        // OpusBitrate 属性的 OnChanged 回调
+        partial void OnOpusBitrateChanged(int oldValue, int newValue)
+        {
+            // 限制Opus比特率在合理范围内 (8000 - 32000)
+            if (newValue < 8000 || newValue > 32000)
+            {
+                _opusBitrate = Math.Clamp(newValue, 8000, 32000);
+                OnPropertyChanged(nameof(OpusBitrate));
+            }
+        }
+
+        // OpusComplexity 属性的 OnChanged 回调
+        partial void OnOpusComplexityChanged(int oldValue, int newValue)
+        {
+            // 限制Opus复杂度在0-5之间
+            if (newValue < 0 || newValue > 5)
+            {
+                _opusComplexity = Math.Clamp(newValue, 0, 5);
+                OnPropertyChanged(nameof(OpusComplexity));
             }
         }
 
@@ -103,6 +146,11 @@ namespace lingualink_client.ViewModels
             OscPort = settings.OscPort;
             OscSendImmediately = settings.OscSendImmediately;
             OscPlayNotificationSound = settings.OscPlayNotificationSound;
+            
+            // 加载音频编码设置
+            UseOpusEncoding = settings.UseOpusEncoding;
+            OpusBitrate = settings.OpusBitrate;
+            OpusComplexity = settings.OpusComplexity;
         }
 
         private bool ValidateAndBuildSettings(out AppSettings? updatedSettings)
@@ -143,6 +191,21 @@ namespace lingualink_client.ViewModels
                     return false;
                 }
             }
+
+            // 验证音频编码设置
+            if (UseOpusEncoding)
+            {
+                if (OpusBitrate < 8000 || OpusBitrate > 32000)
+                {
+                    MessageBox.Show(LanguageManager.GetString("ValidationOpusBitrateInvalid"), LanguageManager.GetString("ValidationErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
+                    return false;
+                }
+                if (OpusComplexity < 0 || OpusComplexity > 5)
+                {
+                    MessageBox.Show(LanguageManager.GetString("ValidationOpusComplexityInvalid"), LanguageManager.GetString("ValidationErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
+                    return false;
+                }
+            }
             
             if (updatedSettings == null) updatedSettings = new AppSettings(); // Should not happen if LoadSettings worked
 
@@ -158,6 +221,11 @@ namespace lingualink_client.ViewModels
             updatedSettings.OscPort = this.OscPort;
             updatedSettings.OscSendImmediately = this.OscSendImmediately;
             updatedSettings.OscPlayNotificationSound = this.OscPlayNotificationSound;
+            
+            // 更新音频编码设置
+            updatedSettings.UseOpusEncoding = this.UseOpusEncoding;
+            updatedSettings.OpusBitrate = this.OpusBitrate;
+            updatedSettings.OpusComplexity = this.OpusComplexity;
             
             return true;
         }

@@ -1,6 +1,7 @@
 ﻿using lingualink_client.ViewModels;
 using lingualink_client.Services;
 using System.Windows;
+using System.Threading.Tasks;
 
 namespace lingualink_client
 {
@@ -23,6 +24,12 @@ namespace lingualink_client
             System.Threading.Thread.CurrentThread.CurrentCulture = culture;
             
             SharedIndexWindowViewModel = new IndexWindowViewModel();
+            
+            // Test OGG/OPUS generation
+            _ = Task.Run(async () => {
+                bool success = await TestOggOpus.TestOggOpusGeneration();
+                System.Diagnostics.Debug.WriteLine($"OGG/OPUS test result: {success}");
+            });
         }
 
         protected override void OnExit(ExitEventArgs e)

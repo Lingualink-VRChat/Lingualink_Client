@@ -33,7 +33,10 @@ namespace lingualink_client.Services.Managers
 
             _translationService = new TranslationService(
                 _appSettings.ServerUrl,
-                _appSettings.ApiKey);
+                _appSettings.ApiKey,
+                _appSettings.UseOpusEncoding,
+                _appSettings.OpusBitrate,
+                _appSettings.OpusComplexity);
             _audioService = new AudioService(_appSettings);
 
             // 初始化OSC服务

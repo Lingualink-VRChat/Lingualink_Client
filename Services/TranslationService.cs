@@ -16,12 +16,15 @@ namespace lingualink_client.Services
         private readonly string _serverUrl;
         private readonly string _apiKey;
         private readonly HttpClient _httpClient;
+        private readonly AudioEncoderService? _audioEncoder;
+        private readonly bool _useOpusEncoding;
         private bool _disposed = false;
  
-        public TranslationService(string serverUrl, string apiKey = "")
+        public TranslationService(string serverUrl, string apiKey = "", bool useOpusEncoding = true, int opusBitrate = 32000, int opusComplexity = 5)
         {
             _serverUrl = serverUrl;
             _apiKey = apiKey;
+            _useOpusEncoding = useOpusEncoding;
             _httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
             
             // Always attempt to set up authentication headers if an API key is provided
@@ -29,6 +32,22 @@ namespace lingualink_client.Services
             {
                 // Use X-API-Key header (preferred by the new backend)
                 _httpClient.DefaultRequestHeaders.Add("X-API-Key", _apiKey);
+            }
+
+            // 初始化Opus编码器（如果启用）
+            if (_useOpusEncoding)
+            {
+                try
+                {
+                    _audioEncoder = new AudioEncoderService(AudioService.APP_SAMPLE_RATE, AudioService.APP_CHANNELS, opusBitrate, opusComplexity);
+                    Debug.WriteLine($"[AudioEncoder] Opus encoding enabled with bitrate: {opusBitrate}bps, complexity: {opusComplexity}");
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[AudioEncoder] Failed to initialize Opus encoder: {ex.Message}. Falling back to WAV.");
+                    _audioEncoder = null;
+                    _useOpusEncoding = false;
+                }
             }
         }
 
@@ -44,20 +63,68 @@ namespace lingualink_client.Services
                 return (null, null, LanguageManager.GetString("ErrorAudioEmpty"));
             }
 
-            string tempFilePath = Path.Combine(Path.GetTempPath(), $"segment_{DateTime.Now:yyyyMMddHHmmssfff}_{triggerReason}.wav");
+            string tempFilePath = string.Empty;
             string? responseContentString = null; // To store raw JSON
+            bool isOpusFile = false;
+            int originalSize = audioData.Length;
+            int encodedSize = audioData.Length;
+
             try
             {
-                await using (var writer = new WaveFileWriter(tempFilePath, waveFormat))
+                // 根据编码选择创建相应的音频文件
+                if (_useOpusEncoding && _audioEncoder != null)
                 {
-                    await writer.WriteAsync(audioData, 0, audioData.Length);
+                    tempFilePath = Path.Combine(Path.GetTempPath(), $"segment_{DateTime.Now:yyyyMMddHHmmssfff}_{triggerReason}.ogg");
+                    try
+                    {
+                        // 编码为OGG/Opus格式
+                        byte[] oggOpusData = _audioEncoder.EncodePcmToOpus(audioData, waveFormat);
+                        await File.WriteAllBytesAsync(tempFilePath, oggOpusData);
+                        encodedSize = oggOpusData.Length;
+                        isOpusFile = true;
+                        
+                        // 计算压缩比率
+                        double compressionRatio = AudioEncoderService.CalculateCompressionRatio(originalSize, encodedSize);
+                        Debug.WriteLine($"[AudioEncoder] OGG/Opus encoding: {originalSize} bytes -> {encodedSize} bytes (compression: {compressionRatio:F1}%)");
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"[AudioEncoder] OGG/Opus encoding failed: {ex.Message}. Falling back to WAV.");
+                        // 回退到WAV格式
+                        tempFilePath = Path.Combine(Path.GetTempPath(), $"segment_{DateTime.Now:yyyyMMddHHmmssfff}_{triggerReason}.wav");
+                        await using (var writer = new WaveFileWriter(tempFilePath, waveFormat))
+                        {
+                            await writer.WriteAsync(audioData, 0, audioData.Length);
+                        }
+                        isOpusFile = false;
+                    }
+                }
+                else
+                {
+                    // 使用传统的WAV格式
+                    tempFilePath = Path.Combine(Path.GetTempPath(), $"segment_{DateTime.Now:yyyyMMddHHmmssfff}_{triggerReason}.wav");
+                    await using (var writer = new WaveFileWriter(tempFilePath, waveFormat))
+                    {
+                        await writer.WriteAsync(audioData, 0, audioData.Length);
+                    }
+                    isOpusFile = false;
                 }
 
                 using (var formData = new MultipartFormDataContent())
                 {
                     var fileBytes = await File.ReadAllBytesAsync(tempFilePath);
                     var fileContent = new ByteArrayContent(fileBytes);
-                    fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("audio/wav");
+                    
+                    // 根据文件类型设置合适的Content-Type
+                    if (isOpusFile)
+                    {
+                        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("audio/ogg");
+                    }
+                    else
+                    {
+                        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("audio/wav");
+                    }
+                    
                     formData.Add(fileContent, "audio_file", Path.GetFileName(tempFilePath));
 
                     // Add user_prompt field as required by new API
@@ -140,6 +207,7 @@ namespace lingualink_client.Services
                 if (disposing)
                 {
                     _httpClient?.Dispose();
+                    _audioEncoder?.Dispose();
                 }
                 _disposed = true;
             }
