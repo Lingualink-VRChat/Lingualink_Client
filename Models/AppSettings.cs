@@ -14,8 +14,8 @@ namespace lingualink_client.Models
         public bool AuthEnabled { get; } = true;
 
         // VAD Parameters (defaults from your AudioService)
-        public double SilenceThresholdSeconds { get; set; } = 0.7;
-        public double MinVoiceDurationSeconds { get; set; } = 0.7;
+        public double SilenceThresholdSeconds { get; set; } = 0.6;
+        public double MinVoiceDurationSeconds { get; set; } = 0.5;
         public double MaxVoiceDurationSeconds { get; set; } = 10.0;
         public double MinRecordingVolumeThreshold { get; set; } = 0.05;
 

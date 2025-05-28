@@ -8,6 +8,17 @@ using WebRtcVadSharp;
 
 namespace lingualink_client.Services
 {
+    /// <summary>
+    /// VAD状态枚举 - 用于数据驱动的状态管理
+    /// </summary>
+    public enum VadState
+    {
+        Idle,           // 空闲状态（未启动）
+        Listening,      // 监听中（等待语音）
+        SpeechDetected, // 检测到语音（累积中）
+        Processing      // 处理中（发送后）
+    }
+
     public class AudioService : IDisposable
     {
         // --- VAD 和音频处理相关常量 ---
@@ -29,13 +40,24 @@ namespace lingualink_client.Services
         private DateTime _lastVoiceActivityTime;
         private List<byte> _currentAudioSegment = new List<byte>();
         private WebRtcVad? _vadInstance;
+        private VadState _currentState = VadState.Idle;
 
         private WaveInEvent? _waveSource;
         private readonly object _vadLock = new object();
         private bool _isCurrentlyWorking = false; 
 
         public event EventHandler<AudioSegmentEventArgs>? AudioSegmentReady;
-        public event EventHandler<string>? StatusUpdated; 
+        public event EventHandler<string>? StatusUpdated;
+        
+        /// <summary>
+        /// VAD状态变化事件（用于数据驱动绑定）
+        /// </summary>
+        public event EventHandler<VadState>? StateChanged;
+
+        /// <summary>
+        /// 当前VAD状态（用于数据驱动绑定）
+        /// </summary>
+        public VadState CurrentState => _currentState;
 
         public AudioService(AppSettings settings)
         {
@@ -44,6 +66,37 @@ namespace lingualink_client.Services
             _minVoiceDurationSeconds = settings.MinVoiceDurationSeconds;
             _maxVoiceDurationSeconds = settings.MaxVoiceDurationSeconds;
             _minRecordingVolumeThreshold = settings.MinRecordingVolumeThreshold;
+        }
+
+        /// <summary>
+        /// 更新VAD状态并触发相应的状态事件
+        /// </summary>
+        private void UpdateVadState(VadState newState, bool forceUpdate = false)
+        {
+            if (_currentState != newState || forceUpdate)
+            {
+                var oldState = _currentState;
+                _currentState = newState;
+                
+                // 触发状态变化事件（用于数据驱动绑定）
+                StateChanged?.Invoke(this, newState);
+                
+                string statusMessage = newState switch
+                {
+                    VadState.Idle => string.Empty,
+                    VadState.Listening => LanguageManager.GetString("AudioStatusListening"),
+                    VadState.SpeechDetected => LanguageManager.GetString("AudioStatusSpeechDetected"),
+                    VadState.Processing => LanguageManager.GetString("AudioStatusSilenceDetectedProcess"),
+                    _ => string.Empty
+                };
+
+                if (!string.IsNullOrEmpty(statusMessage))
+                {
+                    StatusUpdated?.Invoke(this, statusMessage);
+                }
+                
+                System.Diagnostics.Debug.WriteLine($"VAD State: {oldState} -> {newState}");
+            }
         }
 
         public bool IsWorking => _isCurrentlyWorking;
@@ -74,12 +127,14 @@ namespace lingualink_client.Services
                 _waveSource.RecordingStopped += OnRecordingStoppedHandler;
                 _waveSource.StartRecording();
                 _isCurrentlyWorking = true;
-                StatusUpdated?.Invoke(this, LanguageManager.GetString("AudioStatusListening")); // 修改点
+                
+                // 使用新的状态管理系统
+                UpdateVadState(VadState.Listening);
                 return true;
             }
             catch (Exception ex)
             {
-                StatusUpdated?.Invoke(this, string.Format(LanguageManager.GetString("AudioStatusStartFailed"), ex.Message)); // 修改点
+                StatusUpdated?.Invoke(this, string.Format(LanguageManager.GetString("AudioStatusStartFailed"), ex.Message));
                 System.Diagnostics.Debug.WriteLine($"AudioService Start Error: {ex.Message}");
                 Stop(true); 
                 return false;
@@ -109,6 +164,9 @@ namespace lingualink_client.Services
             }
             _currentAudioSegment.Clear();
             _isSpeaking = false;
+            
+            // 更新状态为空闲
+            UpdateVadState(VadState.Idle);
         }
 
         private double CalculatePeakVolume(byte[] pcm16BitAudioFrame, int bytesToProcess)
@@ -189,7 +247,8 @@ namespace lingualink_client.Services
                         if (!_isSpeaking)
                         {
                             _isSpeaking = true;
-                            StatusUpdated?.Invoke(this, LanguageManager.GetString("AudioStatusSpeechDetected")); // 修改点
+                            // 状态转换：监听 -> 检测到语音
+                            UpdateVadState(VadState.SpeechDetected);
                         }
                         _currentAudioSegment.AddRange(frameForVad);
                         _lastVoiceActivityTime = DateTime.UtcNow;
@@ -198,13 +257,22 @@ namespace lingualink_client.Services
                         {
                             var segmentData = _currentAudioSegment.ToArray();
                             _currentAudioSegment.Clear();
-                            _lastVoiceActivityTime = DateTime.UtcNow; 
+                            
+                            // 先显示分割状态
+                            StatusUpdated?.Invoke(this, LanguageManager.GetString("AudioStatusSpeechDetectedSplit"));
+                            
+                            // 发送段数据
                             AudioSegmentReady?.Invoke(this, new AudioSegmentEventArgs(segmentData, "max_duration_split"));
-                            if (_isCurrentlyWorking && _isSpeaking) StatusUpdated?.Invoke(this, LanguageManager.GetString("AudioStatusSpeechDetectedSplit")); // 修改点
+                            
+                            // 重置状态为监听，准备检测新段
+                            _isSpeaking = false;
+                            _lastVoiceActivityTime = DateTime.UtcNow;
+                            UpdateVadState(VadState.Listening);
                         }
                     }
                     else
                     {
+                        // 静音帧，不需要立即处理，由CheckSilenceTimeout处理
                     }
                 }
             }
@@ -223,16 +291,28 @@ namespace lingualink_client.Services
                     var segmentData = _currentAudioSegment.ToArray();
                     _currentAudioSegment.Clear();
 
-                    StatusUpdated?.Invoke(this, LanguageManager.GetString("AudioStatusSilenceDetectedProcess")); // 修改点
+                    // 状态转换：检测到语音 -> 处理中
+                    UpdateVadState(VadState.Processing);
 
                     if (segmentData.Length > 0 && GetSegmentDurationSeconds(segmentData.Length) >= _minVoiceDurationSeconds)
                     {
                         AudioSegmentReady?.Invoke(this, new AudioSegmentEventArgs(segmentData, "silence_timeout"));
-                        if (_isCurrentlyWorking && !_isSpeaking) StatusUpdated?.Invoke(this, LanguageManager.GetString("AudioStatusListening")); // 修改点
+                        
+                        // 段处理完成后，状态转换：处理中 -> 监听
+                        if (_isCurrentlyWorking)
+                        {
+                            UpdateVadState(VadState.Listening);
+                        }
                     }
                     else if (segmentData.Length > 0)
                     {
-                        StatusUpdated?.Invoke(this, LanguageManager.GetString("AudioStatusSegmentTooShort")); // 修改点
+                        StatusUpdated?.Invoke(this, LanguageManager.GetString("AudioStatusSegmentTooShort"));
+                        
+                        // 段太短也返回监听状态
+                        if (_isCurrentlyWorking)
+                        {
+                            UpdateVadState(VadState.Listening);
+                        }
                     }
                 }
             }
@@ -243,8 +323,9 @@ namespace lingualink_client.Services
             CleanupWaveSourceResources(); 
             if (e.Exception != null)
             {
-                StatusUpdated?.Invoke(this, string.Format(LanguageManager.GetString("AudioStatusFatalError"), e.Exception.Message)); // 修改点
-                _isCurrentlyWorking = false; 
+                StatusUpdated?.Invoke(this, string.Format(LanguageManager.GetString("AudioStatusFatalError"), e.Exception.Message));
+                _isCurrentlyWorking = false;
+                UpdateVadState(VadState.Idle);
             }
         }
         

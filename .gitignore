@@ -36,7 +36,7 @@ _ReSharper*/
 
 # Test results
 TestResults/
-
+Properties/PublishProfiles/*
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
 

@@ -1,5 +1,6 @@
 using System;
 using lingualink_client.Models;
+using lingualink_client.Services;
 
 namespace lingualink_client.Services.Interfaces
 {
@@ -39,6 +40,11 @@ namespace lingualink_client.Services.Interfaces
         /// OSC消息发送事件
         /// </summary>
         event EventHandler<OscMessageEventArgs> OscMessageSent;
+
+        /// <summary>
+        /// VAD状态变化事件（用于数据驱动绑定）
+        /// </summary>
+        event EventHandler<VadState> VadStateChanged;
     }
 
     /// <summary>

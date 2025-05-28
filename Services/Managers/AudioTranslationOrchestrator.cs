@@ -3,7 +3,10 @@ using System.Threading.Tasks;
 using System.Windows;
 using NAudio.Wave;
 using lingualink_client.Models;
+using lingualink_client.Services;
 using lingualink_client.Services.Interfaces;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace lingualink_client.Services.Managers
 {
@@ -23,6 +26,11 @@ namespace lingualink_client.Services.Managers
         public event EventHandler<string>? StatusUpdated;
         public event EventHandler<TranslationResultEventArgs>? TranslationCompleted;
         public event EventHandler<OscMessageEventArgs>? OscMessageSent;
+        
+        /// <summary>
+        /// VAD状态变化事件（用于更精确的状态管理）
+        /// </summary>
+        public event EventHandler<VadState>? VadStateChanged;
 
         public AudioTranslationOrchestrator(
             AppSettings appSettings,
@@ -59,6 +67,7 @@ namespace lingualink_client.Services.Managers
             // 订阅音频服务事件
             _audioService.AudioSegmentReady += OnAudioSegmentReadyForTranslation;
             _audioService.StatusUpdated += OnAudioServiceStatusUpdate;
+            _audioService.StateChanged += OnVadStateChanged;
         }
 
         public bool Start(int microphoneIndex)
@@ -83,6 +92,13 @@ namespace lingualink_client.Services.Managers
             var formattedStatus = string.Format(LanguageManager.GetString("StatusPrefix"), status);
             OnStatusUpdated(formattedStatus);
             _loggingManager.AddMessage($"AudioService Status: {status}");
+        }
+
+        private void OnVadStateChanged(object? sender, VadState newState)
+        {
+            // 转发VAD状态变化事件给数据驱动组件
+            VadStateChanged?.Invoke(this, newState);
+            _loggingManager.AddMessage($"VAD State Changed: {newState}");
         }
 
         private async void OnAudioSegmentReadyForTranslation(object? sender, AudioSegmentEventArgs e)
@@ -143,7 +159,7 @@ namespace lingualink_client.Services.Managers
                     resultArgs.OriginalText = response.Data.Raw_Text;
                     resultArgs.DurationSeconds = response.Duration_Seconds;
                     
-                    // 使用模板系统生成OSC文本
+                    // 生成OSC文本
                     if (_appSettings.UseCustomTemplate)
                     {
                         var selectedTemplate = _appSettings.GetSelectedTemplate();
@@ -162,7 +178,8 @@ namespace lingualink_client.Services.Managers
                     }
                     else
                     {
-                        translatedTextForOsc = response.Data.Raw_Text;
+                        // 根据选择的目标语言动态生成类似模板的输出
+                        translatedTextForOsc = GenerateTargetLanguageOutput(response.Data, targetLanguagesForRequest);
                     }
                     
                     resultArgs.ProcessedText = translatedTextForOsc;
@@ -279,10 +296,58 @@ namespace lingualink_client.Services.Managers
             OscMessageSent?.Invoke(this, args);
         }
 
+        /// <summary>
+        /// 根据选择的目标语言动态生成类似模板的输出
+        /// </summary>
+        /// <param name="data">翻译数据</param>
+        /// <param name="targetLanguages">目标语言（逗号分隔）</param>
+        /// <returns>格式化的输出文本</returns>
+        private string GenerateTargetLanguageOutput(TranslationData data, string targetLanguages)
+        {
+            if (data == null || string.IsNullOrEmpty(targetLanguages))
+            {
+                return string.Empty;
+            }
+
+            var languages = targetLanguages.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                                         .Select(lang => lang.Trim())
+                                         .Where(lang => !string.IsNullOrEmpty(lang))
+                                         .ToArray();
+
+            if (languages.Length == 0)
+            {
+                return string.Empty;
+            }
+
+            var outputParts = new List<string>();
+
+            foreach (var language in languages)
+            {
+                var languageText = data.GetLanguageField(language);
+                if (!string.IsNullOrEmpty(languageText))
+                {
+                    outputParts.Add(languageText);
+                }
+            }
+
+            // 如果没有找到任何语言字段，不发送OSC消息
+            if (outputParts.Count == 0)
+            {
+                _loggingManager.AddMessage($"Warning: No translation found for selected languages ({targetLanguages}), skipping OSC send");
+                return string.Empty;
+            }
+
+            var result = string.Join("\n", outputParts);
+            _loggingManager.AddMessage($"Generated target language output for languages: {string.Join(", ", languages)} -> {outputParts.Count} translations found");
+            
+            return result;
+        }
+
         public void Dispose()
         {
             _audioService.AudioSegmentReady -= OnAudioSegmentReadyForTranslation;
             _audioService.StatusUpdated -= OnAudioServiceStatusUpdate;
+            _audioService.StateChanged -= OnVadStateChanged;
             
             _audioService?.Dispose();
             _translationService?.Dispose();
