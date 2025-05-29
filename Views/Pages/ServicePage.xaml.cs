@@ -17,18 +17,6 @@ namespace lingualink_client.Views
             InitializeComponent();
             _viewModel = new ServicePageViewModel(new SettingsService());
             DataContext = _viewModel;
-
-            // Add this line to handle PasswordChanged event
-            ApiKeyPasswordBox.PasswordChanged += ApiKeyPasswordBox_PasswordChanged;
-        }
-
-        // Add this event handler
-        private void ApiKeyPasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
-        {
-            if (_viewModel != null && sender is Wpf.Ui.Controls.PasswordBox pb)
-            {
-                _viewModel.ApiKey = pb.Password;
-            }
         }
     }
 }

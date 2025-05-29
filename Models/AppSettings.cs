@@ -7,7 +7,7 @@ namespace lingualink_client.Models
         public string GlobalLanguage { get; set; } = Services.LanguageManager.DetectSystemLanguage();
 
         public string TargetLanguages { get; set; } = "英文,日文"; // Default: English, Japanese
-        public string ServerUrl { get; set; } = "https://api.lingualink.aiatechco.com/api/v1/translate_audio";
+        public string ServerUrl { get; set; } = "https://api.lingualink.aiatechco.com/api/v1/";
 
         // API Authentication Settings
         public string ApiKey { get; set; } = "";
@@ -20,7 +20,7 @@ namespace lingualink_client.Models
         public double MinRecordingVolumeThreshold { get; set; } = 0.05;
 
          // OSC Settings for VRChat
-        public bool EnableOsc { get; set; } = false;
+        public bool EnableOsc { get; set; } = true;
         public string OscIpAddress { get; set; } = "127.0.0.1";
         public int OscPort { get; set; } = 9000; // VRChat default input port
         public bool OscSendImmediately { get; set; } = true; // Corresponds to 'b' param in /chatbox/input

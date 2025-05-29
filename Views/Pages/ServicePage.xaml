@@ -16,71 +16,42 @@
     <ui:PassiveScrollViewer VerticalScrollBarVisibility="Auto">
         <Grid Margin="15">
             <Grid.RowDefinitions>
-                <!--  Row 0-3 were for Target Languages, now removed  -->
-                <RowDefinition Height="Auto" />
-                <!--  Server URL Label  -->
-                <RowDefinition Height="Auto" />
-                <!--  Server URL TextBox  -->
-                <RowDefinition Height="Auto" />
-                <!--  API Authentication Expander  -->
-                <RowDefinition Height="Auto" />
-                <!--  VAD Expander  -->
-                <RowDefinition Height="Auto" />
-                <!--  OSC Expander  -->
-                <RowDefinition Height="Auto" />
-                <!--  Audio Encoding Expander  -->
-                <RowDefinition Height="*" />
-                <!--  Spacer  -->
-                <RowDefinition Height="Auto" />
-                <!--  Save/Cancel Buttons  -->
+                <RowDefinition Height="Auto" /> <!-- 语音识别设置 -->
+                <RowDefinition Height="Auto" /> <!-- VRChat集成 -->
+                <RowDefinition Height="Auto" /> <!-- 音频处理 -->
+                <RowDefinition Height="*" />   <!-- 占位符 -->
+                <RowDefinition Height="Auto" /> <!-- 保存/撤销按钮 -->
             </Grid.RowDefinitions>
 
-            <!--  Target Language UI Removed  -->
-
-            <Label Grid.Row="0" Content="{Binding ServerUrlLabel}" />
-            <ui:TextBox
-                x:Name="ServerUrlTextBox"
-                Grid.Row="1"
-                Height="52"
-                Margin="0,0,0,10"
-                VerticalContentAlignment="Center"
-                Text="{Binding ServerUrl, UpdateSourceTrigger=PropertyChanged}" />
-
+            <!-- 1. 语音识别设置 -->
             <ui:CardExpander
-                Grid.Row="2"
-                Margin="0,0,0,10"
-                Header="{Binding ApiAuthLabel}"
+                Grid.Row="0"
+                Margin="0,0,0,15"
+                Header="{Binding VoiceRecognitionSettingsLabel}"
                 IsExpanded="False">
                 <StackPanel Margin="10,5,0,0">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-                        <Label
-                            Grid.Row="0"
-                            Content="{Binding ApiKeyLabel}" />
-                        <ui:PasswordBox
-                            x:Name="ApiKeyPasswordBox"
-                            Grid.Row="1"
-                            Margin="0,0,0,5"
-                            Password="{Binding ApiKey, UpdateSourceTrigger=PropertyChanged}" />
-                    </Grid>
-                </StackPanel>
-            </ui:CardExpander>
-
-            <ui:CardExpander
-                Grid.Row="3"
-                Margin="0,0,0,10"
-                Header="{Binding SilenceThresholdLabel}"
-                IsExpanded="False">
-                <StackPanel Margin="10,5,0,0">
+                    <!-- 分组说明 -->
+                    <ui:TextBlock
+                        FontSize="11"
+                        FontStyle="Italic"
+                        Foreground="Gray"
+                        Margin="0,0,0,10"
+                        Text="{Binding VoiceRecognitionSettingsHint}"
+                        TextWrapping="Wrap" />
+                    
+                    <!-- 静音检测阈值 -->
                     <Label Content="{Binding SilenceThresholdLabel}" />
                     <ui:TextBox Margin="0,0,0,5" Text="{Binding SilenceThresholdSeconds, UpdateSourceTrigger=PropertyChanged, StringFormat='N2'}" />
+                    
+                    <!-- 最小语音时长 -->
                     <Label Content="{Binding MinVoiceDurationLabel}" />
                     <ui:TextBox Margin="0,0,0,5" Text="{Binding MinVoiceDurationSeconds, UpdateSourceTrigger=PropertyChanged, StringFormat='N2'}" />
+                    
+                    <!-- 最大语音时长 -->
                     <Label Content="{Binding MaxVoiceDurationLabel}" />
                     <ui:TextBox Margin="0,0,0,5" Text="{Binding MaxVoiceDurationSeconds, UpdateSourceTrigger=PropertyChanged, StringFormat='N2'}" />
+                    
+                    <!-- 最小音量阈值 -->
                     <Label Margin="0,5,0,0" Content="{Binding MinVolumeThresholdLabel}" />
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -114,18 +85,33 @@
                 </StackPanel>
             </ui:CardExpander>
 
+            <!-- 2. VRChat 集成 -->
             <ui:CardExpander
-                Grid.Row="4"
-                Margin="0,0,0,10"
-                Header="{Binding EnableOscLabel}"
+                Grid.Row="1"
+                Margin="0,0,0,15"
+                Header="{Binding VrchatIntegrationLabel}"
                 IsExpanded="False">
                 <StackPanel Margin="10,5,0,0">
+                    <!-- 分组说明 -->
+                    <ui:TextBlock
+                        FontSize="11"
+                        FontStyle="Italic"
+                        Foreground="Gray"
+                        Margin="0,0,0,10"
+                        Text="{Binding VrchatIntegrationHint}"
+                        TextWrapping="Wrap" />
+                    
+                    <!-- 启用OSC -->
                     <CheckBox
-                        Margin="0,0,0,5"
+                        Margin="0,0,0,10"
                         Content="{Binding EnableOscLabel}"
                         IsChecked="{Binding EnableOsc}" />
+                    
+                    <!-- OSC设置组 -->
                     <Grid IsEnabled="{Binding EnableOsc}">
                         <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
@@ -135,6 +121,7 @@
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
+                        
                         <Label
                             Grid.Row="0"
                             Grid.Column="0"
@@ -146,6 +133,7 @@
                             Margin="0,0,0,5"
                             VerticalAlignment="Center"
                             Text="{Binding OscIpAddress, UpdateSourceTrigger=PropertyChanged}" />
+                        
                         <Label
                             Grid.Row="1"
                             Grid.Column="0"
@@ -154,16 +142,18 @@
                         <ui:TextBox
                             Grid.Row="1"
                             Grid.Column="1"
-                            Margin="0,0,0,5"
+                            Margin="0,0,0,10"
                             VerticalAlignment="Center"
                             Text="{Binding OscPort, UpdateSourceTrigger=PropertyChanged}" />
+                        
                         <CheckBox
                             Grid.Row="2"
                             Grid.Column="0"
                             Grid.ColumnSpan="2"
-                            Margin="0,5,0,5"
+                            Margin="0,0,0,5"
                             Content="{Binding SendImmediatelyLabel}"
                             IsChecked="{Binding OscSendImmediately}" />
+                        
                         <CheckBox
                             Grid.Row="3"
                             Grid.Column="0"
@@ -175,25 +165,38 @@
                 </StackPanel>
             </ui:CardExpander>
 
+            <!-- 3. 音频处理 -->
             <ui:CardExpander
-                Grid.Row="5"
-                Margin="0,0,0,10"
-                Header="{Binding AudioEncodingLabel}"
+                Grid.Row="2"
+                Margin="0,0,0,15"
+                Header="{Binding AudioProcessingLabel}"
                 IsExpanded="False">
                 <StackPanel Margin="10,5,0,0">
+                    <!-- 分组说明 -->
+                    <ui:TextBlock
+                        FontSize="11"
+                        FontStyle="Italic"
+                        Foreground="Gray"
+                        Margin="0,0,0,10"
+                        Text="{Binding AudioProcessingHint}"
+                        TextWrapping="Wrap" />
+                    
+                    <!-- 使用Opus编码 -->
                     <CheckBox
                         Margin="0,0,0,5"
                         Content="{Binding UseOpusEncodingLabel}"
                         IsChecked="{Binding UseOpusEncoding}"
-                        IsEnabled="False" /> <!-- Add this line to disable the checkbox -->
+                        IsEnabled="False" />
                     <ui:TextBlock
                         FontSize="10"
                         FontStyle="Italic"
                         Foreground="Gray"
+                        Margin="0,0,0,10"
                         Text="{Binding OpusEncodingHint}"
                         TextWrapping="Wrap" />
                     
-                    <Grid IsEnabled="{Binding UseOpusEncoding}" Margin="0,10,0,0">
+                    <!-- Opus设置组 -->
+                    <Grid IsEnabled="{Binding UseOpusEncoding}" Margin="0,0,0,0">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
@@ -203,6 +206,7 @@
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
                         
+                        <!-- Opus比特率 -->
                         <Label Grid.Row="0" Content="{Binding OpusBitrateLabel}" />
                         <Grid Grid.Row="1" Margin="0,0,0,5">
                             <Grid.ColumnDefinitions>
@@ -231,10 +235,12 @@
                             FontSize="10"
                             FontStyle="Italic"
                             Foreground="Gray"
+                            Margin="0,0,0,10"
                             Text="{Binding OpusBitrateHint}"
                             TextWrapping="Wrap" />
                             
-                        <Label Grid.Row="3" Content="{Binding OpusComplexityLabel}" Margin="0,10,0,0" />
+                        <!-- Opus复杂度 -->
+                        <Label Grid.Row="3" Content="{Binding OpusComplexityLabel}" />
                         <Grid Grid.Row="4" Margin="0,0,0,5">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
@@ -268,8 +274,9 @@
                 </StackPanel>
             </ui:CardExpander>
 
+            <!-- 保存/撤销按钮 -->
             <StackPanel
-                Grid.Row="7"
+                Grid.Row="4"
                 Margin="0,10,0,0"
                 HorizontalAlignment="Right"
                 Orientation="Horizontal">

@@ -66,6 +66,14 @@
                     </ui:NavigationViewItem.Icon>
                 </ui:NavigationViewItem>
                 <ui:NavigationViewItem
+                    Content="{Binding Account}"
+                    NavigationCacheMode="Enabled"
+                    TargetPageType="{x:Type pages:AccountPage}">
+                    <ui:NavigationViewItem.Icon>
+                        <ui:SymbolIcon Symbol="Person24" />
+                    </ui:NavigationViewItem.Icon>
+                </ui:NavigationViewItem>
+                <ui:NavigationViewItem
                     Content="{Binding MessageTemplates}"
                     NavigationCacheMode="Enabled"
                     TargetPageType="{x:Type pages:MessageTemplatePage}">

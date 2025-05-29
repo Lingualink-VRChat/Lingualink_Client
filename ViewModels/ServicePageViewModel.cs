@@ -45,9 +45,18 @@ namespace lingualink_client.ViewModels
         public string OpusBitrateHint => LanguageManager.GetString("OpusBitrateHint");
         public string OpusComplexityHint => LanguageManager.GetString("OpusComplexityHint");
 
-        // 将属性转换为 [ObservableProperty]
-        [ObservableProperty] private string _serverUrl = string.Empty;
-        [ObservableProperty] private string _apiKey = string.Empty;
+        // 新增分组标题标签
+        public string BackendServiceConnectionLabel => LanguageManager.GetString("BackendServiceConnection");
+        public string BackendServiceConnectionHint => LanguageManager.GetString("BackendServiceConnectionHint");
+        public string VoiceRecognitionSettingsLabel => LanguageManager.GetString("VoiceRecognitionSettings");
+        public string VoiceRecognitionSettingsHint => LanguageManager.GetString("VoiceRecognitionSettingsHint");
+        public string VrchatIntegrationLabel => LanguageManager.GetString("VrchatIntegration");
+        public string VrchatIntegrationHint => LanguageManager.GetString("VrchatIntegrationHint");
+        public string AudioProcessingLabel => LanguageManager.GetString("AudioProcessing");
+        public string AudioProcessingHint => LanguageManager.GetString("AudioProcessingHint");
+
+        // 将属性转换为 [ObservableProperty] (移除ServerUrl和ApiKey)
+        [ObservableProperty] private string _serverUrl = string.Empty; // 只读显示
         [ObservableProperty] private double _silenceThresholdSeconds;
         [ObservableProperty] private double _minVoiceDurationSeconds;
         [ObservableProperty] private double _maxVoiceDurationSeconds;
@@ -97,6 +106,16 @@ namespace lingualink_client.ViewModels
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(OpusEncodingHint));
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(OpusBitrateHint));
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(OpusComplexityHint));
+            
+            // 新增分组标题的语言变化订阅
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(BackendServiceConnectionLabel));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(BackendServiceConnectionHint));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(VoiceRecognitionSettingsLabel));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(VoiceRecognitionSettingsHint));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(VrchatIntegrationLabel));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(VrchatIntegrationHint));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(AudioProcessingLabel));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(AudioProcessingHint));
         }
 
         // MinRecordingVolumeThreshold 属性的 OnChanged 回调
@@ -135,7 +154,6 @@ namespace lingualink_client.ViewModels
         private void LoadSettingsFromModel(AppSettings settings)
         {
             ServerUrl = settings.ServerUrl;
-            ApiKey = settings.ApiKey;
             SilenceThresholdSeconds = settings.SilenceThresholdSeconds;
             MinVoiceDurationSeconds = settings.MinVoiceDurationSeconds;
             MaxVoiceDurationSeconds = settings.MaxVoiceDurationSeconds;
@@ -157,18 +175,8 @@ namespace lingualink_client.ViewModels
         {
             updatedSettings = _settingsService.LoadSettings(); // Load existing settings to preserve TargetLanguages
 
-            if (string.IsNullOrWhiteSpace(ServerUrl) || !Uri.TryCreate(ServerUrl, UriKind.Absolute, out _))
-            {
-                MessageBox.Show(LanguageManager.GetString("ValidationServerUrlInvalid"), LanguageManager.GetString("ValidationErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
-                return false;
-            }
+            // 移除服务器URL和API密钥的验证，这些现在在账户页面处理
             
-            // Validate API authentication settings
-            if (string.IsNullOrWhiteSpace(ApiKey))
-            {
-                MessageBox.Show(LanguageManager.GetString("ValidationApiKeyRequired"), LanguageManager.GetString("ValidationErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
-                return false;
-            }
             if (SilenceThresholdSeconds <= 0) { MessageBox.Show(LanguageManager.GetString("ValidationSilenceThresholdInvalid"), LanguageManager.GetString("ValidationErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error); return false; }
             if (MinVoiceDurationSeconds <= 0) { MessageBox.Show(LanguageManager.GetString("ValidationMinVoiceDurationInvalid"), LanguageManager.GetString("ValidationErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error); return false; }
             if (MaxVoiceDurationSeconds <= 0) { MessageBox.Show(LanguageManager.GetString("ValidationMaxVoiceDurationInvalid"), LanguageManager.GetString("ValidationErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error); return false; }
@@ -209,9 +217,7 @@ namespace lingualink_client.ViewModels
             
             if (updatedSettings == null) updatedSettings = new AppSettings(); // Should not happen if LoadSettings worked
 
-            // 更新只由当前页面管理的设置
-            updatedSettings.ServerUrl = this.ServerUrl;
-            updatedSettings.ApiKey = this.ApiKey;
+            // 更新只由当前页面管理的设置（不包括ServerUrl和ApiKey）
             updatedSettings.SilenceThresholdSeconds = this.SilenceThresholdSeconds;
             updatedSettings.MinVoiceDurationSeconds = this.MinVoiceDurationSeconds;
             updatedSettings.MaxVoiceDurationSeconds = this.MaxVoiceDurationSeconds;

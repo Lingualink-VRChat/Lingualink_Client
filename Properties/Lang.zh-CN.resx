@@ -510,21 +510,129 @@
     <value>Opus 比特率 (bps)</value>
   </data>
   <data name="OpusComplexity" xml:space="preserve">
-    <value>Opus 复杂度 (0-5)</value> <!-- CHANGED: Updated max value -->
+    <value>Opus 复杂度 (0-5)</value>
   </data>
   <data name="OpusEncodingHint" xml:space="preserve">
     <value>Opus 编码可显著减少带宽使用，通过压缩音频数据。建议网络较慢时使用。</value>
   </data>
   <data name="OpusBitrateHint" xml:space="preserve">
-    <value>较低的比特率可节省更多带宽，但可能降低音频质量。推荐语音使用 32kbps。</value> <!-- CHANGED: Emphasized 32kbps as max/recommended -->
+    <value>较低的比特率可节省更多带宽，但可能降低音频质量。推荐语音使用 32kbps。</value>
   </data>
   <data name="OpusComplexityHint" xml:space="preserve">
-    <value>更高的复杂度可改善压缩效果，但会增加 CPU 使用率。5 是很好的平衡选择。</value> <!-- CHANGED: Emphasized 5 as max/good balance -->
+    <value>更高的复杂度可改善压缩效果，但会增加 CPU 使用率。5 是很好的平衡选择。</value>
   </data>
   <data name="ValidationOpusBitrateInvalid" xml:space="preserve">
-    <value>Opus比特率必须在8000-32000之间。</value> <!-- CHANGED: Updated max value -->
+    <value>Opus比特率必须在8000-32000之间。</value>
   </data>
   <data name="ValidationOpusComplexityInvalid" xml:space="preserve">
-    <value>Opus复杂度必须在0-5之间。</value> <!-- CHANGED: Updated max value -->
+    <value>Opus复杂度必须在0-5之间。</value>
+  </data>
+
+  <!-- 新增：服务设置分组标题 -->
+  <data name="BackendServiceConnection" xml:space="preserve">
+    <value>后端服务连接</value>
+  </data>
+  <data name="BackendServiceConnectionHint" xml:space="preserve">
+    <value>配置连接到 LinguaLink 翻译服务器的设置。</value>
+  </data>
+  <data name="VoiceRecognitionSettings" xml:space="preserve">
+    <value>语音识别设置</value>
+  </data>
+  <data name="VoiceRecognitionSettingsHint" xml:space="preserve">
+    <value>配置语音活动检测和音频处理参数。</value>
+  </data>
+  <data name="VrchatIntegration" xml:space="preserve">
+    <value>VRChat 集成</value>
+  </data>
+  <data name="VrchatIntegrationHint" xml:space="preserve">
+    <value>配置 OSC 设置以将翻译消息发送到 VRChat。</value>
+  </data>
+  <data name="AudioProcessing" xml:space="preserve">
+    <value>音频处理</value>
+  </data>
+  <data name="AudioProcessingHint" xml:space="preserve">
+    <value>配置音频编码选项以优化带宽使用。</value>
+  </data>
+
+  <!-- 账户页面 -->
+  <data name="Account" xml:space="preserve">
+    <value>账户</value>
+  </data>
+  <data name="AccountSettings" xml:space="preserve">
+    <value>账户设置</value>
+  </data>
+  <data name="AuthenticationMode" xml:space="preserve">
+    <value>认证模式</value>
+  </data>
+  <data name="OfficialService" xml:space="preserve">
+    <value>官方服务</value>
+  </data>
+  <data name="CustomService" xml:space="preserve">
+    <value>自定义服务</value>
+  </data>
+  <data name="OfficialServiceHint" xml:space="preserve">
+    <value>使用官方 LinguaLink 服务，通过账户登录（即将推出）。</value>
+  </data>
+  <data name="CustomServiceHint" xml:space="preserve">
+    <value>连接到您自己的 LinguaLink 服务器，使用自定义 URL 和 API 密钥。</value>
+  </data>
+  <data name="UserLogin" xml:space="preserve">
+    <value>用户登录</value>
+  </data>
+  <data name="Username" xml:space="preserve">
+    <value>用户名</value>
+  </data>
+  <data name="Password" xml:space="preserve">
+    <value>密码</value>
+  </data>
+  <data name="Login" xml:space="preserve">
+    <value>登录</value>
+  </data>
+  <data name="Logout" xml:space="preserve">
+    <value>退出登录</value>
+  </data>
+  <data name="LoginStatus" xml:space="preserve">
+    <value>登录状态</value>
+  </data>
+  <data name="NotLoggedIn" xml:space="preserve">
+    <value>未登录</value>
+  </data>
+  <data name="LoggedInAs" xml:space="preserve">
+    <value>当前登录用户：{0}</value>
+  </data>
+  <data name="ComingSoon" xml:space="preserve">
+    <value>即将推出</value>
+  </data>
+  <data name="CustomServerSettings" xml:space="preserve">
+    <value>自定义服务器设置</value>
+  </data>
+  
+  <!-- 更新的账户页面字符串 -->
+  <data name="OfficialServiceLogin" xml:space="preserve">
+    <value>LinguaLink 官方服务</value>
+  </data>
+  <data name="OfficialServiceSubtitle" xml:space="preserve">
+    <value>使用我们的托管翻译服务快速开始</value>
+  </data>
+  <data name="AdvancedOptions" xml:space="preserve">
+    <value>高级选项</value>
+  </data>
+  <data name="UseCustomServer" xml:space="preserve">
+    <value>使用自定义服务器</value>
+  </data>
+  <data name="UseCustomServerHint" xml:space="preserve">
+    <value>如果您正在运行自己的 LinguaLink 服务器，请启用此选项</value>
+  </data>
+  <data name="GetStarted" xml:space="preserve">
+    <value>开始使用</value>
+  </data>
+  <data name="CreateAccount" xml:space="preserve">
+    <value>创建账户</value>
+  </data>
+  <data name="ForgotPassword" xml:space="preserve">
+    <value>忘记密码？</value>
+  </data>
+  <data name="ConnectionTest" xml:space="preserve">
+    <value>测试连接</value>
   </data>
 </root>

@@ -51,6 +51,48 @@ namespace lingualink_client.Services
             }
         }
 
+        public async Task<bool> VerifyApiKeyAsync()
+        {
+            if (string.IsNullOrEmpty(_apiKey))
+            {
+                Debug.WriteLine("[Auth] API Key is not configured. Skipping verification.");
+                return false; // Or handle as an error depending on requirements
+            }
+
+            var requestUri = new Uri(new Uri(_serverUrl), "auth/verify");
+            Debug.WriteLine($"[Auth] Verifying API Key at {requestUri}");
+
+            try
+            {
+                var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
+                // HttpClient already has X-API-Key header set if _apiKey is present
+
+                var response = await _httpClient.SendAsync(request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    Debug.WriteLine("[Auth] API Key verification successful.");
+                    return true;
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Debug.WriteLine($"[Auth] API Key verification failed. Status: {response.StatusCode}, Response: {errorContent}");
+                    return false;
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                Debug.WriteLine($"[Auth] API Key verification request failed: {ex.Message}");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[Auth] An unexpected error occurred during API Key verification: {ex.Message}");
+                return false;
+            }
+        }
+
         // Modified return type
         public async Task<(ServerResponse? Response, string? RawJsonResponse, string? ErrorMessage)> TranslateAudioSegmentAsync(
             byte[] audioData,
@@ -68,6 +110,9 @@ namespace lingualink_client.Services
             bool isOpusFile = false;
             int originalSize = audioData.Length;
             int encodedSize = audioData.Length;
+
+            var requestUrl = new Uri(new Uri(_serverUrl), "translate_audio");
+            Debug.WriteLine($"[TranslationService] Sending audio to: {requestUrl}");
 
             try
             {
@@ -127,24 +172,18 @@ namespace lingualink_client.Services
                     
                     formData.Add(fileContent, "audio_file", Path.GetFileName(tempFilePath));
 
+                    // Add target_languages field
+                    formData.Add(new StringContent(targetLanguagesCsv), "target_languages");
+                    Debug.WriteLine($"[DEBUG] TranslationService: Adding 'target_languages' = '{targetLanguagesCsv}'");
+
                     // Add user_prompt field as required by new API
                     formData.Add(new StringContent("请处理下面的音频。"), "user_prompt");
                     Debug.WriteLine($"[DEBUG] TranslationService: 添加 'user_prompt' = '请处理下面的音频。'");
+                    
+                    Debug.WriteLine($"[TranslationService] Sending HTTP POST request to {requestUrl} with audio file: {Path.GetFileName(tempFilePath)}, Content-Type: {fileContent.Headers.ContentType}, Original size: {originalSize} bytes, Encoded size: {encodedSize} bytes (Opus: {_useOpusEncoding})");
 
-                    if (!string.IsNullOrWhiteSpace(targetLanguagesCsv))
-                    {
-                        var languagesList = targetLanguagesCsv.Split(',')
-                                                              .Select(lang => lang.Trim())
-                                                              .Where(lang => !string.IsNullOrWhiteSpace(lang));
-                        foreach (var lang in languagesList)
-                        {
-                            Debug.WriteLine($"[DEBUG] TranslationService: 添加 'target_languages' = '{lang}'");
-                            formData.Add(new StringContent(lang), "target_languages");
-                        }
-                    }
-
-                    var httpResponse = await _httpClient.PostAsync(_serverUrl, formData);
-                    responseContentString = await httpResponse.Content.ReadAsStringAsync(); // Get raw JSON
+                    var httpResponse = await _httpClient.PostAsync(requestUrl, formData);
+                    responseContentString = await httpResponse.Content.ReadAsStringAsync();
 
                     if (httpResponse.IsSuccessStatusCode)
                     {

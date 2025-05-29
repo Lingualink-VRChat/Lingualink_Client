@@ -5,6 +5,7 @@ namespace lingualink_client.ViewModels
     public class MainWindowViewModel : ViewModelBase
     {
         public string Start => LanguageManager.GetString("Start");
+        public string Account => LanguageManager.GetString("Account");
         public string MessageTemplates => LanguageManager.GetString("MessageTemplates");
         public string Service => LanguageManager.GetString("Service");
         public string Settings => LanguageManager.GetString("Settings");
@@ -19,6 +20,7 @@ namespace lingualink_client.ViewModels
         public void RefreshLanguageBindings()
         {
             OnPropertyChanged(nameof(Start));
+            OnPropertyChanged(nameof(Account));
             OnPropertyChanged(nameof(MessageTemplates));
             OnPropertyChanged(nameof(Service));
             OnPropertyChanged(nameof(Settings));

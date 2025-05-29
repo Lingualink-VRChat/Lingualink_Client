@@ -503,6 +503,33 @@
   <data name="AudioEncoding" xml:space="preserve">
     <value>Audio Encoding</value>
   </data>
+  
+  <!-- NEW: Service Settings Section Headers -->
+  <data name="BackendServiceConnection" xml:space="preserve">
+    <value>Backend Service Connection</value>
+  </data>
+  <data name="BackendServiceConnectionHint" xml:space="preserve">
+    <value>Configure connection settings to the LinguaLink translation server.</value>
+  </data>
+  <data name="VoiceRecognitionSettings" xml:space="preserve">
+    <value>Voice Recognition Settings</value>
+  </data>
+  <data name="VoiceRecognitionSettingsHint" xml:space="preserve">
+    <value>Configure voice activity detection and audio processing parameters.</value>
+  </data>
+  <data name="VrchatIntegration" xml:space="preserve">
+    <value>VRChat Integration</value>
+  </data>
+  <data name="VrchatIntegrationHint" xml:space="preserve">
+    <value>Configure OSC settings to send translated messages to VRChat.</value>
+  </data>
+  <data name="AudioProcessing" xml:space="preserve">
+    <value>Audio Processing</value>
+  </data>
+  <data name="AudioProcessingHint" xml:space="preserve">
+    <value>Configure audio encoding options to optimize bandwidth usage.</value>
+  </data>
+  
   <data name="UseOpusEncoding" xml:space="preserve">
     <value>Use Opus Encoding</value>
   </data>
@@ -510,21 +537,103 @@
     <value>Opus Bitrate (bps)</value>
   </data>
   <data name="OpusComplexity" xml:space="preserve">
-    <value>Opus Complexity (0-5)</value> <!-- CHANGED: Updated max value -->
+    <value>Opus Complexity (0-5)</value>
   </data>
   <data name="OpusEncodingHint" xml:space="preserve">
     <value>Opus encoding significantly reduces bandwidth usage by compressing audio data. Recommended for slower internet connections.</value>
   </data>
   <data name="OpusBitrateHint" xml:space="preserve">
-    <value>Lower bitrates save more bandwidth but may reduce audio quality. 32kbps is recommended for voice.</value> <!-- CHANGED: Emphasized 32kbps as max/recommended -->
+    <value>Lower bitrates save more bandwidth but may reduce audio quality. 32kbps is recommended for voice.</value>
   </data>
   <data name="OpusComplexityHint" xml:space="preserve">
-    <value>Higher complexity improves compression but increases CPU usage. 5 is a good balance.</value> <!-- CHANGED: Emphasized 5 as max/good balance -->
+    <value>Higher complexity improves compression but increases CPU usage. 5 is a good balance.</value>
   </data>
   <data name="ValidationOpusBitrateInvalid" xml:space="preserve">
-    <value>Opus bitrate must be between 8000-32000 bps.</value> <!-- CHANGED: Updated max value -->
+    <value>Opus bitrate must be between 8000-32000 bps.</value>
   </data>
   <data name="ValidationOpusComplexityInvalid" xml:space="preserve">
-    <value>Opus complexity must be between 0-5.</value> <!-- CHANGED: Updated max value -->
+    <value>Opus complexity must be between 0-5.</value>
+  </data>
+
+  <!-- Account Page -->
+  <data name="Account" xml:space="preserve">
+    <value>Account</value>
+  </data>
+  <data name="AccountSettings" xml:space="preserve">
+    <value>Account Settings</value>
+  </data>
+  <data name="AuthenticationMode" xml:space="preserve">
+    <value>Authentication Mode</value>
+  </data>
+  <data name="OfficialService" xml:space="preserve">
+    <value>Official Service</value>
+  </data>
+  <data name="CustomService" xml:space="preserve">
+    <value>Custom Service</value>
+  </data>
+  <data name="OfficialServiceHint" xml:space="preserve">
+    <value>Use official LinguaLink service with account login (Coming Soon).</value>
+  </data>
+  <data name="CustomServiceHint" xml:space="preserve">
+    <value>Connect to your own LinguaLink server with custom URL and API key.</value>
+  </data>
+  <data name="UserLogin" xml:space="preserve">
+    <value>User Login</value>
+  </data>
+  <data name="Username" xml:space="preserve">
+    <value>Username</value>
+  </data>
+  <data name="Password" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="Login" xml:space="preserve">
+    <value>Login</value>
+  </data>
+  <data name="Logout" xml:space="preserve">
+    <value>Logout</value>
+  </data>
+  <data name="LoginStatus" xml:space="preserve">
+    <value>Login Status</value>
+  </data>
+  <data name="NotLoggedIn" xml:space="preserve">
+    <value>Not logged in</value>
+  </data>
+  <data name="LoggedInAs" xml:space="preserve">
+    <value>Logged in as: {0}</value>
+  </data>
+  <data name="ComingSoon" xml:space="preserve">
+    <value>Coming Soon</value>
+  </data>
+  <data name="CustomServerSettings" xml:space="preserve">
+    <value>Custom Server Settings</value>
+  </data>
+  
+  <!-- Updated Account Page strings -->
+  <data name="OfficialServiceLogin" xml:space="preserve">
+    <value>LinguaLink Official Service</value>
+  </data>
+  <data name="OfficialServiceSubtitle" xml:space="preserve">
+    <value>Get started with our managed translation service</value>
+  </data>
+  <data name="AdvancedOptions" xml:space="preserve">
+    <value>Advanced Options</value>
+  </data>
+  <data name="UseCustomServer" xml:space="preserve">
+    <value>Use custom server instead</value>
+  </data>
+  <data name="UseCustomServerHint" xml:space="preserve">
+    <value>Enable this option if you're running your own LinguaLink server</value>
+  </data>
+  <data name="GetStarted" xml:space="preserve">
+    <value>Get Started</value>
+  </data>
+  <data name="CreateAccount" xml:space="preserve">
+    <value>Create Account</value>
+  </data>
+  <data name="ForgotPassword" xml:space="preserve">
+    <value>Forgot Password?</value>
+  </data>
+  <data name="ConnectionTest" xml:space="preserve">
+    <value>Test Connection</value>
   </data>
 </root>
