@@ -7,6 +7,8 @@ using lingualink_client.Services;
 using lingualink_client.Services.Interfaces;
 using System.Linq;
 using System.Collections.Generic;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace lingualink_client.Services.Managers
 {
@@ -209,7 +211,7 @@ namespace lingualink_client.Services.Managers
                         e.TriggerReason, response.Message ?? LanguageManager.GetString("UnknownError"));
                     if (response.Details != null) 
                         logEntry += string.Format(LanguageManager.GetString("LogServerErrorDetails"), 
-                            response.Details.Content ?? "N/A");
+                            GetContentAsString(response.Details.Content));
                     _loggingManager.AddMessage(logEntry);
                 }
             }
@@ -341,6 +343,28 @@ namespace lingualink_client.Services.Managers
             _loggingManager.AddMessage($"Generated target language output for languages: {string.Join(", ", languages)} -> {outputParts.Count} translations found");
             
             return result;
+        }
+
+        private string GetContentAsString(JsonElement? content)
+        {
+            if (content == null)
+            {
+                return "N/A";
+            }
+
+            var element = content.Value;
+            
+            // 如果是字符串，直接返回字符串值
+            if (element.ValueKind == JsonValueKind.String)
+            {
+                return element.GetString() ?? "N/A";
+            }
+            
+            // 如果是对象、数组或其他类型，返回格式化的JSON字符串
+            return JsonSerializer.Serialize(element, new JsonSerializerOptions 
+            { 
+                WriteIndented = false 
+            });
         }
 
         public void Dispose()

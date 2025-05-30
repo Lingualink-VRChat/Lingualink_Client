@@ -66,7 +66,7 @@ namespace lingualink_client.Services
             try
             {
                 // 清理事件聚合器
-                if (ServiceContainer.TryResolve<IEventAggregator>(out var eventAggregator))
+                if (ServiceContainer.TryResolve<IEventAggregator>(out var eventAggregator) && eventAggregator != null)
                 {
                     eventAggregator.Clear();
                 }

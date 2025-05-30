@@ -53,7 +53,6 @@ namespace lingualink_client.ViewModels
         private void LoadSettings()
         {
             _appSettings = _settingsService.LoadSettings();
-            _appSettings.EnsureDefaultTemplates();
 
             UseCustomTemplateEnabled = _appSettings.UseCustomTemplate;
             
@@ -62,8 +61,6 @@ namespace lingualink_client.ViewModels
             
             UpdatePreview();
         }
-
-
 
         private void InitializePlaceholders()
         {

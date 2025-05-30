@@ -28,8 +28,6 @@ namespace lingualink_client.Models
 
         // Message Template Settings
         public string MessageTemplate { get; set; } = "{raw_text}"; // Default template
-        public List<MessageTemplate> CustomTemplates { get; set; } = new List<MessageTemplate>();
-        public string SelectedTemplateName { get; set; } = "完整文本"; // Default template name
         public bool UseCustomTemplate { get; set; } = false; // Whether to use template system or raw text
         public string UserCustomTemplateText { get; set; } = "{英文}\n{日文}\n{中文}"; // User's custom template text that persists
 
@@ -37,15 +35,6 @@ namespace lingualink_client.Models
         public bool UseOpusEncoding { get; set; } = true; // 默认使用Opus编码以减少带宽
         public int OpusBitrate { get; set; } = 32000; // Opus比特率 (32kbps是语音的好选择)
         public int OpusComplexity { get; set; } = 5; // 编码复杂度 (0-10, 5是平衡选择)
-
-        // Initialize default templates if custom templates list is empty
-        public void EnsureDefaultTemplates()
-        {
-            if (CustomTemplates == null || CustomTemplates.Count == 0)
-            {
-                CustomTemplates = TemplateProcessor.GetDefaultTemplates();
-            }
-        }
 
         // Get the currently selected template
         public MessageTemplate GetSelectedTemplate()
@@ -56,19 +45,8 @@ namespace lingualink_client.Models
                 return new MessageTemplate("自定义模板", UserCustomTemplateText, "用户自定义模板");
             }
             
-            EnsureDefaultTemplates();
-            
-            var template = CustomTemplates.Find(t => t.Name == SelectedTemplateName);
-            if (template != null)
-                return template;
-
-            // Fallback to default template
-            var defaultTemplate = CustomTemplates.Find(t => t.IsDefault);
-            if (defaultTemplate != null)
-                return defaultTemplate;
-
-            // Ultimate fallback
-            return new MessageTemplate("完整文本", "{raw_text}", "显示服务器返回的完整原始文本", true);
+            // Default fallback when custom template is disabled
+            return new MessageTemplate("完整文本", "{raw_text}", "显示服务器返回的完整原始文本");
         }
     }
 }

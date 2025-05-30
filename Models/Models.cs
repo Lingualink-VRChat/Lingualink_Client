@@ -268,7 +268,7 @@ namespace lingualink_client.Models
     public class ErrorDetails // Remains the same
     {
         public int Status_Code { get; set; }
-        public string? Content { get; set; }
+        public JsonElement? Content { get; set; }
     }
 
     public class AudioSegmentEventArgs : EventArgs // Remains the same
@@ -289,16 +289,14 @@ namespace lingualink_client.Models
         public string Name { get; set; } = "";
         public string Template { get; set; } = "";
         public string Description { get; set; } = "";
-        public bool IsDefault { get; set; } = false;
 
         public MessageTemplate() { }
 
-        public MessageTemplate(string name, string template, string description = "", bool isDefault = false)
+        public MessageTemplate(string name, string template, string description = "")
         {
             Name = name;
             Template = template;
             Description = description;
-            IsDefault = isDefault;
         }
     }
 
@@ -428,40 +426,6 @@ namespace lingualink_client.Models
             }
 
             return placeholders;
-        }
-
-        public static List<MessageTemplate> GetDefaultTemplates()
-        {
-            var currentLanguage = System.Threading.Thread.CurrentThread.CurrentUICulture.Name;
-            
-            if (currentLanguage.StartsWith("zh")) // Chinese
-            {
-                return new List<MessageTemplate>
-                {
-                    new MessageTemplate("完整文本", "{raw_text}", "显示服务器返回的完整原始文本", true),
-                    new MessageTemplate("英文+日文", "{英文}\n{日文}", "显示英文和日文翻译"),
-                    new MessageTemplate("英文+中文", "{英文}\n{中文}", "显示英文和中文翻译"),
-                    new MessageTemplate("三语对照", "{英文}\n{日文}\n{中文}", "显示英文、日文和中文"),
-                    new MessageTemplate("英文优先", "{英文}", "只显示英文翻译"),
-                    new MessageTemplate("日文优先", "{日文}", "只显示日文翻译"),
-                    new MessageTemplate("中文优先", "{中文}", "只显示中文翻译"),
-                    new MessageTemplate("自定义格式", "英文: {英文}\n日文: {日文}\n中文: {中文}", "带标签的格式化显示")
-                };
-            }
-            else // English and other languages
-            {
-                return new List<MessageTemplate>
-                {
-                    new MessageTemplate("Full Text", "{raw_text}", "Show complete server response", true),
-                    new MessageTemplate("English + Japanese", "{英文}\n{日文}", "Show English and Japanese translation"),
-                    new MessageTemplate("English + Chinese", "{英文}\n{中文}", "Show English and Chinese translation"),
-                    new MessageTemplate("Three Languages", "{英文}\n{日文}\n{中文}", "Show English, Japanese and Chinese"),
-                    new MessageTemplate("English Only", "{英文}", "Show English translation only"),
-                    new MessageTemplate("Japanese Only", "{日文}", "Show Japanese translation only"),
-                    new MessageTemplate("Chinese Only", "{中文}", "Show Chinese translation only"),
-                    new MessageTemplate("Custom Format", "English: {英文}\nJapanese: {日文}\nChinese: {中文}", "Formatted display with labels")
-                };
-            }
         }
 
         /// <summary>
