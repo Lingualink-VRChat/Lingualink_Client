@@ -3,10 +3,12 @@ using System.Linq;
 using System.Windows;
 using lingualink_client.Models;
 using lingualink_client.Services;
-using System; 
+using System;
 using System.Net;
 using CommunityToolkit.Mvvm.ComponentModel; // 添加
 using CommunityToolkit.Mvvm.Input;       // 添加
+// 使用现代化MessageBox替换系统默认的MessageBox
+using MessageBox = lingualink_client.Services.MessageBox;
 
 namespace lingualink_client.ViewModels
 {
@@ -20,9 +22,6 @@ namespace lingualink_client.ViewModels
         // public DelegateCommand RevertCommand { get; } // 移除此行
 
         // 语言相关的标签仍然是计算属性
-        public string ServerUrlLabel => LanguageManager.GetString("ServerUrl");
-        public string ApiAuthLabel => LanguageManager.GetString("ApiAuthentication");
-        public string ApiKeyLabel => LanguageManager.GetString("ApiKey");
         public string SilenceThresholdLabel => LanguageManager.GetString("SilenceThreshold");
         public string MinVoiceDurationLabel => LanguageManager.GetString("MinVoiceDuration");
         public string MaxVoiceDurationLabel => LanguageManager.GetString("MaxVoiceDuration");
@@ -46,8 +45,6 @@ namespace lingualink_client.ViewModels
         public string OpusComplexityHint => LanguageManager.GetString("OpusComplexityHint");
 
         // 新增分组标题标签
-        public string BackendServiceConnectionLabel => LanguageManager.GetString("BackendServiceConnection");
-        public string BackendServiceConnectionHint => LanguageManager.GetString("BackendServiceConnectionHint");
         public string VoiceRecognitionSettingsLabel => LanguageManager.GetString("VoiceRecognitionSettings");
         public string VoiceRecognitionSettingsHint => LanguageManager.GetString("VoiceRecognitionSettingsHint");
         public string VrchatIntegrationLabel => LanguageManager.GetString("VrchatIntegration");
@@ -55,8 +52,7 @@ namespace lingualink_client.ViewModels
         public string AudioProcessingLabel => LanguageManager.GetString("AudioProcessing");
         public string AudioProcessingHint => LanguageManager.GetString("AudioProcessingHint");
 
-        // 将属性转换为 [ObservableProperty] (移除ServerUrl和ApiKey)
-        [ObservableProperty] private string _serverUrl = string.Empty; // 只读显示
+        // 将属性转换为 [ObservableProperty]
         [ObservableProperty] private double _silenceThresholdSeconds;
         [ObservableProperty] private double _minVoiceDurationSeconds;
         [ObservableProperty] private double _maxVoiceDurationSeconds;
@@ -84,9 +80,6 @@ namespace lingualink_client.ViewModels
             LoadSettingsFromModel(_currentSettings);
 
             // 订阅语言变化，更新依赖语言管理器字符串的属性
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(ServerUrlLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(ApiAuthLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(ApiKeyLabel));
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(SilenceThresholdLabel));
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(MinVoiceDurationLabel));
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(MaxVoiceDurationLabel));
@@ -108,8 +101,6 @@ namespace lingualink_client.ViewModels
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(OpusComplexityHint));
             
             // 新增分组标题的语言变化订阅
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(BackendServiceConnectionLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(BackendServiceConnectionHint));
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(VoiceRecognitionSettingsLabel));
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(VoiceRecognitionSettingsHint));
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(VrchatIntegrationLabel));
@@ -153,7 +144,6 @@ namespace lingualink_client.ViewModels
 
         private void LoadSettingsFromModel(AppSettings settings)
         {
-            ServerUrl = settings.ServerUrl;
             SilenceThresholdSeconds = settings.SilenceThresholdSeconds;
             MinVoiceDurationSeconds = settings.MinVoiceDurationSeconds;
             MaxVoiceDurationSeconds = settings.MaxVoiceDurationSeconds;
@@ -173,7 +163,8 @@ namespace lingualink_client.ViewModels
 
         private bool ValidateAndBuildSettings(out AppSettings? updatedSettings)
         {
-            updatedSettings = _settingsService.LoadSettings(); // Load existing settings to preserve TargetLanguages
+            // 使用当前设置作为基础，而不是重新从文件加载
+            updatedSettings = _currentSettings ?? new AppSettings();
 
             // 移除服务器URL和API密钥的验证，这些现在在账户页面处理
             

@@ -23,11 +23,27 @@ namespace lingualink_client.Services
         {
             try
             {
+                System.Diagnostics.Debug.WriteLine($"[SettingsService] Loading settings from: {_settingsFilePath}");
+
                 if (File.Exists(_settingsFilePath))
                 {
                     string json = File.ReadAllText(_settingsFilePath);
                     var settings = JsonSerializer.Deserialize<AppSettings>(json);
-                    return settings ?? CreateDefaultSettings(); // Return default if deserialization fails
+
+                    if (settings != null)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[SettingsService] Loaded settings - ApiKey: '{settings.ApiKey}', ServerUrl: '{settings.ServerUrl}'");
+                        return settings;
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[SettingsService] Failed to deserialize settings, using defaults");
+                        return CreateDefaultSettings();
+                    }
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"[SettingsService] Settings file does not exist: {_settingsFilePath}");
                 }
             }
             catch (Exception ex)
@@ -35,8 +51,9 @@ namespace lingualink_client.Services
                 System.Diagnostics.Debug.WriteLine($"Error loading settings: {ex.Message}");
                 // Fallback to default settings
             }
-            
+
             // 首次运行，创建默认设置并保存
+            System.Diagnostics.Debug.WriteLine($"[SettingsService] Creating default settings");
             var defaultSettings = CreateDefaultSettings();
             SaveSettings(defaultSettings);
             return defaultSettings;
@@ -54,8 +71,13 @@ namespace lingualink_client.Services
         {
             try
             {
+                System.Diagnostics.Debug.WriteLine($"[SettingsService] Saving settings to: {_settingsFilePath}");
+                System.Diagnostics.Debug.WriteLine($"[SettingsService] ApiKey: '{settings.ApiKey}', ServerUrl: '{settings.ServerUrl}'");
+
                 string json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
                 File.WriteAllText(_settingsFilePath, json);
+
+                System.Diagnostics.Debug.WriteLine($"[SettingsService] Settings saved successfully");
             }
             catch (Exception ex)
             {

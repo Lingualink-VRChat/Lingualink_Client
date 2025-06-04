@@ -19,5 +19,17 @@ namespace lingualink_client.Views
             _viewModel = new AccountPageViewModel(new SettingsService());
             DataContext = _viewModel;
         }
+
+        /// <summary>
+        /// Handle PasswordBox PasswordChanged event for ApiKey to ensure proper two-way binding
+        /// </summary>
+        private void ApiKeyPasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
+        {
+            if (sender is Wpf.Ui.Controls.PasswordBox passwordBox && _viewModel != null)
+            {
+                System.Diagnostics.Debug.WriteLine($"[AccountPage] ApiKey PasswordBox changed to: '{passwordBox.Password}'");
+                _viewModel.ApiKey = passwordBox.Password;
+            }
+        }
     }
 } 

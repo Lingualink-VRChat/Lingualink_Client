@@ -7,7 +7,7 @@ namespace lingualink_client.Models
         public string GlobalLanguage { get; set; } = Services.LanguageManager.DetectSystemLanguage();
 
         public string TargetLanguages { get; set; } = "英文,日文"; // Default: English, Japanese
-        public string ServerUrl { get; set; } = "https://api.lingualink.aiatechco.com/api/v1/";
+        public string ServerUrl { get; set; } = "http://localhost:8080/api/v1/";
 
         // API Authentication Settings
         public string ApiKey { get; set; } = "";

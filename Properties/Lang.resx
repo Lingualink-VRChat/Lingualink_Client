@@ -636,4 +636,11 @@
   <data name="ConnectionTest" xml:space="preserve">
     <value>Test Connection</value>
   </data>
+
+
+
+  <!-- Audio Encoding Settings -->
+  <data name="AudioEncodingSettings" xml:space="preserve">
+    <value>Audio Encoding Settings</value>
+  </data>
 </root>

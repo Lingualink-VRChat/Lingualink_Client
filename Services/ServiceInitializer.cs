@@ -53,6 +53,9 @@ namespace lingualink_client.Services
             var microphoneManager = new ViewModels.Managers.MicrophoneManager();
             ServiceContainer.Register<IMicrophoneManager, ViewModels.Managers.MicrophoneManager>(microphoneManager);
 
+            // 注册新的API服务（延迟初始化，因为需要配置参数）
+            // LingualinkApiService 将在需要时通过工厂方法创建
+
             Debug.WriteLine("ServiceInitializer: Core services registered");
         }
 

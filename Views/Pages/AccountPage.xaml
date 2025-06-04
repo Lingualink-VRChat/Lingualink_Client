@@ -189,14 +189,18 @@
                                 Margin="0,0,0,10"
                                 VerticalContentAlignment="Center"
                                 Text="{Binding ServerUrl, UpdateSourceTrigger=PropertyChanged}"
-                                PlaceholderText="https://api.lingualink.aiatechco.com/api/v1/translate_audio" />
+                                PlaceholderText="http://localhost:8080/api/v1/" />
 
                             <!-- API 密钥 -->
                             <Label Content="{Binding ApiKeyLabel}" />
                             <ui:PasswordBox
+                                x:Name="ApiKeyPasswordBox"
                                 Margin="0,0,0,15"
                                 Password="{Binding ApiKey, UpdateSourceTrigger=PropertyChanged}"
+                                PasswordChanged="ApiKeyPasswordBox_PasswordChanged"
                                 PlaceholderText="Enter your API key here" />
+
+
 
                             <!-- 测试连接按钮 -->
                             <StackPanel Orientation="Horizontal">

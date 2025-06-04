@@ -7,6 +7,8 @@ using lingualink_client.Models;
 using lingualink_client.Services;
 using lingualink_client.Services.Interfaces;
 using lingualink_client.ViewModels.Managers;
+// 使用现代化MessageBox替换系统默认的MessageBox
+using MessageBox = lingualink_client.Services.MessageBox;
 
 namespace lingualink_client.ViewModels.Components
 {
@@ -86,14 +88,16 @@ namespace lingualink_client.ViewModels.Components
 
         private void OnGlobalSettingsChanged()
         {
+            System.Diagnostics.Debug.WriteLine($"[MainControlViewModel] OnGlobalSettingsChanged() called");
+
             Application.Current.Dispatcher.Invoke(() =>
             {
                 bool wasWorking = _orchestrator?.IsWorking ?? false;
                 LoadSettingsAndInitializeServices(true);
 
                 // 只有在不工作且没有显示特定状态时才更新状态
-                if (!wasWorking && !(_orchestrator?.IsWorking ?? false) && 
-                    !StatusText.Contains(LanguageManager.GetString("StatusOscInitFailed").Split(':')[0]) && 
+                if (!wasWorking && !(_orchestrator?.IsWorking ?? false) &&
+                    !StatusText.Contains(LanguageManager.GetString("StatusOscInitFailed").Split(':')[0]) &&
                     !StatusText.Contains(LanguageManager.GetString("StatusRefreshingMics").Split(':')[0]))
                 {
                     StatusText = LanguageManager.GetString("StatusSettingsUpdated");
@@ -103,8 +107,8 @@ namespace lingualink_client.ViewModels.Components
                     }
                     else
                     {
-                        StatusText += (_appSettings.EnableOsc) 
-                            ? $" {LanguageManager.GetString("StatusReadyWithOsc")}" 
+                        StatusText += (_appSettings.EnableOsc)
+                            ? $" {LanguageManager.GetString("StatusReadyWithOsc")}"
                             : $" {LanguageManager.GetString("StatusReadyWithoutOsc")}";
                     }
                 }
@@ -114,14 +118,18 @@ namespace lingualink_client.ViewModels.Components
 
         private void LoadSettingsAndInitializeServices(bool reattachEvents = false)
         {
+            System.Diagnostics.Debug.WriteLine($"[MainControlViewModel] LoadSettingsAndInitializeServices() called");
+
             bool wasWorking = _orchestrator?.IsWorking ?? false;
             int? previouslySelectedMicDeviceNumber = wasWorking ? _microphoneManager.SelectedMicrophone?.WaveInDeviceIndex : null;
 
             _appSettings = _settingsService.LoadSettings();
+            System.Diagnostics.Debug.WriteLine($"[MainControlViewModel] Loaded settings - ApiKey: '{_appSettings.ApiKey}', ServerUrl: '{_appSettings.ServerUrl}'");
 
             // 释放旧的协调器
             if (_orchestrator != null)
             {
+                System.Diagnostics.Debug.WriteLine($"[MainControlViewModel] Disposing old orchestrator");
                 _orchestrator.StatusUpdated -= OnOrchestratorStatusUpdated;
                 _orchestrator.TranslationCompleted -= OnTranslationCompleted;
                 _orchestrator.OscMessageSent -= OnOscMessageSent;
@@ -129,6 +137,7 @@ namespace lingualink_client.ViewModels.Components
             }
 
             // 创建新的协调器
+            System.Diagnostics.Debug.WriteLine($"[MainControlViewModel] Creating new AudioTranslationOrchestrator");
             _orchestrator = new Services.Managers.AudioTranslationOrchestrator(_appSettings, _loggingManager);
             _orchestrator.StatusUpdated += OnOrchestratorStatusUpdated;
             _orchestrator.TranslationCompleted += OnTranslationCompleted;

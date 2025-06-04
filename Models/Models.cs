@@ -25,6 +25,7 @@ namespace lingualink_client.Models
         public override string ToString() => FriendlyName;
     }
 
+    // Legacy ServerResponse for backward compatibility
     public class ServerResponse
     {
         public string? Status { get; set; }
@@ -33,6 +34,58 @@ namespace lingualink_client.Models
         public TranslationData? Data { get; set; } // This will hold our simplified TranslationData
         public string? Message { get; set; }
         public ErrorDetails? Details { get; set; }
+    }
+
+    // New API Response Models (v2.0)
+    public class NewApiResponse
+    {
+        [JsonPropertyName("request_id")]
+        public string? RequestId { get; set; }
+
+        [JsonPropertyName("status")]
+        public string? Status { get; set; }
+
+        [JsonPropertyName("transcription")]
+        public string? Transcription { get; set; }
+
+        [JsonPropertyName("translations")]
+        public Dictionary<string, string>? Translations { get; set; }
+
+        [JsonPropertyName("raw_response")]
+        public string? RawResponse { get; set; }
+
+        [JsonPropertyName("processing_time")]
+        public double ProcessingTime { get; set; }
+
+        [JsonPropertyName("metadata")]
+        public ApiMetadata? Metadata { get; set; }
+
+        [JsonPropertyName("error")]
+        public string? Error { get; set; }
+    }
+
+    public class ApiMetadata
+    {
+        [JsonPropertyName("model")]
+        public string? Model { get; set; }
+
+        [JsonPropertyName("prompt_tokens")]
+        public int PromptTokens { get; set; }
+
+        [JsonPropertyName("total_tokens")]
+        public int TotalTokens { get; set; }
+
+        [JsonPropertyName("backend")]
+        public string? Backend { get; set; }
+
+        [JsonPropertyName("original_format")]
+        public string? OriginalFormat { get; set; }
+
+        [JsonPropertyName("processed_format")]
+        public string? ProcessedFormat { get; set; }
+
+        [JsonPropertyName("conversion_applied")]
+        public bool ConversionApplied { get; set; }
     }
 
     public class TranslationData // Enhanced to support dynamic language fields

@@ -1,40 +1,27 @@
 using System;
-using System.Threading.Tasks;
-using System.Windows;
-using NAudio.Wave;
-using lingualink_client.Models;
-using lingualink_client.Services;
-using lingualink_client.Services.Interfaces;
-using System.Linq;
 using System.Collections.Generic;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using System.Linq;
+using System.Threading.Tasks;
+using lingualink_client.Models;
+using lingualink_client.Services.Interfaces;
 
 namespace lingualink_client.Services.Managers
 {
     /// <summary>
-    /// 音频翻译协调器 - 负责协调音频处理、翻译和OSC发送的完整流程
+    /// 文本翻译协调器 - 负责协调文本翻译和OSC发送的完整流程
     /// </summary>
-    public class AudioTranslationOrchestrator : IAudioTranslationOrchestrator, IDisposable
+    public class TextTranslationOrchestrator : IDisposable
     {
-        private readonly AudioService _audioService;
         private readonly ILingualinkApiService _apiService;
         private readonly OscService? _oscService;
         private readonly AppSettings _appSettings;
         private readonly ILoggingManager _loggingManager;
 
-        public bool IsWorking => _audioService.IsWorking;
-
         public event EventHandler<string>? StatusUpdated;
         public event EventHandler<TranslationResultEventArgs>? TranslationCompleted;
         public event EventHandler<OscMessageEventArgs>? OscMessageSent;
-        
-        /// <summary>
-        /// VAD状态变化事件（用于更精确的状态管理）
-        /// </summary>
-        public event EventHandler<VadState>? VadStateChanged;
 
-        public AudioTranslationOrchestrator(
+        public TextTranslationOrchestrator(
             AppSettings appSettings,
             ILoggingManager loggingManager)
         {
@@ -43,7 +30,6 @@ namespace lingualink_client.Services.Managers
 
             // 使用新的API服务工厂创建API服务
             _apiService = LingualinkApiServiceFactory.CreateApiService(_appSettings);
-            _audioService = new AudioService(_appSettings);
 
             // 初始化OSC服务
             if (_appSettings.EnableOsc)
@@ -61,52 +47,24 @@ namespace lingualink_client.Services.Managers
                     _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogOscInitFailed"), ex.Message));
                 }
             }
-
-            // 订阅音频服务事件
-            _audioService.AudioSegmentReady += OnAudioSegmentReadyForTranslation;
-            _audioService.StatusUpdated += OnAudioServiceStatusUpdate;
-            _audioService.StateChanged += OnVadStateChanged;
         }
 
-        public bool Start(int microphoneIndex)
+        /// <summary>
+        /// 处理文本翻译
+        /// </summary>
+        /// <param name="text">要翻译的文本</param>
+        /// <param name="sourceLanguage">源语言代码（可选）</param>
+        /// <returns>处理结果</returns>
+        public async Task<bool> ProcessTextAsync(string text, string? sourceLanguage = null)
         {
-            var success = _audioService.Start(microphoneIndex);
-            if (success)
+            if (string.IsNullOrWhiteSpace(text))
             {
-                OnStatusUpdated(LanguageManager.GetString("StatusListening"));
+                OnStatusUpdated("Text is required");
+                return false;
             }
-            return success;
-        }
 
-        public void Stop()
-        {
-            _audioService.Stop();
-            OnStatusUpdated(LanguageManager.GetString("StatusStopped"));
-        }
-
-        private void OnAudioServiceStatusUpdate(object? sender, string status)
-        {
-            // AudioService发送的status是纯状态描述，需要加上本地化的"状态:"前缀
-            var formattedStatus = string.Format(LanguageManager.GetString("StatusPrefix"), status);
-            OnStatusUpdated(formattedStatus);
-            _loggingManager.AddMessage($"AudioService Status: {status}");
-        }
-
-        private void OnVadStateChanged(object? sender, VadState newState)
-        {
-            // 转发VAD状态变化事件给数据驱动组件
-            VadStateChanged?.Invoke(this, newState);
-            _loggingManager.AddMessage($"VAD State Changed: {newState}");
-        }
-
-        private async void OnAudioSegmentReadyForTranslation(object? sender, AudioSegmentEventArgs e)
-        {
-            var currentUiStatus = string.Format(LanguageManager.GetString("StatusSendingSegment"), e.TriggerReason);
-            OnStatusUpdated(currentUiStatus);
-            _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogSendingSegment"), 
-                e.TriggerReason, e.AudioData.Length, DateTime.Now));
-
-            var waveFormat = new WaveFormat(AudioService.APP_SAMPLE_RATE, 16, AudioService.APP_CHANNELS);
+            OnStatusUpdated("Processing text translation...");
+            _loggingManager.AddMessage($"Processing text translation: {text.Substring(0, Math.Min(text.Length, 50))}...");
 
             // 确定目标语言（直接使用语言代码）
             List<string> targetLanguageCodes;
@@ -125,40 +83,38 @@ namespace lingualink_client.Services.Managers
                 _loggingManager.AddMessage($"Target languages converted: [{string.Join(", ", chineseLanguages)}] -> [{string.Join(", ", targetLanguageCodes)}]");
             }
 
-            // 使用新的API服务处理音频
-            var apiResult = await _apiService.ProcessAudioAsync(e.AudioData, waveFormat, targetLanguageCodes, e.TriggerReason);
+            // 使用新的API服务处理文本
+            var apiResult = await _apiService.ProcessTextAsync(text, targetLanguageCodes, sourceLanguage);
 
             string translatedTextForOsc = string.Empty;
             var resultArgs = new TranslationResultEventArgs
             {
-                TriggerReason = e.TriggerReason
+                TriggerReason = "manual_text"
             };
 
             // 记录原始响应
             if (!string.IsNullOrEmpty(apiResult.RawResponse))
             {
-                _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogServerRawResponse"),
-                    e.TriggerReason, apiResult.RawResponse));
+                _loggingManager.AddMessage($"Server raw response: {apiResult.RawResponse}");
             }
 
             if (!apiResult.IsSuccess)
             {
-                currentUiStatus = LanguageManager.GetString("StatusTranslationFailed");
+                OnStatusUpdated("Text translation failed");
                 resultArgs.IsSuccess = false;
                 resultArgs.ErrorMessage = apiResult.ErrorMessage;
-                resultArgs.ProcessedText = string.Format(LanguageManager.GetString("TranslationError"), apiResult.ErrorMessage);
-
-                _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogTranslationError"),
-                    e.TriggerReason, apiResult.ErrorMessage));
+                resultArgs.ProcessedText = $"Translation error: {apiResult.ErrorMessage}";
+                
+                _loggingManager.AddMessage($"Text translation error: {apiResult.ErrorMessage}");
             }
             else
             {
                 // 处理成功的情况
                 if (!string.IsNullOrEmpty(apiResult.Transcription))
                 {
-                    currentUiStatus = LanguageManager.GetString("StatusTranslationSuccess");
+                    OnStatusUpdated("Text translation successful");
                     resultArgs.IsSuccess = true;
-                    resultArgs.OriginalText = apiResult.Transcription;
+                    resultArgs.OriginalText = apiResult.Transcription; // 对于文本处理，这是源文本
                     resultArgs.DurationSeconds = apiResult.ProcessingTime;
                     
                     // 生成OSC文本 - 直接使用新API格式
@@ -166,10 +122,10 @@ namespace lingualink_client.Services.Managers
                     {
                         var selectedTemplate = _appSettings.GetSelectedTemplate();
                         translatedTextForOsc = ProcessTemplateWithNewApiResult(selectedTemplate.Template, apiResult);
-
+                        
                         if (string.IsNullOrEmpty(translatedTextForOsc))
                         {
-                            _loggingManager.AddMessage($"Template processing failed - contains unreplaced placeholders. Skipping OSC send for trigger: {e.TriggerReason}");
+                            _loggingManager.AddMessage("Template processing failed - contains unreplaced placeholders. Skipping OSC send for text translation");
                         }
                     }
                     else
@@ -180,24 +136,21 @@ namespace lingualink_client.Services.Managers
                     
                     resultArgs.ProcessedText = translatedTextForOsc;
                     
-                    _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogTranslationSuccess"),
-                        e.TriggerReason, apiResult.Transcription, apiResult.ProcessingTime));
+                    _loggingManager.AddMessage($"Text translation successful: {apiResult.Transcription} -> {apiResult.ProcessingTime}s");
                 }
                 else
                 {
-                    // 成功但没有转录文本
-                    currentUiStatus = LanguageManager.GetString("StatusTranslationSuccessNoText");
+                    // 成功但没有结果文本
+                    OnStatusUpdated("Text translation successful but no result");
                     resultArgs.IsSuccess = true;
-                    resultArgs.ProcessedText = LanguageManager.GetString("TranslationSuccessNoTextPlaceholder");
+                    resultArgs.ProcessedText = "Translation successful but no result text";
                     resultArgs.DurationSeconds = apiResult.ProcessingTime;
-
-                    _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogTranslationSuccessNoText"),
-                        e.TriggerReason, apiResult.ProcessingTime));
+                    
+                    _loggingManager.AddMessage($"Text translation successful but no result: {apiResult.ProcessingTime}s");
                 }
             }
             
             // 触发翻译完成事件
-            OnStatusUpdated(currentUiStatus);
             OnTranslationCompleted(resultArgs);
 
             // 发送OSC消息
@@ -206,78 +159,106 @@ namespace lingualink_client.Services.Managers
                 await SendOscMessageAsync(translatedTextForOsc);
             }
 
-            // 如果音频服务仍在工作且没有其他重要消息，恢复到"监听中..."状态
-            if (_audioService.IsWorking && 
-                !currentUiStatus.Contains(LanguageManager.GetString("AudioStatusSpeechDetected").Split('.')[0]) && 
-                !currentUiStatus.Contains(LanguageManager.GetString("StatusTranslationFailed").Split(':')[0]) && 
-                !currentUiStatus.Contains(LanguageManager.GetString("StatusOscSendFailed").Split(':')[0]))
+            return resultArgs.IsSuccess;
+        }
+
+        /// <summary>
+        /// 验证API连接
+        /// </summary>
+        public async Task<bool> ValidateConnectionAsync()
+        {
+            try
             {
-                OnStatusUpdated(LanguageManager.GetString("StatusListening"));
+                OnStatusUpdated("Validating API connection...");
+                var isValid = await _apiService.ValidateConnectionAsync();
+                
+                if (isValid)
+                {
+                    OnStatusUpdated("API connection validated successfully");
+                    _loggingManager.AddMessage("API connection validation successful");
+                }
+                else
+                {
+                    OnStatusUpdated("API connection validation failed");
+                    _loggingManager.AddMessage("API connection validation failed");
+                }
+                
+                return isValid;
+            }
+            catch (Exception ex)
+            {
+                OnStatusUpdated($"API connection validation error: {ex.Message}");
+                _loggingManager.AddMessage($"API connection validation error: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 获取系统能力信息
+        /// </summary>
+        public async Task<SystemCapabilities?> GetCapabilitiesAsync()
+        {
+            try
+            {
+                return await _apiService.GetCapabilitiesAsync();
+            }
+            catch (Exception ex)
+            {
+                _loggingManager.AddMessage($"Failed to get system capabilities: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 获取支持的语言列表
+        /// </summary>
+        public async Task<LanguageInfo[]?> GetSupportedLanguagesAsync()
+        {
+            try
+            {
+                return await _apiService.GetSupportedLanguagesAsync();
+            }
+            catch (Exception ex)
+            {
+                _loggingManager.AddMessage($"Failed to get supported languages: {ex.Message}");
+                return null;
             }
         }
 
         private async Task SendOscMessageAsync(string message)
         {
-            OnStatusUpdated(LanguageManager.GetString("StatusSendingToVRChat"));
-            
+            OnStatusUpdated("Sending to VRChat...");
+
             var oscArgs = new OscMessageEventArgs { Message = message };
-            
+
             try
             {
                 await _oscService!.SendChatboxMessageAsync(
-                    message, 
-                    _appSettings.OscSendImmediately, 
+                    message,
+                    _appSettings.OscSendImmediately,
                     _appSettings.OscPlayNotificationSound
                 );
-                
+
                 oscArgs.IsSuccess = true;
-                var successStatus = string.Format(
-                    LanguageManager.GetString("StatusTranslationSuccess") + " " + 
-                    LanguageManager.GetString("LogOscSent").Replace("[OSC] ", ""), 
-                    message.Split('\n')[0]);
-                OnStatusUpdated(successStatus);
-                
-                _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogOscSent"), 
-                    message.Split('\n')[0]));
+                OnStatusUpdated($"Sent to VRChat: {message.Split('\n')[0]}");
+
+                _loggingManager.AddMessage($"[OSC] Sent: {message.Split('\n')[0]}");
             }
             catch (Exception ex)
             {
                 oscArgs.IsSuccess = false;
                 oscArgs.ErrorMessage = ex.Message;
-                
-                var errorStatus = string.Format(LanguageManager.GetString("StatusOscSendFailed"), 
-                    ex.Message.Split('\n')[0]);
-                OnStatusUpdated(errorStatus);
-                
-                _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogOscSendFailed"), ex.Message));
+
+                OnStatusUpdated($"OSC send failed: {ex.Message.Split('\n')[0]}");
+                _loggingManager.AddMessage($"[OSC] Send failed: {ex.Message}");
             }
-            
+
             OnOscMessageSent(oscArgs);
         }
-
-        private void OnStatusUpdated(string status)
-        {
-            StatusUpdated?.Invoke(this, status);
-        }
-
-        private void OnTranslationCompleted(TranslationResultEventArgs args)
-        {
-            TranslationCompleted?.Invoke(this, args);
-        }
-
-        private void OnOscMessageSent(OscMessageEventArgs args)
-        {
-            OscMessageSent?.Invoke(this, args);
-        }
-
-
 
         /// <summary>
         /// 使用新API结果处理模板
         /// </summary>
-        /// <param name="template">模板字符串</param>
-        /// <param name="apiResult">新API结果</param>
-        /// <returns>处理后的文本，如果包含未替换的占位符则返回空字符串</returns>
         private string ProcessTemplateWithNewApiResult(string template, ApiResult apiResult)
         {
             if (string.IsNullOrEmpty(template) || apiResult == null)
@@ -320,9 +301,6 @@ namespace lingualink_client.Services.Managers
         /// <summary>
         /// 根据API结果和目标语言代码生成输出文本
         /// </summary>
-        /// <param name="apiResult">API结果</param>
-        /// <param name="targetLanguageCodes">目标语言代码列表</param>
-        /// <returns>格式化的输出文本</returns>
         private string GenerateTargetLanguageOutputFromApiResult(ApiResult apiResult, List<string> targetLanguageCodes)
         {
             if (apiResult?.Translations == null || targetLanguageCodes.Count == 0)
@@ -350,15 +328,25 @@ namespace lingualink_client.Services.Managers
             return result;
         }
 
+        private void OnStatusUpdated(string status)
+        {
+            StatusUpdated?.Invoke(this, status);
+        }
+
+        private void OnTranslationCompleted(TranslationResultEventArgs args)
+        {
+            TranslationCompleted?.Invoke(this, args);
+        }
+
+        private void OnOscMessageSent(OscMessageEventArgs args)
+        {
+            OscMessageSent?.Invoke(this, args);
+        }
+
         public void Dispose()
         {
-            _audioService.AudioSegmentReady -= OnAudioSegmentReadyForTranslation;
-            _audioService.StatusUpdated -= OnAudioServiceStatusUpdate;
-            _audioService.StateChanged -= OnVadStateChanged;
-
-            _audioService?.Dispose();
             _apiService?.Dispose();
             _oscService?.Dispose();
         }
     }
-} 
+}
