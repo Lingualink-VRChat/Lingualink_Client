@@ -189,7 +189,7 @@
                                 Margin="0,0,0,10"
                                 VerticalContentAlignment="Center"
                                 Text="{Binding ServerUrl, UpdateSourceTrigger=PropertyChanged}"
-                                PlaceholderText="http://localhost:8080/api/v1/" />
+                                PlaceholderText="http://api2.lingualink.aiatechco.com/api/v1/" />
 
                             <!-- API 密钥 -->
                             <Label Content="{Binding ApiKeyLabel}" />
