@@ -43,7 +43,7 @@ namespace lingualink_client.Services.Managers
 
             // 使用新的API服务工厂创建API服务
             _apiService = LingualinkApiServiceFactory.CreateApiService(_appSettings);
-            _audioService = new AudioService(_appSettings);
+            _audioService = new AudioService(_appSettings, _loggingManager);
 
             // 初始化OSC服务
             if (_appSettings.EnableOsc)

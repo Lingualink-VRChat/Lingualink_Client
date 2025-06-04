@@ -39,17 +39,125 @@
                         Text="{Binding VoiceRecognitionSettingsHint}"
                         TextWrapping="Wrap" />
                     
-                    <!-- 静音检测阈值 -->
-                    <Label Content="{Binding SilenceThresholdLabel}" />
-                    <ui:TextBox Margin="0,0,0,5" Text="{Binding SilenceThresholdSeconds, UpdateSourceTrigger=PropertyChanged, StringFormat='N2'}" />
-                    
+                    <!-- 追加录音时长 -->
+                    <Grid Margin="0,0,0,10">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Label Grid.Row="0" Content="{Binding PostSpeechRecordingDurationLabel}" />
+                        <Grid Grid.Row="1" Margin="0,0,0,5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Slider
+                                Grid.Column="0"
+                                Margin="0,0,10,0"
+                                VerticalAlignment="Center"
+                                LargeChange="0.1"
+                                Maximum="0.7"
+                                Minimum="0.1"
+                                SmallChange="0.05"
+                                TickFrequency="0.1"
+                                Value="{Binding PostSpeechRecordingDurationSeconds, UpdateSourceTrigger=PropertyChanged}" />
+                            <ui:TextBox
+                                Grid.Column="1"
+                                Width="60"
+                                VerticalAlignment="Center"
+                                Text="{Binding PostSpeechRecordingDurationSeconds, UpdateSourceTrigger=PropertyChanged, StringFormat=F2}"
+                                TextAlignment="Right" />
+                        </Grid>
+                        <ui:TextBlock
+                            Grid.Row="2"
+                            FontSize="10"
+                            FontStyle="Italic"
+                            Foreground="Gray"
+                            Text="{Binding PostSpeechRecordingDurationHint}"
+                            TextWrapping="Wrap" />
+                    </Grid>
+
                     <!-- 最小语音时长 -->
-                    <Label Content="{Binding MinVoiceDurationLabel}" />
-                    <ui:TextBox Margin="0,0,0,5" Text="{Binding MinVoiceDurationSeconds, UpdateSourceTrigger=PropertyChanged, StringFormat='N2'}" />
-                    
+                    <Grid Margin="0,0,0,10">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Label Grid.Row="0" Content="{Binding MinVoiceDurationLabel}" />
+                        <Grid Grid.Row="1" Margin="0,0,0,5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Slider
+                                Grid.Column="0"
+                                Margin="0,0,10,0"
+                                VerticalAlignment="Center"
+                                LargeChange="0.1"
+                                Maximum="0.7"
+                                Minimum="0.1"
+                                SmallChange="0.05"
+                                TickFrequency="0.1"
+                                Value="{Binding MinVoiceDurationSeconds, UpdateSourceTrigger=PropertyChanged}" />
+                            <ui:TextBox
+                                Grid.Column="1"
+                                Width="60"
+                                VerticalAlignment="Center"
+                                Text="{Binding MinVoiceDurationSeconds, UpdateSourceTrigger=PropertyChanged, StringFormat=F2}"
+                                TextAlignment="Right" />
+                        </Grid>
+                        <ui:TextBlock
+                            Grid.Row="2"
+                            FontSize="10"
+                            FontStyle="Italic"
+                            Foreground="Gray"
+                            Text="{Binding MinVoiceDurationHint}"
+                            TextWrapping="Wrap" />
+                    </Grid>
+
                     <!-- 最大语音时长 -->
-                    <Label Content="{Binding MaxVoiceDurationLabel}" />
-                    <ui:TextBox Margin="0,0,0,5" Text="{Binding MaxVoiceDurationSeconds, UpdateSourceTrigger=PropertyChanged, StringFormat='N2'}" />
+                    <Grid Margin="0,0,0,10">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Label Grid.Row="0" Content="{Binding MaxVoiceDurationLabel}" />
+                        <Grid Grid.Row="1" Margin="0,0,0,5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Slider
+                                Grid.Column="0"
+                                Margin="0,0,10,0"
+                                VerticalAlignment="Center"
+                                LargeChange="1"
+                                Maximum="10"
+                                Minimum="1"
+                                SmallChange="0.5"
+                                TickFrequency="1"
+                                Value="{Binding MaxVoiceDurationSeconds, UpdateSourceTrigger=PropertyChanged}" />
+                            <ui:TextBox
+                                Grid.Column="1"
+                                Width="60"
+                                VerticalAlignment="Center"
+                                Text="{Binding MaxVoiceDurationSeconds, UpdateSourceTrigger=PropertyChanged, StringFormat=F1}"
+                                TextAlignment="Right" />
+                        </Grid>
+                        <ui:TextBlock
+                            Grid.Row="2"
+                            FontSize="10"
+                            FontStyle="Italic"
+                            Foreground="Gray"
+                            Text="{Binding MaxVoiceDurationHint}"
+                            TextWrapping="Wrap" />
+                    </Grid>
                     
                     <!-- 最小音量阈值 -->
                     <Label Margin="0,5,0,0" Content="{Binding MinVolumeThresholdLabel}" />
@@ -219,6 +327,156 @@
                             FontStyle="Italic"
                             Foreground="Gray"
                             Text="{Binding OpusComplexityHint}"
+                            TextWrapping="Wrap" />
+                    </Grid>
+                </StackPanel>
+            </ui:CardExpander>
+
+            <!-- 音频增强设置 -->
+            <ui:CardExpander
+                Grid.Row="3"
+                Margin="0,10,0,0"
+                Header="{Binding AudioEnhancementLabel}"
+                IsExpanded="False">
+                <StackPanel Margin="10">
+                    <!-- 音频增强说明 -->
+                    <ui:TextBlock
+                        FontSize="10"
+                        FontStyle="Italic"
+                        Foreground="Gray"
+                        Margin="0,0,0,10"
+                        Text="{Binding AudioEnhancementHint}"
+                        TextWrapping="Wrap" />
+
+                    <!-- 峰值归一化设置 -->
+                    <ui:ToggleSwitch
+                        Margin="0,0,0,10"
+                        Content="{Binding EnableAudioNormalizationLabel}"
+                        IsChecked="{Binding EnableAudioNormalization, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <!-- 归一化目标电平 -->
+                    <Grid Margin="0,0,0,10" IsEnabled="{Binding EnableAudioNormalization}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Label Grid.Row="0" Content="{Binding NormalizationTargetDbLabel}" />
+                        <Grid Grid.Row="1" Margin="0,0,0,5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Slider
+                                Grid.Column="0"
+                                Margin="0,0,10,0"
+                                VerticalAlignment="Center"
+                                LargeChange="1"
+                                Maximum="0"
+                                Minimum="-20"
+                                SmallChange="0.5"
+                                TickFrequency="1"
+                                Value="{Binding NormalizationTargetDb, UpdateSourceTrigger=PropertyChanged}" />
+                            <ui:TextBox
+                                Grid.Column="1"
+                                Width="50"
+                                VerticalAlignment="Center"
+                                Text="{Binding NormalizationTargetDb, UpdateSourceTrigger=PropertyChanged, StringFormat=F1}"
+                                TextAlignment="Right" />
+                        </Grid>
+                        <ui:TextBlock
+                            Grid.Row="2"
+                            FontSize="10"
+                            FontStyle="Italic"
+                            Foreground="Gray"
+                            Text="{Binding AudioNormalizationHint}"
+                            TextWrapping="Wrap" />
+                    </Grid>
+
+                    <!-- 安静语音增强设置 -->
+                    <ui:ToggleSwitch
+                        Margin="0,0,0,10"
+                        Content="{Binding EnableQuietBoostLabel}"
+                        IsChecked="{Binding EnableQuietBoost, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <!-- RMS 阈值设置 -->
+                    <Grid Margin="0,0,0,10" IsEnabled="{Binding EnableQuietBoost}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Label Grid.Row="0" Content="{Binding QuietBoostRmsThresholdLabel}" />
+                        <Grid Grid.Row="1" Margin="0,0,0,5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Slider
+                                Grid.Column="0"
+                                Margin="0,0,10,0"
+                                VerticalAlignment="Center"
+                                LargeChange="5"
+                                Maximum="0"
+                                Minimum="-60"
+                                SmallChange="1"
+                                TickFrequency="5"
+                                Value="{Binding QuietBoostRmsThresholdDbFs, UpdateSourceTrigger=PropertyChanged}" />
+                            <ui:TextBox
+                                Grid.Column="1"
+                                Width="50"
+                                VerticalAlignment="Center"
+                                Text="{Binding QuietBoostRmsThresholdDbFs, UpdateSourceTrigger=PropertyChanged, StringFormat=F1}"
+                                TextAlignment="Right" />
+                        </Grid>
+                        <ui:TextBlock
+                            Grid.Row="2"
+                            FontSize="10"
+                            FontStyle="Italic"
+                            Foreground="Gray"
+                            Text="{Binding QuietBoostRmsThresholdHint}"
+                            TextWrapping="Wrap" />
+                    </Grid>
+
+                    <!-- 增益设置 -->
+                    <Grid Margin="0,0,0,0" IsEnabled="{Binding EnableQuietBoost}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Label Grid.Row="0" Content="{Binding QuietBoostGainLabel}" />
+                        <Grid Grid.Row="1" Margin="0,0,0,5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Slider
+                                Grid.Column="0"
+                                Margin="0,0,10,0"
+                                VerticalAlignment="Center"
+                                LargeChange="2"
+                                Maximum="20"
+                                Minimum="0"
+                                SmallChange="0.5"
+                                TickFrequency="2"
+                                Value="{Binding QuietBoostGainDb, UpdateSourceTrigger=PropertyChanged}" />
+                            <ui:TextBox
+                                Grid.Column="1"
+                                Width="50"
+                                VerticalAlignment="Center"
+                                Text="{Binding QuietBoostGainDb, UpdateSourceTrigger=PropertyChanged, StringFormat=F1}"
+                                TextAlignment="Right" />
+                        </Grid>
+                        <ui:TextBlock
+                            Grid.Row="2"
+                            FontSize="10"
+                            FontStyle="Italic"
+                            Foreground="Gray"
+                            Text="{Binding QuietBoostGainHint}"
                             TextWrapping="Wrap" />
                     </Grid>
                 </StackPanel>

@@ -64,8 +64,8 @@
   <data name="ServerUrl" xml:space="preserve">
     <value>Server URL</value>
   </data>
-  <data name="SilenceThreshold" xml:space="preserve">
-    <value>Silence Detection Threshold (seconds)</value>
+  <data name="PostSpeechRecordingDuration" xml:space="preserve">
+    <value>Post-Speech Recording Duration (seconds)</value>
   </data>
   <data name="MinVoiceDuration" xml:space="preserve">
     <value>Minimum Voice Duration (seconds)</value>
@@ -333,15 +333,7 @@
   <data name="ValidationServerUrlInvalid" xml:space="preserve">
     <value>Server URL is invalid.</value>
   </data>
-  <data name="ValidationSilenceThresholdInvalid" xml:space="preserve">
-    <value>Silence detection threshold must be a positive number.</value>
-  </data>
-  <data name="ValidationMinVoiceDurationInvalid" xml:space="preserve">
-    <value>Minimum voice duration must be a positive number.</value>
-  </data>
-  <data name="ValidationMaxVoiceDurationInvalid" xml:space="preserve">
-    <value>Maximum voice duration must be a positive number.</value>
-  </data>
+
   <data name="ValidationMinMaxVoiceDuration" xml:space="preserve">
     <value>Minimum voice duration must be less than maximum voice duration.</value>
   </data>
@@ -547,6 +539,65 @@
   </data>
   <data name="OpusComplexityHint" xml:space="preserve">
     <value>Higher compression levels achieve better compression ratios but increase CPU usage. Fixed 16kbps bitrate for optimal bandwidth savings. Range: 5-10, Default: 7.</value>
+  </data>
+
+  <!-- Audio Enhancement Settings -->
+  <data name="AudioEnhancement" xml:space="preserve">
+    <value>Audio Enhancement</value>
+  </data>
+  <data name="EnableAudioNormalization" xml:space="preserve">
+    <value>Enable Peak Normalization</value>
+  </data>
+  <data name="NormalizationTargetDb" xml:space="preserve">
+    <value>Normalization Target Level (dBFS)</value>
+  </data>
+  <data name="EnableQuietBoost" xml:space="preserve">
+    <value>Enable Quiet Speech Enhancement</value>
+  </data>
+  <data name="QuietBoostRmsThreshold" xml:space="preserve">
+    <value>Quiet Segment RMS Threshold (dBFS)</value>
+  </data>
+  <data name="QuietBoostGain" xml:space="preserve">
+    <value>Quiet Segment Gain (dB)</value>
+  </data>
+  <data name="AudioNormalizationHint" xml:space="preserve">
+    <value>Peak normalization adjusts audio peaks to a specified level, ensuring consistent volume output. Recommended: -3dBFS.</value>
+  </data>
+  <data name="QuietBoostHint" xml:space="preserve">
+    <value>Quiet speech enhancement detects low-volume speech segments and automatically amplifies them to improve speech recognition accuracy.</value>
+  </data>
+  <data name="QuietBoostRmsThresholdHint" xml:space="preserve">
+    <value>Gain will be applied when audio segment RMS level is below this threshold. Range: -60dBFS to 0dBFS, Default: -25dBFS.</value>
+  </data>
+  <data name="QuietBoostGainHint" xml:space="preserve">
+    <value>Amount of gain applied to quiet segments. Range: 0dB to 20dB, Default: 6dB.</value>
+  </data>
+
+  <!-- Post-Speech Recording Status -->
+  <data name="AudioStatusPostRecording" xml:space="preserve">
+    <value>Recording tail audio...</value>
+  </data>
+
+  <!-- Validation Messages -->
+  <data name="ValidationPostSpeechRecordingDurationInvalid" xml:space="preserve">
+    <value>Post-speech recording duration must be between 0.1 and 0.7 seconds.</value>
+  </data>
+  <data name="ValidationMinVoiceDurationInvalid" xml:space="preserve">
+    <value>Minimum voice duration must be between 0.1 and 0.7 seconds.</value>
+  </data>
+  <data name="ValidationMaxVoiceDurationInvalid" xml:space="preserve">
+    <value>Maximum voice duration must be between 1 and 10 seconds.</value>
+  </data>
+
+  <!-- Voice Settings Hints -->
+  <data name="PostSpeechRecordingDurationHint" xml:space="preserve">
+    <value>Duration to continue recording after VAD detects speech end, for capturing tail sounds. Range: 0.1-0.7s, Recommended: 0.5s.</value>
+  </data>
+  <data name="MinVoiceDurationHint" xml:space="preserve">
+    <value>Minimum duration requirement for voice segments. Shorter segments will be ignored. Range: 0.1-0.7s, Recommended: 0.5s.</value>
+  </data>
+  <data name="MaxVoiceDurationHint" xml:space="preserve">
+    <value>Maximum duration limit for single voice segments. Longer segments will be force-split. Range: 1-10s, Recommended: 10s.</value>
   </data>
   <data name="ValidationOpusBitrateInvalid" xml:space="preserve">
     <value>Opus bitrate must be between 8000-32000 bps.</value>

@@ -22,10 +22,15 @@ namespace lingualink_client.ViewModels
         // public DelegateCommand RevertCommand { get; } // 移除此行
 
         // 语言相关的标签仍然是计算属性
-        public string SilenceThresholdLabel => LanguageManager.GetString("SilenceThreshold");
+        public string PostSpeechRecordingDurationLabel => LanguageManager.GetString("PostSpeechRecordingDuration");
         public string MinVoiceDurationLabel => LanguageManager.GetString("MinVoiceDuration");
         public string MaxVoiceDurationLabel => LanguageManager.GetString("MaxVoiceDuration");
         public string MinVolumeThresholdLabel => LanguageManager.GetString("MinVolumeThreshold");
+
+        // 语音设置提示文本
+        public string PostSpeechRecordingDurationHint => LanguageManager.GetString("PostSpeechRecordingDurationHint");
+        public string MinVoiceDurationHint => LanguageManager.GetString("MinVoiceDurationHint");
+        public string MaxVoiceDurationHint => LanguageManager.GetString("MaxVoiceDurationHint");
         public string EnableOscLabel => LanguageManager.GetString("EnableOsc");
         public string OscIpAddressLabel => LanguageManager.GetString("OscIpAddress");
         public string OscPortLabel => LanguageManager.GetString("OscPort");
@@ -48,8 +53,20 @@ namespace lingualink_client.ViewModels
         public string AudioProcessingLabel => LanguageManager.GetString("AudioProcessing");
         public string AudioProcessingHint => LanguageManager.GetString("AudioProcessingHint");
 
+        // 音频增强相关标签
+        public string AudioEnhancementLabel => LanguageManager.GetString("AudioEnhancement");
+        public string AudioEnhancementHint => LanguageManager.GetString("QuietBoostHint");
+        public string EnableAudioNormalizationLabel => LanguageManager.GetString("EnableAudioNormalization");
+        public string NormalizationTargetDbLabel => LanguageManager.GetString("NormalizationTargetDb");
+        public string EnableQuietBoostLabel => LanguageManager.GetString("EnableQuietBoost");
+        public string QuietBoostRmsThresholdLabel => LanguageManager.GetString("QuietBoostRmsThreshold");
+        public string QuietBoostGainLabel => LanguageManager.GetString("QuietBoostGain");
+        public string AudioNormalizationHint => LanguageManager.GetString("AudioNormalizationHint");
+        public string QuietBoostRmsThresholdHint => LanguageManager.GetString("QuietBoostRmsThresholdHint");
+        public string QuietBoostGainHint => LanguageManager.GetString("QuietBoostGainHint");
+
         // 将属性转换为 [ObservableProperty]
-        [ObservableProperty] private double _silenceThresholdSeconds;
+        [ObservableProperty] private double _postSpeechRecordingDurationSeconds;
         [ObservableProperty] private double _minVoiceDurationSeconds;
         [ObservableProperty] private double _maxVoiceDurationSeconds;
         [ObservableProperty]
@@ -62,6 +79,13 @@ namespace lingualink_client.ViewModels
         
         // 音频编码相关属性 - Opus始终启用，只允许调节复杂度
         [ObservableProperty] private int _opusComplexity;
+
+        // 音频增强相关属性
+        [ObservableProperty] private bool _enableAudioNormalization;
+        [ObservableProperty] private double _normalizationTargetDb;
+        [ObservableProperty] private bool _enableQuietBoost;
+        [ObservableProperty] private double _quietBoostRmsThresholdDbFs;
+        [ObservableProperty] private double _quietBoostGainDb;
         
         public ServicePageViewModel(SettingsService settingsService)
         {
@@ -74,10 +98,15 @@ namespace lingualink_client.ViewModels
             LoadSettingsFromModel(_currentSettings);
 
             // 订阅语言变化，更新依赖语言管理器字符串的属性
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(SilenceThresholdLabel));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(PostSpeechRecordingDurationLabel));
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(MinVoiceDurationLabel));
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(MaxVoiceDurationLabel));
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(MinVolumeThresholdLabel));
+
+            // 语音设置提示文本的语言变化订阅
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(PostSpeechRecordingDurationHint));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(MinVoiceDurationHint));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(MaxVoiceDurationHint));
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(EnableOscLabel));
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(OscIpAddressLabel));
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(OscPortLabel));
@@ -97,6 +126,18 @@ namespace lingualink_client.ViewModels
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(VrchatIntegrationHint));
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(AudioProcessingLabel));
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(AudioProcessingHint));
+
+            // 音频增强标签的语言变化订阅
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(AudioEnhancementLabel));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(AudioEnhancementHint));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(EnableAudioNormalizationLabel));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(NormalizationTargetDbLabel));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(EnableQuietBoostLabel));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(QuietBoostRmsThresholdLabel));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(QuietBoostGainLabel));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(AudioNormalizationHint));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(QuietBoostRmsThresholdHint));
+            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(QuietBoostGainHint));
         }
 
         // MinRecordingVolumeThreshold 属性的 OnChanged 回调
@@ -121,9 +162,75 @@ namespace lingualink_client.ViewModels
             }
         }
 
+        // NormalizationTargetDb 属性的 OnChanged 回调
+        partial void OnNormalizationTargetDbChanged(double oldValue, double newValue)
+        {
+            // 限制归一化目标电平在-20dB到0dB之间
+            if (newValue < -20.0 || newValue > 0.0)
+            {
+                _normalizationTargetDb = Math.Clamp(newValue, -20.0, 0.0);
+                OnPropertyChanged(nameof(NormalizationTargetDb));
+            }
+        }
+
+        // QuietBoostRmsThresholdDbFs 属性的 OnChanged 回调
+        partial void OnQuietBoostRmsThresholdDbFsChanged(double oldValue, double newValue)
+        {
+            // 限制RMS阈值在-60dB到0dB之间
+            if (newValue < -60.0 || newValue > 0.0)
+            {
+                _quietBoostRmsThresholdDbFs = Math.Clamp(newValue, -60.0, 0.0);
+                OnPropertyChanged(nameof(QuietBoostRmsThresholdDbFs));
+            }
+        }
+
+        // QuietBoostGainDb 属性的 OnChanged 回调
+        partial void OnQuietBoostGainDbChanged(double oldValue, double newValue)
+        {
+            // 限制增益在0dB到20dB之间
+            if (newValue < 0.0 || newValue > 20.0)
+            {
+                _quietBoostGainDb = Math.Clamp(newValue, 0.0, 20.0);
+                OnPropertyChanged(nameof(QuietBoostGainDb));
+            }
+        }
+
+        // PostSpeechRecordingDurationSeconds 属性的 OnChanged 回调
+        partial void OnPostSpeechRecordingDurationSecondsChanged(double oldValue, double newValue)
+        {
+            // 限制追加录音时长在0.1秒到0.7秒之间
+            if (newValue < 0.1 || newValue > 0.7)
+            {
+                _postSpeechRecordingDurationSeconds = Math.Clamp(newValue, 0.1, 0.7);
+                OnPropertyChanged(nameof(PostSpeechRecordingDurationSeconds));
+            }
+        }
+
+        // MinVoiceDurationSeconds 属性的 OnChanged 回调
+        partial void OnMinVoiceDurationSecondsChanged(double oldValue, double newValue)
+        {
+            // 限制最小语音时长在0.1秒到0.7秒之间
+            if (newValue < 0.1 || newValue > 0.7)
+            {
+                _minVoiceDurationSeconds = Math.Clamp(newValue, 0.1, 0.7);
+                OnPropertyChanged(nameof(MinVoiceDurationSeconds));
+            }
+        }
+
+        // MaxVoiceDurationSeconds 属性的 OnChanged 回调
+        partial void OnMaxVoiceDurationSecondsChanged(double oldValue, double newValue)
+        {
+            // 限制最大语音时长在1秒到10秒之间
+            if (newValue < 1.0 || newValue > 10.0)
+            {
+                _maxVoiceDurationSeconds = Math.Clamp(newValue, 1.0, 10.0);
+                OnPropertyChanged(nameof(MaxVoiceDurationSeconds));
+            }
+        }
+
         private void LoadSettingsFromModel(AppSettings settings)
         {
-            SilenceThresholdSeconds = settings.SilenceThresholdSeconds;
+            PostSpeechRecordingDurationSeconds = settings.PostSpeechRecordingDurationSeconds;
             MinVoiceDurationSeconds = settings.MinVoiceDurationSeconds;
             MaxVoiceDurationSeconds = settings.MaxVoiceDurationSeconds;
             MinRecordingVolumeThreshold = settings.MinRecordingVolumeThreshold;
@@ -136,6 +243,13 @@ namespace lingualink_client.ViewModels
             
             // 加载音频编码设置
             OpusComplexity = settings.OpusComplexity;
+
+            // 加载音频增强设置
+            EnableAudioNormalization = settings.EnableAudioNormalization;
+            NormalizationTargetDb = settings.NormalizationTargetDb;
+            EnableQuietBoost = settings.EnableQuietBoost;
+            QuietBoostRmsThresholdDbFs = settings.QuietBoostRmsThresholdDbFs;
+            QuietBoostGainDb = settings.QuietBoostGainDb;
         }
 
         private bool ValidateAndBuildSettings(out AppSettings? updatedSettings)
@@ -145,7 +259,7 @@ namespace lingualink_client.ViewModels
 
             // 移除服务器URL和API密钥的验证，这些现在在账户页面处理
             
-            if (SilenceThresholdSeconds <= 0) { MessageBox.Show(LanguageManager.GetString("ValidationSilenceThresholdInvalid"), LanguageManager.GetString("ValidationErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error); return false; }
+            if (PostSpeechRecordingDurationSeconds <= 0) { MessageBox.Show(LanguageManager.GetString("ValidationPostSpeechRecordingDurationInvalid"), LanguageManager.GetString("ValidationErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error); return false; }
             if (MinVoiceDurationSeconds <= 0) { MessageBox.Show(LanguageManager.GetString("ValidationMinVoiceDurationInvalid"), LanguageManager.GetString("ValidationErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error); return false; }
             if (MaxVoiceDurationSeconds <= 0) { MessageBox.Show(LanguageManager.GetString("ValidationMaxVoiceDurationInvalid"), LanguageManager.GetString("ValidationErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error); return false; }
             if (MinVoiceDurationSeconds >= MaxVoiceDurationSeconds) { MessageBox.Show(LanguageManager.GetString("ValidationMinMaxVoiceDuration"), LanguageManager.GetString("ValidationErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error); return false; }
@@ -178,7 +292,7 @@ namespace lingualink_client.ViewModels
             if (updatedSettings == null) updatedSettings = new AppSettings(); // Should not happen if LoadSettings worked
 
             // 更新只由当前页面管理的设置（不包括ServerUrl和ApiKey）
-            updatedSettings.SilenceThresholdSeconds = this.SilenceThresholdSeconds;
+            updatedSettings.PostSpeechRecordingDurationSeconds = this.PostSpeechRecordingDurationSeconds;
             updatedSettings.MinVoiceDurationSeconds = this.MinVoiceDurationSeconds;
             updatedSettings.MaxVoiceDurationSeconds = this.MaxVoiceDurationSeconds;
             updatedSettings.MinRecordingVolumeThreshold = this.MinRecordingVolumeThreshold;
@@ -190,6 +304,13 @@ namespace lingualink_client.ViewModels
             
             // 更新音频编码设置
             updatedSettings.OpusComplexity = this.OpusComplexity;
+
+            // 更新音频增强设置
+            updatedSettings.EnableAudioNormalization = this.EnableAudioNormalization;
+            updatedSettings.NormalizationTargetDb = this.NormalizationTargetDb;
+            updatedSettings.EnableQuietBoost = this.EnableQuietBoost;
+            updatedSettings.QuietBoostRmsThresholdDbFs = this.QuietBoostRmsThresholdDbFs;
+            updatedSettings.QuietBoostGainDb = this.QuietBoostGainDb;
             
             return true;
         }

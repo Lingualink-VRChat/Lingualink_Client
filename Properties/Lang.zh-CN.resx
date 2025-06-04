@@ -64,8 +64,8 @@
   <data name="ServerUrl" xml:space="preserve">
     <value>服务器 URL</value>
   </data>
-  <data name="SilenceThreshold" xml:space="preserve">
-    <value>静音检测阈值 (秒)</value>
+  <data name="PostSpeechRecordingDuration" xml:space="preserve">
+    <value>追加录音时长 (秒)</value>
   </data>
   <data name="MinVoiceDuration" xml:space="preserve">
     <value>最小语音时长 (秒)</value>
@@ -333,15 +333,7 @@
   <data name="ValidationServerUrlInvalid" xml:space="preserve">
     <value>服务器URL无效。</value>
   </data>
-  <data name="ValidationSilenceThresholdInvalid" xml:space="preserve">
-    <value>静音检测阈值必须是正数。</value>
-  </data>
-  <data name="ValidationMinVoiceDurationInvalid" xml:space="preserve">
-    <value>最小语音时长必须是正数。</value>
-  </data>
-  <data name="ValidationMaxVoiceDurationInvalid" xml:space="preserve">
-    <value>最大语音时长必须是正数。</value>
-  </data>
+
   <data name="ValidationMinMaxVoiceDuration" xml:space="preserve">
     <value>最小语音时长必须小于最大语音时长。</value>
   </data>
@@ -520,6 +512,65 @@
   </data>
   <data name="OpusComplexityHint" xml:space="preserve">
     <value>更高的压缩级别可获得更好的压缩率，但会增加 CPU 使用率。固定 16kbps 比特率以获得最佳带宽节省。范围：5-10，默认：7。</value>
+  </data>
+
+  <!-- Audio Enhancement Settings -->
+  <data name="AudioEnhancement" xml:space="preserve">
+    <value>音频增强</value>
+  </data>
+  <data name="EnableAudioNormalization" xml:space="preserve">
+    <value>启用峰值归一化</value>
+  </data>
+  <data name="NormalizationTargetDb" xml:space="preserve">
+    <value>归一化目标电平 (dBFS)</value>
+  </data>
+  <data name="EnableQuietBoost" xml:space="preserve">
+    <value>启用安静语音增强</value>
+  </data>
+  <data name="QuietBoostRmsThreshold" xml:space="preserve">
+    <value>安静片段 RMS 阈值 (dBFS)</value>
+  </data>
+  <data name="QuietBoostGain" xml:space="preserve">
+    <value>安静片段增益 (dB)</value>
+  </data>
+  <data name="AudioNormalizationHint" xml:space="preserve">
+    <value>峰值归一化将音频峰值调整到指定电平，确保一致的音量输出。推荐值：-3dBFS。</value>
+  </data>
+  <data name="QuietBoostHint" xml:space="preserve">
+    <value>安静语音增强会检测音量偏低的语音片段并自动放大，提高语音识别准确率。</value>
+  </data>
+  <data name="QuietBoostRmsThresholdHint" xml:space="preserve">
+    <value>当音频片段的 RMS 电平低于此阈值时，将应用增益。范围：-60dBFS 到 0dBFS，默认：-25dBFS。</value>
+  </data>
+  <data name="QuietBoostGainHint" xml:space="preserve">
+    <value>对安静片段应用的增益量。范围：0dB 到 20dB，默认：6dB。</value>
+  </data>
+
+  <!-- Post-Speech Recording Status -->
+  <data name="AudioStatusPostRecording" xml:space="preserve">
+    <value>正在追加录音...</value>
+  </data>
+
+  <!-- Validation Messages -->
+  <data name="ValidationPostSpeechRecordingDurationInvalid" xml:space="preserve">
+    <value>追加录音时长必须在0.1秒到0.7秒之间。</value>
+  </data>
+  <data name="ValidationMinVoiceDurationInvalid" xml:space="preserve">
+    <value>最小语音时长必须在0.1秒到0.7秒之间。</value>
+  </data>
+  <data name="ValidationMaxVoiceDurationInvalid" xml:space="preserve">
+    <value>最大语音时长必须在1秒到10秒之间。</value>
+  </data>
+
+  <!-- Voice Settings Hints -->
+  <data name="PostSpeechRecordingDurationHint" xml:space="preserve">
+    <value>VAD判断语音结束后继续录制的时长，用于捕捉尾音。范围：0.1-0.7秒，推荐：0.5秒。</value>
+  </data>
+  <data name="MinVoiceDurationHint" xml:space="preserve">
+    <value>语音片段的最小时长要求。短于此时长的语音将被忽略。范围：0.1-0.7秒，推荐：0.5秒。</value>
+  </data>
+  <data name="MaxVoiceDurationHint" xml:space="preserve">
+    <value>单个语音片段的最大时长限制。超过此时长将强制分割。范围：1-10秒，推荐：10秒。</value>
   </data>
   <data name="ValidationOpusBitrateInvalid" xml:space="preserve">
     <value>Opus比特率必须在8000-32000之间。</value>
