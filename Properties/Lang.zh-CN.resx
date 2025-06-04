@@ -510,7 +510,7 @@
     <value>Opus 比特率 (bps)</value>
   </data>
   <data name="OpusComplexity" xml:space="preserve">
-    <value>Opus 复杂度 (0-5)</value>
+    <value>Opus 压缩级别 (5-10)</value>
   </data>
   <data name="OpusEncodingHint" xml:space="preserve">
     <value>Opus 编码可显著减少带宽使用，通过压缩音频数据。建议网络较慢时使用。</value>
@@ -519,13 +519,13 @@
     <value>较低的比特率可节省更多带宽，但可能降低音频质量。推荐语音使用 32kbps。</value>
   </data>
   <data name="OpusComplexityHint" xml:space="preserve">
-    <value>更高的复杂度可改善压缩效果，但会增加 CPU 使用率。5 是很好的平衡选择。</value>
+    <value>更高的压缩级别可获得更好的压缩率，但会增加 CPU 使用率。固定 16kbps 比特率以获得最佳带宽节省。范围：5-10，默认：7。</value>
   </data>
   <data name="ValidationOpusBitrateInvalid" xml:space="preserve">
     <value>Opus比特率必须在8000-32000之间。</value>
   </data>
   <data name="ValidationOpusComplexityInvalid" xml:space="preserve">
-    <value>Opus复杂度必须在0-5之间。</value>
+    <value>Opus压缩级别必须在5-10之间。</value>
   </data>
 
   <!-- 新增：服务设置分组标题 -->

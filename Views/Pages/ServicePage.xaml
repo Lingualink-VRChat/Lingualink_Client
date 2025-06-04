@@ -181,33 +181,16 @@
                         Text="{Binding AudioProcessingHint}"
                         TextWrapping="Wrap" />
                     
-                    <!-- 使用Opus编码 -->
-                    <CheckBox
-                        Margin="0,0,0,5"
-                        Content="{Binding UseOpusEncodingLabel}"
-                        IsChecked="{Binding UseOpusEncoding}"
-                        IsEnabled="False" />
-                    <ui:TextBlock
-                        FontSize="10"
-                        FontStyle="Italic"
-                        Foreground="Gray"
-                        Margin="0,0,0,10"
-                        Text="{Binding OpusEncodingHint}"
-                        TextWrapping="Wrap" />
-                    
-                    <!-- Opus设置组 -->
-                    <Grid IsEnabled="{Binding UseOpusEncoding}" Margin="0,0,0,0">
+                    <!-- Opus压缩设置 (始终启用，固定16kbps比特率) -->
+                    <Grid Margin="0,0,0,0">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
-                        
-                        <!-- Opus比特率 -->
-                        <Label Grid.Row="0" Content="{Binding OpusBitrateLabel}" />
+
+                        <!-- Opus压缩复杂度 (固定16kbps比特率) -->
+                        <Label Grid.Row="0" Content="{Binding OpusComplexityLabel}" />
                         <Grid Grid.Row="1" Margin="0,0,0,5">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
@@ -217,42 +200,9 @@
                                 Grid.Column="0"
                                 Margin="0,0,5,0"
                                 VerticalAlignment="Center"
-                                LargeChange="4000"
-                                Maximum="32000"
-                                Minimum="8000"
-                                SmallChange="1000"
-                                TickFrequency="4000"
-                                Value="{Binding OpusBitrate, UpdateSourceTrigger=PropertyChanged}" />
-                            <ui:TextBox
-                                Grid.Column="1"
-                                Width="70"
-                                VerticalAlignment="Center"
-                                Text="{Binding OpusBitrate, UpdateSourceTrigger=PropertyChanged}"
-                                TextAlignment="Right" />
-                        </Grid>
-                        <ui:TextBlock
-                            Grid.Row="2"
-                            FontSize="10"
-                            FontStyle="Italic"
-                            Foreground="Gray"
-                            Margin="0,0,0,10"
-                            Text="{Binding OpusBitrateHint}"
-                            TextWrapping="Wrap" />
-                            
-                        <!-- Opus复杂度 -->
-                        <Label Grid.Row="3" Content="{Binding OpusComplexityLabel}" />
-                        <Grid Grid.Row="4" Margin="0,0,0,5">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <Slider
-                                Grid.Column="0"
-                                Margin="0,0,5,0"
-                                VerticalAlignment="Center"
-                                LargeChange="1" 
-                                Maximum="5"
-                                Minimum="0"
+                                LargeChange="1"
+                                Maximum="10"
+                                Minimum="5"
                                 SmallChange="1"
                                 TickFrequency="1"
                                 Value="{Binding OpusComplexity, UpdateSourceTrigger=PropertyChanged}" />
@@ -264,11 +214,11 @@
                                 TextAlignment="Right" />
                         </Grid>
                         <ui:TextBlock
-                            Grid.Row="5"
+                            Grid.Row="2"
                             FontSize="10"
                             FontStyle="Italic"
                             Foreground="Gray"
-                            Text="{Binding OpusComplexityHint}" 
+                            Text="{Binding OpusComplexityHint}"
                             TextWrapping="Wrap" />
                     </Grid>
                 </StackPanel>

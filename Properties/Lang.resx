@@ -537,7 +537,7 @@
     <value>Opus Bitrate (bps)</value>
   </data>
   <data name="OpusComplexity" xml:space="preserve">
-    <value>Opus Complexity (0-5)</value>
+    <value>Opus Compression Level (5-10)</value>
   </data>
   <data name="OpusEncodingHint" xml:space="preserve">
     <value>Opus encoding significantly reduces bandwidth usage by compressing audio data. Recommended for slower internet connections.</value>
@@ -546,13 +546,13 @@
     <value>Lower bitrates save more bandwidth but may reduce audio quality. 32kbps is recommended for voice.</value>
   </data>
   <data name="OpusComplexityHint" xml:space="preserve">
-    <value>Higher complexity improves compression but increases CPU usage. 5 is a good balance.</value>
+    <value>Higher compression levels achieve better compression ratios but increase CPU usage. Fixed 16kbps bitrate for optimal bandwidth savings. Range: 5-10, Default: 7.</value>
   </data>
   <data name="ValidationOpusBitrateInvalid" xml:space="preserve">
     <value>Opus bitrate must be between 8000-32000 bps.</value>
   </data>
   <data name="ValidationOpusComplexityInvalid" xml:space="preserve">
-    <value>Opus complexity must be between 0-5.</value>
+    <value>Opus compression level must be between 5-10.</value>
   </data>
 
   <!-- Account Page -->

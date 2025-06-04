@@ -29,15 +29,13 @@ namespace lingualink_client.Services
         public LingualinkApiService(
             string serverUrl,
             string apiKey = "",
-            bool useOpusEncoding = true,
-            int opusBitrate = 32000,
-            int opusComplexity = 5)
+            int opusComplexity = 7)
         {
             _serverUrl = serverUrl.TrimEnd('/');
             _apiKey = apiKey;
-            _useOpusEncoding = useOpusEncoding;
+            _useOpusEncoding = true; // Opus始终启用
 
-            Debug.WriteLine($"[LingualinkApiService] Constructor called - ServerUrl: '{_serverUrl}', ApiKey: '{_apiKey}', UseOpus: {useOpusEncoding}");
+            Debug.WriteLine($"[LingualinkApiService] Constructor called - ServerUrl: '{_serverUrl}', ApiKey: '{_apiKey}', UseOpus: true (always enabled)");
 
             _httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
 
@@ -52,29 +50,27 @@ namespace lingualink_client.Services
                 Debug.WriteLine($"[LingualinkApiService] No API key provided, skipping header");
             }
 
-            // 初始化音频编码器
-            if (_useOpusEncoding)
+            // 初始化音频编码器 - Opus始终启用，固定16kbps比特率
+            try
             {
-                try
-                {
-                    // 使用正确的参数顺序：sampleRate, channels, bitrate, complexity
-                    // 从AudioService获取应用程序的音频配置
-                    int appSampleRate = AudioService.APP_SAMPLE_RATE; // 16000
-                    int appChannels = AudioService.APP_CHANNELS;       // 1
+                // 使用正确的参数顺序：sampleRate, channels, bitrate, complexity
+                // 从AudioService获取应用程序的音频配置
+                int appSampleRate = AudioService.APP_SAMPLE_RATE; // 16000
+                int appChannels = AudioService.APP_CHANNELS;       // 1
+                const int fixedBitrate = 16000; // 固定16kbps比特率以获得更高压缩率
 
-                    _audioEncoder = new AudioEncoderService(
-                        sampleRate: appSampleRate,    // 16000 Hz
-                        channels: appChannels,        // 1 channel (mono)
-                        bitrate: opusBitrate,         // 来自设置的比特率 (e.g., 32000)
-                        complexity: opusComplexity    // 来自设置的复杂度 (e.g., 5)
-                    );
-                    Debug.WriteLine($"[LingualinkApiService] Opus encoder initialized: SR={appSampleRate}, CH={appChannels}, Bitrate={opusBitrate}, Complexity={opusComplexity}");
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"[LingualinkApiService] Failed to initialize Opus encoder: {ex.Message}. Opus encoding will be disabled.");
-                    _audioEncoder = null; // 确保初始化失败时为null
-                }
+                _audioEncoder = new AudioEncoderService(
+                    sampleRate: appSampleRate,    // 16000 Hz
+                    channels: appChannels,        // 1 channel (mono)
+                    bitrate: fixedBitrate,        // 固定16kbps比特率
+                    complexity: opusComplexity    // 来自设置的复杂度 (5-10)
+                );
+                Debug.WriteLine($"[LingualinkApiService] Opus encoder initialized: SR={appSampleRate}, CH={appChannels}, Bitrate={fixedBitrate}, Complexity={opusComplexity}");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[LingualinkApiService] Failed to initialize Opus encoder: {ex.Message}. Opus encoding will be disabled.");
+                _audioEncoder = null; // 确保初始化失败时为null
             }
         }
 

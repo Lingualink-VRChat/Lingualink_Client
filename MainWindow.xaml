@@ -66,14 +66,6 @@
                     </ui:NavigationViewItem.Icon>
                 </ui:NavigationViewItem>
                 <ui:NavigationViewItem
-                    Content="{Binding Account}"
-                    NavigationCacheMode="Enabled"
-                    TargetPageType="{x:Type pages:AccountPage}">
-                    <ui:NavigationViewItem.Icon>
-                        <ui:SymbolIcon Symbol="Person24" />
-                    </ui:NavigationViewItem.Icon>
-                </ui:NavigationViewItem>
-                <ui:NavigationViewItem
                     Content="{Binding MessageTemplates}"
                     NavigationCacheMode="Enabled"
                     TargetPageType="{x:Type pages:MessageTemplatePage}">
@@ -87,6 +79,17 @@
                     TargetPageType="{x:Type pages:ServicePage}">
                     <ui:NavigationViewItem.Icon>
                         <ui:SymbolIcon Symbol="ServerSurfaceMultiple16" />
+                    </ui:NavigationViewItem.Icon>
+                </ui:NavigationViewItem>
+                <ui:NavigationViewItem
+                    Content="{Binding Account}"
+                    NavigationCacheMode="Enabled"
+                    TargetPageType="{x:Type pages:AccountPage}"
+                    FontWeight="SemiBold"
+                    Background="{DynamicResource AccentFillColorDefaultBrush}"
+                    Margin="0,4,0,4">
+                    <ui:NavigationViewItem.Icon>
+                        <ui:SymbolIcon Symbol="PersonAccounts24" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
                     </ui:NavigationViewItem.Icon>
                 </ui:NavigationViewItem>
             </ui:NavigationView.MenuItems>

@@ -26,13 +26,11 @@ namespace lingualink_client.Services
             Debug.WriteLine($"[LingualinkApiServiceFactory] Creating API service with settings:");
             Debug.WriteLine($"[LingualinkApiServiceFactory]   ServerUrl: '{settings.ServerUrl}'");
             Debug.WriteLine($"[LingualinkApiServiceFactory]   ApiKey: '{settings.ApiKey}'");
-            Debug.WriteLine($"[LingualinkApiServiceFactory]   UseOpusEncoding: {settings.UseOpusEncoding}");
+            Debug.WriteLine($"[LingualinkApiServiceFactory]   OpusComplexity: {settings.OpusComplexity}");
 
             return new LingualinkApiService(
                 serverUrl: settings.ServerUrl,
                 apiKey: settings.ApiKey,
-                useOpusEncoding: settings.UseOpusEncoding,
-                opusBitrate: settings.OpusBitrate,
                 opusComplexity: settings.OpusComplexity
             );
         }
@@ -50,9 +48,7 @@ namespace lingualink_client.Services
             return new LingualinkApiService(
                 serverUrl: serverUrl,
                 apiKey: apiKey,
-                useOpusEncoding: false, // 测试时不使用Opus编码以简化
-                opusBitrate: 32000,
-                opusComplexity: 5
+                opusComplexity: 7 // 使用默认复杂度
             );
         }
     }

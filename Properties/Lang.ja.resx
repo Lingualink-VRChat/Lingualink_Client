@@ -537,7 +537,7 @@
     <value>Opusビットレート（bps）</value>
   </data>
   <data name="OpusComplexity" xml:space="preserve">
-    <value>Opus複雑度（0-5）</value>
+    <value>Opus圧縮レベル（5-10）</value>
   </data>
   <data name="OpusEncodingHint" xml:space="preserve">
     <value>Opusエンコーディングは音声データを圧縮することで帯域幅使用量を大幅に削減します。低速なインターネット接続に推奨されます。</value>
@@ -546,13 +546,13 @@
     <value>低いビットレートはより多くの帯域幅を節約しますが、音声品質が低下する可能性があります。音声には32kbpsが推奨されます。</value>
   </data>
   <data name="OpusComplexityHint" xml:space="preserve">
-    <value>高い複雑度は圧縮を改善しますが、CPU使用量が増加します。5は良いバランスです。</value>
+    <value>高い圧縮レベルはより良い圧縮率を実現しますが、CPU使用量が増加します。固定16kbpsビットレートで最適な帯域幅節約を実現。範囲：5-10、デフォルト：7。</value>
   </data>
   <data name="ValidationOpusBitrateInvalid" xml:space="preserve">
     <value>Opusビットレートは8000-32000 bpsの間である必要があります。</value>
   </data>
   <data name="ValidationOpusComplexityInvalid" xml:space="preserve">
-    <value>Opus複雑度は0-5の間である必要があります。</value>
+    <value>Opus圧縮レベルは5-10の間である必要があります。</value>
   </data>
 
   <!-- Account Page -->
