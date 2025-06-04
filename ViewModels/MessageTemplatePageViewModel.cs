@@ -148,9 +148,19 @@ namespace lingualink_client.ViewModels
 
         private void SaveSettings()
         {
+            // 重新加载最新设置作为基础，确保不会覆盖其他页面的更改
+            AppSettings settingsToSave = _settingsService.LoadSettings();
+
+            // 应用此页面管理的特定设置
+            settingsToSave.UseCustomTemplate = this.UseCustomTemplateEnabled;
+            settingsToSave.UserCustomTemplateText = this.CustomTemplateText;
+
             // 确保保存当前的界面语言，避免语言切换bug
-            _appSettings.GlobalLanguage = System.Threading.Thread.CurrentThread.CurrentUICulture.Name;
-            _settingsService.SaveSettings(_appSettings);
+            settingsToSave.GlobalLanguage = System.Threading.Thread.CurrentThread.CurrentUICulture.Name;
+
+            _settingsService.SaveSettings(settingsToSave);
+            _appSettings = settingsToSave; // 更新ViewModel的缓存设置
+
             // 通知其他组件设置已更改
             SettingsChangedNotifier.RaiseSettingsChanged();
         }

@@ -489,7 +489,19 @@ namespace lingualink_client.Services
             short maxAbsSample = 0;
             for (int i = 0; i < samples.Length; i++)
             {
-                short absSample = (short)Math.Abs(samples[i]);
+                short currentSampleValue = samples[i];
+                short absSample;
+
+                // 显式处理 short.MinValue 以避免 Math.Abs 溢出异常
+                if (currentSampleValue == short.MinValue)
+                {
+                    absSample = short.MaxValue; // short.MinValue 的绝对值应该是 short.MaxValue
+                }
+                else
+                {
+                    absSample = (short)Math.Abs(currentSampleValue);
+                }
+
                 if (absSample > maxAbsSample)
                 {
                     maxAbsSample = absSample;
@@ -508,6 +520,13 @@ namespace lingualink_client.Services
 
             // 计算缩放因子
             double scaleFactor = targetAmplitudeLinear / maxAbsSample;
+
+            // 确保缩放因子有效（防止 NaN 或 Infinity）
+            if (double.IsNaN(scaleFactor) || double.IsInfinity(scaleFactor))
+            {
+                _logger.AddMessage($"Warning: Invalid scaleFactor ({scaleFactor}) in peak normalization. Peak: {maxAbsSample}");
+                return samples; // 返回原始样本，不进行归一化
+            }
 
             // 应用缩放并限幅
             for (int i = 0; i < samples.Length; i++)

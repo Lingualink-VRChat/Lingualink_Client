@@ -254,8 +254,8 @@ namespace lingualink_client.ViewModels
 
         private bool ValidateAndBuildSettings(out AppSettings? updatedSettings)
         {
-            // 使用当前设置作为基础，而不是重新从文件加载
-            updatedSettings = _currentSettings ?? new AppSettings();
+            // 重新加载最新设置作为基础，确保不会覆盖其他页面的更改
+            updatedSettings = _settingsService.LoadSettings();
 
             // 移除服务器URL和API密钥的验证，这些现在在账户页面处理
             

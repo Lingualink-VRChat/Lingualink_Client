@@ -134,10 +134,10 @@ namespace lingualink_client.ViewModels
         {
             System.Diagnostics.Debug.WriteLine($"[AccountPageViewModel] ValidateAndBuildSettings() called");
 
-            // 使用当前设置作为基础，而不是重新从文件加载
-            updatedSettings = _currentSettings ?? new AppSettings();
+            // 重新加载最新设置作为基础，确保不会覆盖其他页面的更改
+            updatedSettings = _settingsService.LoadSettings();
 
-            System.Diagnostics.Debug.WriteLine($"[AccountPageViewModel] Current settings base - ApiKey: '{updatedSettings.ApiKey}', ServerUrl: '{updatedSettings.ServerUrl}'");
+            System.Diagnostics.Debug.WriteLine($"[AccountPageViewModel] Loaded latest settings base - ApiKey: '{updatedSettings.ApiKey}', ServerUrl: '{updatedSettings.ServerUrl}'");
 
             // 只有在使用自定义服务器时才需要验证URL和API密钥
             if (UseCustomServer)
