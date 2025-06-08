@@ -1,209 +1,169 @@
-主要语言：中文
+# LinguaLink Client - 项目总结与开发者指南
 
-项目总结：LinguaLink 客户端 v3.0.0
-项目名称: LinguaLink 客户端 (lingualink_client)
+## 1. 项目概述
 
-项目目标:
-LinguaLink 客户端是一个基于 Windows Presentation Foundation (WPF) 的桌面应用程序，旨在提供实时的语音识别和多语言翻译服务。其核心目标是将用户的语音输入快速准确地转换为文本，并将其翻译成一种或多种指定的目标语言。该客户端特别集成了对 VRChat 的 OSC (Open Sound Control) 支持，允许将翻译结果直接发送到 VRChat 的聊天框中，从而促进跨语言交流。
+**LinguaLink Client** 是一个基于 C# 和 WPF 构建的桌面应用程序，旨在提供实时语音识别和翻译功能。它深度集成了 VRChat，可以通过 OSC 协议将翻译结果直接发送到游戏聊天框中。
 
-核心功能 (v3.0.0):
+此客户端设计为一个功能全面、高度可配置的工具，其核心特性包括：
+- **实时音频处理**: 集成了高效的语音活动检测 (VAD)。
+- **多语言翻译**: 通过 LinguaLink 后端 API (v2.0) 实现多种语言的互译。
+- **高效音频传输**: 默认使用 Opus 音频编码 (16kbps)，并结合音频增强技术，以最小的带宽占用实现最高的识别准确率。
+- **模块化和可扩展性**: 采用现代化的 MVVM 架构，结合依赖注入和服务分层，易于维护和扩展。
+- **现代化 UI**: 使用 WPF-UI 库构建，提供流畅的、符合 Fluent Design 的用户界面。
 
-实时语音识别与翻译:
+## 2. 核心技术栈
 
-利用麦克风进行实时语音捕获。
-集成优化的语音活动检测 (VAD) 技术 (WebRtcVadSharp)，包含可配置的说话后追加录音功能，以优化音频片段的捕获，减少不必要的传输和处理。
-Opus 音频编码标准: 默认使用 Opus 编码 (Concentus库) 以固定 16kbps 比特率对捕获的音频进行高效压缩，显著减少网络带宽消耗，并支持调节编码复杂度。
-新增音频增强处理: 在发送前对音频应用峰值归一化和安静语音增强，提升语音识别的准确性。
-支持将处理后的音频发送到后端 LinguaLink API v2.0 服务进行语音转文本 (STT) 和机器翻译 (MT)。
-支持多种目标语言的翻译，如英文、日文、中文等。
-VRChat OSC 集成:
+- **框架**: .NET 8.0
+- **UI**: WPF (Windows Presentation Foundation)
+- **UI 库**: [WPF-UI (Fluent for WPF)](https://github.com/lepoco/wpfui) - 用于实现现代化、流畅的界面。
+- **MVVM 框架**: [CommunityToolkit.Mvvm](https://learn.microsoft.com/en-us/dotnet/communitytoolkit/mvvm/) - 用于实现模型-视图-视图模型 (MVVM) 设计模式。
+- **音频处理**:
+    - **NAudio**: 用于音频输入/输出 (I/O) 和设备管理。
+    - **WebRtcVadSharp**: 用于高效的语音活动检测 (VAD)。
+    - **Concentus**: 用于 Opus 音频编码，以实现高效的音频压缩。
+- **网络与通信**:
+    - **HttpClient**: 用于与后端 LinguaLink API v2.0 进行通信。
+    - **OscCore**: 用于通过 OSC (Open Sound Control) 协议与 VRChat 进行通信。
 
-能够通过 OSC 协议将翻译后的文本发送到 VRChat 聊天框。
-用户可以配置 OSC 的 IP 地址、端口以及发送行为（如是否立即发送、是否播放通知音效）。
-API 服务交互 (v2.0 核心):
+## 3. 架构深度解析
 
-通过 HTTP(S) 与后端的 LinguaLink API v2.0 服务进行通信。
-支持 API 密钥认证，确保安全访问。
-主要依赖新的 API v2.0 响应模型 (NewApiResponse)，同时保留对旧格式的部分兼容转换。
-用户界面与配置:
+项目采用了清晰的分层和模块化架构，遵循了 MVVM 设计模式和 SOLID 原则。
 
-采用 WPF 和 WPF UI 库 (Wpf.Ui) 构建现代化 Fluent Design 用户界面。
-引入了自定义的现代化消息框 (ModernMessageBox) 提升用户体验。
-提供多页面导航，包括主工作区 (IndexPage，采用组件化 ViewModel 容器 IndexWindowViewModel)、服务配置 (ServicePage)、消息模板 (MessageTemplatePage)、账户设置 (AccountPage) 和日志查看 (LogPage)。
-允许用户选择麦克风设备，并通过专门的 MicrophoneSelectionViewModel 管理。
-支持用户配置目标翻译语言（手动选择或通过模板），由 TargetLanguageViewModel 管理。
-提供灵活的消息模板系统 (MessageTemplatePageViewModel 和 TemplateProcessor)，用户可以自定义翻译结果的显示格式，支持基于当前界面语言的占位符提示。
-可调节 VAD 参数（追加录音时长、最小/最大语音时长、最小录音音量阈值）。
-可配置 Opus 编码复杂度。
-可配置音频增强参数（峰值归一化目标电平、安静语音增强的 RMS 阈值和增益）。
-支持界面语言切换（英文、中文、日文），本地化资源通过 .resx 文件管理。
-所有用户配置（如 API 密钥、服务器 URL、语言偏好、VAD 参数、OSC 设置、音频处理参数等）均会保存到本地用户特定目录下的 app_settings.json 文件中。
-日志与状态显示:
+### 3.1. MVVM 模式 (Model-View-ViewModel)
 
-提供详细的实时运行日志 (LogViewModel 和 LoggingManager)，方便用户查看操作过程和排查问题。
-在界面上显示当前的工作状态 (MainControlViewModel) 和翻译结果 (TranslationResultViewModel)。
-技术栈与架构:
+- **Views (`/Views`)**: 负责界面的呈现。XAML 文件非常"轻"，几乎不包含业务逻辑。后台代码 (`.xaml.cs`) 主要用于处理纯粹的 UI 事件（如窗口加载、控件交互）并将它们连接到 ViewModel。
+- **ViewModels (`/ViewModels`)**: 负责 UI 的状态和逻辑。这是应用的核心，包含了所有的数据绑定属性和命令。`CommunityToolkit.Mvvm` 的 `ObservableObject` 和 `RelayCommand` 被广泛使用以减少样板代码。
+- **Models (`/Models`)**: 负责数据结构和业务实体，如 `AppSettings` (应用配置) 和 `NewApiResponse` (API 响应)。
 
-平台: .NET 8.0, WPF (Windows Presentation Foundation)
-UI 框架: WPF UI (Wpf.Ui)
-架构模式: MVVM (Model-View-ViewModel)
-Models (Models/): 定义数据结构，如 AppSettings (应用配置)、NewApiResponse (API v2.0 响应模型)、TranslationData (翻译数据结构)、MMDeviceWrapper (麦克风设备信息)。
-Views (Views/): XAML 文件定义用户界面。
-ViewModels (ViewModels/): 处理视图逻辑和数据绑定，使用 CommunityToolkit.Mvvm 实现。采用组件化设计，如 IndexWindowViewModel 作为容器管理 MainControlViewModel, MicrophoneSelectionViewModel, TargetLanguageViewModel, TranslationResultViewModel, LogViewModel 等子组件 ViewModel。引入 ViewModels/Managers/ 管理更复杂的 UI 相关状态集合。
-核心服务 (Services/):
-服务管理与通信: ServiceContainer (DI), ServiceInitializer, IEventAggregator / EventAggregator, SettingsChangedNotifier.
-LingualinkApiService: 核心 API v2.0 通信服务。
-LingualinkApiServiceFactory: 创建 LingualinkApiService 实例。
-AudioService: 管理麦克风录音、VAD 处理、音频增强。
-AudioEncoderService: 使用 Concentus 进行 Opus 音频编码。
-SimpleOggOpusWriter: 辅助生成 OGG Opus 文件流。
-OscService: 使用 OscCore 处理 OSC 消息发送。
-SettingsService: 加载/保存 AppSettings。
-LanguageManager: 管理界面语言和本地化字符串。
-LanguageDisplayHelper: 辅助语言名称/代码转换。
-LoggingManager: 集中管理日志。
-AudioTranslationOrchestrator / TextTranslationOrchestrator: 协调音频/文本翻译的完整流程。
-本地化: 使用 .resx 文件，由 LanguageManager 动态加载。
-第三方库: NAudio, WebRtcVadSharp, OscCore, Concentus, Concentus.OggFile, CommunityToolkit.Mvvm, WPF UI (Wpf.Ui).
-项目结构概述:
-（与之前版本类似，但 ViewModels 和 Services 内部结构更为清晰，增加了 Managers 和 Components 子目录，体现了更好的模块化设计。）
+### 3.2. 服务层 (`/Services`)
 
-/Assets/Icons/: 应用程序图标。
-/Converters/: WPF 值转换器。
-/Models/: 核心数据模型和应用设置。
-/Properties/: 本地化资源文件。
-/Services/: 核心业务逻辑。
-/Services/Events/: 事件聚合器。
-/Services/Interfaces/: 服务接口。
-/Services/Managers/: 业务流程协调服务。
-/ViewModels/: MVVM 的 ViewModel。
-/ViewModels/Components/: UI 子组件的 ViewModel。
-/ViewModels/Events/: ViewModel 间通信事件。
-/ViewModels/Managers/: UI 相关的状态管理器。
-/Views/: XAML UI 文件。
-/Views/Components/: 可重用 UI 组件。
-/Views/Pages/: 主要页面。
-Root Directory: 项目文件, 解决方案, 应用入口等。
-工作流程简介 (v3.0.0):
+服务层封装了所有的业务逻辑、外部通信和核心功能，使 ViewModel 保持整洁。
 
-初始化: App.xaml.cs 启动时，ServiceInitializer 注册所有核心服务。加载 AppSettings 并应用界面语言。IndexWindowViewModel 被创建，它进而创建并管理其子组件的 ViewModel，如 MicrophoneSelectionViewModel 负责麦克风列表的加载与用户选择。
-用户操作: 用户通过各专门的 ViewModel 控制的 UI 组件进行配置（麦克风、目标语言、模板、各项服务参数）。设置更改通过 SettingsService 保存，并由 SettingsChangedNotifier 通知相关组件。EventAggregator 用于组件间的解耦通信。
-开始工作: 用户点击 "Start Work" (MainControlViewModel)。
-AudioTranslationOrchestrator 被激活，使用 AudioService 监听选定麦克风。
-AudioService 使用 VAD 检测语音，并应用配置的音频增强处理。
-音频处理与翻译:
-AudioService 捕获并处理完一个语音片段后，AudioTranslationOrchestrator 接收音频数据。
-AudioEncoderService 将音频编码为 Opus 格式。
-LingualinkApiService (v2.0) 将编码后的音频数据和目标语言发送到后端。
-收到服务器响应后，解析翻译结果。
-结果展示与发送:
-翻译结果通过 TranslationCompletedEvent 事件传递给 TranslationResultViewModel 在 UI 显示。
-若启用 OSC，OscService 将格式化（可能通过 TemplateProcessor）后的文本发送到 VRChat。
-所有重要操作和状态变更由 LoggingManager 记录，并通过 LogViewModel 显示。
-总结 (v3.0.0):
-LinguaLink 客户端 v3.0.0 在之前版本的基础上进行了显著的架构优化和功能增强。全面迁移至 API v2.0，引入了高效的 Opus 音频编码作为标准配置，并新增了音频增强功能以提升识别准确率。VAD 系统得到进一步优化，ViewModel 层通过组件化和管理器模式提升了模块化和可维护性。这些更新使得客户端在性能、用户体验和代码质量上都有了显著提升，为用户提供了更强大、更稳定的实时语音翻译体验。
+- **依赖注入 (`ServiceContainer`)**: 项目使用一个简单的静态依赖注入容器 `ServiceContainer` 来管理服务的生命周期和解析。在应用启动时，`ServiceInitializer` 会注册所有核心服务。
+- **事件聚合器 (`EventAggregator`)**: `IEventAggregator` 接口及其实现 `EventAggregator` 用于模块间的松耦合通信。这避免了组件之间的直接引用，使得系统更加灵活。例如，当翻译完成时，`AudioTranslationOrchestrator` 会发布一个 `TranslationCompletedEvent`，而 `TranslationResultViewModel` 会订阅并响应此事件以更新UI。
+- **核心服务**:
+    - `SettingsService`: 负责加载和保存 `app_settings.json` 文件。
+    - `AudioService`: 封装了麦克风录音、VAD 处理、音频增强（峰值归一化、安静语音增强）和音频分段逻辑。
+    - `LingualinkApiService`: 负责与后端 API v2.0 通信，包括音频编码 (Opus)、发送请求和解析响应。
+    - `OscService`: 封装了向 VRChat 发送 OSC 消息的逻辑。
+    - `LoggingManager`: 提供一个集中的、线程安全的日志记录系统。
+- **协调器 (`Orchestrators`)**:
+    - `AudioTranslationOrchestrator`: 这是一个关键类，它协调了从音频输入到最终 OSC 输出的完整流程。它监听 `AudioService` 的事件，调用 `LingualinkApiService` 进行翻译，并使用 `OscService` 发送结果。
 
-English Translation of the Summary:
+### 3.3. 组件化 ViewModel 架构
 
-Project Summary: LinguaLink Client v3.0.0
-Project Name: LinguaLink Client (lingualink_client)
+这是一个重要的架构特点。主界面 (`IndexPage`) 并非由一个庞大的 ViewModel 控制，而是由一个容器 ViewModel (`IndexWindowViewModel`) 和多个独立的、可复用的组件 ViewModel 构成。
 
-Project Goal:
-LinguaLink Client is a Windows Presentation Foundation (WPF) based desktop application designed to provide real-time speech recognition and multilingual translation services. Its core objective is to quickly and accurately convert user's speech input into text and translate it into one or more specified target languages. The client notably integrates OSC (Open Sound Control) support for VRChat, allowing translation results to be sent directly to VRChat's chatbox, thereby facilitating cross-language communication.
+- **`IndexWindowViewModel`**: 作为容器，它持有其他组件 ViewModel 的实例，并负责协调它们之间的数据流。
+- **组件 ViewModels (`/ViewModels/Components`)**:
+    - `MainControlViewModel`: 控制核心工作流程（开始/停止），并显示状态文本。
+    - `MicrophoneSelectionViewModel`: 管理麦克风列表和选择。
+    - `TargetLanguageViewModel`: 管理目标语言的选择。
+    - `TranslationResultViewModel`: 显示翻译结果和日志。
+    - `LogViewModel`: 为独立的日志页面提供支持。
+- **管理器 (`/ViewModels/Managers`)**:
+    - 为了进一步分离关注点，`MicrophoneManager` 和 `TargetLanguageManager` 被引入，用于处理与UI相关的复杂状态逻辑（如麦克风刷新、可用语言列表动态更新等），使组件 ViewModel 更加轻量。
 
-Core Features (v3.0.0):
+这种设计使得每个部分都高度内聚，易于独立测试和修改。
 
-Real-time Speech Recognition & Translation:
+## 4. 关键工作流程
 
-Real-time speech capture using a microphone.
-Integrated optimized Voice Activity Detection (VAD) technology (WebRtcVadSharp), including configurable post-speech recording duration, to refine audio segment capture, reducing unnecessary transmission and processing.
-Opus Audio Encoding Standard: Defaults to using Opus encoding (Concentus library) with a fixed 16kbps bitrate for efficient audio compression, significantly reducing network bandwidth consumption, and supports adjustable encoding complexity.
-New Audio Enhancement Processing: Applies peak normalization and quiet speech boost to audio before sending, improving speech recognition accuracy.
-Supports sending processed audio to the backend LinguaLink API v2.0 service for Speech-to-Text (STT) and Machine Translation (MT).
-Supports translation into multiple target languages such as English, Japanese, Chinese, etc.
-VRChat OSC Integration:
+### 4.1. 应用启动流程
 
-Capable of sending translated text to the VRChat chatbox via the OSC protocol.
-Users can configure OSC IP address, port, and sending behavior (e.g., send immediately, play notification sound).
-API Service Interaction (v2.0 Core):
+1.  `App.xaml.cs` 的 `OnStartup` 方法被调用。
+2.  `ServiceInitializer.Initialize()` 注册所有单例服务（如 `ILoggingManager`, `IEventAggregator`）。
+3.  `SettingsService` 加载用户设置，并应用全局语言。
+4.  主窗口 `MainWindow` 被创建，`IndexWindowViewModel` 被实例化，进而创建所有组件 ViewModel。
+5.  `IndexWindowViewModel` 从 `SettingsService` 加载配置，并初始化其管理的组件（如 `TargetLanguageManager`）。
 
-Communicates with the backend LinguaLink API v2.0 service via HTTP(S).
-Supports API key authentication for secure access.
-Primarily relies on the new API v2.0 response model (NewApiResponse), while retaining partial backward compatibility for older formats.
-User Interface & Configuration:
+### 4.2. 实时音频翻译流程
 
-Built with WPF and the WPF UI library (Wpf.Ui) for a modern Fluent Design user interface.
-Introduced a custom ModernMessageBox for an improved user experience.
-Provides multi-page navigation, including a main workspace (IndexPage using a componentized ViewModel container IndexWindowViewModel), service configuration (ServicePage), message templates (MessageTemplatePage), account settings (AccountPage), and log viewing (LogPage).
-Allows users to select a microphone device, managed by a dedicated MicrophoneSelectionViewModel.
-Supports user configuration of target translation languages (manual selection or via templates), managed by TargetLanguageViewModel.
-Offers a flexible message template system (MessageTemplatePageViewModel and TemplateProcessor), allowing users to customize the display format of translation results, with placeholder hints based on the current UI language.
-Adjustable VAD parameters (post-speech recording duration, min/max voice duration, min recording volume threshold).
-Configurable Opus encoding complexity.
-Configurable audio enhancement parameters (peak normalization target level, quiet speech boost RMS threshold and gain).
-Supports UI language switching (English, Chinese, Japanese), with localization resources managed via .resx files.
-All user configurations (API key, server URL, language preferences, VAD parameters, OSC settings, audio processing parameters, etc.) are saved locally to an app_settings.json file in a user-specific directory.
-Logging & Status Display:
+这是一个核心的、异步的、事件驱动的流程：
 
-Provides detailed real-time operational logs (LogViewModel and LoggingManager) for users to view processes and troubleshoot issues.
-Displays current working status (MainControlViewModel) and translation results (TranslationResultViewModel) in the UI.
-Technology Stack & Architecture:
+1.  **用户操作**: 用户在 `IndexPage` 上选择麦克风，然后点击 "开始工作" 按钮。
+2.  **ViewModel (UI -> Logic)**:
+    - `MainControlViewModel` 的 `ToggleWorkCommand` 被执行。
+    - 它调用 `AudioTranslationOrchestrator.Start()`，并传入所选麦克风的设备索引。
+3.  **音频服务 (录音与VAD)**:
+    - `AudioService.Start()` 初始化 `NAudio` 的 `WaveInEvent` 和 `WebRtcVad`。
+    - `OnVadDataAvailable` 事件处理器持续接收音频数据。
+    - VAD 算法检测语音的开始和结束。`PostSpeechRecordingDuration` 确保捕捉到完整的语音尾音。
+    - 当一个完整的语音片段形成后（满足最小时长且静音超时），`AudioService` 会对音频应用增强处理（`ProcessAndNormalizeAudio`），然后触发 `AudioSegmentReady` 事件，并附带音频数据。
+4.  **协调器 (核心逻辑)**:
+    - `AudioTranslationOrchestrator` 监听到 `AudioSegmentReady` 事件。
+    - 它从 `AppSettings` 获取目标语言（或从模板中提取）。
+    - 音频数据被传递给 `AudioEncoderService` 进行 Opus 编码，得到压缩后的字节数组。
+    - `LingualinkApiService.ProcessAudioAsync()` 被调用，将编码后的音频数据发送到后端。
+5.  **API 服务 (网络通信)**:
+    - `LingualinkApiService` 发送 HTTP POST 请求到后端 `/process_audio` 端点。
+    - 它异步等待服务器的 JSON 响应 (`NewApiResponse`)。
+6.  **结果处理 (返回路径)**:
+    - `AudioTranslationOrchestrator` 接收到 `ApiResult`。
+    - 如果成功，它会根据用户的模板设置 (`UseCustomTemplate`) 格式化翻译文本。
+    - 它通过 `IEventAggregator` 发布一个 `TranslationCompletedEvent`，其中包含原始文本和处理后的文本。
+    - 如果 `EnableOsc` 为 `true`，它会调用 `OscService.SendChatboxMessageAsync()` 将处理后的文本发送到 VRChat。
+7.  **ViewModel (Logic -> UI)**:
+    - `TranslationResultViewModel` 订阅了 `TranslationCompletedEvent`。
+    - 当事件被接收时，它会更新其 `OriginalText` 和 `ProcessedText` 属性，UI 会通过数据绑定自动刷新。
+    - `MainControlViewModel` 也会更新 `StatusText` 以向用户反馈当前状态（如 "翻译成功"、"发送中..."）。
 
-Platform: .NET 8.0, WPF (Windows Presentation Foundation)
-UI Framework: WPF UI (Wpf.Ui)
-Architecture Pattern: MVVM (Model-View-ViewModel)
-Models (Models/): Defines data structures like AppSettings, NewApiResponse (API v2.0), TranslationData, MMDeviceWrapper.
-Views (Views/): XAML files defining the UI.
-ViewModels (ViewModels/): Handles view logic and data binding using CommunityToolkit.Mvvm. Employs a componentized design, e.g., IndexWindowViewModel as a container for MainControlViewModel, MicrophoneSelectionViewModel, etc. Introduces ViewModels/Managers/ for more complex UI-related state management.
-Core Services (Services/):
-Service Management & Communication: ServiceContainer (DI), ServiceInitializer, IEventAggregator / EventAggregator, SettingsChangedNotifier.
-LingualinkApiService: Core API v2.0 communication service.
-LingualinkApiServiceFactory: Creates LingualinkApiService instances.
-AudioService: Manages microphone recording, VAD, and audio enhancements.
-AudioEncoderService: Opus audio encoding using Concentus.
-SimpleOggOpusWriter: Helper for generating OGG Opus streams.
-OscService: OSC message sending using OscCore.
-SettingsService: Loads/saves AppSettings.
-LanguageManager: Manages UI language and localization.
-LanguageDisplayHelper: Assists with language name/code conversions.
-LoggingManager: Centralized logging.
-AudioTranslationOrchestrator / TextTranslationOrchestrator: Coordinates the full audio/text translation workflow.
-Localization: Uses .resx files, dynamically loaded by LanguageManager.
-Third-party Libraries: NAudio, WebRtcVadSharp, OscCore, Concentus, Concentus.OggFile, CommunityToolkit.Mvvm, WPF UI (Wpf.Ui).
-Project Structure Overview:
-(Similar to previous versions, but ViewModels and Services have clearer internal structures with added Managers and Components subdirectories, reflecting better modularity.)
+### 4.3. 设置更改流程
 
-/Assets/Icons/: Application icons.
-/Converters/: WPF value converters.
-/Models/: Core data models and application settings.
-/Properties/: Localization resource files.
-/Services/: Core business logic.
-/Services/Events/: Event aggregator.
-/Services/Interfaces/: Service interfaces.
-/Services/Managers/: Business process coordination services.
-/ViewModels/: MVVM ViewModels.
-/ViewModels/Components/: ViewModels for UI sub-components.
-/ViewModels/Events/: Events for ViewModel communication.
-/ViewModels/Managers/: UI-related state managers.
-/Views/: XAML UI files.
-/Views/Components/: Reusable UI components.
-/Views/Pages/: Main application pages.
-Root Directory: Project files, solution, application entry points, etc.
-Workflow Brief (v3.0.0):
+1.  用户在 `ServicePage` 或 `AccountPage` 等页面上修改设置。
+2.  对应 ViewModel (`ServicePageViewModel`, `AccountPageViewModel`) 的属性通过双向绑定更新。
+3.  用户点击 "保存" 按钮，触发 `SaveCommand`。
+4.  ViewModel 验证输入，然后从 `SettingsService` 加载最新的 `AppSettings` 对象（以避免覆盖其他页面的更改）。
+5.  ViewModel 将当前页面管理的设置更新到这个 `AppSettings` 对象中。
+6.  `SettingsService.SaveSettings()` 将更新后的对象序列化为 JSON 并保存到磁盘。
+7.  `SettingsChangedNotifier.RaiseSettingsChanged()` 被调用，这是一个全局静态事件。
+8.  `IndexWindowViewModel` 和 `MainControlViewModel` 等关心设置变化的组件会监听到此事件，并重新加载配置以应用更改（例如，重新创建 `AudioTranslationOrchestrator` 以应用新的 API 密钥或 OSC 地址）。
 
-Initialization: On App.xaml.cs startup, ServiceInitializer registers all core services. AppSettings are loaded, and UI language is applied. IndexWindowViewModel is created, which in turn creates and manages ViewModels for its sub-components (e.g., MicrophoneSelectionViewModel for microphone list loading and selection).
-User Interaction: Users configure settings (microphone, target languages, templates, service parameters) via UI components controlled by their respective ViewModels. Changes are saved via SettingsService and broadcast by SettingsChangedNotifier. EventAggregator facilitates decoupled communication.
-Start Work: User clicks "Start Work" (MainControlViewModel).
-AudioTranslationOrchestrator is activated, using AudioService to listen to the selected microphone.
-AudioService uses VAD to detect speech and applies configured audio enhancements.
-Audio Processing & Translation:
-When AudioService captures and processes a speech segment, AudioTranslationOrchestrator receives the audio data.
-AudioEncoderService encodes the audio to Opus format.
-LingualinkApiService (v2.0) sends the encoded audio and target languages to the backend.
-Server response is received and translation results are parsed.
-Result Display & Sending:
-Translation results are passed via TranslationCompletedEvent to TranslationResultViewModel for UI display.
-If OSC is enabled, OscService sends the formatted text (possibly via TemplateProcessor) to VRChat.
-All significant operations and state changes are logged by LoggingManager and displayed via LogViewModel.
-Conclusion (v3.0.0):
-LinguaLink Client v3.0.0 introduces significant architectural optimizations and feature enhancements over previous versions. It fully migrates to API v2.0, incorporates efficient Opus audio encoding as a standard feature, and adds new audio enhancement capabilities to improve recognition accuracy. The VAD system has been further refined, and the ViewModel layer has been refactored with componentization and manager patterns for improved modularity and maintainability. These updates provide users with a more powerful, stable,
+## 5. 重要类及其职责
+
+| 类别       | 类/接口                                    | 职责                                                               |
+|------------|--------------------------------------------|--------------------------------------------------------------------|
+| **Models** | `AppSettings.cs`                           | 定义所有用户可配置的设置项，是 `app_settings.json` 的C#映射。        |
+|            | `Models.cs` (`NewApiResponse`, `ApiResult`) | 定义与后端 API v2.0 交互的数据模型和统一的 API 结果封装。          |
+| **Services** | `IEventAggregator.cs` / `EventAggregator.cs` | 提供松耦合的发布/订阅事件总线。                                    |
+|            | `ILingualinkApiService.cs` / `LingualinkApiService.cs` | 封装与后端 API v2.0 的所有 HTTP 通信，包括认证、编码和请求。   |
+|            | `AudioService.cs`                          | 核心音频处理：录音、VAD、分段、音频增强。                          |
+|            | `AudioTranslationOrchestrator.cs`          | 流程协调器，粘合音频输入、API翻译和OSC输出。                       |
+|            | `SettingsService.cs`                       | 负责 `app_settings.json` 的读写操作。                              |
+|            | `ServiceContainer.cs` / `ServiceInitializer.cs` | 实现简单的依赖注入和服务生命周期管理。                             |
+| **ViewModels**| `IndexWindowViewModel.cs`                    | 作为组件容器，管理所有主界面上的子 ViewModel。                     |
+|            | `MainControlViewModel.cs`                  | 控制核心工作流程（启停）、状态显示，并持有 `Orchestrator` 实例。 |
+|            | `AccountPageViewModel.cs`                  | 管理账户和自定义服务器（URL、API Key）的设置。                       |
+|            | `ServicePageViewModel.cs`                  | 管理服务相关的详细参数（VAD、OSC、音频处理等）。                   |
+|            | `TargetLanguageManager.cs`                 | 封装目标语言选择的复杂UI逻辑，如动态更新可用语言列表。           |
+
+## 6. 未来开发指南
+
+### 6.1. 如何添加一个新的设置项
+
+1.  **Model**: 在 `Models/AppSettings.cs` 中添加新的属性。
+2.  **View**: 在相应的设置页面 XAML (如 `ServicePage.xaml`) 中添加 UI 控件（如 `Slider`, `CheckBox`）。
+3.  **ViewModel**: 在对应的 ViewModel (如 `ServicePageViewModel.cs`) 中：
+    -   添加一个与新属性同名的 `[ObservableProperty]`。
+    -   在 `LoadSettingsFromModel` 方法中，从 `AppSettings` 加载值到 ViewModel 属性。
+    -   在 `ValidateAndBuildSettings` 方法中，将 ViewModel 属性的值写回 `AppSettings` 对象。
+    -   添加对应的本地化标签字符串到 `.resx` 文件和 ViewModel。
+4.  **Service**: 如果新设置影响了某个服务（如 `AudioService`），请确保在服务的构造函数中接收并使用该值。
+
+### 6.2. 如何添加一个新的UI页面
+
+1.  **View**: 在 `Views/Pages/` 目录下创建一个新的 `Page` (e.g., `NewFeaturePage.xaml`)。
+2.  **ViewModel**: 在 `ViewModels/` 目录下创建一个对应的 ViewModel (`NewFeaturePageViewModel.cs`)，继承自 `ViewModelBase`。
+3.  **MainWindow**: 在 `MainWindow.xaml` 的 `ui:NavigationView.MenuItems` 中添加一个新的 `ui:NavigationViewItem`，并将其 `TargetPageType` 指向你的新页面。
+4.  **Localization**: 为新的导航项在 `.resx` 文件中添加内容，并在 `MainWindowViewModel.cs` 中添加对应的属性绑定。
+
+### 6.3. 开发最佳实践
+
+- **保持 ViewModel 简洁**: 复杂的业务逻辑应移至服务层。ViewModel 的主要职责是管理UI状态和响应用户交互。
+- **使用 `ServiceContainer`**: 需要使用服务时，通过 `ServiceContainer.Resolve<T>()` 获取。新的单例服务应在 `ServiceInitializer` 中注册。
+- **使用 `EventAggregator`**: 当模块间需要通信但又不希望产生强引用时（如 ViewModel A 需要通知 ViewModel B 某事发生），请使用事件聚合器。定义一个新的事件类，然后发布和订阅它。
+- **利用组件化**: 对于复杂界面，优先考虑将其拆分为多个子组件 ViewModel，而不是创建一个庞大的单体 ViewModel。`IndexPage` 是一个很好的例子。
+- **本地化**: 所有面向用户的字符串都应通过 `LanguageManager.GetString("ResourceKey")` 获取，并添加到所有 `.resx` 文件中。
+
+## 7. 结论
+
+LinguaLink Client v3.0 是一个架构清晰、功能强大且易于扩展的应用程序。通过采用现代化的 MVVM 模式、服务分层和事件驱动设计，项目具备了良好的可维护性。未来的开发者可以基于此坚实的基础，轻松地添加新功能或进行修改。

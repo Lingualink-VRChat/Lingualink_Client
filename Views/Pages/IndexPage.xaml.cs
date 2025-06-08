@@ -9,8 +9,8 @@ namespace lingualink_client.Views // Assuming this namespace based on your exist
         public IndexPage()
         {
             InitializeComponent();
-            // 使用新的容器ViewModel实现数据驱动模式
-            DataContext = new IndexWindowViewModel();
+            // 使用App中共享的IndexWindowViewModel实例，避免重复创建
+            DataContext = (Application.Current as App)?.SharedIndexWindowViewModel;
         }
     }
 }

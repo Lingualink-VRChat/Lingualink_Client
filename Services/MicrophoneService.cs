@@ -7,7 +7,11 @@ using lingualink_client.Models; // Assuming Models.cs is in Models folder
 
 namespace lingualink_client.Services
 {
-    public class MicrophoneManager
+    /// <summary>
+    /// 麦克风服务 - 提供麦克风设备的发现和枚举功能
+    /// 重命名自MicrophoneManager以避免与ViewModels/Managers/MicrophoneManager混淆
+    /// </summary>
+    public class MicrophoneService
     {
         public List<MMDeviceWrapper> GetAvailableMicrophones(out MMDeviceWrapper? defaultDeviceWrapper)
         {

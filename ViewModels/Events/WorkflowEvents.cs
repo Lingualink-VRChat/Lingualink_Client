@@ -3,32 +3,6 @@ using lingualink_client.Models;
 namespace lingualink_client.ViewModels.Events
 {
     /// <summary>
-    /// 工作开始事件
-    /// </summary>
-    public class WorkStartedEvent
-    {
-        public int MicrophoneIndex { get; set; }
-        public string MicrophoneName { get; set; } = string.Empty;
-    }
-
-    /// <summary>
-    /// 工作停止事件
-    /// </summary>
-    public class WorkStoppedEvent
-    {
-        public string Reason { get; set; } = string.Empty;
-    }
-
-    /// <summary>
-    /// 音频状态更新事件
-    /// </summary>
-    public class AudioStatusUpdatedEvent
-    {
-        public string Status { get; set; } = string.Empty;
-        public bool IsWorking { get; set; }
-    }
-
-    /// <summary>
     /// 翻译完成事件
     /// </summary>
     public class TranslationCompletedEvent
@@ -39,16 +13,6 @@ namespace lingualink_client.ViewModels.Events
         public ServerResponse? Response { get; set; }
         public string? ErrorMessage { get; set; }
         public double Duration { get; set; }
-    }
-
-    /// <summary>
-    /// OSC消息发送事件
-    /// </summary>
-    public class OscMessageSentEvent
-    {
-        public string Message { get; set; } = string.Empty;
-        public bool Success { get; set; }
-        public string? ErrorMessage { get; set; }
     }
 
     /// <summary>

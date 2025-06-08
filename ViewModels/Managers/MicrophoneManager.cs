@@ -20,7 +20,7 @@ namespace lingualink_client.ViewModels.Managers
     {
         private readonly IEventAggregator _eventAggregator;
         private readonly ILoggingManager _logger;
-        private readonly Services.MicrophoneManager _microphoneService;
+        private readonly Services.MicrophoneService _microphoneService;
         private MMDeviceWrapper? _selectedMicrophone;
         private bool _isRefreshing = false;
         private bool _isEnabled = true;
@@ -88,7 +88,7 @@ namespace lingualink_client.ViewModels.Managers
         {
             _eventAggregator = ServiceContainer.Resolve<IEventAggregator>();
             _logger = ServiceContainer.Resolve<ILoggingManager>();
-            _microphoneService = new Services.MicrophoneManager();
+            _microphoneService = new Services.MicrophoneService();
             
             Microphones = new ObservableCollection<MMDeviceWrapper>();
             

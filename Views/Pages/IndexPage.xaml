@@ -9,7 +9,7 @@
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:vm="clr-namespace:lingualink_client.ViewModels"
     Title="IndexPage"
-    d:DataContext="{d:DesignInstance Type=vm:IndexContainerViewModel}"
+    d:DataContext="{d:DesignInstance Type=vm:IndexWindowViewModel}"
     mc:Ignorable="d">
 
     <Grid Margin="10">
