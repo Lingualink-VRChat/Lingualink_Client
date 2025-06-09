@@ -694,4 +694,27 @@
   <data name="AudioEncodingSettings" xml:space="preserve">
     <value>Audio Encoding Settings</value>
   </data>
+
+  <!-- API Connection Validation -->
+  <data name="StatusValidatingConnection" xml:space="preserve">
+    <value>Status: Validating API connection...</value>
+  </data>
+  <data name="StatusConnectionValidated" xml:space="preserve">
+    <value>Status: API connection validated successfully</value>
+  </data>
+  <data name="StatusConnectionValidationFailed" xml:space="preserve">
+    <value>Status: API connection validation failed</value>
+  </data>
+  <data name="StatusConnectionValidationError" xml:space="preserve">
+    <value>Status: API connection validation error: {0}</value>
+  </data>
+  <data name="LogConnectionValidated" xml:space="preserve">
+    <value>API connection validation successful</value>
+  </data>
+  <data name="LogConnectionValidationFailed" xml:space="preserve">
+    <value>API connection validation failed</value>
+  </data>
+  <data name="LogConnectionValidationError" xml:space="preserve">
+    <value>API connection validation error: {0}</value>
+  </data>
 </root>

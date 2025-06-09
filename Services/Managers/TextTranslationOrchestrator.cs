@@ -100,19 +100,19 @@ namespace lingualink_client.Services.Managers
 
             if (!apiResult.IsSuccess)
             {
-                OnStatusUpdated("Text translation failed");
+                OnStatusUpdated(LanguageManager.GetString("StatusTranslationFailed"));
                 resultArgs.IsSuccess = false;
                 resultArgs.ErrorMessage = apiResult.ErrorMessage;
-                resultArgs.ProcessedText = $"Translation error: {apiResult.ErrorMessage}";
-                
-                _loggingManager.AddMessage($"Text translation error: {apiResult.ErrorMessage}");
+                resultArgs.ProcessedText = string.Format(LanguageManager.GetString("TranslationError"), apiResult.ErrorMessage);
+
+                _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogTranslationError"), "manual_text", apiResult.ErrorMessage));
             }
             else
             {
                 // 处理成功的情况
                 if (!string.IsNullOrEmpty(apiResult.Transcription))
                 {
-                    OnStatusUpdated("Text translation successful");
+                    OnStatusUpdated(LanguageManager.GetString("StatusTranslationSuccess"));
                     resultArgs.IsSuccess = true;
                     resultArgs.OriginalText = apiResult.Transcription; // 对于文本处理，这是源文本
                     resultArgs.DurationSeconds = apiResult.ProcessingTime;
@@ -135,18 +135,18 @@ namespace lingualink_client.Services.Managers
                     }
                     
                     resultArgs.ProcessedText = translatedTextForOsc;
-                    
-                    _loggingManager.AddMessage($"Text translation successful: {apiResult.Transcription} -> {apiResult.ProcessingTime}s");
+
+                    _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogTranslationSuccess"), "manual_text", apiResult.Transcription, apiResult.ProcessingTime));
                 }
                 else
                 {
                     // 成功但没有结果文本
-                    OnStatusUpdated("Text translation successful but no result");
+                    OnStatusUpdated(LanguageManager.GetString("StatusTranslationSuccessNoText"));
                     resultArgs.IsSuccess = true;
-                    resultArgs.ProcessedText = "Translation successful but no result text";
+                    resultArgs.ProcessedText = LanguageManager.GetString("TranslationSuccessNoTextPlaceholder");
                     resultArgs.DurationSeconds = apiResult.ProcessingTime;
-                    
-                    _loggingManager.AddMessage($"Text translation successful but no result: {apiResult.ProcessingTime}s");
+
+                    _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogTranslationSuccessNoText"), "manual_text", apiResult.ProcessingTime));
                 }
             }
             
@@ -169,26 +169,26 @@ namespace lingualink_client.Services.Managers
         {
             try
             {
-                OnStatusUpdated("Validating API connection...");
+                OnStatusUpdated(LanguageManager.GetString("StatusValidatingConnection"));
                 var isValid = await _apiService.ValidateConnectionAsync();
-                
+
                 if (isValid)
                 {
-                    OnStatusUpdated("API connection validated successfully");
-                    _loggingManager.AddMessage("API connection validation successful");
+                    OnStatusUpdated(LanguageManager.GetString("StatusConnectionValidated"));
+                    _loggingManager.AddMessage(LanguageManager.GetString("LogConnectionValidated"));
                 }
                 else
                 {
-                    OnStatusUpdated("API connection validation failed");
-                    _loggingManager.AddMessage("API connection validation failed");
+                    OnStatusUpdated(LanguageManager.GetString("StatusConnectionValidationFailed"));
+                    _loggingManager.AddMessage(LanguageManager.GetString("LogConnectionValidationFailed"));
                 }
-                
+
                 return isValid;
             }
             catch (Exception ex)
             {
-                OnStatusUpdated($"API connection validation error: {ex.Message}");
-                _loggingManager.AddMessage($"API connection validation error: {ex.Message}");
+                OnStatusUpdated(string.Format(LanguageManager.GetString("StatusConnectionValidationError"), ex.Message));
+                _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogConnectionValidationError"), ex.Message));
                 return false;
             }
         }
@@ -227,7 +227,7 @@ namespace lingualink_client.Services.Managers
 
         private async Task SendOscMessageAsync(string message)
         {
-            OnStatusUpdated("Sending to VRChat...");
+            OnStatusUpdated(LanguageManager.GetString("StatusSendingToVRChat"));
 
             var oscArgs = new OscMessageEventArgs { Message = message };
 
@@ -240,17 +240,23 @@ namespace lingualink_client.Services.Managers
                 );
 
                 oscArgs.IsSuccess = true;
-                OnStatusUpdated($"Sent to VRChat: {message.Split('\n')[0]}");
+                var successStatus = string.Format(
+                    LanguageManager.GetString("StatusTranslationSuccess") + " " +
+                    LanguageManager.GetString("LogOscSent").Replace("[OSC] ", ""),
+                    message.Split('\n')[0]);
+                OnStatusUpdated(successStatus);
 
-                _loggingManager.AddMessage($"[OSC] Sent: {message.Split('\n')[0]}");
+                _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogOscSent"), message.Split('\n')[0]));
             }
             catch (Exception ex)
             {
                 oscArgs.IsSuccess = false;
                 oscArgs.ErrorMessage = ex.Message;
 
-                OnStatusUpdated($"OSC send failed: {ex.Message.Split('\n')[0]}");
-                _loggingManager.AddMessage($"[OSC] Send failed: {ex.Message}");
+                var errorStatus = string.Format(LanguageManager.GetString("StatusOscSendFailed"), ex.Message.Split('\n')[0]);
+                OnStatusUpdated(errorStatus);
+
+                _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogOscSendFailed"), ex.Message));
             }
 
             OnOscMessageSent(oscArgs);

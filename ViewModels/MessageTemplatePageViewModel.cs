@@ -1,4 +1,5 @@
 using lingualink_client.Services;
+using lingualink_client.Services.Interfaces;
 using lingualink_client.Models;
 using System;
 using System.Collections.Generic;
@@ -94,27 +95,36 @@ namespace lingualink_client.ViewModels
                 return;
             }
 
-            // Use the enhanced sample data with multiple languages
-            var sampleData = TemplateProcessor.CreateSamplePreviewData();
-            TemplatePreview = TemplateProcessor.ProcessTemplate(CustomTemplateText, sampleData);
+            // Create a sample ApiResult for previewing with the new API format
+            var sampleApiResult = new ApiResult
+            {
+                IsSuccess = true,
+                Transcription = "This is the source text.",
+                Translations = new Dictionary<string, string>
+                {
+                    { "en", "Hello World" },
+                    { "ja", "こんにちは世界" },
+                    { "zh", "你好世界" },
+                    { "ko", "안녕하세요 세계" },
+                    { "fr", "Bonjour le monde" },
+                    { "de", "Hallo Welt" },
+                    { "es", "Hola Mundo" },
+                    { "ru", "Привет, мир" },
+                    { "it", "Ciao mondo" }
+                }
+            };
+
+            // Use the updated ApiResultProcessor to generate the preview
+            TemplatePreview = ApiResultProcessor.ProcessTemplate(CustomTemplateText, sampleApiResult);
         }
 
         [RelayCommand]
         private void ResetTemplate()
         {
-            // Reset to a simple template showing main translations based on current language
-            var currentLanguage = System.Threading.Thread.CurrentThread.CurrentUICulture.Name;
-            
-            if (currentLanguage.StartsWith("zh")) // Chinese
-            {
-                CustomTemplateText = "{英文}\n{日文}\n{中文}";
-            }
-            else // English and other languages
-            {
-                CustomTemplateText = "{英文}\n{日文}\n{中文}";
-            }
-            
-            SaveSettings();
+            // Reset to a universal, language-code based template
+            CustomTemplateText = "{en}\n{ja}\n{zh}";
+
+            // The SaveSettings() call will be triggered by the change to CustomTemplateText
         }
 
         [RelayCommand]
@@ -123,27 +133,18 @@ namespace lingualink_client.ViewModels
             if (string.IsNullOrEmpty(placeholder))
                 return;
 
-            string actualPlaceholder = placeholder;
-            
-            // Extract the actual Chinese placeholder from display text
-            // For English mode: "English ({英文})" -> "{英文}"
-            // For Chinese mode: "{英文}" -> "{英文}"
-            if (placeholder.Contains("({") && placeholder.Contains("})"))
+            // Extract the language code from the button's content
+            // Format: "English ({en})" -> "{en}"
+            var match = System.Text.RegularExpressions.Regex.Match(placeholder, @"\{([a-z]{2,3}(?:-[A-Za-z0-9]+)?)\}");
+            if (match.Success)
             {
-                var startIndex = placeholder.IndexOf("({");
-                var endIndex = placeholder.IndexOf("})", startIndex);
-                if (startIndex >= 0 && endIndex > startIndex)
-                {
-                    actualPlaceholder = placeholder.Substring(startIndex + 1, endIndex - startIndex);
-                }
+                CustomTemplateText += match.Value; // Insert {en}, {ja}, etc.
             }
-            else if (placeholder.Contains(" (") && placeholder.EndsWith(")"))
+            else
             {
-                // Legacy format support (shouldn't be used anymore, but just in case)
-                actualPlaceholder = placeholder.Substring(0, placeholder.IndexOf(" ("));
+                // Fallback: if it's already in the correct format, use it directly
+                CustomTemplateText += placeholder;
             }
-
-            CustomTemplateText += actualPlaceholder;
         }
 
         private void SaveSettings()

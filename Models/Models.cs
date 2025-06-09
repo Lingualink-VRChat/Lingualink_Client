@@ -4,6 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Linq;
+using lingualink_client.Services;
 
 namespace lingualink_client.Models
 {
@@ -387,7 +389,8 @@ namespace lingualink_client.Models
         }
 
         /// <summary>
-        /// Check if the processed template still contains unreplaced placeholders
+        /// Check if the processed template still contains unreplaced placeholders.
+        /// Supports both new format ({en}, {ja}) and legacy format ({英文}, {日文}).
         /// </summary>
         /// <param name="processedText">Text after template processing</param>
         /// <returns>True if there are still unreplaced placeholders, false otherwise</returns>
@@ -396,9 +399,20 @@ namespace lingualink_client.Models
             if (string.IsNullOrEmpty(processedText))
                 return false;
 
-            var availableLanguages = new[] { "原文", "英文", "日文", "中文", "韩文", "法文", "德文", "西班牙文", "俄文", "意大利文" };
-            
-            foreach (var lang in availableLanguages)
+            // Check for language code placeholders like {en}, {ja}
+            var codeMatches = System.Text.RegularExpressions.Regex.Matches(processedText, @"\{([a-z]{2,3}(?:-[A-Za-z0-9]+)?)\}");
+            foreach (System.Text.RegularExpressions.Match match in codeMatches)
+            {
+                var code = match.Groups[1].Value;
+                if (LanguageDisplayHelper.IsLanguageCodeSupported(code))
+                {
+                    return true; // Found unreplaced language code placeholder
+                }
+            }
+
+            // Check for legacy Chinese name placeholders
+            var availableChineseNames = new[] { "原文", "英文", "日文", "中文", "韩文", "法文", "德文", "西班牙文", "俄文", "意大利文" };
+            foreach (var lang in availableChineseNames)
             {
                 if (processedText.Contains($"{{{lang}}}"))
                 {
@@ -430,39 +444,17 @@ namespace lingualink_client.Models
         public static List<string> GetAvailablePlaceholders(TranslationData? sampleData = null)
         {
             var placeholders = new List<string>();
-            
-            // Check current UI language to determine display format
-            var currentLanguage = System.Threading.Thread.CurrentThread.CurrentUICulture.Name;
-            
-            if (currentLanguage.StartsWith("zh")) // Chinese - show only Chinese placeholders
+
+            // Generate universal, user-friendly placeholder format: "Display Name ({code})"
+            // This format is intuitive for all users regardless of UI language
+            foreach (var backendName in LanguageDisplayHelper.BackendLanguageNames)
             {
-                placeholders.AddRange(new[]
+                var displayName = LanguageDisplayHelper.GetDisplayName(backendName); // "English", "Japanese", etc.
+                var code = LanguageDisplayHelper.ConvertChineseNameToLanguageCode(backendName); // "en", "ja", etc.
+                if (!string.IsNullOrEmpty(code))
                 {
-                    "{英文}",
-                    "{日文}",
-                    "{中文}",
-                    "{韩文}",
-                    "{法文}",
-                    "{德文}",
-                    "{西班牙文}",
-                    "{俄文}",
-                    "{意大利文}"
-                });
-            }
-            else // English and other languages - show English labels but keep Chinese placeholders for backend
-            {
-                placeholders.AddRange(new[]
-                {
-                    "English ({英文})",
-                    "Japanese ({日文})",
-                    "Chinese ({中文})",
-                    "Korean ({韩文})",
-                    "French ({法文})",
-                    "German ({德文})",
-                    "Spanish ({西班牙文})",
-                    "Russian ({俄文})",
-                    "Italian ({意大利文})"
-                });
+                    placeholders.Add($"{displayName} ({{{code}}})");
+                }
             }
 
             if (sampleData != null)
@@ -503,29 +495,51 @@ namespace lingualink_client.Models
         }
 
         /// <summary>
-        /// Extract unique language placeholders from a template string
+        /// Extract unique language codes from a template string.
+        /// Supports both new format ({en}, {ja}) and legacy format ({英文}, {日文}) for backward compatibility.
         /// </summary>
         /// <param name="template">Template string to analyze</param>
-        /// <returns>List of unique language names (max 3) found in the template</returns>
+        /// <returns>List of unique language codes (e.g., "en", "ja") found in the template (max 3).</returns>
         public static List<string> ExtractLanguagesFromTemplate(string template)
         {
             if (string.IsNullOrEmpty(template))
                 return new List<string>();
 
-            var languages = new HashSet<string>();
-            var availableLanguages = new[] { "原文", "英文", "日文", "中文", "韩文", "法文", "德文", "西班牙文", "俄文", "意大利文" };
+            var languageCodes = new HashSet<string>();
 
-            foreach (var lang in availableLanguages)
+            // First, check for new format: language codes like {en}, {ja}, {zh-hant}
+            var codeMatches = System.Text.RegularExpressions.Regex.Matches(template, @"\{([a-z]{2,3}(?:-[A-Za-z0-9]+)?)\}");
+            foreach (System.Text.RegularExpressions.Match match in codeMatches)
             {
-                if (template.Contains($"{{{lang}}}"))
+                var code = match.Groups[1].Value;
+                if (LanguageDisplayHelper.IsLanguageCodeSupported(code))
                 {
-                    languages.Add(lang);
-                    if (languages.Count >= 3) // Limit to 3 languages for VRChat OSC
+                    languageCodes.Add(code);
+                    if (languageCodes.Count >= 3) // Limit to 3 languages for VRChat OSC
                         break;
                 }
             }
 
-            return languages.ToList();
+            // If no language codes found, check for legacy format: Chinese names like {英文}, {日文}
+            if (languageCodes.Count == 0)
+            {
+                var availableChineseNames = new[] { "英文", "日文", "中文", "韩文", "法文", "德文", "西班牙文", "俄文", "意大利文" };
+                foreach (var chineseName in availableChineseNames)
+                {
+                    if (template.Contains($"{{{chineseName}}}"))
+                    {
+                        var code = LanguageDisplayHelper.ConvertChineseNameToLanguageCode(chineseName);
+                        if (!string.IsNullOrEmpty(code))
+                        {
+                            languageCodes.Add(code);
+                            if (languageCodes.Count >= 3) // Limit to 3 languages for VRChat OSC
+                                break;
+                        }
+                    }
+                }
+            }
+
+            return languageCodes.ToList();
         }
     }
 }

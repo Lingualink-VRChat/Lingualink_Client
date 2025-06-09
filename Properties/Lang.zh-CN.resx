@@ -693,4 +693,27 @@
   <data name="AudioEncodingSettings" xml:space="preserve">
     <value>音频编码设置</value>
   </data>
+
+  <!-- API连接验证 -->
+  <data name="StatusValidatingConnection" xml:space="preserve">
+    <value>状态：正在验证API连接...</value>
+  </data>
+  <data name="StatusConnectionValidated" xml:space="preserve">
+    <value>状态：API连接验证成功</value>
+  </data>
+  <data name="StatusConnectionValidationFailed" xml:space="preserve">
+    <value>状态：API连接验证失败</value>
+  </data>
+  <data name="StatusConnectionValidationError" xml:space="preserve">
+    <value>状态：API连接验证错误：{0}</value>
+  </data>
+  <data name="LogConnectionValidated" xml:space="preserve">
+    <value>API连接验证成功</value>
+  </data>
+  <data name="LogConnectionValidationFailed" xml:space="preserve">
+    <value>API连接验证失败</value>
+  </data>
+  <data name="LogConnectionValidationError" xml:space="preserve">
+    <value>API连接验证错误：{0}</value>
+  </data>
 </root>

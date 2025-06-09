@@ -643,4 +643,27 @@
   <data name="AudioEncodingSettings" xml:space="preserve">
     <value>音声エンコーディング設定</value>
   </data>
+
+  <!-- API接続検証 -->
+  <data name="StatusValidatingConnection" xml:space="preserve">
+    <value>ステータス：API接続を検証中...</value>
+  </data>
+  <data name="StatusConnectionValidated" xml:space="preserve">
+    <value>ステータス：API接続の検証が成功しました</value>
+  </data>
+  <data name="StatusConnectionValidationFailed" xml:space="preserve">
+    <value>ステータス：API接続の検証に失敗しました</value>
+  </data>
+  <data name="StatusConnectionValidationError" xml:space="preserve">
+    <value>ステータス：API接続検証エラー：{0}</value>
+  </data>
+  <data name="LogConnectionValidated" xml:space="preserve">
+    <value>API接続の検証が成功しました</value>
+  </data>
+  <data name="LogConnectionValidationFailed" xml:space="preserve">
+    <value>API接続の検証に失敗しました</value>
+  </data>
+  <data name="LogConnectionValidationError" xml:space="preserve">
+    <value>API接続検証エラー：{0}</value>
+  </data>
 </root>

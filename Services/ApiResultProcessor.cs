@@ -12,9 +12,9 @@ namespace lingualink_client.Services
     public static class ApiResultProcessor
     {
         /// <summary>
-        /// 使用新API结果处理模板
+        /// 使用新API结果处理模板 (支持新格式语言代码和传统中文名称占位符)
         /// </summary>
-        /// <param name="template">模板字符串</param>
+        /// <param name="template">模板字符串, 支持 {en}, {ja} 或 {英文}, {日文} 格式</param>
         /// <param name="apiResult">新API结果</param>
         /// <returns>处理后的文本，如果包含未替换的占位符则返回空字符串</returns>
         public static string ProcessTemplate(string template, ApiResult apiResult)
@@ -24,18 +24,24 @@ namespace lingualink_client.Services
 
             string result = template;
 
-            // 替换原文占位符
+            // 替换原文占位符 (支持多种格式)
             if (!string.IsNullOrEmpty(apiResult.Transcription))
             {
+                result = result.Replace("{source_text}", apiResult.Transcription);
+                result = result.Replace("{transcription}", apiResult.Transcription);
                 result = result.Replace("{原文}", apiResult.Transcription);
                 result = result.Replace("{raw_text}", apiResult.Transcription);
                 result = result.Replace("{原始文本}", apiResult.Transcription);
                 result = result.Replace("{完整文本}", apiResult.RawResponse ?? apiResult.Transcription);
             }
 
-            // 替换翻译占位符 - 将语言代码转换为中文名称
+            // 替换翻译占位符 - 支持两种格式
             foreach (var translation in apiResult.Translations)
             {
+                // 新格式: 直接使用语言代码 {en}, {ja}
+                result = result.Replace($"{{{translation.Key}}}", translation.Value);
+
+                // 传统格式: 转换为中文名称 {英文}, {日文} (向后兼容)
                 var chineseName = LanguageDisplayHelper.ConvertLanguageCodeToChineseName(translation.Key);
                 if (!string.IsNullOrEmpty(chineseName))
                 {
@@ -44,13 +50,9 @@ namespace lingualink_client.Services
             }
 
             // 检查是否还有未替换的占位符
-            var availableLanguages = new[] { "原文", "英文", "日文", "中文", "韩文", "法文", "德文", "西班牙文", "俄文", "意大利文" };
-            foreach (var lang in availableLanguages)
+            if (TemplateProcessor.ContainsUnreplacedPlaceholders(result))
             {
-                if (result.Contains($"{{{lang}}}"))
-                {
-                    return string.Empty; // 包含未替换的占位符
-                }
+                return string.Empty; // 包含未替换的占位符
             }
 
             return result;
