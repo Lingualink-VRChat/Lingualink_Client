@@ -19,6 +19,7 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
@@ -31,14 +32,25 @@
                 Margin="0,0,0,20" />
 
             <!-- Enable Custom Template -->
-            <CheckBox 
+            <CheckBox
                 Grid.Row="1"
-                Content="{Binding UseCustomTemplate}" 
+                Content="{Binding UseCustomTemplate}"
                 IsChecked="{Binding UseCustomTemplateEnabled, Mode=TwoWay}"
                 Margin="0,0,0,20" />
 
+            <!-- 新增: 模板验证警告 -->
+            <ui:InfoBar
+                Grid.Row="2"
+                Margin="0,0,0,15"
+                IsClosable="False"
+                IsOpen="{Binding IsTemplateOverLimit}"
+                Severity="Warning"
+                Title="{Binding ValidationTitle}"
+                Message="{Binding ValidationMessage}"
+                Visibility="{Binding IsTemplateOverLimit, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
             <!-- Template Configuration -->
-            <Grid Grid.Row="2" IsEnabled="{Binding UseCustomTemplateEnabled}">
+            <Grid Grid.Row="3" IsEnabled="{Binding UseCustomTemplateEnabled}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
@@ -109,8 +121,8 @@
             </Grid>
 
             <!-- Reset Button -->
-            <Button 
-                Grid.Row="3"
+            <Button
+                Grid.Row="4"
                 Content="{Binding ResetToDefaults}"
                 Command="{Binding ResetTemplateCommand}"
                 HorizontalAlignment="Left"
@@ -119,8 +131,8 @@
                 IsEnabled="{Binding UseCustomTemplateEnabled}" />
 
             <!-- Template Hint -->
-            <TextBlock 
-                Grid.Row="4"
+            <TextBlock
+                Grid.Row="5"
                 x:Name="TemplateHintText"
                 TextWrapping="Wrap"
                 Margin="15,15,15,20"

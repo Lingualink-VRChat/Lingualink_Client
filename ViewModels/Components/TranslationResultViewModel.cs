@@ -26,7 +26,6 @@ namespace lingualink_client.ViewModels.Components
         public string RunningLogLabel => LanguageManager.GetString("RunningLog");
         public string ClearLogLabel => LanguageManager.GetString("ClearLog");
         public string VrcOutputLabel => LanguageManager.GetString("VrcOutput");
-        public string OriginalResponseLabel => LanguageManager.GetString("OriginalResponse");
         public string WorkHintLabel => LanguageManager.GetString("WorkHint");
 
         public TranslationResultViewModel()
@@ -56,7 +55,6 @@ namespace lingualink_client.ViewModels.Components
             OnPropertyChanged(nameof(RunningLogLabel));
             OnPropertyChanged(nameof(ClearLogLabel));
             OnPropertyChanged(nameof(VrcOutputLabel));
-            OnPropertyChanged(nameof(OriginalResponseLabel));
             OnPropertyChanged(nameof(WorkHintLabel));
         }
 

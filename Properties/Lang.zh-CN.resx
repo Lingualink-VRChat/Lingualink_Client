@@ -716,4 +716,12 @@
   <data name="LogConnectionValidationError" xml:space="preserve">
     <value>API连接验证错误：{0}</value>
   </data>
+
+  <!-- 模板验证消息 -->
+  <data name="TemplateLimitWarningTitle" xml:space="preserve">
+    <value>模板警告</value>
+  </data>
+  <data name="TemplateLimitWarningMessage" xml:space="preserve">
+    <value>您的模板包含了超过3个语言占位符。为保证性能，只有前3个会被请求翻译。</value>
+  </data>
 </root>

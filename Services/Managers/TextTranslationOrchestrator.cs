@@ -70,9 +70,9 @@ namespace lingualink_client.Services.Managers
             List<string> targetLanguageCodes;
             if (_appSettings.UseCustomTemplate)
             {
-                // 从模板提取语言并转换为语言代码
-                var templateLanguages = TemplateProcessor.ExtractLanguagesFromTemplate(_appSettings.UserCustomTemplateText);
-                targetLanguageCodes = LanguageDisplayHelper.ConvertChineseNamesToLanguageCodes(templateLanguages);
+                // 直接从模板中提取前3个语言代码用于API请求
+                targetLanguageCodes = TemplateProcessor.ExtractLanguagesFromTemplate(_appSettings.UserCustomTemplateText, 3);
+                _loggingManager.AddMessage($"Languages extracted from template for API call: [{string.Join(", ", targetLanguageCodes)}]");
             }
             else
             {
@@ -103,7 +103,8 @@ namespace lingualink_client.Services.Managers
                 OnStatusUpdated(LanguageManager.GetString("StatusTranslationFailed"));
                 resultArgs.IsSuccess = false;
                 resultArgs.ErrorMessage = apiResult.ErrorMessage;
-                resultArgs.ProcessedText = string.Format(LanguageManager.GetString("TranslationError"), apiResult.ErrorMessage);
+                // [修复] 失败时不在VRChat输出框显示错误消息，保持为空
+                resultArgs.ProcessedText = string.Empty;
 
                 _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogTranslationError"), "manual_text", apiResult.ErrorMessage));
             }

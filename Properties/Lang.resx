@@ -717,4 +717,12 @@
   <data name="LogConnectionValidationError" xml:space="preserve">
     <value>API connection validation error: {0}</value>
   </data>
+
+  <!-- Template Validation Messages -->
+  <data name="TemplateLimitWarningTitle" xml:space="preserve">
+    <value>Template Warning</value>
+  </data>
+  <data name="TemplateLimitWarningMessage" xml:space="preserve">
+    <value>Your template contains more than 3 language placeholders. Only the first 3 will be requested for translation to ensure performance.</value>
+  </data>
 </root>

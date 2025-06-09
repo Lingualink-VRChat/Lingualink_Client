@@ -12,11 +12,11 @@ namespace lingualink_client.Services
     public static class ApiResultProcessor
     {
         /// <summary>
-        /// 使用新API结果处理模板 (支持新格式语言代码和传统中文名称占位符)
+        /// 使用新API结果处理模板 (已更新为使用语言代码占位符)
         /// </summary>
-        /// <param name="template">模板字符串, 支持 {en}, {ja} 或 {英文}, {日文} 格式</param>
+        /// <param name="template">模板字符串, e.g., "EN: {en}\nJP: {ja}"</param>
         /// <param name="apiResult">新API结果</param>
-        /// <returns>处理后的文本，如果包含未替换的占位符则返回空字符串</returns>
+        /// <returns>处理后的文本</returns>
         public static string ProcessTemplate(string template, ApiResult apiResult)
         {
             if (string.IsNullOrEmpty(template) || apiResult == null)
@@ -29,19 +29,21 @@ namespace lingualink_client.Services
             {
                 result = result.Replace("{source_text}", apiResult.Transcription);
                 result = result.Replace("{transcription}", apiResult.Transcription);
+                // 保留旧格式以向后兼容
                 result = result.Replace("{原文}", apiResult.Transcription);
                 result = result.Replace("{raw_text}", apiResult.Transcription);
                 result = result.Replace("{原始文本}", apiResult.Transcription);
                 result = result.Replace("{完整文本}", apiResult.RawResponse ?? apiResult.Transcription);
             }
 
-            // 替换翻译占位符 - 支持两种格式
+            // 替换翻译占位符 - 直接使用语言代码
             foreach (var translation in apiResult.Translations)
             {
-                // 新格式: 直接使用语言代码 {en}, {ja}
+                // translation.Key is "en", "ja", etc.
+                // The placeholder is now {en}, {ja}, etc.
                 result = result.Replace($"{{{translation.Key}}}", translation.Value);
 
-                // 传统格式: 转换为中文名称 {英文}, {日文} (向后兼容)
+                // (可选) 为了完全向后兼容，可以保留对中文名称的替换
                 var chineseName = LanguageDisplayHelper.ConvertLanguageCodeToChineseName(translation.Key);
                 if (!string.IsNullOrEmpty(chineseName))
                 {
@@ -49,11 +51,13 @@ namespace lingualink_client.Services
                 }
             }
 
-            // 检查是否还有未替换的占位符
-            if (TemplateProcessor.ContainsUnreplacedPlaceholders(result))
-            {
-                return string.Empty; // 包含未替换的占位符
-            }
+            // [重要改动] 移除严格的占位符检查。
+            // 现在，即使有未替换的占位符，我们也会返回部分处理后的结果。
+            // 这为用户提供了更好的反馈。
+            // if (TemplateProcessor.ContainsUnreplacedPlaceholders(result))
+            // {
+            //     return string.Empty;
+            // }
 
             return result;
         }

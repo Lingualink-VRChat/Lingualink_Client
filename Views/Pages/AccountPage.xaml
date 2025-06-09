@@ -207,7 +207,8 @@
                                 <ui:Button
                                     Width="120"
                                     Content="{Binding ConnectionTestLabel}"
-                                    Appearance="Secondary" />
+                                    Appearance="Secondary"
+                                    Command="{Binding TestConnectionCommand}" />
                                 <ui:TextBlock
                                     Margin="15,0,0,0"
                                     VerticalAlignment="Center"

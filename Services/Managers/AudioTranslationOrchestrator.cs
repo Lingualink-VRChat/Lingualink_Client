@@ -105,25 +105,40 @@ namespace lingualink_client.Services.Managers
 
             var waveFormat = new WaveFormat(AudioService.APP_SAMPLE_RATE, 16, AudioService.APP_CHANNELS);
 
-            // 确定目标语言（直接使用语言代码）
+            // 确定目标语言和任务类型
             List<string> targetLanguageCodes;
+            string task = "translate"; // 默认为翻译任务
+
             if (_appSettings.UseCustomTemplate)
             {
-                // 从模板提取语言并转换为语言代码
-                var templateLanguages = TemplateProcessor.ExtractLanguagesFromTemplate(_appSettings.UserCustomTemplateText);
-                targetLanguageCodes = LanguageDisplayHelper.ConvertChineseNamesToLanguageCodes(templateLanguages);
+                string template = _appSettings.UserCustomTemplateText;
+                targetLanguageCodes = TemplateProcessor.ExtractLanguagesFromTemplate(template, 3);
+
+                // 智能判断是否为"仅转录"模式
+                if (targetLanguageCodes.Count == 0)
+                {
+                    // 如果模板中没有目标语言占位符，但有原文占位符，则认为是"仅转录"
+                    if (template.Contains("{transcription}") || template.Contains("{source_text}") || template.Contains("{原文}"))
+                    {
+                        task = "transcribe";
+                        _loggingManager.AddMessage("Template contains only transcription placeholders. Setting task to 'transcribe'.");
+                    }
+                }
+                else
+                {
+                     _loggingManager.AddMessage($"Languages extracted from template for API call: [{string.Join(", ", targetLanguageCodes)}]");
+                }
             }
             else
             {
-                // 使用手动选择的目标语言，转换为语言代码
+                // 手动模式下总是翻译
                 var chineseLanguages = _appSettings.TargetLanguages.Split(',').Select(lang => lang.Trim()).ToList();
                 targetLanguageCodes = LanguageDisplayHelper.ConvertChineseNamesToLanguageCodes(chineseLanguages);
-
-                _loggingManager.AddMessage($"Target languages converted: [{string.Join(", ", chineseLanguages)}] -> [{string.Join(", ", targetLanguageCodes)}]");
+                _loggingManager.AddMessage($"Target languages from settings converted: [{string.Join(", ", chineseLanguages)}] -> [{string.Join(", ", targetLanguageCodes)}]");
             }
 
-            // 使用新的API服务处理音频
-            var apiResult = await _apiService.ProcessAudioAsync(e.AudioData, waveFormat, targetLanguageCodes, e.TriggerReason);
+            // 使用新的API服务处理音频，并传入确定的任务类型
+            var apiResult = await _apiService.ProcessAudioAsync(e.AudioData, waveFormat, targetLanguageCodes, task, e.TriggerReason);
 
             string translatedTextForOsc = string.Empty;
             var resultArgs = new TranslationResultEventArgs
@@ -143,7 +158,8 @@ namespace lingualink_client.Services.Managers
                 currentUiStatus = LanguageManager.GetString("StatusTranslationFailed");
                 resultArgs.IsSuccess = false;
                 resultArgs.ErrorMessage = apiResult.ErrorMessage;
-                resultArgs.ProcessedText = string.Format(LanguageManager.GetString("TranslationError"), apiResult.ErrorMessage);
+                // [修复] 失败时不在VRChat输出框显示错误消息，保持为空
+                resultArgs.ProcessedText = string.Empty;
 
                 _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogTranslationError"),
                     e.TriggerReason, apiResult.ErrorMessage));

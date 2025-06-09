@@ -75,9 +75,10 @@ namespace lingualink_client.Services
         }
 
         public async Task<ApiResult> ProcessAudioAsync(
-            byte[] audioData, 
-            WaveFormat waveFormat, 
+            byte[] audioData,
+            WaveFormat waveFormat,
             IEnumerable<string> targetLanguages,
+            string task = "translate",
             string triggerReason = "manual")
         {
             if (audioData.Length == 0)
@@ -90,17 +91,21 @@ namespace lingualink_client.Services
             }
 
             var targetLangArray = targetLanguages.ToArray();
-            if (targetLangArray.Length == 0)
+
+            // [核心修复] 只有在任务是"翻译"时，才要求目标语言。
+            if (task == "translate" && targetLangArray.Length == 0)
             {
-                return new ApiResult 
-                { 
-                    IsSuccess = false, 
-                    ErrorMessage = "Target languages are required" 
+                // 如果是翻译任务，但没有目标语言，则返回错误。
+                Debug.WriteLine($"[LingualinkApiService] Error: 'translate' task requires target languages, but none were provided.");
+                return new ApiResult
+                {
+                    IsSuccess = false,
+                    ErrorMessage = "Target languages are required for the translation task."
                 };
             }
 
             var requestUrl = new Uri(_serverUrl.TrimEnd('/') + "/process_audio");
-            Debug.WriteLine($"[LingualinkApiService] Processing audio: {requestUrl}, targets: [{string.Join(", ", targetLangArray)}]");
+            Debug.WriteLine($"[LingualinkApiService] Processing audio: {requestUrl}, task: {task}, targets: [{string.Join(", ", targetLangArray)}]");
 
             try
             {
@@ -137,7 +142,7 @@ namespace lingualink_client.Services
                 {
                     audio = audioBase64,
                     audio_format = audioFormat,
-                    task = "translate", // 固定使用translate任务
+                    task = task, // 使用传入的task参数
                     target_languages = targetLangArray
                 };
 
@@ -146,22 +151,46 @@ namespace lingualink_client.Services
                     PropertyNamingPolicy = JsonNamingPolicy.CamelCase
                 });
 
+                // [详细日志] 记录请求JSON内容
+                Debug.WriteLine($"[LingualinkApiService] Request JSON: {jsonContent}");
+
                 var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
                 var response = await _httpClient.PostAsync(requestUrl, content);
                 var responseContent = await response.Content.ReadAsStringAsync();
 
+                // [详细日志] 记录响应状态和完整JSON内容
+                Debug.WriteLine($"[LingualinkApiService] Response Status: {response.StatusCode} ({(int)response.StatusCode})");
+                Debug.WriteLine($"[LingualinkApiService] Response JSON: {responseContent}");
+
                 if (response.IsSuccessStatusCode)
                 {
-                    var apiResponse = JsonSerializer.Deserialize<NewApiResponse>(responseContent, new JsonSerializerOptions 
-                    { 
-                        PropertyNameCaseInsensitive = true 
+                    var apiResponse = JsonSerializer.Deserialize<NewApiResponse>(responseContent, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
                     });
 
                     if (apiResponse != null)
                     {
+                        // [详细日志] 记录解析后的API响应详情
+                        var isSuccessful = apiResponse.Status == "success" || apiResponse.Status == "partial_success";
+                        Debug.WriteLine($"[LingualinkApiService] Parsed API Response:");
+                        Debug.WriteLine($"  - Status: {apiResponse.Status} (IsSuccess: {isSuccessful})");
+                        Debug.WriteLine($"  - RequestId: {apiResponse.RequestId}");
+                        Debug.WriteLine($"  - Transcription: {apiResponse.Transcription}");
+                        Debug.WriteLine($"  - Translations Count: {apiResponse.Translations?.Count ?? 0}");
+                        if (apiResponse.Translations != null)
+                        {
+                            foreach (var translation in apiResponse.Translations)
+                            {
+                                Debug.WriteLine($"    - {translation.Key}: {translation.Value}");
+                            }
+                        }
+                        Debug.WriteLine($"  - ProcessingTime: {apiResponse.ProcessingTime}ms");
+                        Debug.WriteLine($"  - Error: {apiResponse.Error}");
+
                         return new ApiResult
                         {
-                            IsSuccess = apiResponse.Status == "success",
+                            IsSuccess = apiResponse.Status == "success" || apiResponse.Status == "partial_success",
                             RequestId = apiResponse.RequestId,
                             Transcription = apiResponse.Transcription,
                             Translations = apiResponse.Translations ?? new Dictionary<string, string>(),
@@ -171,6 +200,10 @@ namespace lingualink_client.Services
                             ErrorMessage = apiResponse.Error
                         };
                     }
+                    else
+                    {
+                        Debug.WriteLine($"[LingualinkApiService] Failed to deserialize API response - apiResponse is null");
+                    }
                 }
 
                 // 处理错误响应
@@ -178,26 +211,33 @@ namespace lingualink_client.Services
             }
             catch (TaskCanceledException ex)
             {
-                return new ApiResult 
-                { 
-                    IsSuccess = false, 
-                    ErrorMessage = $"Request timeout: {ex.Message}" 
+                Debug.WriteLine($"[LingualinkApiService] Request timeout: {ex.Message}");
+                Debug.WriteLine($"[LingualinkApiService] Stack trace: {ex.StackTrace}");
+                return new ApiResult
+                {
+                    IsSuccess = false,
+                    ErrorMessage = $"Request timeout: {ex.Message}"
                 };
             }
             catch (HttpRequestException ex)
             {
-                return new ApiResult 
-                { 
-                    IsSuccess = false, 
-                    ErrorMessage = $"Network error: {ex.Message}" 
+                Debug.WriteLine($"[LingualinkApiService] Network error: {ex.Message}");
+                Debug.WriteLine($"[LingualinkApiService] Stack trace: {ex.StackTrace}");
+                return new ApiResult
+                {
+                    IsSuccess = false,
+                    ErrorMessage = $"Network error: {ex.Message}"
                 };
             }
             catch (Exception ex)
             {
-                return new ApiResult 
-                { 
-                    IsSuccess = false, 
-                    ErrorMessage = $"Unexpected error: {ex.Message}" 
+                Debug.WriteLine($"[LingualinkApiService] Unexpected error: {ex.Message}");
+                Debug.WriteLine($"[LingualinkApiService] Exception type: {ex.GetType().Name}");
+                Debug.WriteLine($"[LingualinkApiService] Stack trace: {ex.StackTrace}");
+                return new ApiResult
+                {
+                    IsSuccess = false,
+                    ErrorMessage = $"Unexpected error: {ex.Message}"
                 };
             }
         }
@@ -245,22 +285,46 @@ namespace lingualink_client.Services
                     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
                 });
 
+                // [详细日志] 记录请求JSON内容
+                Debug.WriteLine($"[LingualinkApiService] Text Request JSON: {jsonContent}");
+
                 var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
                 var response = await _httpClient.PostAsync(requestUrl, content);
                 var responseContent = await response.Content.ReadAsStringAsync();
 
+                // [详细日志] 记录响应状态和完整JSON内容
+                Debug.WriteLine($"[LingualinkApiService] Text Response Status: {response.StatusCode} ({(int)response.StatusCode})");
+                Debug.WriteLine($"[LingualinkApiService] Text Response JSON: {responseContent}");
+
                 if (response.IsSuccessStatusCode)
                 {
-                    var apiResponse = JsonSerializer.Deserialize<TextApiResponse>(responseContent, new JsonSerializerOptions 
-                    { 
-                        PropertyNameCaseInsensitive = true 
+                    var apiResponse = JsonSerializer.Deserialize<TextApiResponse>(responseContent, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
                     });
 
                     if (apiResponse != null)
                     {
+                        // [详细日志] 记录解析后的文本API响应详情
+                        var isSuccessful = apiResponse.Status == "success" || apiResponse.Status == "partial_success";
+                        Debug.WriteLine($"[LingualinkApiService] Parsed Text API Response:");
+                        Debug.WriteLine($"  - Status: {apiResponse.Status} (IsSuccess: {isSuccessful})");
+                        Debug.WriteLine($"  - RequestId: {apiResponse.RequestId}");
+                        Debug.WriteLine($"  - SourceText: {apiResponse.SourceText}");
+                        Debug.WriteLine($"  - Translations Count: {apiResponse.Translations?.Count ?? 0}");
+                        if (apiResponse.Translations != null)
+                        {
+                            foreach (var translation in apiResponse.Translations)
+                            {
+                                Debug.WriteLine($"    - {translation.Key}: {translation.Value}");
+                            }
+                        }
+                        Debug.WriteLine($"  - ProcessingTime: {apiResponse.ProcessingTime}ms");
+                        Debug.WriteLine($"  - Error: {apiResponse.Error}");
+
                         return new ApiResult
                         {
-                            IsSuccess = apiResponse.Status == "success",
+                            IsSuccess = apiResponse.Status == "success" || apiResponse.Status == "partial_success",
                             RequestId = apiResponse.RequestId,
                             Transcription = apiResponse.SourceText, // 对于文本处理，源文本作为"转录"
                             Translations = apiResponse.Translations ?? new Dictionary<string, string>(),
@@ -270,6 +334,10 @@ namespace lingualink_client.Services
                             ErrorMessage = apiResponse.Error
                         };
                     }
+                    else
+                    {
+                        Debug.WriteLine($"[LingualinkApiService] Failed to deserialize Text API response - apiResponse is null");
+                    }
                 }
 
                 // 处理错误响应
@@ -277,26 +345,33 @@ namespace lingualink_client.Services
             }
             catch (TaskCanceledException ex)
             {
-                return new ApiResult 
-                { 
-                    IsSuccess = false, 
-                    ErrorMessage = $"Request timeout: {ex.Message}" 
+                Debug.WriteLine($"[LingualinkApiService] Text request timeout: {ex.Message}");
+                Debug.WriteLine($"[LingualinkApiService] Stack trace: {ex.StackTrace}");
+                return new ApiResult
+                {
+                    IsSuccess = false,
+                    ErrorMessage = $"Request timeout: {ex.Message}"
                 };
             }
             catch (HttpRequestException ex)
             {
-                return new ApiResult 
-                { 
-                    IsSuccess = false, 
-                    ErrorMessage = $"Network error: {ex.Message}" 
+                Debug.WriteLine($"[LingualinkApiService] Text network error: {ex.Message}");
+                Debug.WriteLine($"[LingualinkApiService] Stack trace: {ex.StackTrace}");
+                return new ApiResult
+                {
+                    IsSuccess = false,
+                    ErrorMessage = $"Network error: {ex.Message}"
                 };
             }
             catch (Exception ex)
             {
-                return new ApiResult 
-                { 
-                    IsSuccess = false, 
-                    ErrorMessage = $"Unexpected error: {ex.Message}" 
+                Debug.WriteLine($"[LingualinkApiService] Text unexpected error: {ex.Message}");
+                Debug.WriteLine($"[LingualinkApiService] Exception type: {ex.GetType().Name}");
+                Debug.WriteLine($"[LingualinkApiService] Stack trace: {ex.StackTrace}");
+                return new ApiResult
+                {
+                    IsSuccess = false,
+                    ErrorMessage = $"Unexpected error: {ex.Message}"
                 };
             }
         }
@@ -382,6 +457,11 @@ namespace lingualink_client.Services
 
         private Task<ApiResult> HandleErrorResponse(HttpResponseMessage response, string responseContent)
         {
+            // [详细日志] 记录错误响应的详细信息
+            Debug.WriteLine($"[LingualinkApiService] Error Response Details:");
+            Debug.WriteLine($"  - Status Code: {response.StatusCode} ({(int)response.StatusCode})");
+            Debug.WriteLine($"  - Response Content: {responseContent}");
+
             try
             {
                 // 尝试解析错误响应
@@ -392,6 +472,7 @@ namespace lingualink_client.Services
 
                 if (errorResponse != null && !string.IsNullOrEmpty(errorResponse.Error))
                 {
+                    Debug.WriteLine($"  - Parsed Error: {errorResponse.Error}");
                     return Task.FromResult(new ApiResult
                     {
                         IsSuccess = false,
@@ -399,9 +480,10 @@ namespace lingualink_client.Services
                     });
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // 忽略JSON解析错误，使用原始响应
+                // 记录JSON解析错误
+                Debug.WriteLine($"  - JSON Parse Error: {ex.Message}");
             }
 
             // 处理特殊HTTP状态码

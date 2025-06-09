@@ -28,6 +28,11 @@ namespace lingualink_client.ViewModels
         [ObservableProperty] private string _customTemplateText = "";
         [ObservableProperty] private string _templatePreview = "";
 
+        // 新增：用于控制警告提示的属性
+        [ObservableProperty] private bool _isTemplateOverLimit = false;
+        [ObservableProperty] private string _validationMessage = string.Empty;
+        [ObservableProperty] private string _validationTitle = string.Empty;
+
         public ObservableCollection<string> PlaceholderList { get; } = new();
 
         public MessageTemplatePageViewModel()
@@ -49,6 +54,7 @@ namespace lingualink_client.ViewModels
 
             LoadSettings();
             InitializePlaceholders();
+            ValidateTemplate(); // 初始加载时也进行验证
         }
 
         private void LoadSettings()
@@ -56,11 +62,12 @@ namespace lingualink_client.ViewModels
             _appSettings = _settingsService.LoadSettings();
 
             UseCustomTemplateEnabled = _appSettings.UseCustomTemplate;
-            
+
             // Load the user's custom template text, preserving their previous work
             CustomTemplateText = _appSettings.UserCustomTemplateText;
-            
+
             UpdatePreview();
+            ValidateTemplate(); // 加载设置后验证
         }
 
         private void InitializePlaceholders()
@@ -85,6 +92,7 @@ namespace lingualink_client.ViewModels
             _appSettings.UserCustomTemplateText = value;
             SaveSettings();
             UpdatePreview();
+            ValidateTemplate(); // 文本变化时验证
         }
 
         private void UpdatePreview()
@@ -171,9 +179,26 @@ namespace lingualink_client.ViewModels
             });
         }
 
+        private void ValidateTemplate()
+        {
+            // 使用我们新的无限制提取方法来获取所有占位符
+            var allPlaceholders = TemplateProcessor.ExtractLanguagesFromTemplate(CustomTemplateText, 0);
+
+            if (allPlaceholders.Count > 3)
+            {
+                IsTemplateOverLimit = true;
+                ValidationTitle = LanguageManager.GetString("TemplateLimitWarningTitle");
+                ValidationMessage = LanguageManager.GetString("TemplateLimitWarningMessage");
+            }
+            else
+            {
+                IsTemplateOverLimit = false;
+            }
+        }
+
         public void RefreshSettings()
         {
             LoadSettings();
         }
     }
-} 
+}

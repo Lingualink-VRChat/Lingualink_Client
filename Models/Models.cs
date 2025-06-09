@@ -445,6 +445,9 @@ namespace lingualink_client.Models
         {
             var placeholders = new List<string>();
 
+            // 添加一个明确的原文占位符
+            placeholders.Add("Source Text ({transcription})");
+
             // Generate universal, user-friendly placeholder format: "Display Name ({code})"
             // This format is intuitive for all users regardless of UI language
             foreach (var backendName in LanguageDisplayHelper.BackendLanguageNames)
@@ -495,19 +498,19 @@ namespace lingualink_client.Models
         }
 
         /// <summary>
-        /// Extract unique language codes from a template string.
-        /// Supports both new format ({en}, {ja}) and legacy format ({英文}, {日文}) for backward compatibility.
+        /// 从模板字符串中提取唯一的语言代码。
         /// </summary>
-        /// <param name="template">Template string to analyze</param>
-        /// <returns>List of unique language codes (e.g., "en", "ja") found in the template (max 3).</returns>
-        public static List<string> ExtractLanguagesFromTemplate(string template)
+        /// <param name="template">要分析的模板字符串</param>
+        /// <param name="limit">要提取的最大语言数量。如果为0或负数，则不限制。</param>
+        /// <returns>在模板中找到的唯一语言代码列表（例如 "en", "ja"）。</returns>
+        public static List<string> ExtractLanguagesFromTemplate(string template, int limit = 0)
         {
             if (string.IsNullOrEmpty(template))
                 return new List<string>();
 
             var languageCodes = new HashSet<string>();
 
-            // First, check for new format: language codes like {en}, {ja}, {zh-hant}
+            // 正则表达式，用于查找 {en}, {ja}, {zh-hant} 等占位符
             var codeMatches = System.Text.RegularExpressions.Regex.Matches(template, @"\{([a-z]{2,3}(?:-[A-Za-z0-9]+)?)\}");
             foreach (System.Text.RegularExpressions.Match match in codeMatches)
             {
@@ -515,12 +518,12 @@ namespace lingualink_client.Models
                 if (LanguageDisplayHelper.IsLanguageCodeSupported(code))
                 {
                     languageCodes.Add(code);
-                    if (languageCodes.Count >= 3) // Limit to 3 languages for VRChat OSC
+                    if (limit > 0 && languageCodes.Count >= limit)
                         break;
                 }
             }
 
-            // If no language codes found, check for legacy format: Chinese names like {英文}, {日文}
+            // 如果没有找到语言代码，检查传统格式: {英文}, {日文}
             if (languageCodes.Count == 0)
             {
                 var availableChineseNames = new[] { "英文", "日文", "中文", "韩文", "法文", "德文", "西班牙文", "俄文", "意大利文" };
@@ -532,7 +535,7 @@ namespace lingualink_client.Models
                         if (!string.IsNullOrEmpty(code))
                         {
                             languageCodes.Add(code);
-                            if (languageCodes.Count >= 3) // Limit to 3 languages for VRChat OSC
+                            if (limit > 0 && languageCodes.Count >= limit)
                                 break;
                         }
                     }

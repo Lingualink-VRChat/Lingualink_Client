@@ -149,42 +149,25 @@
             <!-- 翻译结果组件 -->
             <Grid Grid.Row="4" Margin="0,0,0,10" DataContext="{Binding TranslationResult}">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
+                    <!-- 只保留两行：一个标签，一个文本框 -->
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <!-- Original Server Response -->
+                <!-- VRChat Output (现在是唯一的结果显示) -->
                 <ui:TextBlock
                     Grid.Row="0"
-                    Margin="0,0,0,5"
-                    FontWeight="SemiBold"
-                    Text="{Binding OriginalResponseLabel}" />
-                <ui:TextBox
-                    Grid.Row="1"
-                    Margin="0,0,0,10"
-                    AcceptsReturn="True"
-                    IsReadOnly="True"
-                    Text="{Binding OriginalText, Mode=OneWay}"
-                    TextWrapping="Wrap"
-                    VerticalScrollBarVisibility="Auto"
-                    MinHeight="80" />
-
-                <!-- VRChat Output -->
-                <ui:TextBlock
-                    Grid.Row="2"
-                    Margin="0,0,0,5"
+                    Margin="0,10,0,5"
                     FontWeight="SemiBold"
                     Text="{Binding VrcOutputLabel}" />
                 <ui:TextBox
-                    Grid.Row="3"
+                    Grid.Row="1"
                     AcceptsReturn="True"
                     IsReadOnly="True"
                     Text="{Binding ProcessedText, Mode=OneWay}"
                     TextWrapping="Wrap"
                     VerticalScrollBarVisibility="Auto"
-                    MinHeight="80"
+                    MinHeight="160"
                     Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
                     BorderBrush="{DynamicResource AccentTextFillColorPrimaryBrush}"
                     BorderThickness="2" />

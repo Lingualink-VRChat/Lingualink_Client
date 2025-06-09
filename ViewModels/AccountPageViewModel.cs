@@ -4,6 +4,8 @@ using lingualink_client.Models;
 using lingualink_client.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using System.Threading.Tasks;
+using lingualink_client.Services.Interfaces;
 // 使用现代化MessageBox替换系统默认的MessageBox
 using MessageBox = lingualink_client.Services.MessageBox;
 
@@ -46,7 +48,9 @@ namespace lingualink_client.ViewModels
         public string ForgotPasswordLabel => LanguageManager.GetString("ForgotPassword");
         public string ConnectionTestLabel => LanguageManager.GetString("ConnectionTest");
 
-
+        // 新增：测试连接状态
+        [ObservableProperty]
+        private bool _isTestingConnection = false;
 
         // 认证模式属性 - 简化为只有一个开关
         [ObservableProperty] private bool _useCustomServer = false;
@@ -246,5 +250,49 @@ namespace lingualink_client.ViewModels
             Username = string.Empty;
             UserPassword = string.Empty;
         }
+
+        [RelayCommand(CanExecute = nameof(CanTestConnection))]
+        private async Task TestConnectionAsync()
+        {
+            IsTestingConnection = true;
+            OnPropertyChanged(nameof(ConnectionTestLabel)); // 通知UI更新
+
+            ILingualinkApiService? testApiService = null;
+            bool success = false;
+            string errorMessage = "An unknown error occurred.";
+
+            try
+            {
+                // 使用工厂创建临时的API服务实例进行测试
+                testApiService = LingualinkApiServiceFactory.CreateTestApiService(ServerUrl, ApiKey);
+                success = await testApiService.ValidateConnectionAsync();
+            }
+            catch (Exception ex)
+            {
+                success = false;
+                errorMessage = ex.Message;
+            }
+            finally
+            {
+                // 确保释放资源
+                testApiService?.Dispose();
+                IsTestingConnection = false;
+                OnPropertyChanged(nameof(ConnectionTestLabel)); // 恢复按钮文本
+            }
+
+            if (success)
+            {
+                MessageBox.Show("Connection successful!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            else
+            {
+                MessageBox.Show($"Connection failed: {errorMessage}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private bool CanTestConnection()
+        {
+            return !IsTestingConnection && !string.IsNullOrWhiteSpace(ServerUrl);
+        }
     }
-} 
+}

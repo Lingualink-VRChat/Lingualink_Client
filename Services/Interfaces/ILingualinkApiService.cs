@@ -18,12 +18,14 @@ namespace lingualink_client.Services.Interfaces
         /// <param name="audioData">音频数据</param>
         /// <param name="waveFormat">音频格式</param>
         /// <param name="targetLanguages">目标语言代码列表（如：["en", "ja"]）</param>
+        /// <param name="task">要执行的任务："translate" 或 "transcribe"</param>
         /// <param name="triggerReason">触发原因</param>
         /// <returns>处理结果</returns>
         Task<ApiResult> ProcessAudioAsync(
-            byte[] audioData, 
-            WaveFormat waveFormat, 
+            byte[] audioData,
+            WaveFormat waveFormat,
             IEnumerable<string> targetLanguages,
+            string task = "translate",
             string triggerReason = "manual");
 
         /// <summary>
