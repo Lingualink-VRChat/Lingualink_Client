@@ -19,6 +19,7 @@
                 <RowDefinition Height="Auto" /> <!-- 语音识别设置 -->
                 <RowDefinition Height="Auto" /> <!-- VRChat集成 -->
                 <RowDefinition Height="Auto" /> <!-- 音频处理 -->
+                <RowDefinition Height="Auto" /> <!-- 音频增强 -->
                 <RowDefinition Height="*" />   <!-- 占位符 -->
                 <RowDefinition Height="Auto" /> <!-- 保存/撤销按钮 -->
             </Grid.RowDefinitions>
@@ -335,7 +336,7 @@
             <!-- 音频增强设置 -->
             <ui:CardExpander
                 Grid.Row="3"
-                Margin="0,10,0,0"
+                Margin="0,0,0,15"
                 Header="{Binding AudioEnhancementLabel}"
                 IsExpanded="False">
                 <StackPanel Margin="10">
@@ -484,7 +485,7 @@
 
             <!-- 保存/撤销按钮 -->
             <StackPanel
-                Grid.Row="4"
+                Grid.Row="5"
                 Margin="0,10,0,0"
                 HorizontalAlignment="Right"
                 Orientation="Horizontal">

@@ -9,11 +9,12 @@
 
 - 🎤 **实时语音识别**: 自动检测和处理语音输入，集成优化的 VAD（语音活动检测）和追加录音功能。
 - 🌍 **多语言翻译**: 支持英文、日文、中文等多种语言翻译。
-- 🔐 **API 密钥认证**: 支持安全的后端 API v2.0 认证。
+- ✨ **动态语言加载**: 启动时从服务器动态获取支持的语言列表，无需硬编码。
+- 🔐 **API 密钥认证**: 支持安全的后端 API v2.0 认证，并提供连接测试功能。
 - 🔊 **Opus 音频编码标准**: 默认启用 Opus (16kbps) 高效压缩音频，支持调节编码复杂度，显著减少带宽使用。
 - ✨ **音频增强处理**: 内置峰值归一化和安静语音增强功能，提升识别准确率。
 - 🎮 **VRChat 集成**: 直接发送翻译结果到 VRChat 聊天框。
-- 📝 **自定义模板**: 灵活的消息格式模板系统。
+- 📝 **自定义模板**: 灵活的消息格式模板系统，支持语言代码和中文名两种占位符，并提供实时预览和验证。
 - 🎛️ **参数调节**: 可调节的 VAD、Opus 编码、音频增强及 OSC 参数。
 - 📊 **实时日志**: 详细的运行状态和错误日志。
 - 🌐 **多语言界面**: 支持中文、英文、日文界面。
@@ -52,6 +53,7 @@
     * 如果使用自建服务器，勾选 **"使用自定义服务器 (Use custom server instead)"**。
     * **服务器 URL (Server URL)**: 输入您的 LinguaLink Server API v2.0 的基础 URL (例如: `http://localhost:8080/api/v1/`)。请确保 URL 指向 API 的根路径。
     * **API 密钥 (API Key)**: 输入从后端获取的 API 密钥。
+    * 点击 **"测试连接 (Test Connection)"** 按钮验证配置是否正确。
     * 点击 **"保存 (Save)"**。
 3.  进入 **"服务 (Service)"** 页面：
     * **语音识别设置 (Voice Recognition Settings)**: 根据需要调整 VAD 参数，如追加录音时长、最小/最大语音时长、最小音量阈值。
@@ -88,6 +90,7 @@
 * **使用自定义服务器 (Use custom server instead)**: 勾选此项以连接到您自己部署的 LinguaLink 服务器。
     * **服务器 URL (Server URL)**: 您的 LinguaLink 服务器 API v2.0 的基础 URL (例如 `http://localhost:8080/api/v1/`)。
     * **API 密钥 (API Key)**: 用于访问您的自定义服务器的 API 密钥。
+    * **测试连接 (Test Connection)**: 点击此按钮可验证您填写的服务器URL和API密钥是否能成功连接到后端服务。
 * 官方服务登录功能即将推出。
 
 ### 服务设置 (Service Page)
@@ -127,21 +130,17 @@
 
 ### 自定义模板
 
-通过勾选 **"使用自定义模板 (Use Custom Template)"** 来启用。支持使用占位符创建自定义模板，例如：
-
-```
-{英文}
-{日文}
-{中文}
-```
+通过勾选 **"使用自定义模板 (Use Custom Template)"** 来启用。支持使用占位符创建自定义模板。
 
 模板示例：
 ```
-English: {英文}
-Japanese: {日文}
-Chinese: {中文}
+English: {en}
+Japanese: {ja}
+Chinese: {zh}
 ```
-**注意**: 当使用自定义模板时，目标翻译语言将由模板中包含的占位符决定 (最多3种语言)。手动选择目标语言的下拉框将被禁用。
+**注意**:
+- 模板同时支持新式语言代码 (`{en}`, `{ja}`)和旧式中文名 (`{日文}`, `{英文}`)占位符，以确保向后兼容。
+- 当使用自定义模板时，目标翻译语言将由模板中包含的占位符决定。为保证性能，系统最多只会请求翻译模板中的**前3种语言**。如果模板中包含超过3种语言，界面会显示警告信息。
 
 ## 故障排除
 （与原 README 基本一致，可按需更新）
@@ -150,6 +149,24 @@ Chinese: {中文}
 （与原 README 基本一致）
 
 ## 更新日志
+
+### v3.1.0 (2025-06-09)
+- ✨ **动态语言加载与初始化**: 重构了语言管理系统，现在客户端启动时会从API动态获取支持的语言列表，使语言支持与后端实时同步。如果API加载失败，则会回退到内置的语言列表。
+- 🚀 **模板系统增强**: 模板引擎现在同时支持新式语言代码 (`{en}`)和旧式中文名 (`{日文}`)占位符，确保了向后兼容性。增加了模板验证功能，当模板中包含超过3种语言时会向用户显示警告。
+- 🔧 **新增API连接测试**: 在"账户"页面增加了"测试连接"按钮，方便用户验证服务器URL和API密钥的有效性。
+- 🌐 **本地化系统完善**: 根据新的API响应更新了所有内置的语言资源文件（例如，将"德文"统一为"德语"），解决了部分语言显示为英文的问题。同时添加了API连接验证和模板警告的本地化文本。
+- 🧹 **架构重构**: 优化了 `ApiResultProcessor` 和多个ViewModel，利用事件聚合器 (`LanguagesInitializedEvent`)实现了模块间的解耦，提升了代码的健壮性和可维护性。
+
+---
+
+**English Translation of v3.1.0 Changelog:**
+
+### v3.1.0 (2025-06-09)
+- ✨ **Dynamic Language Loading & Initialization**: Rearchitected the language management system. The client now dynamically fetches the list of supported languages from the API on startup, ensuring real-time synchronization with the backend. A fallback mechanism to a built-in list is in place if the API call fails.
+- 🚀 **Template System Enhancement**: The template engine now supports both modern language codes (`{en}`) and legacy Chinese names (`{日文}`) as placeholders, ensuring backward compatibility. Added template validation to warn users when more than three languages are included in the template.
+- 🔧 **New API Connection Test Feature**: Added a "Test Connection" button on the "Account" page for users to easily validate their server URL and API key.
+- 🌐 **Localization System Improvement**: Updated all built-in language resource files to align with the new API response format (e.g., standardizing on "德语" for German), fixing the issue where some languages were displayed in English. Added localized text for API connection validation and template warnings.
+- 🧹 **Architectural Refactoring**: Optimized `ApiResultProcessor` and various ViewModels. Utilized the `EventAggregator` (`LanguagesInitializedEvent`) to decouple modules, enhancing code robustness and maintainability.
 
 ### v3.0.0 (2025-06-04)
 - ✨ **全面迁移至 LinguaLink API v2.0**: 优化了与后端服务的交互逻辑和数据模型。

@@ -63,7 +63,8 @@
                         Text="Information"
                         FontSize="16"
                         FontWeight="SemiBold"
-                        VerticalAlignment="Center" />
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
 
                     <!-- 关闭按钮 -->
                     <ui:Button
@@ -90,7 +91,8 @@
                     Text="Message content goes here"
                     FontSize="14"
                     TextWrapping="Wrap"
-                    LineHeight="20" />
+                    LineHeight="20"
+                    Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
             </ScrollViewer>
 
             <!-- 按钮区域 -->
