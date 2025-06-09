@@ -25,26 +25,6 @@ namespace lingualink_client.Services.Interfaces
         /// 停止音频翻译工作
         /// </summary>
         void Stop();
-
-        /// <summary>
-        /// 状态更新事件
-        /// </summary>
-        event EventHandler<string> StatusUpdated;
-
-        /// <summary>
-        /// 翻译完成事件
-        /// </summary>
-        event EventHandler<TranslationResultEventArgs> TranslationCompleted;
-
-        /// <summary>
-        /// OSC消息发送事件
-        /// </summary>
-        event EventHandler<OscMessageEventArgs> OscMessageSent;
-
-        /// <summary>
-        /// VAD状态变化事件（用于数据驱动绑定）
-        /// </summary>
-        event EventHandler<VadState> VadStateChanged;
     }
 
     /// <summary>

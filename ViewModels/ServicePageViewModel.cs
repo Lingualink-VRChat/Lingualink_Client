@@ -328,7 +328,15 @@ namespace lingualink_client.ViewModels
                     
                     _settingsService.SaveSettings(updatedSettingsFromThisPage);
                     _currentSettings = updatedSettingsFromThisPage; // Update local copy with the combined settings
-                    SettingsChangedNotifier.RaiseSettingsChanged();
+
+                    // 通过事件聚合器通知设置变更
+                    var eventAggregator = ServiceContainer.Resolve<Services.Interfaces.IEventAggregator>();
+                    eventAggregator.Publish(new ViewModels.Events.SettingsChangedEvent
+                    {
+                        Settings = updatedSettingsFromThisPage,
+                        ChangeSource = "ServicePage"
+                    });
+
                     MessageBox.Show(LanguageManager.GetString("SettingsSavedSuccess"), LanguageManager.GetString("SuccessTitle"), MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }

@@ -201,7 +201,14 @@ namespace lingualink_client.ViewModels
                     _currentSettings = updatedSettings;
 
                     System.Diagnostics.Debug.WriteLine($"[AccountPageViewModel] Settings saved, raising SettingsChanged event");
-                    SettingsChangedNotifier.RaiseSettingsChanged();
+
+                    // 通过事件聚合器通知设置变更
+                    var eventAggregator = ServiceContainer.Resolve<Services.Interfaces.IEventAggregator>();
+                    eventAggregator.Publish(new ViewModels.Events.SettingsChangedEvent
+                    {
+                        Settings = updatedSettings,
+                        ChangeSource = "AccountPage"
+                    });
 
                     MessageBox.Show(LanguageManager.GetString("SettingsSavedSuccess"),
                                    LanguageManager.GetString("SuccessTitle"),

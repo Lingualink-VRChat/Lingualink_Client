@@ -51,7 +51,13 @@ namespace lingualink_client.ViewModels.Managers
                 {
                     _isRefreshing = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsRefreshing)));
-                    RefreshingStateChanged?.Invoke(this, value);
+
+                    // 发布刷新状态变更事件
+                    _eventAggregator.Publish(new MicrophoneRefreshingStateChangedEvent
+                    {
+                        IsRefreshing = value
+                    });
+
                     Debug.WriteLine($"MicrophoneManager: Refreshing state changed to {value}");
                 }
             }
@@ -66,7 +72,13 @@ namespace lingualink_client.ViewModels.Managers
                 {
                     _isEnabled = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsEnabled)));
-                    EnabledStateChanged?.Invoke(this, value);
+
+                    // 发布启用状态变更事件
+                    _eventAggregator.Publish(new MicrophoneEnabledStateChangedEvent
+                    {
+                        IsEnabled = value
+                    });
+
                     Debug.WriteLine($"MicrophoneManager: Enabled state changed to {value}");
                 }
             }
@@ -79,9 +91,6 @@ namespace lingualink_client.ViewModels.Managers
             SelectedMicrophone.WaveInDeviceIndex != -1 &&
             SelectedMicrophone.WaveInDeviceIndex < WaveIn.DeviceCount;
 
-        public event EventHandler<MMDeviceWrapper?>? MicrophoneChanged;
-        public event EventHandler<bool>? RefreshingStateChanged;
-        public event EventHandler<bool>? EnabledStateChanged;
         public event PropertyChangedEventHandler? PropertyChanged;
 
         public MicrophoneManager()
@@ -192,9 +201,6 @@ namespace lingualink_client.ViewModels.Managers
                     _logger.AddMessage($"Selected microphone: {newValue.FriendlyName}");
                 }
             }
-
-            // 触发事件
-            MicrophoneChanged?.Invoke(this, newValue);
 
             // 发布全局事件
             _eventAggregator.Publish(new MicrophoneChangedEvent

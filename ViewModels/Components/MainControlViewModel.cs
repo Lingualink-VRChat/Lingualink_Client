@@ -56,12 +56,16 @@ namespace lingualink_client.ViewModels.Components
 
         private void SubscribeToEvents()
         {
-            // 订阅麦克风管理器事件
-            _microphoneManager.MicrophoneChanged += OnMicrophoneChanged;
+            // 订阅麦克风管理器PropertyChanged事件（仍需要用于UI绑定）
             _microphoneManager.PropertyChanged += OnMicrophoneManagerPropertyChanged;
 
-            // 订阅全局设置变更事件
-            SettingsChangedNotifier.SettingsChanged += OnGlobalSettingsChanged;
+            // 通过事件聚合器订阅事件
+            var eventAggregator = ServiceContainer.Resolve<Services.Interfaces.IEventAggregator>();
+            eventAggregator.Subscribe<ViewModels.Events.MicrophoneChangedEvent>(OnMicrophoneChanged);
+            eventAggregator.Subscribe<ViewModels.Events.SettingsChangedEvent>(OnGlobalSettingsChanged);
+            eventAggregator.Subscribe<ViewModels.Events.StatusUpdatedEvent>(OnOrchestratorStatusUpdated);
+            eventAggregator.Subscribe<ViewModels.Events.TranslationCompletedEvent>(OnTranslationCompleted);
+            eventAggregator.Subscribe<ViewModels.Events.OscMessageSentEvent>(OnOscMessageSent);
         }
 
         private void OnMicrophoneManagerPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -86,9 +90,9 @@ namespace lingualink_client.ViewModels.Components
             OnPropertyChanged(nameof(WorkHintLabel));
         }
 
-        private void OnGlobalSettingsChanged()
+        private void OnGlobalSettingsChanged(ViewModels.Events.SettingsChangedEvent e)
         {
-            System.Diagnostics.Debug.WriteLine($"[MainControlViewModel] OnGlobalSettingsChanged() called");
+            System.Diagnostics.Debug.WriteLine($"[MainControlViewModel] OnGlobalSettingsChanged() called from {e.ChangeSource}");
 
             Application.Current.Dispatcher.Invoke(() =>
             {
@@ -130,18 +134,12 @@ namespace lingualink_client.ViewModels.Components
             if (_orchestrator != null)
             {
                 System.Diagnostics.Debug.WriteLine($"[MainControlViewModel] Disposing old orchestrator");
-                _orchestrator.StatusUpdated -= OnOrchestratorStatusUpdated;
-                _orchestrator.TranslationCompleted -= OnTranslationCompleted;
-                _orchestrator.OscMessageSent -= OnOscMessageSent;
                 _orchestrator.Dispose();
             }
 
             // 创建新的协调器
             System.Diagnostics.Debug.WriteLine($"[MainControlViewModel] Creating new AudioTranslationOrchestrator");
             _orchestrator = new Services.Managers.AudioTranslationOrchestrator(_appSettings, _loggingManager);
-            _orchestrator.StatusUpdated += OnOrchestratorStatusUpdated;
-            _orchestrator.TranslationCompleted += OnTranslationCompleted;
-            _orchestrator.OscMessageSent += OnOscMessageSent;
 
             // 恢复工作状态
             if (wasWorking && previouslySelectedMicDeviceNumber.HasValue && 
@@ -167,8 +165,9 @@ namespace lingualink_client.ViewModels.Components
             ToggleWorkCommand.NotifyCanExecuteChanged();
         }
 
-        private void OnMicrophoneChanged(object? sender, MMDeviceWrapper? microphone)
+        private void OnMicrophoneChanged(ViewModels.Events.MicrophoneChangedEvent e)
         {
+            var microphone = e.SelectedMicrophone;
             if (microphone != null)
             {
                 if (microphone.WaveInDeviceIndex != -1 && microphone.WaveInDeviceIndex < NAudio.Wave.WaveIn.DeviceCount)
@@ -204,26 +203,18 @@ namespace lingualink_client.ViewModels.Components
             ToggleWorkCommand.NotifyCanExecuteChanged();
         }
 
-        private void OnOrchestratorStatusUpdated(object? sender, string status)
+        private void OnOrchestratorStatusUpdated(ViewModels.Events.StatusUpdatedEvent e)
         {
-            Application.Current.Dispatcher.Invoke(() => StatusText = status);
+            Application.Current.Dispatcher.Invoke(() => StatusText = e.Status);
         }
 
-        private void OnTranslationCompleted(object? sender, Services.Interfaces.TranslationResultEventArgs e)
+        private void OnTranslationCompleted(ViewModels.Events.TranslationCompletedEvent e)
         {
-            // 通过事件聚合器通知翻译结果更新
-            var eventAggregator = ServiceContainer.Resolve<Services.Interfaces.IEventAggregator>();
-            eventAggregator.Publish(new ViewModels.Events.TranslationCompletedEvent
-            {
-                TriggerReason = e.TriggerReason ?? "",
-                OriginalText = e.OriginalText ?? "",
-                ProcessedText = e.ProcessedText ?? "",
-                ErrorMessage = e.ErrorMessage,
-                Duration = e.DurationSeconds ?? 0.0
-            });
+            // 事件已经是正确的格式，可以直接处理或转发给其他组件
+            // 这里可以添加额外的处理逻辑
         }
 
-        private void OnOscMessageSent(object? sender, Services.Interfaces.OscMessageEventArgs e)
+        private void OnOscMessageSent(ViewModels.Events.OscMessageSentEvent e)
         {
             // 这里可以触发事件给其他组件
             // 暂时保留为空，后续可以扩展
@@ -279,17 +270,17 @@ namespace lingualink_client.ViewModels.Components
         {
             // 取消订阅事件
             LanguageManager.LanguageChanged -= OnLanguageChanged;
-            SettingsChangedNotifier.SettingsChanged -= OnGlobalSettingsChanged;
-            _microphoneManager.MicrophoneChanged -= OnMicrophoneChanged;
             _microphoneManager.PropertyChanged -= OnMicrophoneManagerPropertyChanged;
 
-            if (_orchestrator != null)
-            {
-                _orchestrator.StatusUpdated -= OnOrchestratorStatusUpdated;
-                _orchestrator.TranslationCompleted -= OnTranslationCompleted;
-                _orchestrator.OscMessageSent -= OnOscMessageSent;
-                _orchestrator.Dispose();
-            }
+            // 取消订阅事件聚合器事件
+            var eventAggregator = ServiceContainer.Resolve<Services.Interfaces.IEventAggregator>();
+            eventAggregator.Unsubscribe<ViewModels.Events.MicrophoneChangedEvent>(OnMicrophoneChanged);
+            eventAggregator.Unsubscribe<ViewModels.Events.SettingsChangedEvent>(OnGlobalSettingsChanged);
+            eventAggregator.Unsubscribe<ViewModels.Events.StatusUpdatedEvent>(OnOrchestratorStatusUpdated);
+            eventAggregator.Unsubscribe<ViewModels.Events.TranslationCompletedEvent>(OnTranslationCompleted);
+            eventAggregator.Unsubscribe<ViewModels.Events.OscMessageSentEvent>(OnOscMessageSent);
+
+            _orchestrator?.Dispose();
         }
     }
 } 

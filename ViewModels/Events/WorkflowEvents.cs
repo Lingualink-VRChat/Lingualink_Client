@@ -1,4 +1,6 @@
 using lingualink_client.Models;
+using lingualink_client.Services;
+using lingualink_client.Services.Interfaces;
 
 namespace lingualink_client.ViewModels.Events
 {
@@ -34,6 +36,48 @@ namespace lingualink_client.ViewModels.Events
     }
 
     /// <summary>
+    /// 麦克风刷新状态变更事件
+    /// </summary>
+    public class MicrophoneRefreshingStateChangedEvent
+    {
+        public bool IsRefreshing { get; set; }
+    }
+
+    /// <summary>
+    /// 麦克风启用状态变更事件
+    /// </summary>
+    public class MicrophoneEnabledStateChangedEvent
+    {
+        public bool IsEnabled { get; set; }
+    }
+
+    /// <summary>
+    /// 状态更新事件
+    /// </summary>
+    public class StatusUpdatedEvent
+    {
+        public string Status { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// OSC消息发送事件
+    /// </summary>
+    public class OscMessageSentEvent
+    {
+        public string Message { get; set; } = string.Empty;
+        public bool IsSuccess { get; set; }
+        public string? ErrorMessage { get; set; }
+    }
+
+    /// <summary>
+    /// VAD状态变化事件
+    /// </summary>
+    public class VadStateChangedEvent
+    {
+        public VadState State { get; set; }
+    }
+
+    /// <summary>
     /// 目标语言变更事件
     /// </summary>
     public class TargetLanguagesChangedEvent
@@ -42,4 +86,4 @@ namespace lingualink_client.ViewModels.Events
         public bool IsTemplateMode { get; set; }
         public string Source { get; set; } = string.Empty;
     }
-} 
+}

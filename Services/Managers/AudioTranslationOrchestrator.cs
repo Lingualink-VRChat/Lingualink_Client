@@ -5,6 +5,7 @@ using NAudio.Wave;
 using lingualink_client.Models;
 using lingualink_client.Services;
 using lingualink_client.Services.Interfaces;
+using lingualink_client.ViewModels.Events;
 using System.Linq;
 using System.Collections.Generic;
 using System.Text.Json;
@@ -22,17 +23,9 @@ namespace lingualink_client.Services.Managers
         private readonly OscService? _oscService;
         private readonly AppSettings _appSettings;
         private readonly ILoggingManager _loggingManager;
+        private readonly IEventAggregator _eventAggregator;
 
         public bool IsWorking => _audioService.IsWorking;
-
-        public event EventHandler<string>? StatusUpdated;
-        public event EventHandler<TranslationResultEventArgs>? TranslationCompleted;
-        public event EventHandler<OscMessageEventArgs>? OscMessageSent;
-        
-        /// <summary>
-        /// VAD状态变化事件（用于更精确的状态管理）
-        /// </summary>
-        public event EventHandler<VadState>? VadStateChanged;
 
         public AudioTranslationOrchestrator(
             AppSettings appSettings,
@@ -40,6 +33,7 @@ namespace lingualink_client.Services.Managers
         {
             _appSettings = appSettings;
             _loggingManager = loggingManager;
+            _eventAggregator = ServiceContainer.Resolve<IEventAggregator>();
 
             // 使用新的API服务工厂创建API服务
             _apiService = LingualinkApiServiceFactory.CreateApiService(_appSettings);
@@ -94,8 +88,11 @@ namespace lingualink_client.Services.Managers
 
         private void OnVadStateChanged(object? sender, VadState newState)
         {
-            // 转发VAD状态变化事件给数据驱动组件
-            VadStateChanged?.Invoke(this, newState);
+            // 发布VAD状态变化事件
+            _eventAggregator.Publish(new VadStateChangedEvent
+            {
+                State = newState
+            });
             _loggingManager.AddMessage($"VAD State Changed: {newState}");
         }
 
@@ -257,17 +254,32 @@ namespace lingualink_client.Services.Managers
 
         private void OnStatusUpdated(string status)
         {
-            StatusUpdated?.Invoke(this, status);
+            _eventAggregator.Publish(new StatusUpdatedEvent
+            {
+                Status = status
+            });
         }
 
         private void OnTranslationCompleted(TranslationResultEventArgs args)
         {
-            TranslationCompleted?.Invoke(this, args);
+            _eventAggregator.Publish(new TranslationCompletedEvent
+            {
+                TriggerReason = args.TriggerReason,
+                OriginalText = args.OriginalText,
+                ProcessedText = args.ProcessedText,
+                ErrorMessage = args.ErrorMessage,
+                Duration = args.DurationSeconds ?? 0.0
+            });
         }
 
         private void OnOscMessageSent(OscMessageEventArgs args)
         {
-            OscMessageSent?.Invoke(this, args);
+            _eventAggregator.Publish(new OscMessageSentEvent
+            {
+                Message = args.Message,
+                IsSuccess = args.IsSuccess,
+                ErrorMessage = args.ErrorMessage
+            });
         }
 
 

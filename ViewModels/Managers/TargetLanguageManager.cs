@@ -135,7 +135,14 @@ namespace lingualink_client.ViewModels.Managers
             _appSettings.TargetLanguages = string.Join(",", selectedLangsList);
             
             _settingsService.SaveSettings(_appSettings);
-            SettingsChangedNotifier.RaiseSettingsChanged(); // Notify other parts of the app
+
+            // 通过事件聚合器通知设置变更
+            _eventAggregator.Publish(new SettingsChangedEvent
+            {
+                Settings = _appSettings,
+                ChangeSource = "TargetLanguageManager"
+            });
+
             _logger.AddMessage(Services.LanguageManager.GetString("LogTargetLangsSaved"));
         }
 

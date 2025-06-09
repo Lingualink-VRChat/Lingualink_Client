@@ -46,20 +46,5 @@ namespace lingualink_client.ViewModels.Managers
         /// </summary>
         /// <returns>刷新任务</returns>
         Task RefreshAsync();
-
-        /// <summary>
-        /// 麦克风选择变更事件
-        /// </summary>
-        event EventHandler<MMDeviceWrapper?>? MicrophoneChanged;
-
-        /// <summary>
-        /// 刷新状态变更事件
-        /// </summary>
-        event EventHandler<bool>? RefreshingStateChanged;
-
-        /// <summary>
-        /// 启用状态变更事件
-        /// </summary>
-        event EventHandler<bool>? EnabledStateChanged;
     }
 } 

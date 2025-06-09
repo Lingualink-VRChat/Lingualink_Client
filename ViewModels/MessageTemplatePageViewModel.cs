@@ -161,8 +161,13 @@ namespace lingualink_client.ViewModels
             _settingsService.SaveSettings(settingsToSave);
             _appSettings = settingsToSave; // 更新ViewModel的缓存设置
 
-            // 通知其他组件设置已更改
-            SettingsChangedNotifier.RaiseSettingsChanged();
+            // 通过事件聚合器通知设置变更
+            var eventAggregator = ServiceContainer.Resolve<Services.Interfaces.IEventAggregator>();
+            eventAggregator.Publish(new ViewModels.Events.SettingsChangedEvent
+            {
+                Settings = settingsToSave,
+                ChangeSource = "MessageTemplatePage"
+            });
         }
 
         public void RefreshSettings()
