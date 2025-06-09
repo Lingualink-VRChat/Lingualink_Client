@@ -1,6 +1,7 @@
 using lingualink_client.Services;
 using lingualink_client.Services.Interfaces;
 using lingualink_client.Models;
+using lingualink_client.ViewModels.Events;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -39,7 +40,7 @@ namespace lingualink_client.ViewModels
         {
             _settingsService = new SettingsService();
             _appSettings = _settingsService.LoadSettings();
-            
+
             LanguageManager.LanguageChanged += () => {
                 OnPropertyChanged(nameof(MessageTemplateSettings));
                 OnPropertyChanged(nameof(UseCustomTemplate));
@@ -47,14 +48,24 @@ namespace lingualink_client.ViewModels
                 OnPropertyChanged(nameof(AvailablePlaceholders));
                 OnPropertyChanged(nameof(PreviewTemplate));
                 OnPropertyChanged(nameof(ResetToDefaults));
-                
+
                 // Refresh placeholders when language changes
                 InitializePlaceholders();
             };
 
+            // 订阅语言初始化事件
+            var eventAggregator = ServiceContainer.Resolve<IEventAggregator>();
+            eventAggregator.Subscribe<LanguagesInitializedEvent>(OnLanguagesInitialized);
+
             LoadSettings();
             InitializePlaceholders();
             ValidateTemplate(); // 初始加载时也进行验证
+        }
+
+        private void OnLanguagesInitialized(LanguagesInitializedEvent obj)
+        {
+            // 当语言加载完成后，刷新占位符列表
+            InitializePlaceholders();
         }
 
         private void LoadSettings()

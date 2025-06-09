@@ -86,4 +86,21 @@ namespace lingualink_client.ViewModels.Events
         public bool IsTemplateMode { get; set; }
         public string Source { get; set; } = string.Empty;
     }
+
+    /// <summary>
+    /// 语言列表初始化完成事件
+    /// 让事件携带加载完成的语言列表
+    /// </summary>
+    public class LanguagesInitializedEvent
+    {
+        /// <summary>
+        /// 支持的语言列表
+        /// </summary>
+        public List<string> SupportedLanguages { get; }
+
+        public LanguagesInitializedEvent(List<string> supportedLanguages)
+        {
+            SupportedLanguages = supportedLanguages;
+        }
+    }
 }

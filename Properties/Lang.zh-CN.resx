@@ -399,26 +399,29 @@
   <data name="Lang_日文" xml:space="preserve">
     <value>日文</value>
   </data>
-  <data name="Lang_法文" xml:space="preserve">
-    <value>法文</value>
+  <data name="Lang_法语" xml:space="preserve">
+    <value>法语</value>
   </data>
   <data name="Lang_中文" xml:space="preserve">
     <value>中文</value>
   </data>
+  <data name="Lang_繁體中文" xml:space="preserve">
+    <value>繁體中文</value>
+  </data>
   <data name="Lang_韩文" xml:space="preserve">
     <value>韩文</value>
   </data>
-  <data name="Lang_西班牙文" xml:space="preserve">
-    <value>西班牙文</value>
+  <data name="Lang_西班牙语" xml:space="preserve">
+    <value>西班牙语</value>
   </data>
-  <data name="Lang_俄文" xml:space="preserve">
-    <value>俄文</value>
+  <data name="Lang_俄语" xml:space="preserve">
+    <value>俄语</value>
   </data>
-  <data name="Lang_德文" xml:space="preserve">
-    <value>德文</value>
+  <data name="Lang_德语" xml:space="preserve">
+    <value>德语</value>
   </data>
-  <data name="Lang_意大利文" xml:space="preserve">
-    <value>意大利文</value>
+  <data name="Lang_意大利语" xml:space="preserve">
+    <value>意大利语</value>
   </data>
 
   <!-- Message Template Settings -->

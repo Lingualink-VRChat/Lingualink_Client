@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -20,6 +21,10 @@ namespace lingualink_client.ViewModels.Managers
         private readonly SettingsService _settingsService;
         private AppSettings _appSettings = null!;
         private bool _isLoadingSettings = false;
+
+        // [核心修改] 新增一个字段来存储从事件中获取的语言列表
+        // 这是TargetLanguageManager自己的语言数据副本，一旦初始化后就不再改变。
+        private List<string> _allSupportedLanguages = new List<string>();
 
         public ObservableCollection<SelectableTargetLanguageViewModel> LanguageItems { get; }
         
@@ -49,40 +54,60 @@ namespace lingualink_client.ViewModels.Managers
         public event EventHandler<bool>? EnabledStateChanged;
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        private static readonly string[] AllSupportedLanguages = LanguageDisplayHelper.BackendLanguageNames.ToArray();
-
         public TargetLanguageManager()
         {
             _eventAggregator = ServiceContainer.Resolve<IEventAggregator>();
             _logger = ServiceContainer.Resolve<ILoggingManager>();
             _settingsService = new SettingsService();
-            
+
             LanguageItems = new ObservableCollection<SelectableTargetLanguageViewModel>();
-            
-            // Load initial AppSettings to have a reference
-            // This will be overwritten by LoadFromSettings if called later with a different instance
+
             _appSettings = _settingsService.LoadSettings();
-            
-            Debug.WriteLine("TargetLanguageManager: Initialized");
+
+            // 订阅初始化完成事件
+            _eventAggregator.Subscribe<LanguagesInitializedEvent>(OnLanguagesInitialized);
+
+            Debug.WriteLine("TargetLanguageManager: Initialized and waiting for language data.");
+        }
+
+        /// <summary>
+        /// 响应语言初始化完成事件
+        /// </summary>
+        private void OnLanguagesInitialized(LanguagesInitializedEvent e)
+        {
+            Debug.WriteLine($"TargetLanguageManager: Received LanguagesInitializedEvent. Contains {e.SupportedLanguages.Count} languages.");
+
+            // [核心修改] 直接从事件中获取语言列表并存储
+            _allSupportedLanguages = e.SupportedLanguages;
+
+            // 使用存储的列表来加载设置
+            LoadFromSettings(_appSettings);
         }
 
         public void LoadFromSettings(AppSettings settings)
         {
+            // 不再从LanguageDisplayHelper获取数据，而是使用已存储的 _allSupportedLanguages
+            if (!_allSupportedLanguages.Any())
+            {
+                _logger.AddMessage("Warning: No supported languages available to load into TargetLanguageManager.");
+                return; // 如果没有语言数据，则不执行任何操作
+            }
+
             _isLoadingSettings = true;
             _appSettings = settings; // Crucial: Store the AppSettings instance being used by the system
-            
+
             try
             {
                 Debug.WriteLine("TargetLanguageManager: Loading from settings");
-                
+
                 LanguageItems.Clear();
-                
+
                 var languagesFromSettings = string.IsNullOrWhiteSpace(settings.TargetLanguages)
                     ? new string[0]
                     : settings.TargetLanguages.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
                                              .Select(s => s.Trim())
-                                             // Ensure we only load languages that are known backend names
-                                             .Where(s => AllSupportedLanguages.Contains(s))
+                                             // 使用 _allSupportedLanguages 进行验证
+                                             .Where(s => _allSupportedLanguages.Contains(s))
                                              .Distinct()
                                              .ToArray();
 
@@ -91,17 +116,17 @@ namespace lingualink_client.ViewModels.Managers
                     // This case means settings.TargetLanguages had values, but none were valid backend names.
                     // Default to the first backend language.
                     _logger.AddMessage($"Warning: TargetLanguages in settings ('{settings.TargetLanguages}') were invalid. Defaulting.");
-                    languagesFromSettings = new[] { AllSupportedLanguages.FirstOrDefault() ?? "英文" };
+                    languagesFromSettings = new[] { _allSupportedLanguages.FirstOrDefault() ?? "英文" };
                 }
                 else if (!languagesFromSettings.Any())
                 {
                     // This case means settings.TargetLanguages was empty or whitespace.
-                    languagesFromSettings = new[] { AllSupportedLanguages.FirstOrDefault() ?? "英文" };
+                    languagesFromSettings = new[] { _allSupportedLanguages.FirstOrDefault() ?? "英文" };
                 }
 
                 foreach (var lang in languagesFromSettings.Take(MaxLanguageCount))
                 {
-                    var newItem = new SelectableTargetLanguageViewModel(this, lang, AllSupportedLanguages.ToList());
+                    var newItem = new SelectableTargetLanguageViewModel(this, lang, _allSupportedLanguages);
                     LanguageItems.Add(newItem);
                 }
                 
@@ -128,12 +153,15 @@ namespace lingualink_client.ViewModels.Managers
 
             var selectedLangsList = LanguageItems
                 .Select(item => item.SelectedLanguage)
-                .Where(lang => !string.IsNullOrWhiteSpace(lang) && AllSupportedLanguages.Contains(lang))
+                .Where(lang => !string.IsNullOrWhiteSpace(lang) && _allSupportedLanguages.Contains(lang))
                 .Distinct()
                 .ToList();
-            
+
             _appSettings.TargetLanguages = string.Join(",", selectedLangsList);
-            
+
+            // [核心Bug修复] 在保存前，确保GlobalLanguage是最新的
+            _appSettings.GlobalLanguage = System.Threading.Thread.CurrentThread.CurrentUICulture.Name;
+
             _settingsService.SaveSettings(_appSettings);
 
             // 通过事件聚合器通知设置变更
@@ -154,22 +182,31 @@ namespace lingualink_client.ViewModels.Managers
                 return;
             }
 
-            string defaultNewLang = AllSupportedLanguages.FirstOrDefault(l => !LanguageItems.Any(item => item.SelectedLanguage == l))
-                                    ?? AllSupportedLanguages.First();
-            
-            var newItem = new SelectableTargetLanguageViewModel(this, defaultNewLang, AllSupportedLanguages.ToList());
+            // [核心修改] 使用实例字段 _allSupportedLanguages
+            string defaultNewLang = _allSupportedLanguages.FirstOrDefault(l => !LanguageItems.Any(item => item.SelectedLanguage == l))
+                                    ?? _allSupportedLanguages.FirstOrDefault()
+                                    ?? string.Empty; // 如果列表为空，则为空字符串，这解释了你的日志
+
+            // [防御性编程] 如果找不到新语言（例如列表为空），则不添加
+            if (string.IsNullOrEmpty(defaultNewLang))
+            {
+                _logger.AddMessage("Warning: Cannot add new language, no available languages found.");
+                return;
+            }
+
+            var newItem = new SelectableTargetLanguageViewModel(this, defaultNewLang, _allSupportedLanguages);
             LanguageItems.Add(newItem);
-            
+
             UpdateItemPropertiesAndAvailableLanguagesInternal();
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentLanguageCount)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CanAddLanguage)));
-            
+
             NotifyLanguagesChanged(); // Notifies listeners like TargetLanguageViewModel
             if (!_appSettings.UseCustomTemplate) // Only persist if not in template mode
             {
                 UpdateAndPersistTargetLanguages();
             }
-            
+
             _logger.AddMessage($"Added target language: {defaultNewLang}");
             Debug.WriteLine($"TargetLanguageManager: Added language {defaultNewLang}. Total: {LanguageItems.Count}");
         }
@@ -220,7 +257,7 @@ namespace lingualink_client.ViewModels.Managers
                 // 使用手动选择的语言
                 var selectedLanguages = LanguageItems
                     .Select(item => item.SelectedLanguage)
-                    .Where(lang => !string.IsNullOrWhiteSpace(lang) && AllSupportedLanguages.Contains(lang))
+                    .Where(lang => !string.IsNullOrWhiteSpace(lang) && _allSupportedLanguages.Contains(lang))
                     .Distinct()
                     .ToArray();
                 
@@ -280,23 +317,23 @@ namespace lingualink_client.ViewModels.Managers
             for (int i = 0; i < LanguageItems.Count; i++)
             {
                 var itemVm = LanguageItems[i];
-                
+
                 // 使用本地化的目标标签
                 itemVm.Label = $"{LanguageManager.GetString("TargetLabel")} {i + 1}:";
                 itemVm.CanRemove = LanguageItems.Count > 1;
-                
+
                 // 构建这个下拉框可用的语言选项（排除其他下拉框已选中的选项）
-                var availableBackendLanguages = AllSupportedLanguages
-                    .Where(langOption => langOption == itemVm.SelectedLanguage || 
+                var availableBackendLanguages = _allSupportedLanguages
+                    .Where(langOption => langOption == itemVm.SelectedLanguage ||
                                        !LanguageItems.Where(it => it != itemVm).Any(it => it.SelectedLanguage == langOption))
                     .ToList();
-                
+
                 // 确保当前选中的语言在列表中
                 if (!string.IsNullOrEmpty(itemVm.SelectedLanguage) && !availableBackendLanguages.Contains(itemVm.SelectedLanguage))
                 {
                     availableBackendLanguages.Add(itemVm.SelectedLanguage);
                 }
-                
+
                 // 更新可用语言列表
                 itemVm.UpdateAvailableLanguages(availableBackendLanguages);
             }

@@ -2,6 +2,7 @@ using lingualink_client.Models;
 using NAudio.Wave;
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace lingualink_client.Services.Interfaces
@@ -143,12 +144,20 @@ namespace lingualink_client.Services.Interfaces
     }
 
     /// <summary>
-    /// 语言信息
+    /// 语言信息 (已修复以匹配API响应)
     /// </summary>
     public class LanguageInfo
     {
+        [JsonPropertyName("code")]
         public string Code { get; set; } = string.Empty;
-        public string Display { get; set; } = string.Empty;
+
+        [JsonPropertyName("display")]
+        public string Display { get; set; } = string.Empty; // e.g., "英文"
+
+        [JsonPropertyName("english")]
+        public string English { get; set; } = string.Empty; // e.g., "English"
+
+        [JsonPropertyName("aliases")]
         public string[] Aliases { get; set; } = Array.Empty<string>();
     }
 }

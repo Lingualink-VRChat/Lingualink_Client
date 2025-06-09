@@ -407,25 +407,28 @@
   <data name="Lang_日文" xml:space="preserve">
     <value>日本語</value>
   </data>
-  <data name="Lang_法文" xml:space="preserve">
+  <data name="Lang_法语" xml:space="preserve">
     <value>フランス語</value>
   </data>
   <data name="Lang_中文" xml:space="preserve">
     <value>中国語</value>
   </data>
+  <data name="Lang_繁體中文" xml:space="preserve">
+    <value>繁体中国語</value>
+  </data>
   <data name="Lang_韩文" xml:space="preserve">
     <value>韓国語</value>
   </data>
-  <data name="Lang_西班牙文" xml:space="preserve">
+  <data name="Lang_西班牙语" xml:space="preserve">
     <value>スペイン語</value>
   </data>
-  <data name="Lang_俄文" xml:space="preserve">
+  <data name="Lang_俄语" xml:space="preserve">
     <value>ロシア語</value>
   </data>
-  <data name="Lang_德文" xml:space="preserve">
+  <data name="Lang_德语" xml:space="preserve">
     <value>ドイツ語</value>
   </data>
-  <data name="Lang_意大利文" xml:space="preserve">
+  <data name="Lang_意大利语" xml:space="preserve">
     <value>イタリア語</value>
   </data>
 

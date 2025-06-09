@@ -399,25 +399,28 @@
   <data name="Lang_日文" xml:space="preserve">
     <value>Japanese</value>
   </data>
-  <data name="Lang_法文" xml:space="preserve">
+  <data name="Lang_法语" xml:space="preserve">
     <value>French</value>
   </data>
   <data name="Lang_中文" xml:space="preserve">
     <value>Chinese</value>
   </data>
+  <data name="Lang_繁體中文" xml:space="preserve">
+    <value>Traditional Chinese</value>
+  </data>
   <data name="Lang_韩文" xml:space="preserve">
     <value>Korean</value>
   </data>
-  <data name="Lang_西班牙文" xml:space="preserve">
+  <data name="Lang_西班牙语" xml:space="preserve">
     <value>Spanish</value>
   </data>
-  <data name="Lang_俄文" xml:space="preserve">
+  <data name="Lang_俄语" xml:space="preserve">
     <value>Russian</value>
   </data>
-  <data name="Lang_德文" xml:space="preserve">
+  <data name="Lang_德语" xml:space="preserve">
     <value>German</value>
   </data>
-  <data name="Lang_意大利文" xml:space="preserve">
+  <data name="Lang_意大利语" xml:space="preserve">
     <value>Italian</value>
   </data>
 

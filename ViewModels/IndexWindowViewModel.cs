@@ -1,9 +1,12 @@
 using System;
+using System.Threading.Tasks;
 using System.Windows;
 using lingualink_client.ViewModels.Components;
 using lingualink_client.ViewModels.Managers;
 using lingualink_client.Services;
+using lingualink_client.Services.Interfaces;
 using lingualink_client.Models;
+using lingualink_client.ViewModels.Events;
 
 namespace lingualink_client.ViewModels
 {
@@ -24,6 +27,7 @@ namespace lingualink_client.ViewModels
         private AppSettings _appSettings;
         private readonly ITargetLanguageManager _targetLanguageManager;
         private readonly IMicrophoneManager _microphoneManager;
+        private readonly IEventAggregator _eventAggregator;
 
         public IndexWindowViewModel()
         {
@@ -31,6 +35,7 @@ namespace lingualink_client.ViewModels
             _settingsService = new SettingsService();
             _targetLanguageManager = ServiceContainer.Resolve<ITargetLanguageManager>();
             _microphoneManager = ServiceContainer.Resolve<IMicrophoneManager>();
+            _eventAggregator = ServiceContainer.Resolve<IEventAggregator>();
 
             // 初始化组件ViewModels
             MainControl = new MainControlViewModel();
@@ -38,18 +43,48 @@ namespace lingualink_client.ViewModels
             TargetLanguage = new TargetLanguageViewModel();
             TranslationResult = new TranslationResultViewModel();
 
-            // 加载初始设置并应用到管理器
             _appSettings = _settingsService.LoadSettings();
-            _targetLanguageManager.LoadFromSettings(_appSettings);
-            _targetLanguageManager.UpdateEnabledState(_appSettings.UseCustomTemplate);
-            _ = _microphoneManager.RefreshAsync(); // 初始麦克风刷新
+
+            // 启动异步初始化，但不等待
+            _ = InitializeApplicationAsync();
 
             // 通过事件聚合器订阅全局设置变化
-            var eventAggregator = ServiceContainer.Resolve<Services.Interfaces.IEventAggregator>();
-            eventAggregator.Subscribe<ViewModels.Events.SettingsChangedEvent>(OnGlobalSettingsChanged);
+            _eventAggregator.Subscribe<SettingsChangedEvent>(OnGlobalSettingsChanged);
 
             // 建立组件间的事件连接
             SetupComponentCommunication();
+        }
+
+        /// <summary>
+        /// 异步初始化应用程序
+        /// </summary>
+        private async Task InitializeApplicationAsync()
+        {
+            // 1. 异步加载语言
+            ILingualinkApiService? tempApiService = null;
+            try
+            {
+                tempApiService = LingualinkApiServiceFactory.CreateApiService(_appSettings);
+                await LanguageDisplayHelper.InitializeAsync(tempApiService);
+            }
+            catch (Exception ex)
+            {
+                // 日志记录错误
+                var logger = ServiceContainer.Resolve<ILoggingManager>();
+                logger.AddMessage($"[CRITICAL] Failed to initialize languages from API: {ex.Message}");
+            }
+            finally
+            {
+                tempApiService?.Dispose();
+            }
+
+            // 2. 加载完成后，发布事件通知其他组件刷新
+            // 发布事件时，将加载好的语言列表作为参数传递
+            var supportedLanguages = LanguageDisplayHelper.BackendLanguageNames;
+            _eventAggregator.Publish(new LanguagesInitializedEvent(new List<string>(supportedLanguages)));
+
+            // 3. 初始麦克风刷新现在也移到这里，确保在语言加载后进行
+            await _microphoneManager.RefreshAsync();
         }
 
         private void SetupComponentCommunication()
@@ -106,8 +141,7 @@ namespace lingualink_client.ViewModels
         public void Dispose()
         {
             // 取消订阅事件聚合器事件
-            var eventAggregator = ServiceContainer.Resolve<Services.Interfaces.IEventAggregator>();
-            eventAggregator.Unsubscribe<ViewModels.Events.SettingsChangedEvent>(OnGlobalSettingsChanged);
+            _eventAggregator.Unsubscribe<SettingsChangedEvent>(OnGlobalSettingsChanged);
 
             MainControl?.Dispose();
             MicrophoneSelection?.Dispose();
