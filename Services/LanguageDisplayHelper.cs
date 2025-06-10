@@ -16,6 +16,9 @@ namespace lingualink_client.Services
         private static bool _isInitialized = false;
         private static readonly object _lock = new object();
 
+        // 特殊的"仅转录"选项的后端名称
+        public static readonly string TranscriptionBackendName = "仅转录";
+
         // 将硬编码列表替换为可动态填充的属性
         public static List<string> BackendLanguageNames { get; private set; } = new List<string>();
         private static Dictionary<string, string> ChineseToLanguageCode { get; set; } = new Dictionary<string, string>();
@@ -62,6 +65,9 @@ namespace lingualink_client.Services
                         Debug.WriteLine($"[LanguageDisplayHelper] Added language: {backendName} -> {lang.Code} ({lang.English})");
                     }
 
+                    // 插入"仅转录"选项
+                    InsertTranscriptionOption(backendNames, chineseToCode, chineseToEnglish, codeToChinese);
+
                     // 原子性地更新静态属性
                     BackendLanguageNames = backendNames;
                     ChineseToLanguageCode = chineseToCode;
@@ -95,6 +101,12 @@ namespace lingualink_client.Services
         /// </summary>
         private static void LoadFallbackLanguages()
         {
+            var chineseToCode = new Dictionary<string, string>
+            {
+                { "英文", "en" }, { "日文", "ja" }, { "法语", "fr" }, { "中文", "zh" }, { "韩文", "ko" },
+                { "西班牙语", "es" }, { "俄语", "ru" }, { "德语", "de" }, { "意大利语", "it" }
+            };
+            var codeToChinese = chineseToCode.ToDictionary(kvp => kvp.Value, kvp => kvp.Key);
             // [核心修复] 更新这里的中文名称以匹配新的API display名称
             BackendLanguageNames = new List<string> { "英文", "日文", "法语", "中文", "韩文", "西班牙语", "俄语", "德语", "意大利语" };
             ChineseToLanguageCode = new Dictionary<string, string>
@@ -102,7 +114,7 @@ namespace lingualink_client.Services
                 { "英文", "en" }, { "日文", "ja" }, { "法语", "fr" }, { "中文", "zh" }, { "韩文", "ko" },
                 { "西班牙语", "es" }, { "俄语", "ru" }, { "德语", "de" }, { "意大利语", "it" }
             };
-            LanguageCodeToChinese = ChineseToLanguageCode.ToDictionary(kvp => kvp.Value, kvp => kvp.Key);
+            LanguageCodeToChinese = codeToChinese;
             // 添加繁体中文映射
             LanguageCodeToChinese["zh-hant"] = "繁體中文"; // 确保与API响应一致
             ChineseToEnglish = new Dictionary<string, string>
@@ -111,6 +123,26 @@ namespace lingualink_client.Services
                  { "西班牙语", "Spanish" }, { "俄语", "Russian" }, { "德语", "German" }, { "意大利语", "Italian" },
                  { "繁體中文", "Traditional Chinese" } // 确保包含所有可能的显示名称
             };
+
+            var backendNames = chineseToCode.Keys.ToList();
+
+            // 插入"仅转录"选项
+            InsertTranscriptionOption(backendNames, chineseToCode, ChineseToEnglish, codeToChinese);
+
+            // 更新静态属性
+            BackendLanguageNames = backendNames;
+            ChineseToLanguageCode = chineseToCode;
+        }
+
+        private static void InsertTranscriptionOption(List<string> backendNames, Dictionary<string, string> chineseToCode, Dictionary<string, string> chineseToEnglish, Dictionary<string, string> codeToChinese)
+        {
+            backendNames.Insert(0, TranscriptionBackendName);
+            // 使用 "transcription" 作为内部代码, 但它不应该被视为一个真正的语言代码
+            // 因此，我们不把它添加到 chineseToCode 或 codeToChinese 中
+
+            // 我们只需要一个地方来获取它的显示名称
+            // 英文回退
+            chineseToEnglish[TranscriptionBackendName] = "Source Text";
         }
 
         /// <summary>
@@ -121,6 +153,12 @@ namespace lingualink_client.Services
         public static string GetDisplayName(string backendLanguageName)
         {
             if (string.IsNullOrEmpty(backendLanguageName)) return backendLanguageName;
+
+            // 为"原文"选项提供专门的本地化
+            if (backendLanguageName == TranscriptionBackendName)
+            {
+                return LanguageManager.GetString("Lang_SourceText");
+            }
 
             // [核心修复] 对资源键进行规范化，移除空格和特殊字符
             // 例如 "繁體中文" -> "Lang_繁體中文"
@@ -182,6 +220,12 @@ namespace lingualink_client.Services
             if (string.IsNullOrEmpty(chineseName))
                 return string.Empty;
 
+            // 特殊处理"仅转录"选项
+            if (chineseName == TranscriptionBackendName)
+            {
+                return "transcription"; // 返回一个非语言代码的标识符
+            }
+
             return ChineseToLanguageCode.TryGetValue(chineseName, out var code) ? code : chineseName;
         }
 
@@ -193,6 +237,13 @@ namespace lingualink_client.Services
         public static string ConvertLanguageCodeToChineseName(string languageCode)
         {
             if (string.IsNullOrEmpty(languageCode)) return string.Empty;
+
+            // 特殊处理
+            if (languageCode == "transcription")
+            {
+                return TranscriptionBackendName;
+            }
+
             // 增加对繁体中文代码的回退查找
             if (languageCode.Equals("zh-hant", StringComparison.OrdinalIgnoreCase) && !LanguageCodeToChinese.ContainsKey(languageCode))
             {

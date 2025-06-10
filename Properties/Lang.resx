@@ -728,4 +728,7 @@
   <data name="TemplateLimitWarningMessage" xml:space="preserve">
     <value>Your template contains more than 3 language placeholders. Only the first 3 will be requested for translation to ensure performance.</value>
   </data>
+  <data name="Lang_SourceText" xml:space="preserve">
+    <value>Source Text</value>
+  </data>
 </root>

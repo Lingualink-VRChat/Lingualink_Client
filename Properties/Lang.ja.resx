@@ -677,4 +677,7 @@
   <data name="TemplateLimitWarningMessage" xml:space="preserve">
     <value>テンプレートに4つ以上の言語プレースホルダーが含まれています。パフォーマンスを確保するため、最初の3つのみが翻訳リクエストされます。</value>
   </data>
+  <data name="Lang_SourceText" xml:space="preserve">
+    <value>元のテキスト</value>
+  </data>
 </root>

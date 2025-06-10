@@ -76,11 +76,14 @@ namespace lingualink_client.Services.Managers
             }
             else
             {
-                // 使用手动选择的目标语言，转换为语言代码
-                var chineseLanguages = _appSettings.TargetLanguages.Split(',').Select(lang => lang.Trim()).ToList();
-                targetLanguageCodes = LanguageDisplayHelper.ConvertChineseNamesToLanguageCodes(chineseLanguages);
+                // 手动模式下智能判断任务类型
+                var selectedBackendNames = _appSettings.TargetLanguages.Split(',').Select(lang => lang.Trim()).ToList();
 
-                _loggingManager.AddMessage($"Target languages converted: [{string.Join(", ", chineseLanguages)}] -> [{string.Join(", ", targetLanguageCodes)}]");
+                // 从选择中筛选出真正的目标语言，排除我们的特殊"仅转录"选项
+                var realLanguageNames = selectedBackendNames.Where(name => name != LanguageDisplayHelper.TranscriptionBackendName).ToList();
+                targetLanguageCodes = LanguageDisplayHelper.ConvertChineseNamesToLanguageCodes(realLanguageNames);
+
+                _loggingManager.AddMessage($"Target languages converted: [{string.Join(", ", realLanguageNames)}] -> [{string.Join(", ", targetLanguageCodes)}]");
             }
 
             // 使用新的API服务处理文本
@@ -132,7 +135,9 @@ namespace lingualink_client.Services.Managers
                     else
                     {
                         // 根据选择的目标语言动态生成输出
-                        translatedTextForOsc = ApiResultProcessor.GenerateTargetLanguageOutput(apiResult, targetLanguageCodes, _loggingManager);
+                        // [核心修复] 传递完整的用户选择，而不是只传递给API的语言代码
+                        var selectedBackendNamesFromSettings = _appSettings.TargetLanguages.Split(',').Select(lang => lang.Trim()).ToList();
+                        translatedTextForOsc = ApiResultProcessor.GenerateTargetLanguageOutput(apiResult, selectedBackendNamesFromSettings, _loggingManager);
                     }
                     
                     resultArgs.ProcessedText = translatedTextForOsc;

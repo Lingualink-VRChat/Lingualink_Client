@@ -171,18 +171,18 @@
                             Grid.Column="0"
                             Margin="0,0,5,5"
                             VerticalAlignment="Center"
-                            LargeChange="0.1"
+                            LargeChange="0.01"
                             Maximum="1.0"
                             Minimum="0"
-                            SmallChange="0.01"
-                            TickFrequency="0.05"
+                            SmallChange="0.001"
+                            TickFrequency="0.01"
                             Value="{Binding MinRecordingVolumeThreshold, UpdateSourceTrigger=PropertyChanged}" />
                         <ui:TextBox
                             Grid.Column="1"
-                            Width="50"
+                            Width="60"
                             Margin="0,0,0,5"
                             VerticalAlignment="Center"
-                            Text="{Binding MinRecordingVolumeThreshold, StringFormat='P0', UpdateSourceTrigger=PropertyChanged}"
+                            Text="{Binding MinRecordingVolumeThreshold, StringFormat='P1', UpdateSourceTrigger=PropertyChanged}"
                             TextAlignment="Right" />
                     </Grid>
                     <ui:TextBlock

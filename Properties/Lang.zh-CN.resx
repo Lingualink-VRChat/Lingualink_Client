@@ -727,4 +727,7 @@
   <data name="TemplateLimitWarningMessage" xml:space="preserve">
     <value>您的模板包含了超过3个语言占位符。为保证性能，只有前3个会被请求翻译。</value>
   </data>
+  <data name="Lang_SourceText" xml:space="preserve">
+    <value>原文</value>
+  </data>
 </root>

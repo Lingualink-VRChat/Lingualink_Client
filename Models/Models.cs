@@ -441,22 +441,34 @@ namespace lingualink_client.Models
             return processedText;
         }
 
-        public static List<string> GetAvailablePlaceholders(TranslationData? sampleData = null)
+        public static List<PlaceholderItem> GetAvailablePlaceholders(TranslationData? sampleData = null)
         {
-            var placeholders = new List<string>();
+            var placeholders = new List<PlaceholderItem>();
 
-            // 添加一个明确的原文占位符
-            placeholders.Add("Source Text ({transcription})");
+            // 添加一个明确且本地化的原文占位符
+            placeholders.Add(new PlaceholderItem
+            {
+                DisplayName = LanguageManager.GetString("Lang_SourceText"),
+                Value = "{transcription}"
+            });
 
             // Generate universal, user-friendly placeholder format: "Display Name ({code})"
             // This format is intuitive for all users regardless of UI language
             foreach (var backendName in LanguageDisplayHelper.BackendLanguageNames)
             {
+                // 跳过"仅转录"选项，因为我们已经在上面单独添加了
+                if (backendName == LanguageDisplayHelper.TranscriptionBackendName)
+                    continue;
+
                 var displayName = LanguageDisplayHelper.GetDisplayName(backendName); // "English", "Japanese", etc.
                 var code = LanguageDisplayHelper.ConvertChineseNameToLanguageCode(backendName); // "en", "ja", etc.
                 if (!string.IsNullOrEmpty(code))
                 {
-                    placeholders.Add($"{displayName} ({{{code}}})");
+                    placeholders.Add(new PlaceholderItem
+                    {
+                        DisplayName = $"{displayName} ({code})",
+                        Value = $"{{{code}}}"
+                    });
                 }
             }
 
@@ -466,9 +478,13 @@ namespace lingualink_client.Models
                 foreach (var language in languageFields.Keys)
                 {
                     string placeholder = $"{{{language}}}";
-                    if (!placeholders.Any(p => p.Contains(placeholder)))
+                    if (!placeholders.Any(p => p.Value.Contains(placeholder)))
                     {
-                        placeholders.Add(placeholder);
+                        placeholders.Add(new PlaceholderItem
+                        {
+                            DisplayName = placeholder,
+                            Value = placeholder
+                        });
                     }
                 }
             }
@@ -544,5 +560,20 @@ namespace lingualink_client.Models
 
             return languageCodes.ToList();
         }
+    }
+
+    /// <summary>
+    /// Represents a placeholder item for the UI, separating display text from insertion value.
+    /// </summary>
+    public class PlaceholderItem
+    {
+        /// <summary>
+        /// The text displayed on the button (e.g., "Source Text", "English (en)").
+        /// </summary>
+        public string DisplayName { get; set; } = string.Empty;
+        /// <summary>
+        /// The value inserted into the textbox (e.g., "{transcription}", "{en}").
+        /// </summary>
+        public string Value { get; set; } = string.Empty;
     }
 }

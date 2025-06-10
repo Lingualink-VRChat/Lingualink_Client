@@ -131,10 +131,32 @@ namespace lingualink_client.Services.Managers
             }
             else
             {
-                // 手动模式下总是翻译
-                var chineseLanguages = _appSettings.TargetLanguages.Split(',').Select(lang => lang.Trim()).ToList();
-                targetLanguageCodes = LanguageDisplayHelper.ConvertChineseNamesToLanguageCodes(chineseLanguages);
-                _loggingManager.AddMessage($"Target languages from settings converted: [{string.Join(", ", chineseLanguages)}] -> [{string.Join(", ", targetLanguageCodes)}]");
+                // 手动模式下智能判断任务类型
+                var selectedBackendNames = _appSettings.TargetLanguages.Split(',').Select(lang => lang.Trim()).ToList();
+
+                // 从选择中筛选出真正的目标语言，排除我们的特殊"仅转录"选项
+                var realLanguageNames = selectedBackendNames.Where(name => name != LanguageDisplayHelper.TranscriptionBackendName).ToList();
+                targetLanguageCodes = LanguageDisplayHelper.ConvertChineseNamesToLanguageCodes(realLanguageNames);
+
+                // 智能判断任务类型
+                if (targetLanguageCodes.Any())
+                {
+                    // 如果有任何一个真正的翻译目标，任务必须是 'translate'
+                    task = "translate";
+                    _loggingManager.AddMessage($"Manual mode: Translation requested for languages: [{string.Join(", ", targetLanguageCodes)}]");
+                }
+                else if (selectedBackendNames.Contains(LanguageDisplayHelper.TranscriptionBackendName))
+                {
+                    // 如果没有翻译目标，但选择了"仅转录"
+                    task = "transcribe";
+                    _loggingManager.AddMessage("Manual mode: Only transcription selected. Setting task to 'transcribe'.");
+                }
+                else
+                {
+                    // 兜底情况：用户可能清空了所有选项，默认为仅转录
+                    task = "transcribe";
+                    _loggingManager.AddMessage("Manual mode: No target languages selected. Defaulting to transcribe-only task.");
+                }
             }
 
             // 使用新的API服务处理音频，并传入确定的任务类型
@@ -188,7 +210,9 @@ namespace lingualink_client.Services.Managers
                     else
                     {
                         // 根据选择的目标语言动态生成输出
-                        translatedTextForOsc = ApiResultProcessor.GenerateTargetLanguageOutput(apiResult, targetLanguageCodes, _loggingManager);
+                        // [核心修复] 传递完整的用户选择，而不是只传递给API的语言代码
+                        var selectedBackendNamesFromSettings = _appSettings.TargetLanguages.Split(',').Select(lang => lang.Trim()).ToList();
+                        translatedTextForOsc = ApiResultProcessor.GenerateTargetLanguageOutput(apiResult, selectedBackendNamesFromSettings, _loggingManager);
                     }
                     
                     resultArgs.ProcessedText = translatedTextForOsc;

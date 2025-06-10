@@ -81,10 +81,10 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Button 
-                                Content="{Binding}"
+                            <Button
+                                Content="{Binding DisplayName}"
                                 Command="{Binding DataContext.InsertPlaceholderCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                CommandParameter="{Binding}"
+                                CommandParameter="{Binding Value}"
                                 Margin="2"
                                 Padding="5,2"
                                 FontSize="10"

@@ -63,35 +63,48 @@ namespace lingualink_client.Services
         }
 
         /// <summary>
-        /// 根据API结果和目标语言代码生成输出文本
+        /// 根据API结果和用户选择的后端名称生成输出文本
         /// </summary>
         /// <param name="apiResult">API结果</param>
-        /// <param name="targetLanguageCodes">目标语言代码列表</param>
+        /// <param name="selectedBackendNames">用户选择的后端名称列表（可能包含"仅转录"选项）</param>
         /// <param name="logger">日志管理器</param>
         /// <returns>格式化的输出文本</returns>
-        public static string GenerateTargetLanguageOutput(ApiResult apiResult, List<string> targetLanguageCodes, ILoggingManager logger)
+        public static string GenerateTargetLanguageOutput(ApiResult apiResult, List<string> selectedBackendNames, ILoggingManager logger)
         {
-            if (apiResult?.Translations == null || targetLanguageCodes.Count == 0)
+            if (apiResult == null || selectedBackendNames.Count == 0)
                 return string.Empty;
 
             var outputParts = new List<string>();
 
-            foreach (var languageCode in targetLanguageCodes)
+            foreach (var backendName in selectedBackendNames)
             {
-                if (apiResult.Translations.TryGetValue(languageCode, out var translation) && !string.IsNullOrEmpty(translation))
+                if (backendName == LanguageDisplayHelper.TranscriptionBackendName)
                 {
-                    outputParts.Add(translation);
+                    // 处理"仅转录"选项
+                    if (!string.IsNullOrEmpty(apiResult.Transcription))
+                    {
+                        outputParts.Add(apiResult.Transcription);
+                    }
+                }
+                else
+                {
+                    // 处理普通语言选项
+                    var code = LanguageDisplayHelper.ConvertChineseNameToLanguageCode(backendName);
+                    if (apiResult.Translations != null && apiResult.Translations.TryGetValue(code, out var translation) && !string.IsNullOrEmpty(translation))
+                    {
+                        outputParts.Add(translation);
+                    }
                 }
             }
 
             if (outputParts.Count == 0)
             {
-                logger.AddMessage($"Warning: No translations found for target languages [{string.Join(", ", targetLanguageCodes)}], skipping OSC send");
+                logger.AddMessage($"Warning: No transcription or translations found for selected options [{string.Join(", ", selectedBackendNames)}], skipping OSC send");
                 return string.Empty;
             }
 
             var result = string.Join("\n", outputParts);
-            logger.AddMessage($"Generated output for languages: [{string.Join(", ", targetLanguageCodes)}] -> {outputParts.Count} translations found");
+            logger.AddMessage($"Generated output for selections: [{string.Join(", ", selectedBackendNames)}] -> {outputParts.Count} parts found");
 
             return result;
         }

@@ -34,7 +34,7 @@ namespace lingualink_client.ViewModels
         [ObservableProperty] private string _validationMessage = string.Empty;
         [ObservableProperty] private string _validationTitle = string.Empty;
 
-        public ObservableCollection<string> PlaceholderList { get; } = new();
+        public ObservableCollection<PlaceholderItem> PlaceholderList { get; } = new();
 
         public MessageTemplatePageViewModel()
         {
@@ -147,23 +147,13 @@ namespace lingualink_client.ViewModels
         }
 
         [RelayCommand]
-        private void InsertPlaceholder(string placeholder)
+        private void InsertPlaceholder(string? placeholderValue)
         {
-            if (string.IsNullOrEmpty(placeholder))
+            if (string.IsNullOrEmpty(placeholderValue))
                 return;
 
-            // Extract the language code from the button's content
-            // Format: "English ({en})" -> "{en}"
-            var match = System.Text.RegularExpressions.Regex.Match(placeholder, @"\{([a-z]{2,3}(?:-[A-Za-z0-9]+)?)\}");
-            if (match.Success)
-            {
-                CustomTemplateText += match.Value; // Insert {en}, {ja}, etc.
-            }
-            else
-            {
-                // Fallback: if it's already in the correct format, use it directly
-                CustomTemplateText += placeholder;
-            }
+            // The command parameter is now the direct value to insert, e.g., "{transcription}" or "{en}"
+            CustomTemplateText += placeholderValue;
         }
 
         private void SaveSettings()
