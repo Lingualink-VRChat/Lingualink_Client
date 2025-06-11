@@ -39,7 +39,16 @@ namespace lingualink_client.ViewModels
         public string RemoveLabel => Services.LanguageManager.GetString("Remove"); // 移除按钮的标签
 
         [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(RemoveItemCommand))]
         private bool _canRemove;
+
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(MoveUpCommand))]
+        private bool _canMoveUp;
+
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(MoveDownCommand))]
+        private bool _canMoveDown;
 
         // RemoveCommand 将被 [RelayCommand] 生成
         // public DelegateCommand RemoveCommand { get; } // 移除此行
@@ -167,6 +176,18 @@ namespace lingualink_client.ViewModels
         private void RemoveItem() // 方法名与命令名对应
         {
             LanguageManager.RemoveLanguage(this);
+        }
+
+        [RelayCommand(CanExecute = nameof(CanMoveUp))]
+        private void MoveUp()
+        {
+            LanguageManager.MoveLanguageUp(this);
+        }
+
+        [RelayCommand(CanExecute = nameof(CanMoveDown))]
+        private void MoveDown()
+        {
+            LanguageManager.MoveLanguageDown(this);
         }
     }
 }

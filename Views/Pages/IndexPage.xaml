@@ -87,39 +87,63 @@
                         TextWrapping="Wrap"
                         Visibility="{Binding AreLanguagesEnabled, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Invert}" />
                     
-                    <ItemsControl ItemsSource="{Binding LanguageItems}">
+                    <!-- ItemsControl with button-based reordering -->
+                    <ItemsControl x:Name="LanguageItemsControl"
+                                  ItemsSource="{Binding LanguageItems}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate DataType="{x:Type vm:SelectableTargetLanguageViewModel}">
-                                <Grid Margin="0,3,0,3">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <ui:TextBlock
-                                        Grid.Column="0"
-                                        Margin="0,0,8,0"
-                                        VerticalAlignment="Center"
-                                        Text="{Binding Label}" />
-                                    <ComboBox
-                                        Grid.Column="1"
-                                        MinWidth="150"
-                                        MaxWidth="200"
-                                        HorizontalAlignment="Stretch"
-                                        ItemsSource="{Binding AvailableLanguages}"
-                                        SelectedItem="{Binding SelectedDisplayLanguage}"
-                                        DisplayMemberPath="DisplayName"
-                                        IsEnabled="{Binding DataContext.AreLanguagesEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ui:CardExpander}}}" />
-                                    <ui:Button
-                                        Grid.Column="2"
-                                        Margin="8,0,0,0"
-                                        Padding="5,2"
-                                        VerticalAlignment="Center"
-                                        Command="{Binding RemoveItemCommand}"
-                                        Content="{Binding RemoveLabel}"
-                                        IsEnabled="{Binding DataContext.AreLanguagesEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ui:CardExpander}}}"
-                                        Visibility="{Binding CanRemove, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                                </Grid>
+                                <Border Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
+                                        CornerRadius="6"
+                                        BorderBrush="{DynamicResource ControlElevationBorderBrush}"
+                                        BorderThickness="1"
+                                        Padding="8,4"
+                                        Margin="0,3,0,3">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" /> <!-- Move Buttons -->
+                                            <ColumnDefinition Width="Auto" /> <!-- Label -->
+                                            <ColumnDefinition Width="*" />    <!-- ComboBox -->
+                                            <ColumnDefinition Width="Auto" /> <!-- Remove Button -->
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- Move Buttons -->
+                                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,12,0"
+                                                    IsEnabled="{Binding DataContext.AreLanguagesEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ui:CardExpander}}}">
+                                            <ui:Button Padding="4,0" Command="{Binding MoveUpCommand}" Appearance="Secondary">
+                                                <ui:SymbolIcon Symbol="ChevronUp24" FontSize="12" />
+                                            </ui:Button>
+                                            <ui:Button Padding="4,0" Command="{Binding MoveDownCommand}" Appearance="Secondary">
+                                                <ui:SymbolIcon Symbol="ChevronDown24" FontSize="12" />
+                                            </ui:Button>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <ui:TextBlock
+                                                Margin="0,0,8,0"
+                                                VerticalAlignment="Center"
+                                                Text="{Binding Label}" />
+                                        </StackPanel>
+
+                                        <ComboBox
+                                            Grid.Column="2"
+                                            MinWidth="150"
+                                            MaxWidth="200"
+                                            HorizontalAlignment="Stretch"
+                                            ItemsSource="{Binding AvailableLanguages}"
+                                            SelectedItem="{Binding SelectedDisplayLanguage}"
+                                            DisplayMemberPath="DisplayName"
+                                            IsEnabled="{Binding DataContext.AreLanguagesEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ui:CardExpander}}}" />
+                                        <ui:Button
+                                            Grid.Column="3"
+                                            Margin="8,0,0,0"
+                                            Padding="5,2"
+                                            VerticalAlignment="Center"
+                                            Command="{Binding RemoveItemCommand}"
+                                            Content="{Binding RemoveLabel}"
+                                            IsEnabled="{Binding DataContext.AreLanguagesEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ui:CardExpander}}}"
+                                            Visibility="{Binding CanRemove, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                    </Grid>
+                                </Border>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>

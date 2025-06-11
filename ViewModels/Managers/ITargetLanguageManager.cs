@@ -71,6 +71,18 @@ namespace lingualink_client.ViewModels.Managers
         void UpdateItemPropertiesAndAvailableLanguages();
 
         /// <summary>
+        /// Moves the specified language item up in the list.
+        /// </summary>
+        /// <param name="item">The item to move up.</param>
+        void MoveLanguageUp(SelectableTargetLanguageViewModel item);
+
+        /// <summary>
+        /// Moves the specified language item down in the list.
+        /// </summary>
+        /// <param name="item">The item to move down.</param>
+        void MoveLanguageDown(SelectableTargetLanguageViewModel item);
+
+        /// <summary>
         /// 语言配置变更事件
         /// </summary>
         event EventHandler? LanguagesChanged;

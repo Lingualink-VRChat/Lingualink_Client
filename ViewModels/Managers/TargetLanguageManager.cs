@@ -304,6 +304,42 @@ namespace lingualink_client.ViewModels.Managers
             }
         }
 
+        public void MoveLanguageUp(SelectableTargetLanguageViewModel item)
+        {
+            if (item == null || !LanguageItems.Contains(item)) return;
+
+            int currentIndex = LanguageItems.IndexOf(item);
+            if (currentIndex > 0)
+            {
+                LanguageItems.Move(currentIndex, currentIndex - 1);
+                AfterReorder();
+            }
+        }
+
+        public void MoveLanguageDown(SelectableTargetLanguageViewModel item)
+        {
+            if (item == null || !LanguageItems.Contains(item)) return;
+
+            int currentIndex = LanguageItems.IndexOf(item);
+            if (currentIndex < LanguageItems.Count - 1)
+            {
+                LanguageItems.Move(currentIndex, currentIndex + 1);
+                AfterReorder();
+            }
+        }
+
+        private void AfterReorder()
+        {
+            UpdateItemPropertiesAndAvailableLanguagesInternal();
+
+            if (!_appSettings.UseCustomTemplate)
+            {
+                UpdateAndPersistTargetLanguages();
+            }
+
+            _logger.AddMessage($"Target languages reordered.");
+        }
+
         /// <summary>
         /// 更新语言项属性和可用语言（公开方法）
         /// </summary>
@@ -321,6 +357,10 @@ namespace lingualink_client.ViewModels.Managers
                 // 使用本地化的目标标签
                 itemVm.Label = $"{LanguageManager.GetString("TargetLabel")} {i + 1}:";
                 itemVm.CanRemove = LanguageItems.Count > 1;
+
+                // Set CanMove properties for the buttons
+                itemVm.CanMoveUp = i > 0;
+                itemVm.CanMoveDown = i < LanguageItems.Count - 1;
 
                 // 构建这个下拉框可用的语言选项（排除其他下拉框已选中的选项）
                 var availableBackendLanguages = _allSupportedLanguages
