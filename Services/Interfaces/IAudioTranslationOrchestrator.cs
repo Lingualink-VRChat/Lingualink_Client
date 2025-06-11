@@ -25,6 +25,16 @@ namespace lingualink_client.Services.Interfaces
         /// 停止音频翻译工作
         /// </summary>
         void Stop();
+
+        /// <summary>
+        /// 暂停音频处理
+        /// </summary>
+        void Pause();
+
+        /// <summary>
+        /// 恢复音频处理
+        /// </summary>
+        void Resume();
     }
 
     /// <summary>

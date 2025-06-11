@@ -7,6 +7,7 @@ namespace lingualink_client.ViewModels
         public string Start => LanguageManager.GetString("Start");
         public string Account => LanguageManager.GetString("Account");
         public string MessageTemplates => LanguageManager.GetString("MessageTemplates");
+        public string MessageTyping => LanguageManager.GetString("MessageTyping");
         public string Service => LanguageManager.GetString("Service");
         public string Settings => LanguageManager.GetString("Settings");
         public string AppTitle => LanguageManager.GetString("AppTitle");
@@ -22,6 +23,7 @@ namespace lingualink_client.ViewModels
             OnPropertyChanged(nameof(Start));
             OnPropertyChanged(nameof(Account));
             OnPropertyChanged(nameof(MessageTemplates));
+            OnPropertyChanged(nameof(MessageTyping));
             OnPropertyChanged(nameof(Service));
             OnPropertyChanged(nameof(Settings));
             OnPropertyChanged(nameof(AppTitle));

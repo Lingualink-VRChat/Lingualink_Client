@@ -53,7 +53,8 @@ namespace lingualink_client.Services
 
         private WaveInEvent? _waveSource;
         private readonly object _vadLock = new object();
-        private bool _isCurrentlyWorking = false; 
+        private bool _isCurrentlyWorking = false;
+        private bool _isPaused = false; // 新增：暂停标志
 
         public event EventHandler<AudioSegmentEventArgs>? AudioSegmentReady;
         public event EventHandler<string>? StatusUpdated;
@@ -184,6 +185,24 @@ namespace lingualink_client.Services
             UpdateVadState(VadState.Idle);
         }
 
+        /// <summary>
+        /// 暂停音频处理
+        /// </summary>
+        public void Pause()
+        {
+            _isPaused = true;
+            System.Diagnostics.Debug.WriteLine($"[AudioService] Paused.");
+        }
+
+        /// <summary>
+        /// 恢复音频处理
+        /// </summary>
+        public void Resume()
+        {
+            _isPaused = false;
+            System.Diagnostics.Debug.WriteLine($"[AudioService] Resumed.");
+        }
+
         private double CalculatePeakVolume(byte[] pcm16BitAudioFrame, int bytesToProcess)
         {
             if (pcm16BitAudioFrame == null || bytesToProcess == 0)
@@ -219,7 +238,8 @@ namespace lingualink_client.Services
 
         private void OnVadDataAvailable(object? sender, WaveInEventArgs e)
         {
-            if (!_isCurrentlyWorking || _vadInstance == null) return;
+            // 在方法开头检查暂停状态
+            if (_isPaused || !_isCurrentlyWorking || _vadInstance == null) return;
 
             for (int offset = 0; offset < e.BytesRecorded; offset += _vadFrameSizeInBytes)
             {

@@ -478,6 +478,24 @@
   <data name="MessageTemplates" xml:space="preserve">
     <value>メッセージテンプレート</value>
   </data>
+  <data name="MessageTyping" xml:space="preserve">
+    <value>メッセージ入力</value>
+  </data>
+  <data name="Send" xml:space="preserve">
+    <value>送信</value>
+  </data>
+  <data name="TextEntryHint" xml:space="preserve">
+    <value>ここにテキストを入力し、Ctrl+Enterキーを押すか、「送信」ボタンをクリックしてVRChatに送信します。</value>
+  </data>
+  <data name="StatusSendingText" xml:space="preserve">
+    <value>ステータス：テキストを送信中...</value>
+  </data>
+  <data name="SentToVrcLabel" xml:space="preserve">
+    <value>VRChatに送信される内容</value>
+  </data>
+  <data name="InputTextLabel" xml:space="preserve">
+    <value>テキスト入力</value>
+  </data>
   <data name="VrcOutput" xml:space="preserve">
     <value>VRChatに送信</value>
   </data>
@@ -679,5 +697,8 @@
   </data>
   <data name="Lang_SourceText" xml:space="preserve">
     <value>元のテキスト</value>
+  </data>
+  <data name="StatusPausedForInput" xml:space="preserve">
+    <value>テキスト入力のため、リスニングを一時停止しました...</value>
   </data>
 </root>

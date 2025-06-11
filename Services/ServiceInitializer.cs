@@ -1,6 +1,7 @@
 using lingualink_client.Services.Events;
 using lingualink_client.Services.Interfaces;
 using lingualink_client.Services.Managers;
+using lingualink_client.ViewModels;
 using lingualink_client.ViewModels.Managers;
 using System.Diagnostics;
 
@@ -52,6 +53,10 @@ namespace lingualink_client.Services
             // 注册麦克风管理器
             var microphoneManager = new ViewModels.Managers.MicrophoneManager();
             ServiceContainer.Register<IMicrophoneManager, ViewModels.Managers.MicrophoneManager>(microphoneManager);
+
+            // 注册全局共享状态ViewModel
+            var sharedStateViewModel = new SharedStateViewModel();
+            ServiceContainer.Register<SharedStateViewModel, SharedStateViewModel>(sharedStateViewModel);
 
             // 注册新的API服务（延迟初始化，因为需要配置参数）
             // LingualinkApiService 将在需要时通过工厂方法创建

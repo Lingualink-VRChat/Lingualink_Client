@@ -60,7 +60,7 @@
                                 VerticalAlignment="Center"
                                 LargeChange="0.1"
                                 Maximum="0.7"
-                                Minimum="0.1"
+                                Minimum="0.4"
                                 SmallChange="0.05"
                                 TickFrequency="0.1"
                                 Value="{Binding PostSpeechRecordingDurationSeconds, UpdateSourceTrigger=PropertyChanged}" />
@@ -100,7 +100,7 @@
                                 VerticalAlignment="Center"
                                 LargeChange="0.1"
                                 Maximum="0.7"
-                                Minimum="0.1"
+                                Minimum="0.4"
                                 SmallChange="0.05"
                                 TickFrequency="0.1"
                                 Value="{Binding MinVoiceDurationSeconds, UpdateSourceTrigger=PropertyChanged}" />

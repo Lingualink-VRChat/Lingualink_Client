@@ -14,8 +14,8 @@ namespace lingualink_client.Models
         public bool AuthEnabled { get; } = true;
 
         // VAD Parameters (defaults from your AudioService)
-        public double PostSpeechRecordingDurationSeconds { get; set; } = 0.5; // 追加录音时长，用于捕捉尾音
-        public double MinVoiceDurationSeconds { get; set; } = 0.5;
+        public double PostSpeechRecordingDurationSeconds { get; set; } = 0.6; // 追加录音时长，用于捕捉尾音
+        public double MinVoiceDurationSeconds { get; set; } = 0.7;
         public double MaxVoiceDurationSeconds { get; set; } = 10.0;
         public double MinRecordingVolumeThreshold { get; set; } = 0.05;
 

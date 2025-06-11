@@ -74,6 +74,14 @@
                     </ui:NavigationViewItem.Icon>
                 </ui:NavigationViewItem>
                 <ui:NavigationViewItem
+                    Content="{Binding MessageTyping}"
+                    NavigationCacheMode="Enabled"
+                    TargetPageType="{x:Type pages:TextEntryPage}">
+                    <ui:NavigationViewItem.Icon>
+                        <ui:SymbolIcon Symbol="Keyboard24" />
+                    </ui:NavigationViewItem.Icon>
+                </ui:NavigationViewItem>
+                <ui:NavigationViewItem
                     Content="{Binding Service}"
                     NavigationCacheMode="Enabled"
                     TargetPageType="{x:Type pages:ServicePage}">

@@ -256,10 +256,26 @@ namespace lingualink_client.ViewModels.Components
             ToggleWorkCommand.NotifyCanExecuteChanged();
         }
 
-        private bool CanExecuteToggleWork() => 
-            _microphoneManager.SelectedMicrophone != null && 
-            _microphoneManager.SelectedMicrophone.WaveInDeviceIndex != -1 && 
+        private bool CanExecuteToggleWork() =>
+            _microphoneManager.SelectedMicrophone != null &&
+            _microphoneManager.SelectedMicrophone.WaveInDeviceIndex != -1 &&
             !_microphoneManager.IsRefreshing;
+
+        /// <summary>
+        /// 因文本输入暂停监听
+        /// </summary>
+        public void PauseListeningForTextInput()
+        {
+            _orchestrator?.Pause();
+        }
+
+        /// <summary>
+        /// 从文本输入状态恢复监听
+        /// </summary>
+        public void ResumeListeningFromTextInput()
+        {
+            _orchestrator?.Resume();
+        }
 
         /// <summary>
         /// 获取音频翻译协调器实例（用于组件间通信）

@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using lingualink_client.Models;
+using lingualink_client.Services;
 using lingualink_client.Services.Interfaces;
+using lingualink_client.ViewModels.Events;
 
 namespace lingualink_client.Services.Managers
 {
@@ -16,10 +18,7 @@ namespace lingualink_client.Services.Managers
         private readonly OscService? _oscService;
         private readonly AppSettings _appSettings;
         private readonly ILoggingManager _loggingManager;
-
-        public event EventHandler<string>? StatusUpdated;
-        public event EventHandler<TranslationResultEventArgs>? TranslationCompleted;
-        public event EventHandler<OscMessageEventArgs>? OscMessageSent;
+        private readonly IEventAggregator _eventAggregator;
 
         public TextTranslationOrchestrator(
             AppSettings appSettings,
@@ -27,6 +26,7 @@ namespace lingualink_client.Services.Managers
         {
             _appSettings = appSettings;
             _loggingManager = loggingManager;
+            _eventAggregator = ServiceContainer.Resolve<IEventAggregator>();
 
             // 使用新的API服务工厂创建API服务
             _apiService = LingualinkApiServiceFactory.CreateApiService(_appSettings);
@@ -55,47 +55,79 @@ namespace lingualink_client.Services.Managers
         /// <param name="text">要翻译的文本</param>
         /// <param name="sourceLanguage">源语言代码（可选）</param>
         /// <returns>处理结果</returns>
-        public async Task<bool> ProcessTextAsync(string text, string? sourceLanguage = null)
+        public async Task<string> ProcessTextAsync(string text, string? sourceLanguage = null)
         {
             if (string.IsNullOrWhiteSpace(text))
             {
                 OnStatusUpdated("Text is required");
-                return false;
+                return string.Empty;
             }
 
-            OnStatusUpdated("Processing text translation...");
-            _loggingManager.AddMessage($"Processing text translation: {text.Substring(0, Math.Min(text.Length, 50))}...");
+            OnStatusUpdated(LanguageManager.GetString("StatusSendingText"));
+            _loggingManager.AddMessage($"Processing text input: {text.Substring(0, Math.Min(text.Length, 50))}...");
 
-            // 确定目标语言（直接使用语言代码）
+            // --- 智能判断任务类型和目标语言 ---
             List<string> targetLanguageCodes;
+            string task = "translate";
+
             if (_appSettings.UseCustomTemplate)
             {
-                // 直接从模板中提取前3个语言代码用于API请求
-                targetLanguageCodes = TemplateProcessor.ExtractLanguagesFromTemplate(_appSettings.UserCustomTemplateText, 3);
-                _loggingManager.AddMessage($"Languages extracted from template for API call: [{string.Join(", ", targetLanguageCodes)}]");
+                string template = _appSettings.UserCustomTemplateText;
+                targetLanguageCodes = TemplateProcessor.ExtractLanguagesFromTemplate(template, 3);
+                if (targetLanguageCodes.Count == 0 && (template.Contains("{transcription}") || template.Contains("{原文}")))
+                {
+                    task = "transcribe";
+                    _loggingManager.AddMessage("Template indicates a transcribe-only task for text input.");
+                }
             }
             else
             {
-                // 手动模式下智能判断任务类型
                 var selectedBackendNames = _appSettings.TargetLanguages.Split(',').Select(lang => lang.Trim()).ToList();
-
-                // 从选择中筛选出真正的目标语言，排除我们的特殊"仅转录"选项
                 var realLanguageNames = selectedBackendNames.Where(name => name != LanguageDisplayHelper.TranscriptionBackendName).ToList();
                 targetLanguageCodes = LanguageDisplayHelper.ConvertChineseNamesToLanguageCodes(realLanguageNames);
 
-                _loggingManager.AddMessage($"Target languages converted: [{string.Join(", ", realLanguageNames)}] -> [{string.Join(", ", targetLanguageCodes)}]");
+                if (!targetLanguageCodes.Any() && selectedBackendNames.Contains(LanguageDisplayHelper.TranscriptionBackendName))
+                {
+                    task = "transcribe";
+                    _loggingManager.AddMessage("Manual selection indicates a transcribe-only task for text input.");
+                }
             }
 
-            // 使用新的API服务处理文本
-            var apiResult = await _apiService.ProcessTextAsync(text, targetLanguageCodes, sourceLanguage);
+            // --- 根据任务类型选择处理路径 ---
+            ApiResult apiResult;
+            if (task == "transcribe")
+            {
+                // 本地处理 "仅转录" 任务，跳过API调用
+                _loggingManager.AddMessage("Performing local transcription processing (no API call).");
+                apiResult = new ApiResult
+                {
+                    IsSuccess = true,
+                    Transcription = text, // 用户的输入就是转录结果
+                    Translations = new Dictionary<string, string>(),
+                    ProcessingTime = 0,
+                    RawResponse = text
+                };
+            }
+            else
+            {
+                // 调用API进行翻译
+                _loggingManager.AddMessage($"Requesting translation from API for languages: [{string.Join(", ", targetLanguageCodes)}]");
+                apiResult = await _apiService.ProcessTextAsync(text, targetLanguageCodes, sourceLanguage);
+            }
+
+            // --- 统一处理结果并返回最终文本 ---
+            return await ProcessApiResultAndSendAsync(apiResult, "manual_text");
+        }
+
+        /// <summary>
+        /// 统一处理API结果（真实的或伪造的），生成最终文本并发送
+        /// </summary>
+        private async Task<string> ProcessApiResultAndSendAsync(ApiResult apiResult, string triggerReason)
+        {
 
             string translatedTextForOsc = string.Empty;
-            var resultArgs = new TranslationResultEventArgs
-            {
-                TriggerReason = "manual_text"
-            };
+            var resultArgs = new TranslationResultEventArgs { TriggerReason = triggerReason };
 
-            // 记录原始响应
             if (!string.IsNullOrEmpty(apiResult.RawResponse))
             {
                 _loggingManager.AddMessage($"Server raw response: {apiResult.RawResponse}");
@@ -106,66 +138,62 @@ namespace lingualink_client.Services.Managers
                 OnStatusUpdated(LanguageManager.GetString("StatusTranslationFailed"));
                 resultArgs.IsSuccess = false;
                 resultArgs.ErrorMessage = apiResult.ErrorMessage;
-                // [修复] 失败时不在VRChat输出框显示错误消息，保持为空
                 resultArgs.ProcessedText = string.Empty;
-
-                _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogTranslationError"), "manual_text", apiResult.ErrorMessage));
+                _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogTranslationError"), triggerReason, apiResult.ErrorMessage));
             }
             else
             {
-                // 处理成功的情况
                 if (!string.IsNullOrEmpty(apiResult.Transcription))
                 {
                     OnStatusUpdated(LanguageManager.GetString("StatusTranslationSuccess"));
                     resultArgs.IsSuccess = true;
-                    resultArgs.OriginalText = apiResult.Transcription; // 对于文本处理，这是源文本
+                    resultArgs.OriginalText = apiResult.Transcription;
                     resultArgs.DurationSeconds = apiResult.ProcessingTime;
-                    
-                    // 生成OSC文本 - 直接使用新API格式
+
                     if (_appSettings.UseCustomTemplate)
                     {
                         var selectedTemplate = _appSettings.GetSelectedTemplate();
                         translatedTextForOsc = ApiResultProcessor.ProcessTemplate(selectedTemplate.Template, apiResult);
-
                         if (string.IsNullOrEmpty(translatedTextForOsc))
                         {
-                            _loggingManager.AddMessage("Template processing failed - contains unreplaced placeholders. Skipping OSC send for text translation");
+                             _loggingManager.AddMessage("Template processing failed - contains unreplaced placeholders. Skipping OSC send for text translation");
                         }
                     }
                     else
                     {
-                        // 根据选择的目标语言动态生成输出
-                        // [核心修复] 传递完整的用户选择，而不是只传递给API的语言代码
                         var selectedBackendNamesFromSettings = _appSettings.TargetLanguages.Split(',').Select(lang => lang.Trim()).ToList();
                         translatedTextForOsc = ApiResultProcessor.GenerateTargetLanguageOutput(apiResult, selectedBackendNamesFromSettings, _loggingManager);
                     }
-                    
-                    resultArgs.ProcessedText = translatedTextForOsc;
 
-                    _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogTranslationSuccess"), "manual_text", apiResult.Transcription, apiResult.ProcessingTime));
+                    resultArgs.ProcessedText = translatedTextForOsc;
+                    _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogTranslationSuccess"), triggerReason, apiResult.Transcription, apiResult.ProcessingTime));
                 }
                 else
                 {
-                    // 成功但没有结果文本
                     OnStatusUpdated(LanguageManager.GetString("StatusTranslationSuccessNoText"));
                     resultArgs.IsSuccess = true;
                     resultArgs.ProcessedText = LanguageManager.GetString("TranslationSuccessNoTextPlaceholder");
                     resultArgs.DurationSeconds = apiResult.ProcessingTime;
-
-                    _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogTranslationSuccessNoText"), "manual_text", apiResult.ProcessingTime));
+                    _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogTranslationSuccessNoText"), triggerReason, apiResult.ProcessingTime));
                 }
             }
-            
-            // 触发翻译完成事件
-            OnTranslationCompleted(resultArgs);
 
-            // 发送OSC消息
+            var eventArgs = new TranslationCompletedEvent
+            {
+                TriggerReason = resultArgs.TriggerReason,
+                OriginalText = resultArgs.OriginalText,
+                ProcessedText = resultArgs.ProcessedText,
+                ErrorMessage = resultArgs.ErrorMessage,
+                Duration = resultArgs.DurationSeconds ?? 0.0
+            };
+            _eventAggregator.Publish(eventArgs);
+
             if (_appSettings.EnableOsc && _oscService != null && !string.IsNullOrEmpty(translatedTextForOsc))
             {
                 await SendOscMessageAsync(translatedTextForOsc);
             }
 
-            return resultArgs.IsSuccess;
+            return translatedTextForOsc;
         }
 
         /// <summary>
@@ -265,24 +293,19 @@ namespace lingualink_client.Services.Managers
                 _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogOscSendFailed"), ex.Message));
             }
 
-            OnOscMessageSent(oscArgs);
+            _eventAggregator.Publish(new OscMessageSentEvent
+            {
+                Message = oscArgs.Message,
+                IsSuccess = oscArgs.IsSuccess,
+                ErrorMessage = oscArgs.ErrorMessage
+            });
         }
 
 
 
         private void OnStatusUpdated(string status)
         {
-            StatusUpdated?.Invoke(this, status);
-        }
-
-        private void OnTranslationCompleted(TranslationResultEventArgs args)
-        {
-            TranslationCompleted?.Invoke(this, args);
-        }
-
-        private void OnOscMessageSent(OscMessageEventArgs args)
-        {
-            OscMessageSent?.Invoke(this, args);
+            _eventAggregator.Publish(new StatusUpdatedEvent { Status = status });
         }
 
         public void Dispose()

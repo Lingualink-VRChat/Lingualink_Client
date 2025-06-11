@@ -9,15 +9,16 @@ namespace lingualink_client.ViewModels.Components
     /// <summary>
     /// 翻译结果ViewModel - 专门负责翻译结果显示和日志管理
     /// </summary>
-    public partial class TranslationResultViewModel : ViewModelBase
+    public partial class TranslationResultViewModel : ViewModelBase, System.IDisposable
     {
         private readonly ILoggingManager _loggingManager;
+        private readonly SharedStateViewModel _sharedStateViewModel;
 
         [ObservableProperty]
         private string _originalText = string.Empty;
 
-        [ObservableProperty]
-        private string _processedText = string.Empty;
+        // 修改 ProcessedText，使其成为只读代理属性
+        public string ProcessedText => _sharedStateViewModel.LastSentMessage;
 
         public ObservableCollection<string> LogMessages => _loggingManager.LogMessages;
         public string FormattedLogMessages => _loggingManager.FormattedLogMessages;
@@ -31,22 +32,26 @@ namespace lingualink_client.ViewModels.Components
         public TranslationResultViewModel()
         {
             _loggingManager = ServiceContainer.Resolve<ILoggingManager>();
+            _sharedStateViewModel = ServiceContainer.Resolve<SharedStateViewModel>(); // 解析共享状态
 
-            // 订阅日志管理器事件
             _loggingManager.MessageAdded += OnLogMessageAdded;
-
-            // 订阅语言变更事件
             LanguageManager.LanguageChanged += OnLanguageChanged;
-
-            // 订阅翻译完成事件
-            var eventAggregator = ServiceContainer.Resolve<Services.Interfaces.IEventAggregator>();
-            eventAggregator.Subscribe<ViewModels.Events.TranslationCompletedEvent>(OnTranslationCompleted);
+            _sharedStateViewModel.PropertyChanged += OnSharedStatePropertyChanged; // 订阅共享状态变化
         }
 
         private void OnLogMessageAdded(object? sender, string message)
         {
             OnPropertyChanged(nameof(LogMessages));
             OnPropertyChanged(nameof(FormattedLogMessages));
+        }
+
+        // 新增事件处理器
+        private void OnSharedStatePropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(SharedStateViewModel.LastSentMessage))
+            {
+                OnPropertyChanged(nameof(ProcessedText)); // 通知UI更新
+            }
         }
 
         private void OnLanguageChanged()
@@ -58,31 +63,7 @@ namespace lingualink_client.ViewModels.Components
             OnPropertyChanged(nameof(WorkHintLabel));
         }
 
-        /// <summary>
-        /// 更新翻译结果
-        /// </summary>
-        /// <param name="originalText">原始翻译文本</param>
-        /// <param name="processedText">处理后的文本（用于VRC输出）</param>
-        public void UpdateTranslationResult(string originalText, string processedText)
-        {
-            OriginalText = originalText;
-            ProcessedText = processedText;
-        }
 
-        /// <summary>
-        /// 清空翻译结果
-        /// </summary>
-        public void ClearTranslationResult()
-        {
-            OriginalText = string.Empty;
-            ProcessedText = string.Empty;
-        }
-
-        private void OnTranslationCompleted(ViewModels.Events.TranslationCompletedEvent e)
-        {
-            // 更新翻译结果显示
-            UpdateTranslationResult(e.OriginalText, e.ProcessedText);
-        }
 
         [RelayCommand]
         private void ClearLog()
@@ -92,9 +73,9 @@ namespace lingualink_client.ViewModels.Components
 
         public void Dispose()
         {
-            // 取消订阅事件
             LanguageManager.LanguageChanged -= OnLanguageChanged;
             _loggingManager.MessageAdded -= OnLogMessageAdded;
+            _sharedStateViewModel.PropertyChanged -= OnSharedStatePropertyChanged;
         }
     }
 } 

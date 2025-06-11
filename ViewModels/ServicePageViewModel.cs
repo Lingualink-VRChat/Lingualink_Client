@@ -198,10 +198,10 @@ namespace lingualink_client.ViewModels
         // PostSpeechRecordingDurationSeconds 属性的 OnChanged 回调
         partial void OnPostSpeechRecordingDurationSecondsChanged(double oldValue, double newValue)
         {
-            // 限制追加录音时长在0.1秒到0.7秒之间
-            if (newValue < 0.1 || newValue > 0.7)
+            // 限制追加录音时长在0.4秒到0.7秒之间
+            if (newValue < 0.4 || newValue > 0.7)
             {
-                _postSpeechRecordingDurationSeconds = Math.Clamp(newValue, 0.1, 0.7);
+                _postSpeechRecordingDurationSeconds = Math.Clamp(newValue, 0.4, 0.7);
                 OnPropertyChanged(nameof(PostSpeechRecordingDurationSeconds));
             }
         }
@@ -209,10 +209,10 @@ namespace lingualink_client.ViewModels
         // MinVoiceDurationSeconds 属性的 OnChanged 回调
         partial void OnMinVoiceDurationSecondsChanged(double oldValue, double newValue)
         {
-            // 限制最小语音时长在0.1秒到0.7秒之间
-            if (newValue < 0.1 || newValue > 0.7)
+            // 限制最小语音时长在0.4秒到0.7秒之间
+            if (newValue < 0.4 || newValue > 0.7)
             {
-                _minVoiceDurationSeconds = Math.Clamp(newValue, 0.1, 0.7);
+                _minVoiceDurationSeconds = Math.Clamp(newValue, 0.4, 0.7);
                 OnPropertyChanged(nameof(MinVoiceDurationSeconds));
             }
         }

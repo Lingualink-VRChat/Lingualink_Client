@@ -470,6 +470,24 @@
   <data name="MessageTemplates" xml:space="preserve">
     <value>消息模板</value>
   </data>
+  <data name="MessageTyping" xml:space="preserve">
+    <value>消息键入</value>
+  </data>
+  <data name="Send" xml:space="preserve">
+    <value>发送</value>
+  </data>
+  <data name="TextEntryHint" xml:space="preserve">
+    <value>在此处输入文本，按 Ctrl+Enter或点击"发送"按钮以发送到 VRChat。</value>
+  </data>
+  <data name="StatusSendingText" xml:space="preserve">
+    <value>状态：正在发送文本...</value>
+  </data>
+  <data name="SentToVrcLabel" xml:space="preserve">
+    <value>发送到VRChat的内容</value>
+  </data>
+  <data name="InputTextLabel" xml:space="preserve">
+    <value>输入文本</value>
+  </data>
   <data name="VrcOutput" xml:space="preserve">
     <value>发送到VRChat的内容</value>
   </data>
@@ -556,10 +574,10 @@
 
   <!-- Validation Messages -->
   <data name="ValidationPostSpeechRecordingDurationInvalid" xml:space="preserve">
-    <value>追加录音时长必须在0.1秒到0.7秒之间。</value>
+    <value>追加录音时长必须在0.4秒到0.7秒之间。</value>
   </data>
   <data name="ValidationMinVoiceDurationInvalid" xml:space="preserve">
-    <value>最小语音时长必须在0.1秒到0.7秒之间。</value>
+    <value>最小语音时长必须在0.4秒到0.7秒之间。</value>
   </data>
   <data name="ValidationMaxVoiceDurationInvalid" xml:space="preserve">
     <value>最大语音时长必须在1秒到10秒之间。</value>
@@ -567,10 +585,10 @@
 
   <!-- Voice Settings Hints -->
   <data name="PostSpeechRecordingDurationHint" xml:space="preserve">
-    <value>VAD判断语音结束后继续录制的时长，用于捕捉尾音。范围：0.1-0.7秒，推荐：0.5秒。</value>
+    <value>VAD判断语音结束后继续录制的时长，用于捕捉尾音。范围：0.4-0.7秒，推荐：0.5秒。</value>
   </data>
   <data name="MinVoiceDurationHint" xml:space="preserve">
-    <value>语音片段的最小时长要求。短于此时长的语音将被忽略。范围：0.1-0.7秒，推荐：0.5秒。</value>
+    <value>语音片段的最小时长要求。短于此时长的语音将被忽略。范围：0.4-0.7秒，推荐：0.5秒。</value>
   </data>
   <data name="MaxVoiceDurationHint" xml:space="preserve">
     <value>单个语音片段的最大时长限制。超过此时长将强制分割。范围：1-10秒，推荐：10秒。</value>
@@ -729,5 +747,8 @@
   </data>
   <data name="Lang_SourceText" xml:space="preserve">
     <value>原文</value>
+  </data>
+  <data name="StatusPausedForInput" xml:space="preserve">
+    <value>为进行文本输入，监听已暂停...</value>
   </data>
 </root>

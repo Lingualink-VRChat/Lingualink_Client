@@ -470,6 +470,24 @@
   <data name="MessageTemplates" xml:space="preserve">
     <value>Message Templates</value>
   </data>
+  <data name="MessageTyping" xml:space="preserve">
+    <value>Message Typing</value>
+  </data>
+  <data name="Send" xml:space="preserve">
+    <value>Send</value>
+  </data>
+  <data name="TextEntryHint" xml:space="preserve">
+    <value>Enter text here, press Ctrl+Enter, or click the Send button to send to VRChat.</value>
+  </data>
+  <data name="StatusSendingText" xml:space="preserve">
+    <value>Status: Sending text...</value>
+  </data>
+  <data name="SentToVrcLabel" xml:space="preserve">
+    <value>Content sent to VRChat</value>
+  </data>
+  <data name="InputTextLabel" xml:space="preserve">
+    <value>Input Text</value>
+  </data>
   <data name="VrcOutput" xml:space="preserve">
     <value>Sent to VRChat</value>
   </data>
@@ -583,10 +601,10 @@
 
   <!-- Validation Messages -->
   <data name="ValidationPostSpeechRecordingDurationInvalid" xml:space="preserve">
-    <value>Post-speech recording duration must be between 0.1 and 0.7 seconds.</value>
+    <value>Post-speech recording duration must be between 0.4 and 0.7 seconds.</value>
   </data>
   <data name="ValidationMinVoiceDurationInvalid" xml:space="preserve">
-    <value>Minimum voice duration must be between 0.1 and 0.7 seconds.</value>
+    <value>Minimum voice duration must be between 0.4 and 0.7 seconds.</value>
   </data>
   <data name="ValidationMaxVoiceDurationInvalid" xml:space="preserve">
     <value>Maximum voice duration must be between 1 and 10 seconds.</value>
@@ -594,10 +612,10 @@
 
   <!-- Voice Settings Hints -->
   <data name="PostSpeechRecordingDurationHint" xml:space="preserve">
-    <value>Duration to continue recording after VAD detects speech end, for capturing tail sounds. Range: 0.1-0.7s, Recommended: 0.5s.</value>
+    <value>Duration to continue recording after VAD detects speech end, for capturing tail sounds. Range: 0.4-0.7s, Recommended: 0.5s.</value>
   </data>
   <data name="MinVoiceDurationHint" xml:space="preserve">
-    <value>Minimum duration requirement for voice segments. Shorter segments will be ignored. Range: 0.1-0.7s, Recommended: 0.5s.</value>
+    <value>Minimum duration requirement for voice segments. Shorter segments will be ignored. Range: 0.4-0.7s, Recommended: 0.5s.</value>
   </data>
   <data name="MaxVoiceDurationHint" xml:space="preserve">
     <value>Maximum duration limit for single voice segments. Longer segments will be force-split. Range: 1-10s, Recommended: 10s.</value>
@@ -730,5 +748,8 @@
   </data>
   <data name="Lang_SourceText" xml:space="preserve">
     <value>Source Text</value>
+  </data>
+  <data name="StatusPausedForInput" xml:space="preserve">
+    <value>Listening paused for text input...</value>
   </data>
 </root>

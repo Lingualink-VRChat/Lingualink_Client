@@ -21,6 +21,7 @@ namespace lingualink_client.Services.Managers
         private readonly AudioService _audioService;
         private readonly ILingualinkApiService _apiService;
         private readonly OscService? _oscService;
+        private bool _isTemporarilyPaused = false; // 新增：用于跟踪智能暂停状态
         private readonly AppSettings _appSettings;
         private readonly ILoggingManager _loggingManager;
         private readonly IEventAggregator _eventAggregator;
@@ -76,6 +77,29 @@ namespace lingualink_client.Services.Managers
         {
             _audioService.Stop();
             OnStatusUpdated(LanguageManager.GetString("StatusStopped"));
+        }
+
+        public void Pause()
+        {
+            if (IsWorking && !_isTemporarilyPaused)
+            {
+                _audioService.Pause();
+                _isTemporarilyPaused = true;
+                _loggingManager.AddMessage("Audio processing paused for text input.");
+                OnStatusUpdated(LanguageManager.GetString("StatusPausedForInput"));
+            }
+        }
+
+        public void Resume()
+        {
+            if (IsWorking && _isTemporarilyPaused)
+            {
+                _audioService.Resume();
+                _isTemporarilyPaused = false;
+                _loggingManager.AddMessage("Audio processing resumed.");
+                // 恢复到正常的监听状态文本
+                OnStatusUpdated(LanguageManager.GetString("StatusListening"));
+            }
         }
 
         private void OnAudioServiceStatusUpdate(object? sender, string status)

@@ -98,15 +98,8 @@ namespace lingualink_client.ViewModels
 
         private void SetupTranslationResultUpdates()
         {
-            // 由于orchestrator在MainControl初始化时创建，我们需要延迟连接事件
-            // 通过MainControl的事件来间接连接
-            // 这里暂时保留为空，实际的事件连接在MainControl中处理
-        }
-
-        private void OnTranslationCompleted(object? sender, Services.Interfaces.TranslationResultEventArgs e)
-        {
-            // 更新翻译结果显示
-            TranslationResult.UpdateTranslationResult(e.OriginalText ?? "", e.ProcessedText ?? "");
+            // TranslationResultViewModel现在通过SharedStateViewModel自动更新
+            // 不再需要手动连接事件
         }
 
         private void OnGlobalSettingsChanged(ViewModels.Events.SettingsChangedEvent e)
