@@ -140,15 +140,15 @@
     <value>更新中...</value>
   </data>
   <data name="WorkHint" xml:space="preserve">
-    <value>「作業開始」をクリックして音声録音と翻訳を開始してください</value>
+    <value>「リスニング開始」をクリックして音声録音と翻訳を開始してください</value>
   </data>
 
   <!-- Newly Added/Modified Strings -->
-  <data name="StartWork" xml:space="preserve">
-    <value>作業開始</value>
+  <data name="StartListening" xml:space="preserve">
+    <value>リスニング開始</value>
   </data>
-  <data name="StopWork" xml:space="preserve">
-    <value>作業停止</value>
+  <data name="StopListening" xml:space="preserve">
+    <value>リスニング停止</value>
   </data>
   <data name="VolumeThresholdHint" xml:space="preserve">
     <value>ヒント：マイク入力音量がこの閾値を超えた場合のみ音声が処理されます。0%でこのフィルタリングを無効にします。</value>
@@ -171,10 +171,10 @@
     <value>マイクを選択してください。</value>
   </data>
   <data name="StatusReadyWithOsc" xml:space="preserve">
-    <value>作業開始とVRChatへの送信の準備ができました。</value>
+    <value>リスニング開始とVRChatへの送信の準備ができました。</value>
   </data>
   <data name="StatusReadyWithoutOsc" xml:space="preserve">
-    <value>作業開始の準備ができました。</value>
+    <value>リスニング開始の準備ができました。</value>
   </data>
   <data name="StatusOscEnabled" xml:space="preserve">
     <value>ステータス：OSCサービスが有効です（{0}:{1}）。</value>

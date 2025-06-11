@@ -140,15 +140,15 @@
     <value>刷新中...</value>
   </data>
   <data name="WorkHint" xml:space="preserve">
-    <value>点击"开始工作"来开始录音和翻译</value>
+    <value>点击"开始监听"来开始录音和翻译</value>
   </data>
 
   <!-- Newly Added/Modified Strings -->
-  <data name="StartWork" xml:space="preserve">
-    <value>开始工作</value>
+  <data name="StartListening" xml:space="preserve">
+    <value>开始监听</value>
   </data>
-  <data name="StopWork" xml:space="preserve">
-    <value>停止工作</value>
+  <data name="StopListening" xml:space="preserve">
+    <value>停止监听</value>
   </data>
   <data name="VolumeThresholdHint" xml:space="preserve">
     <value>提示: 仅当麦克风输入音量高于此阈值时才开始处理语音。0% 表示禁用此过滤。</value>
@@ -171,10 +171,10 @@
     <value>请选择麦克风。</value>
   </data>
   <data name="StatusReadyWithOsc" xml:space="preserve">
-    <value>可开始工作并发送至VRChat。</value>
+    <value>可开始监听并发送至VRChat。</value>
   </data>
   <data name="StatusReadyWithoutOsc" xml:space="preserve">
-    <value>可开始工作。</value>
+    <value>可开始监听。</value>
   </data>
   <data name="StatusOscEnabled" xml:space="preserve">
     <value>状态：OSC服务已启用 ({0}:{1})。</value>
@@ -384,7 +384,7 @@
     <value>无效麦克风</value>
   </data>
   <data name="MsgBoxSelectValidMicContent" xml:space="preserve">
-    <value>请在开始工作前选择一个有效的麦克风。</value>
+    <value>请在开始监听前选择一个有效的麦克风。</value>
   </data>
 
   <!-- Target Language Labels -->

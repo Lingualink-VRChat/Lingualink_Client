@@ -140,15 +140,15 @@
     <value>Refreshing...</value>
   </data>
   <data name="WorkHint" xml:space="preserve">
-    <value>Click "Start Work" to begin voice recording and translation</value>
+    <value>Click "Start Listening" to begin voice recording and translation</value>
   </data>
 
   <!-- Newly Added/Modified Strings -->
-  <data name="StartWork" xml:space="preserve">
-    <value>Start Work</value>
+  <data name="StartListening" xml:space="preserve">
+    <value>Start Listening</value>
   </data>
-  <data name="StopWork" xml:space="preserve">
-    <value>Stop Work</value>
+  <data name="StopListening" xml:space="preserve">
+    <value>Stop Listening</value>
   </data>
   <data name="VolumeThresholdHint" xml:space="preserve">
     <value>Hint: Audio will only be processed if microphone input volume exceeds this threshold. 0% disables this filtering.</value>

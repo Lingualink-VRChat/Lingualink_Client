@@ -80,7 +80,7 @@
 
 这是一个核心的、异步的、事件驱动的流程：
 
-1.  **用户操作**: 用户在 `IndexPage` 上选择麦克风，然后点击 "开始工作" 按钮。
+1.  **用户操作**: 用户在 `IndexPage` 上选择麦克风，然后点击 "开始监听" 按钮。
 2.  **ViewModel (UI -> Logic)**:
     - `MainControlViewModel` 的 `ToggleWorkCommand` 被执行。
     - 它调用 `AudioTranslationOrchestrator.Start()`，并传入所选麦克风的设备索引。

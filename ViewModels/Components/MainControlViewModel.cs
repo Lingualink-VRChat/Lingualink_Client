@@ -43,7 +43,7 @@ namespace lingualink_client.ViewModels.Components
 
             // 设置初始本地化值
             _statusText = LanguageManager.GetString("StatusInitializing");
-            _workButtonContent = LanguageManager.GetString("StartWork");
+            _workButtonContent = LanguageManager.GetString("StartListening");
 
             _loggingManager.AddMessage(LanguageManager.GetString("IndexVmCtorLogInit"));
 
@@ -83,8 +83,8 @@ namespace lingualink_client.ViewModels.Components
         {
             // 更新动态按钮文本
             WorkButtonContent = _orchestrator?.IsWorking == true 
-                ? LanguageManager.GetString("StopWork") 
-                : LanguageManager.GetString("StartWork");
+                ? LanguageManager.GetString("StopListening") 
+                : LanguageManager.GetString("StartListening");
             
             // 更新其他本地化标签
             OnPropertyChanged(nameof(WorkHintLabel));
@@ -147,18 +147,18 @@ namespace lingualink_client.ViewModels.Components
             {
                 if (_orchestrator.Start(previouslySelectedMicDeviceNumber.Value))
                 {
-                    WorkButtonContent = LanguageManager.GetString("StopWork");
+                    WorkButtonContent = LanguageManager.GetString("StopListening");
                     IsMicrophoneComboBoxEnabled = false;
                 }
                 else
                 {
-                    WorkButtonContent = LanguageManager.GetString("StartWork");
+                    WorkButtonContent = LanguageManager.GetString("StartListening");
                     IsMicrophoneComboBoxEnabled = true;
                 }
             }
             else if (wasWorking)
             {
-                WorkButtonContent = LanguageManager.GetString("StartWork");
+                WorkButtonContent = LanguageManager.GetString("StartListening");
                 IsMicrophoneComboBoxEnabled = true;
             }
 
@@ -232,7 +232,7 @@ namespace lingualink_client.ViewModels.Components
 
                     if (success)
                     {
-                        WorkButtonContent = LanguageManager.GetString("StopWork");
+                        WorkButtonContent = LanguageManager.GetString("StopListening");
                         IsMicrophoneComboBoxEnabled = false;
                     }
                 }
@@ -248,7 +248,7 @@ namespace lingualink_client.ViewModels.Components
             else
             {
                 await Task.Run(() => _orchestrator!.Stop());
-                WorkButtonContent = LanguageManager.GetString("StartWork");
+                WorkButtonContent = LanguageManager.GetString("StartListening");
                 StatusText = LanguageManager.GetString("StatusStopped");
                 IsMicrophoneComboBoxEnabled = true;
             }
