@@ -54,3 +54,6 @@ ehthumbs.db
 
 # JetBrains Rider local history
 .history/ 
+
+# AI guide
+guide.md
