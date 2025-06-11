@@ -1,20 +1,19 @@
-**主要语言：中文** (English version follows the Chinese changelog entry)
-
-```markdown
 # LinguaLink Client
 
 一个基于 WPF 的实时语音翻译客户端，支持 VRChat OSC 集成。
 
 ## 功能特性
 
-- 🎤 **实时语音识别**: 自动检测和处理语音输入，集成优化的 VAD（语音活动检测）和追加录音功能。
+- 🎤 **实时语音识别与监听**: 自动检测和处理语音输入，集成优化的 VAD（语音活动检测）。用户可点击“开始监听”启动该功能。
+- 📝 **手动文本输入**: 新增独立的文本输入页面，允许用户手动键入消息并直接发送到 VRChat，同时支持在输入期间暂停音频处理，提升用户体验。
 - 🌍 **多语言翻译**: 支持英文、日文、中文等多种语言翻译。
 - ✨ **动态语言加载**: 启动时从服务器动态获取支持的语言列表，无需硬编码。
+- ↕️ **目标语言排序**: 用户可以通过“上移”和“下移”按钮，自由调整目标翻译语言的显示顺序。
 - 🔐 **API 密钥认证**: 支持安全的后端 API v2.0 认证，并提供连接测试功能。
 - 🔊 **Opus 音频编码标准**: 默认启用 Opus (16kbps) 高效压缩音频，支持调节编码复杂度，显著减少带宽使用。
 - ✨ **音频增强处理**: 内置峰值归一化和安静语音增强功能，提升识别准确率。
 - 🎮 **VRChat 集成**: 直接发送翻译结果到 VRChat 聊天框。
-- 📝 **自定义模板**: 灵活的消息格式模板系统，支持语言代码和中文名两种占位符，并提供实时预览和验证。
+- 📝 **增强的自定义模板**: 灵活的消息格式模板系统，不仅支持各语言占位符，还新增了对语音识别原文（`{transcription}`）的占位符支持。提供实时预览和验证。
 - 🎛️ **参数调节**: 可调节的 VAD、Opus 编码、音频增强及 OSC 参数。
 - 📊 **实时日志**: 详细的运行状态和错误日志。
 - 🌐 **多语言界面**: 支持中文、英文、日文界面。
@@ -67,21 +66,11 @@
 
 1.  在 **"启动 (Start)"** 页面：
     * 选择一个有效的 **麦克风设备 (Select Microphone)**。
-    * 如果未使用模板，请在 **目标语言 (Target Languages)** 部分选择一至三个翻译目标语言。如果启用了自定义模板，目标语言将由模板内容决定。
+    * 如果未使用模板，请在 **目标语言 (Target Languages)** 部分选择一至三个翻译目标语言，并可使用上下按钮调整顺序。如果启用了自定义模板，目标语言将由模板内容决定。
 2.  点击 **"开始监听 (Start Listening)"** 按钮开始语音监听。
 3.  说话时系统会自动识别、处理并翻译。
-4.  翻译结果会显示在界面上（原始响应和 VRChat 输出），并可根据配置发送到 VRChat。
-
-## 主要功能详解
-
-### 语音识别与翻译
-（与项目总结部分类似，强调 API v2.0, Opus, 音频增强, VAD 优化）
-
-### VRChat 集成
-（与项目总结部分类似）
-
-### 界面功能
-（与项目总结部分类似，强调组件化 ViewModel 和现代化 UI）
+4.  您也可以切换到 **"文本输入 (Text Entry)"** 页面，手动输入文字并发送。
+5.  翻译结果会显示在界面上（原始响应和 VRChat 输出），并可根据配置发送到 VRChat。
 
 ## 配置说明
 
@@ -130,16 +119,20 @@
 
 ### 自定义模板
 
-通过勾选 **"使用自定义模板 (Use Custom Template)"** 来启用。支持使用占位符创建自定义模板。
+通过勾选 **"使用自定义模板 (Use Custom Template)"** 来启用。支持使用占位符创建自定义模板。新增了对语音识别原文的占位符支持。
 
-模板示例：
+**可用占位符**:
+- **语言代码**: 如 `{en}`, `{ja}`, `{zh}` 等。
+- **语音识别原文**: `{transcription}`，用于显示未经翻译的原始识别文本。
+- **旧式中文名 (兼容)**: 如 `{日文}`, `{英文}` 等，为保证向后兼容性依然可用。
+
+**模板示例**：
 ```
+识别原文: {transcription}
 English: {en}
-Japanese: {ja}
-Chinese: {zh}
+日本語: {ja}
 ```
 **注意**:
-- 模板同时支持新式语言代码 (`{en}`, `{ja}`)和旧式中文名 (`{日文}`, `{英文}`)占位符，以确保向后兼容。
 - 当使用自定义模板时，目标翻译语言将由模板中包含的占位符决定。为保证性能，系统最多只会请求翻译模板中的**前3种语言**。如果模板中包含超过3种语言，界面会显示警告信息。
 
 ## 故障排除
@@ -150,86 +143,22 @@ Chinese: {zh}
 
 ## 更新日志
 
-### v3.1.0 (2025-06-09)
-- ✨ **动态语言加载与初始化**: 重构了语言管理系统，现在客户端启动时会从API动态获取支持的语言列表，使语言支持与后端实时同步。如果API加载失败，则会回退到内置的语言列表。
-- 🚀 **模板系统增强**: 模板引擎现在同时支持新式语言代码 (`{en}`)和旧式中文名 (`{日文}`)占位符，确保了向后兼容性。增加了模板验证功能，当模板中包含超过3种语言时会向用户显示警告。
-- 🔧 **新增API连接测试**: 在"账户"页面增加了"测试连接"按钮，方便用户验证服务器URL和API密钥的有效性。
-- 🌐 **本地化系统完善**: 根据新的API响应更新了所有内置的语言资源文件（例如，将"德文"统一为"德语"），解决了部分语言显示为英文的问题。同时添加了API连接验证和模板警告的本地化文本。
-- 🧹 **架构重构**: 优化了 `ApiResultProcessor` 和多个ViewModel，利用事件聚合器 (`LanguagesInitializedEvent`)实现了模块间的解耦，提升了代码的健壮性和可维护性。
+### v3.2.0 (2025-06-11)
+- ✨ **新增文本输入功能**: 引入了全新的文本输入页面 (`TextEntryPage`)，允许用户手动输入并发送消息至 VRChat。该功能集成了多语言本地化支持，并在输入时自动暂停/恢复音频处理，以提供流畅的用户体验。
+- 🚀 **占位符系统增强**: 重构了占位符管理，新增了对语音识别原文的特殊占位符支持 (`{transcription}`), 允许用户在自定义消息模板中直接嵌入未经翻译的识别结果，提高了模板的灵活性和实用性。
+- ↕️ **新增目标语言排序功能**: 在主界面为目标语言列表添加了“上移”和“下移”按钮，使用户能够方便地调整语言的显示和发送顺序，优化了多语言交流时的操作便利性。
+- ✏️ **术语统一与优化**: 将整个应用中的“Start Work”相关术语统一更新为“Start Listening”（开始监听），包括 README、界面文本及内部代码，使功能描述更加直观和准确。
+- 🌐 **UI与本地化完善**: 更新了中、日、英三语的本地化资源，以支持文本输入、占位符增强等新功能。改进了多个页面的UI绑定，确保界面能够准确反映后台数据的变化。
+- 🔧 **架构与代码改进**: 优化了 `ApiResultProcessor` 和相关业务流程，以处理用户选择的后端名称。`PlaceholderItem` 类的引入分离了显示文本和插入值，提升了代码的清晰度和可维护性。
 
 ---
 
-**English Translation of v3.1.0 Changelog:**
+**English Translation of v3.2.0 Changelog:**
 
-### v3.1.0 (2025-06-09)
-- ✨ **Dynamic Language Loading & Initialization**: Rearchitected the language management system. The client now dynamically fetches the list of supported languages from the API on startup, ensuring real-time synchronization with the backend. A fallback mechanism to a built-in list is in place if the API call fails.
-- 🚀 **Template System Enhancement**: The template engine now supports both modern language codes (`{en}`) and legacy Chinese names (`{日文}`) as placeholders, ensuring backward compatibility. Added template validation to warn users when more than three languages are included in the template.
-- 🔧 **New API Connection Test Feature**: Added a "Test Connection" button on the "Account" page for users to easily validate their server URL and API key.
-- 🌐 **Localization System Improvement**: Updated all built-in language resource files to align with the new API response format (e.g., standardizing on "德语" for German), fixing the issue where some languages were displayed in English. Added localized text for API connection validation and template warnings.
-- 🧹 **Architectural Refactoring**: Optimized `ApiResultProcessor` and various ViewModels. Utilized the `EventAggregator` (`LanguagesInitializedEvent`) to decouple modules, enhancing code robustness and maintainability.
-
-### v3.0.0 (2025-06-04)
-- ✨ **全面迁移至 LinguaLink API v2.0**: 优化了与后端服务的交互逻辑和数据模型。
-- 🔊 **Opus 音频编码成为标准**: 默认启用 Opus (16kbps 固定码率) 以大幅减少带宽占用，并支持调节编码复杂度。
-- 💪 **新增音频增强功能**: 包括峰值归一化和安静语音增强，旨在提升语音识别的准确性。
-- ⚙️ **VAD 系统优化**: 改进了语音活动检测 (VAD) 逻辑，增加了可配置的说话后追加录音功能，并使 VAD 参数更精细化。
-- 🏗️ **架构重构与组件化**:
-    - 引入了简单的依赖注入容器 (`ServiceContainer`) 和服务初始化器 (`ServiceInitializer`)。
-    - 实现了事件聚合器 (`EventAggregator`) 以促进模块间的松耦合通信。
-    - ViewModel 层进行了显著的组件化重构，例如 `IndexWindowViewModel` 作为多个子组件 ViewModel（如 `MainControlViewModel`, `MicrophoneSelectionViewModel`, `TargetLanguageViewModel`, `TranslationResultViewModel`, `LogViewModel`）的容器。
-    - 引入了 ViewModel 层的管理器 (`ViewModels/Managers/`)，如 `MicrophoneManager` 和 `TargetLanguageManager`，用于处理更复杂的UI相关状态和逻辑。
-- 💄 **UI 改进与用户体验提升**:
-    - 引入了基于 WPF UI 的现代化消息框 (`ModernMessageBox`)，替换了系统默认对话框。
-    - 账户页面 (`AccountPage`) 和服务配置页面 (`ServicePage`) UI 布局和逻辑调整，配置项更清晰。
-    - 改进了麦克风和目标语言选择组件的交互和状态管理。
-- 🔧 **配置项扩展**: `AppSettings` 模型增加了更多可配置参数，包括音频增强选项、Opus 编码复杂度等。
-- 🧹 **代码质量提升**: 更广泛和规范地使用了 `CommunityToolkit.Mvvm`，加强了 MVVM 模式的应用，服务分层更清晰。
-- 🌐 **本地化完善**: 增加了更多UI文本的本地化支持。
-
----
-
-**English Translation of v3.0.0 Changelog:**
-
-### v3.0.0 (2025-06-04)
-- ✨ **Full Migration to LinguaLink API v2.0**: Optimized interaction logic and data models with the backend service.
-- 🔊 **Opus Audio Encoding as Standard**: Opus encoding (fixed 16kbps bitrate) is now enabled by default to significantly reduce bandwidth usage, with support for adjusting encoding complexity.
-- 💪 **New Audio Enhancement Features**: Added Peak Normalization and Quiet Speech Enhancement to improve speech recognition accuracy.
-- ⚙️ **VAD System Optimization**: Improved Voice Activity Detection (VAD) logic, including a configurable post-speech recording feature and more granular VAD parameters.
-- 🏗️ **Architectural Refactoring & Componentization**:
-    - Introduced a simple Dependency Injection container (`ServiceContainer`) and a `ServiceInitializer`.
-    - Implemented an `EventAggregator` for loosely coupled communication between modules.
-    - Significantly refactored the ViewModel layer into components, e.g., `IndexWindowViewModel` now acts as a container for sub-component ViewModels (`MainControlViewModel`, `MicrophoneSelectionViewModel`, `TargetLanguageViewModel`, `TranslationResultViewModel`, `LogViewModel`).
-    - Introduced ViewModel-layer managers (`ViewModels/Managers/`), such as `MicrophoneManager` and `TargetLanguageManager`, for handling more complex UI-related states and logic.
-- 💄 **UI Improvements & Enhanced User Experience**:
-    - Introduced a modern `ModernMessageBox` based on WPF UI, replacing default system dialogs.
-    - Adjusted UI layout and logic for the Account Page (`AccountPage`) and Service Configuration Page (`ServicePage`) for clearer settings.
-    - Improved interaction and state management for microphone and target language selection components.
-- 🔧 **Configuration Options Expanded**: The `AppSettings` model now includes more configurable parameters, such as audio enhancement options and Opus encoding complexity.
-- 🧹 **Code Quality Improvements**: More extensive and standardized use of `CommunityToolkit.Mvvm`, strengthening the MVVM pattern application, and clearer service layering.
-- 🌐 **Localization Enhancements**: Added localization support for more UI texts.
-
-
-### v2.1.0 (2025-05-27)
-- (Previous changelog entry, kept for history)
-- 🔊 新增 Opus 音频编码支持，显著减少带宽使用
-- ⚡ 优化音频传输性能，支持可配置的压缩参数
-- 🎛️ 增强的音频编码设置界面
-- 🛠️ 改进的错误处理和回退机制
-
-### v2.0.0 (2025-05-26)
-- (Previous changelog entry, kept for history)
-- 🔐 添加 API 密钥认证支持
-- 🔄 更新 API 端点到 v1
-- 🌐 支持新的后端响应格式
-
-### v1.0.0
-- 🎉 初始版本发布
-- 🎤 基础语音识别和翻译功能
-- 🎮 VRChat OSC 集成
-- 📝 模板系统
-- 🌍 多语言界面支持
-
----
-
-如有问题或需要支持，请提交 Issue。
-```
+### v3.2.0 (2025-06-11)
+- ✨ **feat: Add Text Entry Page and Enhance Message Handling**: Introduced a new `TextEntryPage` for user input, allowing text to be sent directly to VRChat. This feature includes full localization support and automatically pauses/resumes audio processing for a smoother user experience.
+- 🚀 **feat: Enhance Placeholder Management**: Refactored the placeholder system to add support for a special source text placeholder (`{transcription}`). This allows users to embed the original, untranslated speech recognition result directly into their custom message templates, enhancing flexibility.
+- ↕️ **feat: Implement Language Item Reordering**: Added "Move Up" and "Move Down" buttons for the target language list on the main page, enabling users to easily reorder languages for display and output, improving usability in multi-language scenarios.
+- ✏️ **refactor: Update Terminology for Voice Recording**: Changed all references of "Start Work" to "Start Listening" throughout the application, including the README, UI text, and internal code, to more accurately reflect the functionality.
+- 🌐 **feat: UI and Localization Improvements**: Updated localization resources in English, Japanese, and Chinese to support new features like text entry and enhanced placeholders. Improved UI binding on multiple pages to ensure the interface accurately reflects underlying data changes.
+- 🔧 **chore: Architectural and Code Enhancements**: Optimized `ApiResultProcessor` and related orchestrators to handle user-selected backend names. The new `PlaceholderItem` class decouples display text from insertion values, improving code clarity and maintainability.
