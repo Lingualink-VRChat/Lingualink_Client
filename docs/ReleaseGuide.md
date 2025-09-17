@@ -88,7 +88,8 @@ powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -FrameworkO
 
 - 若未显式传入 `-ConfigPath`，会优先读取 `%APPDATA%\LinguaLink\release-settings.json`，否则回退到 `scripts/release-settings.json`。
 - 运行期间会临时设置 `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` 等环境变量，命令结束后自动清理。
-- 真实上传命令为 `aws s3 sync artifacts/<目录> s3://{Bucket}/{Prefix} --endpoint-url {Endpoint} --delete`，确保远端目录与本地一致。
+- 为兼容 rains3 等第三方 S3 端点，脚本会自动设置 `AWS_REQUEST_CHECKSUM_CALCULATION=WHEN_REQUIRED` 与 `AWS_RESPONSE_CHECKSUM_VALIDATION=WHEN_REQUIRED`，避免 AWS CLI 新版默认 CRC 校验导致上传失败。
+- 真实上传命令为 `aws s3 cp artifacts/<目录> s3://{Bucket}/{Prefix}/ --endpoint-url {Endpoint} --recursive --no-verify-ssl`，脚本会自动规范化前缀首尾斜杠并保持远端目录结构一致。
 - `-DryRun` 可先确认差异，再去掉该参数执行真实上传。
 
 上传完成后，可访问 `https://download.cn-nb1.rains3.com/lingualink/stable-self-contained/RELEASES`
@@ -108,7 +109,8 @@ powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -FrameworkO
 | ---- | -------- |
 | `Build-Release.ps1` 找不到 Velopack CLI | 确认已安装 `vpk`，或设置 `VPK_EXE` 指向 Velopack CLI 完整路径后重试。 |
 | `Publish-Release.ps1` 提示 `aws` 不存在 | 安装 AWS CLI v2，并重新打开终端确保 PATH 生效。 |
-| `aws s3 sync` 返回 401/403 | 检查 `release-settings.json` 中的 AccessKey/SecretKey 是否有效，必要时在控制台重新生成密钥。 |
+| `aws s3 cp` 返回 401/403 | 检查 `release-settings.json` 中的 AccessKey/SecretKey 是否有效，必要时在控制台重新生成密钥。 |
+| `aws s3 cp` 返回 InvalidArgument/"invalid checksum" | 确保使用当前仓库的 `Publish-Release.ps1`（已内置校验和兼容逻辑），或在执行 `aws s3 cp` 前手动设置 `AWS_REQUEST_CHECKSUM_CALCULATION=WHEN_REQUIRED` 与 `AWS_RESPONSE_CHECKSUM_VALIDATION=WHEN_REQUIRED` 后重试。 |
 | 客户端不弹更新提示 | 确认 `RELEASES` 最新版本号大于当前版本，并检查 `App.xaml.cs` 中的更新 URL 是否指向对应目录。 |
 | 访问下载域名仍是旧版本 | rains3 CDN 可能缓存滞后，可刷新缓存或直接访问源站路径确认。 |
 
