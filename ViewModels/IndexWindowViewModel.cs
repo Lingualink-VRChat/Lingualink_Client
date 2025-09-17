@@ -1,12 +1,17 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using lingualink_client.ViewModels.Components;
-using lingualink_client.ViewModels.Managers;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using lingualink_client.Models;
 using lingualink_client.Services;
 using lingualink_client.Services.Interfaces;
-using lingualink_client.Models;
+using lingualink_client.ViewModels.Components;
 using lingualink_client.ViewModels.Events;
+using lingualink_client.ViewModels.Managers;
+using Velopack;
+using MessageBox = System.Windows.MessageBox;
 
 namespace lingualink_client.ViewModels
 {
@@ -28,6 +33,13 @@ namespace lingualink_client.ViewModels
         private readonly ITargetLanguageManager _targetLanguageManager;
         private readonly IMicrophoneManager _microphoneManager;
         private readonly IEventAggregator _eventAggregator;
+        [ObservableProperty]
+        private bool isUpdateAvailable;
+
+        public IRelayCommand ShowUpdateDialogCommand { get; }
+
+        private UpdateManager? _updateManager;
+        private UpdateInfo? _pendingUpdateInfo;
 
         public IndexWindowViewModel()
         {
@@ -53,6 +65,8 @@ namespace lingualink_client.ViewModels
 
             // 建立组件间的事件连接
             SetupComponentCommunication();
+
+            ShowUpdateDialogCommand = new RelayCommand(ShowUpdateDialog);
         }
 
         /// <summary>
@@ -85,6 +99,67 @@ namespace lingualink_client.ViewModels
 
             // 3. 初始麦克风刷新现在也移到这里，确保在语言加载后进行
             await _microphoneManager.RefreshAsync();
+        }
+
+        public void SetUpdateInfo(UpdateManager manager, UpdateInfo info)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                _updateManager = manager;
+                _pendingUpdateInfo = info;
+                IsUpdateAvailable = true;
+            });
+        }
+
+        private void ShowUpdateDialog()
+        {
+            if (!IsUpdateAvailable || _pendingUpdateInfo is null || _updateManager is null)
+            {
+                return;
+            }
+
+            var deltaVersions = (_pendingUpdateInfo.DeltasToTarget ?? Array.Empty<VelopackAsset>())
+                .Select(asset => $"• {asset.Version}");
+            var allVersions = deltaVersions.Append($"• {_pendingUpdateInfo.TargetFullRelease.Version}");
+            var plannedVersions = string.Join(Environment.NewLine, allVersions);
+
+            var releaseNotes = _pendingUpdateInfo.TargetFullRelease.NotesMarkdown;
+            var displayNotes = string.IsNullOrWhiteSpace(releaseNotes) ? "(未提供更新日志)" : releaseNotes;
+
+            var message = $"发现新版本: {_pendingUpdateInfo.TargetFullRelease.Version}\n\n即将应用的版本:\n{plannedVersions}\n\n更新日志:\n{displayNotes}\n\n是否立即更新？";
+
+            var result = MessageBox.Show(message, "更新提示", MessageBoxButton.YesNo, MessageBoxImage.Information);
+            if (result == MessageBoxResult.Yes)
+            {
+                StartUpdate();
+            }
+        }
+
+        private async void StartUpdate()
+        {
+            if (_updateManager is null || _pendingUpdateInfo is null)
+            {
+                return;
+            }
+
+            try
+            {
+                MessageBox.Show("正在后台下载更新，请稍候...", "更新中");
+                await _updateManager.DownloadUpdatesAsync(_pendingUpdateInfo, null, CancellationToken.None);
+                MessageBox.Show("更新已下载，可稍后手动重启。", "更新完成", MessageBoxButton.OK, MessageBoxImage.Information);
+                IsUpdateAvailable = false;
+                await _updateManager.WaitExitThenApplyUpdatesAsync(_pendingUpdateInfo, silent: false, restart: false);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"更新过程中发生错误: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                _pendingUpdateInfo = null;
+                _updateManager = null;
+                IsUpdateAvailable = false;
+            }
         }
 
         private void SetupComponentCommunication()
@@ -142,4 +217,5 @@ namespace lingualink_client.ViewModels
             TranslationResult?.Dispose();
         }
     }
-} 
+}
+

@@ -1,0 +1,8 @@
+{
+  "AccessKey": "YOUR_ACCESS_KEY_HERE",
+  "SecretKey": "YOUR_SECRET_KEY_HERE",
+  "Endpoint": "https://download.cn-nb1.rains3.com",
+  "Bucket": "lingualink",
+  "SelfContainedPrefix": "stable-self-contained",
+  "FrameworkPrefix": "stable-framework-dependent"
+}

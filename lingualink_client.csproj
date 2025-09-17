@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -12,10 +12,22 @@
     <PlatformTarget>x64</PlatformTarget>
 
     <!-- Version Information -->
-    <Version>3.2.0</Version>
-    <AssemblyVersion>3.2.0.0</AssemblyVersion>
-    <FileVersion>3.2.0.0</FileVersion>
-    <ProductVersion>3.2.0</ProductVersion>
+    <Version>3.3.0</Version>
+    <AssemblyVersion>3.3.0.0</AssemblyVersion>
+    <FileVersion>3.3.0.0</FileVersion>
+    <ProductVersion>3.3.0</ProductVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseSelfContained|AnyCPU'">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <DefineConstants>$(DefineConstants);RELEASE;SELF_CONTAINED</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseFrameworkDependent|AnyCPU'">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <DefineConstants>$(DefineConstants);RELEASE;FRAMEWORK_DEPENDENT</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,6 +39,7 @@
     <PackageReference Include="Concentus.Oggfile" Version="1.0.6" />
     <PackageReference Include="NAudio" Version="2.2.1" />
     <PackageReference Include="OscCore" Version="1.0.5" />
+    <PackageReference Include="Velopack" Version="0.0.1298" />
     <PackageReference Include="WebRtcVadSharp" Version="1.3.2" />
     <PackageReference Include="WPF-UI" Version="4.0.2" />
     <PackageReference Include="Concentus" Version="2.2.2" />

@@ -18,8 +18,24 @@
             <!--  Only one column now  -->
         </Grid.ColumnDefinitions>
 
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <ui:Button
+            Grid.Row="0"
+            Grid.Column="0"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Top"
+            Margin="0,0,0,10"
+            Padding="12,6"
+            Content="发现新版本！"
+            Command="{Binding ShowUpdateDialogCommand}"
+            Visibility="{Binding IsUpdateAvailable, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
         <!--  Main Controls (was Left Column)  -->
-        <Grid Grid.Column="0">
+        <Grid Grid.Row="1" Grid.Column="0">
             <!--  Margin="0,0,5,0" removed  -->
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
