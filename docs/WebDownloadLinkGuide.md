@@ -8,7 +8,6 @@
   - `https://download.cn-nb1.rains3.com/lingualink/stable-self-contained/`
   - `https://download.cn-nb1.rains3.com/lingualink/stable-framework-dependent/`
 - 两个前缀下都会有 Velopack 标准的 `RELEASES` 元数据、`.nupkg` 增量包、`Setup.exe` 或 `Setup-with-runtime.exe` 全量安装包。
-- 若已为域名 `dl.aiatechco.com` 做 CNAME，可用该域名替换 host，其余路径保持一致。
 
 ## 2. 如何判定“最新版本”
 `RELEASES` 文件是一个使用制表符分隔的文本清单，每行代表一个版本。最后一行即为最新版本。例如：
@@ -34,7 +33,7 @@
 
 ### TypeScript 示例
 ```ts
-const S3_BASE = 'https://dl.aiatechco.com/lingualink';
+const S3_BASE = 'https://download.cn-nb1.rains3.com/lingualink';
 const CHANNEL = 'stable-self-contained'; // or 'stable-framework-dependent'
 
 async function fetchLatestInstaller() {

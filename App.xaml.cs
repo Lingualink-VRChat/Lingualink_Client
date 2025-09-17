@@ -91,9 +91,9 @@ namespace lingualink_client
             string updateUrl;
 
 #if SELF_CONTAINED
-            updateUrl = "https://dl.aiatechco.com/lingualink/stable-self-contained";
+            updateUrl = "https://download.cn-nb1.rains3.com/lingualink/stable-self-contained";
 #elif FRAMEWORK_DEPENDENT
-            updateUrl = "https://dl.aiatechco.com/lingualink/stable-framework-dependent";
+            updateUrl = "https://download.cn-nb1.rains3.com/lingualink/stable-framework-dependent";
 #else
             updateUrl = string.Empty;
 #endif

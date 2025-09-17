@@ -20,7 +20,7 @@
    {
      "AccessKey": "你的真实AccessKey",
      "SecretKey": "你的真实SecretKey",
-     "Endpoint": "https://download.cn-nb1.rains3.com",
+     "Endpoint": "https://cn-nb1.rains3.com",
      "Bucket": "lingualink",
      "SelfContainedPrefix": "stable-self-contained",
      "FrameworkPrefix": "stable-framework-dependent"
@@ -91,7 +91,7 @@ powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -FrameworkO
 - 真实上传命令为 `aws s3 sync artifacts/<目录> s3://{Bucket}/{Prefix} --endpoint-url {Endpoint} --delete`，确保远端目录与本地一致。
 - `-DryRun` 可先确认差异，再去掉该参数执行真实上传。
 
-上传完成后，可访问 `https://download.cn-nb1.rains3.com/lingualink/stable-self-contained/RELEASES` 或自定义域名 `https://dl.aiatechco.com/...` 验证文件是否更新。
+上传完成后，可访问 `https://download.cn-nb1.rains3.com/lingualink/stable-self-contained/RELEASES`
 
 ## 6. 客户端验证
 

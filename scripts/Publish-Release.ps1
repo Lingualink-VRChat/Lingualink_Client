@@ -66,11 +66,19 @@ if (-not (Test-Path $artifactRoot)) {
 # 设置AWS环境变量
 $env:AWS_ACCESS_KEY_ID = $config.AccessKey
 $env:AWS_SECRET_ACCESS_KEY = $config.SecretKey
-if ($config.SessionToken) {
+if ($config.PSObject.Properties.Match('SessionToken').Count -gt 0 -and $config.SessionToken) {
     $env:AWS_SESSION_TOKEN = $config.SessionToken
 }
-if ($config.Region) {
+if ($config.PSObject.Properties.Match('Region').Count -gt 0 -and $config.Region) {
     $env:AWS_DEFAULT_REGION = $config.Region
+}
+
+# 避免 S3 兼容端点因请求校验和失败
+if (-not $env:AWS_REQUEST_CHECKSUM_CALCULATION) {
+    $env:AWS_REQUEST_CHECKSUM_CALCULATION = 'WHEN_REQUIRED'
+}
+if (-not $env:AWS_RESPONSE_CHECKSUM_VALIDATION) {
+    $env:AWS_RESPONSE_CHECKSUM_VALIDATION = 'WHEN_REQUIRED'
 }
 
 # 同步函数
@@ -85,8 +93,18 @@ function Invoke-Sync {
         return
     }
     
-    $target = "s3://$($config.Bucket)/$Prefix"
-    $args = @('s3','sync',$Source,$target,'--endpoint-url',$config.Endpoint,'--delete')
+    # 规范化前缀，确保以斜杠结尾，避免部分 S3 兼容端在 ListObjectsV2 时返回 NoSuchKey
+    $prefixNormalized = $Prefix
+    if ($null -ne $prefixNormalized) {
+        $prefixNormalized = ($prefixNormalized -replace '^[\\/]+','') -replace '[\\/]+$',''
+        if ($prefixNormalized -ne "" -and -not $prefixNormalized.EndsWith('/')) {
+            $prefixNormalized += '/'
+        }
+    }
+
+    $target = "s3://$($config.Bucket)/$prefixNormalized"
+    # 使用 cp 命令避免 sync 的校验和问题
+    $args = @('s3','cp',$Source,$target,'--endpoint-url',$config.Endpoint,'--recursive','--no-verify-ssl')
     
     if ($Version) {
         Write-Info "上传版本 $Version 到 $target"
@@ -102,7 +120,7 @@ function Invoke-Sync {
     try {
         $process = Start-Process -FilePath 'aws' -ArgumentList $args -NoNewWindow -Wait -PassThru
         if ($process.ExitCode -ne 0) {
-            throw "aws s3 sync 失败 (exit code $($process.ExitCode))"
+            throw "aws s3 cp 失败 (exit code $($process.ExitCode))"
         }
     } catch {
         throw "同步到 $target 时失败: $($_.Exception.Message)"
@@ -131,4 +149,7 @@ try {
     Remove-Item Env:AWS_SECRET_ACCESS_KEY -ErrorAction SilentlyContinue
     Remove-Item Env:AWS_SESSION_TOKEN -ErrorAction SilentlyContinue
     Remove-Item Env:AWS_DEFAULT_REGION -ErrorAction SilentlyContinue
+    Remove-Item Env:AWS_REQUEST_CHECKSUM_CALCULATION -ErrorAction SilentlyContinue
+    Remove-Item Env:AWS_RESPONSE_CHECKSUM_VALIDATION -ErrorAction SilentlyContinue
 }
+

@@ -1,8 +1,10 @@
 {
   "AccessKey": "YOUR_ACCESS_KEY_HERE",
   "SecretKey": "YOUR_SECRET_KEY_HERE",
-  "Endpoint": "https://download.cn-nb1.rains3.com",
-  "Bucket": "lingualink",
-  "SelfContainedPrefix": "stable-self-contained",
-  "FrameworkPrefix": "stable-framework-dependent"
+  "Endpoint": "https://cn-nb1.rains3.com",
+  "Bucket": "download",
+  "SelfContainedPrefix": "lingualink/stable-self-contained",
+  "FrameworkPrefix": "lingualink/stable-framework-dependent",
+  "Region": "cn-northwest-1", 
+  "SessionToken": "OPTIONAL_SESSION_TOKEN_IF_USING_TEMP_CREDENTIALS"
 }
