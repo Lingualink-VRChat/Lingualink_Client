@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using lingualink_client.Models;
 
 namespace lingualink_client.Services.Interfaces
 {
@@ -11,7 +12,7 @@ namespace lingualink_client.Services.Interfaces
         /// <summary>
         /// 日志消息集合
         /// </summary>
-        ObservableCollection<string> LogMessages { get; }
+        ObservableCollection<LogEntry> LogEntries { get; }
 
         /// <summary>
         /// 格式化的日志消息字符串
@@ -22,7 +23,10 @@ namespace lingualink_client.Services.Interfaces
         /// 添加日志消息
         /// </summary>
         /// <param name="message">日志消息</param>
-        void AddMessage(string message);
+        /// <param name="level">日志级别</param>
+        /// <param name="category">日志分类</param>
+        /// <param name="details">附加信息</param>
+        void AddMessage(string message, LogLevel level = LogLevel.Info, string category = "General", string? details = null);
 
         /// <summary>
         /// 清除所有日志消息
@@ -32,7 +36,7 @@ namespace lingualink_client.Services.Interfaces
         /// <summary>
         /// 日志消息添加事件
         /// </summary>
-        event EventHandler<string>? MessageAdded;
+        event EventHandler<LogEntry>? EntryAdded;
 
         /// <summary>
         /// 日志清除事件

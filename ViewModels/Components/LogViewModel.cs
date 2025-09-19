@@ -4,8 +4,12 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Text.Json;
+using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
+using System.Windows.Threading;
+using Forms = System.Windows.Forms;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using lingualink_client.Models;
@@ -16,6 +20,7 @@ namespace lingualink_client.ViewModels.Components
 {
     public partial class LogViewModel : ViewModelBase, IDisposable
     {
+        private const string ClipboardCategory = "Clipboard";
         private readonly ILoggingManager _loggingManager;
         private readonly ObservableCollection<FilterOption<string?>> _categoryOptions = new();
         private readonly ReadOnlyObservableCollection<FilterOption<string?>> _readOnlyCategoryOptions;
@@ -99,7 +104,7 @@ namespace lingualink_client.ViewModels.Components
         }
 
         [RelayCommand]
-        private void CopySelected(IList? items)
+        private async Task CopySelectedAsync(IList? items)
         {
             var entries = (items?.OfType<LogEntry>() ?? Enumerable.Empty<LogEntry>()).ToList();
             if (!entries.Any())
@@ -113,11 +118,11 @@ namespace lingualink_client.ViewModels.Components
             }
 
             var text = string.Join(Environment.NewLine, entries.Select(entry => entry.ToDisplayString()));
-            Clipboard.SetText(text);
+            await CopyTextToClipboardAsync(text).ConfigureAwait(false);
         }
 
         [RelayCommand]
-        private void CopyAll()
+        private async Task CopyAllAsync()
         {
             var entries = EntriesView.Cast<LogEntry>().ToList();
             if (!entries.Any())
@@ -126,7 +131,27 @@ namespace lingualink_client.ViewModels.Components
             }
 
             var text = string.Join(Environment.NewLine, entries.Select(entry => entry.ToDisplayString()));
-            Clipboard.SetText(text);
+            await CopyTextToClipboardAsync(text).ConfigureAwait(false);
+        }
+
+        private Task CopyTextToClipboardAsync(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                return Task.CompletedTask;
+            }
+
+            var dispatcher = Application.Current?.Dispatcher ?? Dispatcher.CurrentDispatcher;
+            try
+            {
+                dispatcher.Invoke(() => Forms.Clipboard.SetText(text, Forms.TextDataFormat.Text));
+            }
+            catch (ExternalException ex)
+            {
+                _loggingManager.AddMessage($"Clipboard copy failed: {ex.Message}", LogLevel.Warning, ClipboardCategory, ex.ToString());
+            }
+
+            return Task.CompletedTask;
         }
 
         [RelayCommand]
@@ -304,3 +329,5 @@ namespace lingualink_client.ViewModels.Components
         }
     }
 }
+
+

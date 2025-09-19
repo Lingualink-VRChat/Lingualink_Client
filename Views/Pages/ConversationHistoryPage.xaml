@@ -1,0 +1,256 @@
+<Page
+    x:Class="lingualink_client.Views.ConversationHistoryPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:vm="clr-namespace:lingualink_client.ViewModels.Components"
+    Title="ConversationHistoryPage"
+    d:DataContext="{d:DesignInstance Type=vm:ConversationHistoryViewModel}"
+    mc:Ignorable="d">
+
+    <Page.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+    </Page.Resources>
+
+    <Grid Margin="15,0,15,15">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="300" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Sessions List -->
+        <ui:Card Grid.Column="0"
+                 Margin="0,0,20,0"
+                 Padding="16"
+                 VerticalAlignment="Stretch"
+                 VerticalContentAlignment="Stretch"
+                 HorizontalAlignment="Stretch"
+                 Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" Orientation="Horizontal">
+                    <TextBlock VerticalAlignment="Center"
+                               FontSize="14"
+                               FontWeight="SemiBold"
+                               Text="{Binding SessionsHeader}" />
+                </StackPanel>
+
+                <ListBox Grid.Row="1"
+                         Margin="0,12,0,0"
+                         ItemsSource="{Binding Sessions}"
+                         SelectedItem="{Binding SelectedSession}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate DataType="{x:Type vm:ConversationSessionItemViewModel}">
+                            <Border Margin="0,0,0,6"
+                                    Padding="10"
+                                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                                    CornerRadius="6">
+                                <StackPanel>
+                                    <TextBlock FontWeight="SemiBold"
+                                               Text="{Binding DisplayName}" />
+                                    <TextBlock Margin="0,4,0,0"
+                                               FontSize="11"
+                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                               Text="{Binding Tooltip}" />
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+        </ui:Card>
+
+
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- Storage Path Card -->
+            <ui:Card Grid.Row="0" Padding="16" Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}" Margin="0,0,0,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Orientation="Vertical">
+                    <TextBlock FontSize="14" FontWeight="SemiBold" Text="{Binding StoragePathLabel}" />
+                    <TextBlock Margin="0,4,0,0" FontFamily="Consolas" FontSize="12"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                               Text="{Binding StoragePath}" TextWrapping="Wrap" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <ui:Button Margin="0,0,8,0" MinWidth="110" Padding="12,6" Appearance="Secondary"
+                               Command="{Binding OpenFolderCommand}" Content="{Binding OpenFolderLabel}" />
+                    <ui:Button MinWidth="110" Padding="12,6"
+                               Command="{Binding ChangePathCommand}" Content="{Binding ChangePathLabel}" />
+                </StackPanel>
+            </Grid>
+        </ui:Card>
+
+        <!-- Filters/Search -->
+        <ui:Card Grid.Row="1" Padding="16" Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}" Margin="0,0,0,12">
+            <StackPanel Orientation="Vertical">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <ui:TextBox Grid.Column="0" Margin="0,0,12,0" Padding="8,4"
+                                PlaceholderText="{Binding SearchPlaceholder}"
+                                VerticalContentAlignment="Center"
+                                Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <CheckBox Content="{Binding IncludeTranslationsLabel}"
+                                  IsChecked="{Binding SearchInTranslations}" />
+                    </StackPanel>
+                </Grid>
+
+                <Grid Margin="0,12,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Orientation="Vertical">
+                        <TextBlock FontSize="12" FontWeight="SemiBold" Text="{Binding SourceFilterLabel}" />
+                        <ComboBox Margin="0,6,0,0" ItemsSource="{Binding SourceFilterOptions}"
+                                  SelectedValue="{Binding SelectedSourceFilter}"
+                                  SelectedValuePath="Value"
+                                  DisplayMemberPath="Label" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Margin="12,0,0,0" Orientation="Vertical">
+                        <TextBlock FontSize="12" FontWeight="SemiBold" Text="{Binding StatusFilterLabel}" />
+                        <ComboBox Margin="0,6,0,0" ItemsSource="{Binding StatusFilterOptions}"
+                                  SelectedValue="{Binding SelectedStatusFilter}"
+                                  SelectedValuePath="Value"
+                                  DisplayMemberPath="Label" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Margin="12,0,0,0" Orientation="Vertical">
+                        <TextBlock FontSize="12" FontWeight="SemiBold" Text="{Binding DateFromLabel}" />
+                        <DatePicker Margin="0,6,0,0" SelectedDate="{Binding FromDate}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="3" Margin="12,0,0,0" Orientation="Vertical">
+                        <TextBlock FontSize="12" FontWeight="SemiBold" Text="{Binding DateToLabel}" />
+                        <DatePicker Margin="0,6,0,0" SelectedDate="{Binding ToDate}" />
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </ui:Card>
+
+        <!-- Entries Table -->
+            <Grid Grid.Row="2">
+                <DataGrid Grid.Row="0" AutoGenerateColumns="False" EnableRowVirtualization="True"
+                      CanUserAddRows="False" IsReadOnly="True"
+                      ItemsSource="{Binding Entries}" SelectionMode="Single"
+                      SelectionUnit="FullRow" HeadersVisibility="Column"
+                      SelectedItem="{Binding SelectedEntry}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Binding="{Binding TimeDisplay}" Width="90">
+                        <DataGridTextColumn.Header>
+                            <TextBlock Text="{Binding DataContext.ColumnTimeLabel, RelativeSource={RelativeSource AncestorType=Page}}" />
+                        </DataGridTextColumn.Header>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Binding="{Binding SourceDisplay}" Width="120">
+                        <DataGridTextColumn.Header>
+                            <TextBlock Text="{Binding DataContext.ColumnSourceLabel, RelativeSource={RelativeSource AncestorType=Page}}" />
+                        </DataGridTextColumn.Header>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Binding="{Binding StatusDisplay}" Width="120">
+                        <DataGridTextColumn.Header>
+                            <TextBlock Text="{Binding DataContext.ColumnStatusLabel, RelativeSource={RelativeSource AncestorType=Page}}" />
+                        </DataGridTextColumn.Header>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Binding="{Binding TargetLanguagesDisplay}" Width="180">
+                        <DataGridTextColumn.Header>
+                            <TextBlock Text="{Binding DataContext.ColumnTargetsLabel, RelativeSource={RelativeSource AncestorType=Page}}" />
+                        </DataGridTextColumn.Header>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Binding="{Binding DurationDisplay}" Width="90">
+                        <DataGridTextColumn.Header>
+                            <TextBlock Text="{Binding DataContext.ColumnDurationLabel, RelativeSource={RelativeSource AncestorType=Page}}" />
+                        </DataGridTextColumn.Header>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Binding="{Binding Summary}" Width="*">
+                        <DataGridTextColumn.Header>
+                            <TextBlock Text="{Binding DataContext.ColumnSummaryLabel, RelativeSource={RelativeSource AncestorType=Page}}" />
+                        </DataGridTextColumn.Header>
+                    </DataGridTextColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <Border Background="#66000000" Visibility="{Binding IsEntriesLoading, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <ui:ProgressRing Width="48" Height="48" />
+                    <TextBlock Margin="0,8,0,0" HorizontalAlignment="Center"
+                               Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                               Text="{Binding RefreshLabel}" />
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Details Panel -->
+        <ui:Card Grid.Row="3" Margin="0,12,0,0" Padding="16" Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}">
+            <ui:Card.Style>
+                <Style TargetType="ui:Card">
+                    <Setter Property="Visibility" Value="Visible" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding SelectedEntry}" Value="{x:Null}">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ui:Card.Style>
+
+            <StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <ui:Button Margin="0,0,8,0" Padding="10,6" Appearance="Secondary"
+                               Command="{Binding CopySelectedCommand}" Content="{Binding CopySelectedLabel}" />
+                    <ui:Button Margin="0,0,8,0" Padding="10,6" Appearance="Secondary"
+                               Command="{Binding CopyAllCommand}" Content="{Binding CopyAllLabel}" />
+                    <ui:Button Margin="0,0,8,0" Padding="10,6" Appearance="Secondary"
+                               Command="{Binding ExportCommand}" CommandParameter="markdown"
+                               Content="{Binding ExportMarkdownLabel}" />
+                    <ui:Button Padding="10,6" Appearance="Secondary"
+                               Command="{Binding ExportCommand}" CommandParameter="json"
+                               Content="{Binding ExportJsonLabel}" />
+                </StackPanel>
+
+                <StackPanel Margin="0,8,0,0">
+                    <TextBlock FontWeight="SemiBold" Text="{Binding DetailsOriginalLabel}" />
+                    <TextBlock Text="{Binding SelectedEntry.OriginalText}" TextWrapping="Wrap" />
+                </StackPanel>
+
+                <ItemsControl Margin="0,8,0,0" ItemsSource="{Binding SelectedEntry.TranslationItems}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Margin="0,0,0,8">
+                                <TextBlock FontWeight="SemiBold" Text="{Binding Key}" />
+                                <TextBlock Text="{Binding Value}" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </ui:Card>
+        </Grid>
+    </Grid>
+</Page>

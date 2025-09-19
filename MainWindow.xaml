@@ -66,6 +66,14 @@
                     </ui:NavigationViewItem.Icon>
                 </ui:NavigationViewItem>
                 <ui:NavigationViewItem
+                    Content="{Binding MessageTyping}"
+                    NavigationCacheMode="Enabled"
+                    TargetPageType="{x:Type pages:TextEntryPage}">
+                    <ui:NavigationViewItem.Icon>
+                        <ui:SymbolIcon Symbol="Keyboard24" />
+                    </ui:NavigationViewItem.Icon>
+                </ui:NavigationViewItem>
+                <ui:NavigationViewItem
                     Content="{Binding MessageTemplates}"
                     NavigationCacheMode="Enabled"
                     TargetPageType="{x:Type pages:MessageTemplatePage}">
@@ -74,11 +82,11 @@
                     </ui:NavigationViewItem.Icon>
                 </ui:NavigationViewItem>
                 <ui:NavigationViewItem
-                    Content="{Binding MessageTyping}"
+                    Content="{Binding ConversationHistory}"
                     NavigationCacheMode="Enabled"
-                    TargetPageType="{x:Type pages:TextEntryPage}">
+                    TargetPageType="{x:Type pages:ConversationHistoryPage}">
                     <ui:NavigationViewItem.Icon>
-                        <ui:SymbolIcon Symbol="Keyboard24" />
+                        <ui:SymbolIcon Symbol="History24" />
                     </ui:NavigationViewItem.Icon>
                 </ui:NavigationViewItem>
                 <ui:NavigationViewItem
@@ -102,6 +110,14 @@
                 </ui:NavigationViewItem>
             </ui:NavigationView.MenuItems>
             <ui:NavigationView.FooterMenuItems>
+                <ui:NavigationViewItem
+                    Content="{Binding Logs}"
+                    NavigationCacheMode="Enabled"
+                    TargetPageType="{x:Type pages:LogPage}">
+                    <ui:NavigationViewItem.Icon>
+                        <ui:SymbolIcon Symbol="DocumentText24" />
+                    </ui:NavigationViewItem.Icon>
+                </ui:NavigationViewItem>
                 <ui:NavigationViewItem
                     Content="{Binding Settings}"
                     NavigationCacheMode="Disabled"

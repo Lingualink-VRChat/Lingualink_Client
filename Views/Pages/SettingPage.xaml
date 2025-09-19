@@ -13,7 +13,7 @@
     d:DesignWidth="800"
     mc:Ignorable="d">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <Grid Margin="15,0">
+        <Grid Margin="15,0,15,15">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -52,42 +52,7 @@
                     FontSize="11" />
             </StackPanel>
 
-            <!-- Running Log Section -->
-            <StackPanel Grid.Row="2" Margin="0,0,0,20">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    
-                    <Label Grid.Column="0" Content="{Binding RunningLogLabel}" FontWeight="Bold" FontSize="14" />
-                    <Button 
-                        Grid.Column="1"
-                        Content="{Binding ClearLogLabel}"
-                        Command="{Binding ClearLogCommand}"
-                        Padding="10,5"
-                        Margin="5,0,0,0" />
-                </Grid>
-                
-                <Border 
-                    BorderBrush="Gray" 
-                    BorderThickness="1" 
-                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" 
-                    Margin="0,5,0,0">
-                    <ScrollViewer 
-                        Height="300"
-                        VerticalScrollBarVisibility="Auto"
-                        HorizontalScrollBarVisibility="Auto">
-                        <TextBlock 
-                            Text="{Binding FormattedLogMessages}"
-                            TextWrapping="NoWrap"
-                            FontFamily="Consolas"
-                            FontSize="10"
-                            Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                            Padding="5" />
-                    </ScrollViewer>
-                </Border>
-            </StackPanel>
-        </Grid>
-    </ScrollViewer>
+            <!-- (Former log section removed to avoid duplication with dedicated Logs page) -->
+    </Grid>
+</ScrollViewer>
 </Page>

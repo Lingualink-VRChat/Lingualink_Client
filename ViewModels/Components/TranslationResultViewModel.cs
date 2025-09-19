@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using lingualink_client.Models;
 using lingualink_client.Services;
 using lingualink_client.Services.Interfaces;
 
@@ -20,7 +21,7 @@ namespace lingualink_client.ViewModels.Components
         // 修改 ProcessedText，使其成为只读代理属性
         public string ProcessedText => _sharedStateViewModel.LastSentMessage;
 
-        public ObservableCollection<string> LogMessages => _loggingManager.LogMessages;
+        public ObservableCollection<LogEntry> LogEntries => _loggingManager.LogEntries;
         public string FormattedLogMessages => _loggingManager.FormattedLogMessages;
 
         // 本地化标签
@@ -34,14 +35,14 @@ namespace lingualink_client.ViewModels.Components
             _loggingManager = ServiceContainer.Resolve<ILoggingManager>();
             _sharedStateViewModel = ServiceContainer.Resolve<SharedStateViewModel>(); // 解析共享状态
 
-            _loggingManager.MessageAdded += OnLogMessageAdded;
+            _loggingManager.EntryAdded += OnLogEntryAdded;
             LanguageManager.LanguageChanged += OnLanguageChanged;
             _sharedStateViewModel.PropertyChanged += OnSharedStatePropertyChanged; // 订阅共享状态变化
         }
 
-        private void OnLogMessageAdded(object? sender, string message)
+        private void OnLogEntryAdded(object? sender, LogEntry entry)
         {
-            OnPropertyChanged(nameof(LogMessages));
+            OnPropertyChanged(nameof(LogEntries));
             OnPropertyChanged(nameof(FormattedLogMessages));
         }
 
@@ -74,8 +75,8 @@ namespace lingualink_client.ViewModels.Components
         public void Dispose()
         {
             LanguageManager.LanguageChanged -= OnLanguageChanged;
-            _loggingManager.MessageAdded -= OnLogMessageAdded;
+            _loggingManager.EntryAdded -= OnLogEntryAdded;
             _sharedStateViewModel.PropertyChanged -= OnSharedStatePropertyChanged;
         }
     }
-} 
+}

@@ -16,7 +16,7 @@ namespace lingualink_client.Views
             DataContext = _viewModel;
         }
 
-        private void InputTextBox_KeyDown(object sender, KeyEventArgs e)
+        private void InputTextBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
             // [修复] 之前这里的逻辑是 Ctrl+Enter，现在改为用户更习惯的 Enter 发送，Shift+Enter 换行
             if (e.Key == Key.Enter && (Keyboard.Modifiers & ModifierKeys.Shift) == 0)
@@ -46,3 +46,4 @@ namespace lingualink_client.Views
         }
     }
 }
+

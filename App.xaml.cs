@@ -9,7 +9,7 @@ using Velopack;
 
 namespace lingualink_client
 {
-    public partial class App : Application
+    public partial class App : System.Windows.Application
     {
         public IndexWindowViewModel SharedIndexWindowViewModel { get; private set; } = null!;
 
@@ -144,3 +144,4 @@ namespace lingualink_client
         }
     }
 }
+

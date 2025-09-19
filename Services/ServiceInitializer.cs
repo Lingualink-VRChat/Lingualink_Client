@@ -46,6 +46,10 @@ namespace lingualink_client.Services
             var loggingManager = new LoggingManager();
             ServiceContainer.Register<ILoggingManager, LoggingManager>(loggingManager);
 
+            // 注册对话历史管理器
+            var conversationHistoryService = new ConversationHistoryService();
+            ServiceContainer.Register<IConversationHistoryService, ConversationHistoryService>(conversationHistoryService);
+
             // 注册目标语言管理器
             var targetLanguageManager = new TargetLanguageManager();
             ServiceContainer.Register<ITargetLanguageManager, TargetLanguageManager>(targetLanguageManager);
@@ -77,6 +81,11 @@ namespace lingualink_client.Services
                 if (ServiceContainer.TryResolve<IEventAggregator>(out var eventAggregator) && eventAggregator != null)
                 {
                     eventAggregator.Clear();
+                }
+
+                if (ServiceContainer.TryResolve<IConversationHistoryService>(out var conversationHistoryService) && conversationHistoryService != null)
+                {
+                    conversationHistoryService.Dispose();
                 }
 
                 // 清理服务容器

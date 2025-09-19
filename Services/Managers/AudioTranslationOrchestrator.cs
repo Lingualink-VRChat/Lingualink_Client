@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
 using NAudio.Wave;
@@ -18,6 +19,11 @@ namespace lingualink_client.Services.Managers
     /// </summary>
     public class AudioTranslationOrchestrator : IAudioTranslationOrchestrator, IDisposable
     {
+        private const string AudioCategory = "Audio";
+        private const string OscCategory = "OSC";
+        private const string TemplateCategory = "Template";
+        private const string ApiCategory = "API";
+
         private readonly AudioService _audioService;
         private readonly ILingualinkApiService _apiService;
         private readonly OscService? _oscService;
@@ -53,7 +59,7 @@ namespace lingualink_client.Services.Managers
                 {
                     _oscService = null;
                     OnStatusUpdated(string.Format(LanguageManager.GetString("StatusOscInitFailed"), ex.Message));
-                    _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogOscInitFailed"), ex.Message));
+                    _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogOscInitFailed"), ex.Message), LogLevel.Error, OscCategory);
                 }
             }
 
@@ -85,7 +91,7 @@ namespace lingualink_client.Services.Managers
             {
                 _audioService.Pause();
                 _isTemporarilyPaused = true;
-                _loggingManager.AddMessage("Audio processing paused for text input.");
+                _loggingManager.AddMessage("Audio processing paused for text input.", LogLevel.Info, AudioCategory);
                 OnStatusUpdated(LanguageManager.GetString("StatusPausedForInput"));
             }
         }
@@ -96,7 +102,7 @@ namespace lingualink_client.Services.Managers
             {
                 _audioService.Resume();
                 _isTemporarilyPaused = false;
-                _loggingManager.AddMessage("Audio processing resumed.");
+                _loggingManager.AddMessage("Audio processing resumed.", LogLevel.Info, AudioCategory);
                 // 恢复到正常的监听状态文本
                 OnStatusUpdated(LanguageManager.GetString("StatusListening"));
             }
@@ -107,7 +113,7 @@ namespace lingualink_client.Services.Managers
             // AudioService发送的status是纯状态描述，需要加上本地化的"状态:"前缀
             var formattedStatus = string.Format(LanguageManager.GetString("StatusPrefix"), status);
             OnStatusUpdated(formattedStatus);
-            _loggingManager.AddMessage($"AudioService Status: {status}");
+            _loggingManager.AddMessage($"AudioService Status: {status}", LogLevel.Debug, AudioCategory);
         }
 
         private void OnVadStateChanged(object? sender, VadState newState)
@@ -117,7 +123,7 @@ namespace lingualink_client.Services.Managers
             {
                 State = newState
             });
-            _loggingManager.AddMessage($"VAD State Changed: {newState}");
+            _loggingManager.AddMessage($"VAD State Changed: {newState}", LogLevel.Debug, AudioCategory);
         }
 
         private async void OnAudioSegmentReadyForTranslation(object? sender, AudioSegmentEventArgs e)
@@ -125,7 +131,7 @@ namespace lingualink_client.Services.Managers
             var currentUiStatus = string.Format(LanguageManager.GetString("StatusSendingSegment"), e.TriggerReason);
             OnStatusUpdated(currentUiStatus);
             _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogSendingSegment"), 
-                e.TriggerReason, e.AudioData.Length, DateTime.Now));
+                e.TriggerReason, e.AudioData.Length, DateTime.Now), LogLevel.Info, AudioCategory);
 
             var waveFormat = new WaveFormat(AudioService.APP_SAMPLE_RATE, 16, AudioService.APP_CHANNELS);
 
@@ -145,12 +151,12 @@ namespace lingualink_client.Services.Managers
                     if (template.Contains("{transcription}") || template.Contains("{source_text}") || template.Contains("{原文}"))
                     {
                         task = "transcribe";
-                        _loggingManager.AddMessage("Template contains only transcription placeholders. Setting task to 'transcribe'.");
+                        _loggingManager.AddMessage("Template contains only transcription placeholders. Setting task to 'transcribe'.", LogLevel.Debug, TemplateCategory);
                     }
                 }
                 else
                 {
-                     _loggingManager.AddMessage($"Languages extracted from template for API call: [{string.Join(", ", targetLanguageCodes)}]");
+                     _loggingManager.AddMessage($"Languages extracted from template for API call: [{string.Join(", ", targetLanguageCodes)}]", LogLevel.Debug, TemplateCategory);
                 }
             }
             else
@@ -167,40 +173,47 @@ namespace lingualink_client.Services.Managers
                 {
                     // 如果有任何一个真正的翻译目标，任务必须是 'translate'
                     task = "translate";
-                    _loggingManager.AddMessage($"Manual mode: Translation requested for languages: [{string.Join(", ", targetLanguageCodes)}]");
+                    _loggingManager.AddMessage($"Manual mode: Translation requested for languages: [{string.Join(", ", targetLanguageCodes)}]", LogLevel.Info, AudioCategory);
                 }
                 else if (selectedBackendNames.Contains(LanguageDisplayHelper.TranscriptionBackendName))
                 {
                     // 如果没有翻译目标，但选择了"仅转录"
                     task = "transcribe";
-                    _loggingManager.AddMessage("Manual mode: Only transcription selected. Setting task to 'transcribe'.");
+                    _loggingManager.AddMessage("Manual mode: Only transcription selected. Setting task to 'transcribe'.", LogLevel.Debug, AudioCategory);
                 }
                 else
                 {
                     // 兜底情况：用户可能清空了所有选项，默认为仅转录
                     task = "transcribe";
-                    _loggingManager.AddMessage("Manual mode: No target languages selected. Defaulting to transcribe-only task.");
+                    _loggingManager.AddMessage("Manual mode: No target languages selected. Defaulting to transcribe-only task.", LogLevel.Warning, AudioCategory);
                 }
             }
 
             // 使用新的API服务处理音频，并传入确定的任务类型
+            var stopwatch = Stopwatch.StartNew();
             var apiResult = await _apiService.ProcessAudioAsync(e.AudioData, waveFormat, targetLanguageCodes, task, e.TriggerReason);
+            stopwatch.Stop();
+
+            var elapsedSeconds = Math.Max(0, stopwatch.Elapsed.TotalSeconds);
+            var effectiveDuration = apiResult.ProcessingTime > 0 ? apiResult.ProcessingTime : elapsedSeconds;
 
             string translatedTextForOsc = string.Empty;
             var resultArgs = new TranslationResultEventArgs
             {
-                TriggerReason = e.TriggerReason
+                TriggerReason = e.TriggerReason,
+                DurationSeconds = effectiveDuration
             };
 
             // 记录原始响应
             if (!string.IsNullOrEmpty(apiResult.RawResponse))
             {
                 _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogServerRawResponse"),
-                    e.TriggerReason, apiResult.RawResponse));
+                    e.TriggerReason, apiResult.RawResponse), LogLevel.Trace, ApiCategory);
             }
 
             if (!apiResult.IsSuccess)
             {
+                resultArgs.DurationSeconds = effectiveDuration;
                 currentUiStatus = LanguageManager.GetString("StatusTranslationFailed");
                 resultArgs.IsSuccess = false;
                 resultArgs.ErrorMessage = apiResult.ErrorMessage;
@@ -208,7 +221,7 @@ namespace lingualink_client.Services.Managers
                 resultArgs.ProcessedText = string.Empty;
 
                 _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogTranslationError"),
-                    e.TriggerReason, apiResult.ErrorMessage));
+                    e.TriggerReason, apiResult.ErrorMessage), LogLevel.Error, ApiCategory, apiResult.ErrorMessage);
             }
             else
             {
@@ -218,7 +231,7 @@ namespace lingualink_client.Services.Managers
                     currentUiStatus = LanguageManager.GetString("StatusTranslationSuccess");
                     resultArgs.IsSuccess = true;
                     resultArgs.OriginalText = apiResult.Transcription;
-                    resultArgs.DurationSeconds = apiResult.ProcessingTime;
+                    resultArgs.DurationSeconds = effectiveDuration;
                     
                     // 生成OSC文本 - 直接使用新API格式
                     if (_appSettings.UseCustomTemplate)
@@ -228,7 +241,7 @@ namespace lingualink_client.Services.Managers
 
                         if (string.IsNullOrEmpty(translatedTextForOsc))
                         {
-                            _loggingManager.AddMessage($"Template processing failed - contains unreplaced placeholders. Skipping OSC send for trigger: {e.TriggerReason}");
+                            _loggingManager.AddMessage($"Template processing failed - contains unreplaced placeholders. Skipping OSC send for trigger: {e.TriggerReason}", LogLevel.Warning, TemplateCategory);
                         }
                     }
                     else
@@ -242,7 +255,7 @@ namespace lingualink_client.Services.Managers
                     resultArgs.ProcessedText = translatedTextForOsc;
                     
                     _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogTranslationSuccess"),
-                        e.TriggerReason, apiResult.Transcription, apiResult.ProcessingTime));
+                        e.TriggerReason, apiResult.Transcription, apiResult.ProcessingTime), LogLevel.Info, ApiCategory);
                 }
                 else
                 {
@@ -250,16 +263,16 @@ namespace lingualink_client.Services.Managers
                     currentUiStatus = LanguageManager.GetString("StatusTranslationSuccessNoText");
                     resultArgs.IsSuccess = true;
                     resultArgs.ProcessedText = LanguageManager.GetString("TranslationSuccessNoTextPlaceholder");
-                    resultArgs.DurationSeconds = apiResult.ProcessingTime;
+                    resultArgs.DurationSeconds = effectiveDuration;
 
                     _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogTranslationSuccessNoText"),
-                        e.TriggerReason, apiResult.ProcessingTime));
+                        e.TriggerReason, apiResult.ProcessingTime), LogLevel.Info, ApiCategory);
                 }
             }
             
             // 触发翻译完成事件
             OnStatusUpdated(currentUiStatus);
-            OnTranslationCompleted(resultArgs);
+            OnTranslationCompleted(resultArgs, apiResult, targetLanguageCodes, task, effectiveDuration);
 
             // 发送OSC消息
             if (_appSettings.EnableOsc && _oscService != null && !string.IsNullOrEmpty(translatedTextForOsc))
@@ -299,7 +312,7 @@ namespace lingualink_client.Services.Managers
                 OnStatusUpdated(successStatus);
                 
                 _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogOscSent"), 
-                    message.Split('\n')[0]));
+                    message.Split('\n')[0]), LogLevel.Info, OscCategory);
             }
             catch (Exception ex)
             {
@@ -310,7 +323,7 @@ namespace lingualink_client.Services.Managers
                     ex.Message.Split('\n')[0]);
                 OnStatusUpdated(errorStatus);
                 
-                _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogOscSendFailed"), ex.Message));
+                _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogOscSendFailed"), ex.Message), LogLevel.Error, OscCategory, ex.Message);
             }
             
             OnOscMessageSent(oscArgs);
@@ -324,15 +337,33 @@ namespace lingualink_client.Services.Managers
             });
         }
 
-        private void OnTranslationCompleted(TranslationResultEventArgs args)
+        private void OnTranslationCompleted(
+            TranslationResultEventArgs args,
+            ApiResult apiResult,
+            IEnumerable<string> targetLanguageCodes,
+            string task,
+            double fallbackDurationSeconds)
         {
+            var translations = apiResult.Translations ?? new Dictionary<string, string>();
+            var durationSeconds = args.DurationSeconds.HasValue && args.DurationSeconds > 0
+                ? args.DurationSeconds.Value
+                : (apiResult.ProcessingTime > 0 ? apiResult.ProcessingTime : fallbackDurationSeconds);
+
             _eventAggregator.Publish(new TranslationCompletedEvent
             {
                 TriggerReason = args.TriggerReason,
                 OriginalText = args.OriginalText,
                 ProcessedText = args.ProcessedText,
                 ErrorMessage = args.ErrorMessage,
-                Duration = args.DurationSeconds ?? 0.0
+                Duration = durationSeconds,
+                IsSuccess = args.IsSuccess,
+                Source = TranslationSource.Audio,
+                TargetLanguages = targetLanguageCodes?.ToList() ?? new List<string>(),
+                Translations = new Dictionary<string, string>(translations),
+                Task = task,
+                RequestId = apiResult.RequestId,
+                Metadata = apiResult.Metadata,
+                TimestampUtc = DateTime.UtcNow
             });
         }
 

@@ -41,6 +41,12 @@ namespace lingualink_client.Models
         public double QuietBoostRmsThresholdDbFs { get; set; } = -25.0; // RMS阈值，低于此值的片段将被增强 (dBFS)
         public double QuietBoostGainDb { get; set; } = 6.0; // 对安静片段应用的增益量 (dB)
 
+        // Conversation history configuration
+        public bool ConversationHistoryEnabled { get; set; } = true;
+        public string ConversationHistoryStoragePath { get; set; } = string.Empty;
+        public int ConversationHistoryRetentionDays { get; set; } = 90;
+        public bool ConversationHistoryIncludeFailures { get; set; } = false;
+
         // Get the currently selected template
         public MessageTemplate GetSelectedTemplate()
         {

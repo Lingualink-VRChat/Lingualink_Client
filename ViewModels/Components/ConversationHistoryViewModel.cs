@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Threading;
@@ -24,6 +25,7 @@ namespace lingualink_client.ViewModels.Components
 {
     public partial class ConversationHistoryViewModel : ViewModelBase, IDisposable
     {
+        private const string ClipboardCategory = "Clipboard";
         private readonly IConversationHistoryService _historyService;
         private readonly Dispatcher _dispatcher;
         private readonly ObservableCollection<FilterOption<TranslationSource?>> _sourceFilterOptions = new();
@@ -288,7 +290,7 @@ namespace lingualink_client.ViewModels.Components
             }
 
             var export = await _historyService.ExportAsync(new[] { SelectedEntry.Model }, ConversationExportFormat.PlainText).ConfigureAwait(false);
-            _dispatcher.Invoke(() => Clipboard.SetText(export));
+            await CopyTextToClipboardAsync(export).ConfigureAwait(false);
         }
 
         private bool CanCopySelected() => SelectedEntry != null;
@@ -302,7 +304,26 @@ namespace lingualink_client.ViewModels.Components
             }
 
             var export = await _historyService.ExportAsync(Entries.Select(e => e.Model), ConversationExportFormat.PlainText).ConfigureAwait(false);
-            _dispatcher.Invoke(() => Clipboard.SetText(export));
+            await CopyTextToClipboardAsync(export).ConfigureAwait(false);
+        }
+
+        private Task CopyTextToClipboardAsync(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                return Task.CompletedTask;
+            }
+
+            try
+            {
+                _dispatcher.Invoke(() => Forms.Clipboard.SetText(text, Forms.TextDataFormat.Text));
+            }
+            catch (ExternalException ex)
+            {
+                _loggingManager.AddMessage($"Clipboard copy failed: {ex.Message}", LogLevel.Warning, ClipboardCategory, ex.ToString());
+            }
+
+            return Task.CompletedTask;
         }
 
         [RelayCommand]
@@ -377,12 +398,13 @@ namespace lingualink_client.ViewModels.Components
                 return;
             }
 
-            _entriesRefreshCts?.Cancel();
-            _entriesRefreshCts?.Dispose();
+            var previousCts = _entriesRefreshCts;
+            previousCts?.Cancel();
 
             var sessionId = SelectedSession?.SessionId;
             if (string.IsNullOrWhiteSpace(sessionId))
             {
+                _entriesRefreshCts = null;
                 return;
             }
 
@@ -402,7 +424,16 @@ namespace lingualink_client.ViewModels.Components
                 {
                     // ignored
                 }
-            }, cts.Token);
+                finally
+                {
+                    if (ReferenceEquals(_entriesRefreshCts, cts))
+                    {
+                        _entriesRefreshCts = null;
+                    }
+
+                    cts.Dispose();
+                }
+            });
         }
 
         partial void OnSelectedSessionChanged(ConversationSessionItemViewModel? value)
@@ -537,6 +568,7 @@ namespace lingualink_client.ViewModels.Components
             }
 
             _dispatcher.Invoke(() => StoragePath = _historyService.StorageFolder);
+            _ = RefreshSessionsInternalAsync(retainSelection: false);
         }
 
         private void RefreshFilterOptions()
@@ -623,8 +655,10 @@ namespace lingualink_client.ViewModels.Components
             }
 
             _isDisposed = true;
-            _entriesRefreshCts?.Cancel();
-            _entriesRefreshCts?.Dispose();
+
+            var cts = _entriesRefreshCts;
+            _entriesRefreshCts = null;
+            cts?.Cancel();
 
             _historyService.EntrySaved -= OnEntrySaved;
             _historyService.StoragePathChanged -= OnStoragePathChanged;

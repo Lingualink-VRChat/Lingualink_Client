@@ -102,27 +102,27 @@
             <DataGrid.Columns>
                 <DataGridTextColumn Binding="{Binding Timestamp, StringFormat=yyyy-MM-dd HH:mm:ss.fff}" Width="170">
                     <DataGridTextColumn.Header>
-                        <TextBlock Text="{Binding DataContext.ColumnTimeLabel, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                        <TextBlock Text="{Binding DataContext.ColumnTimeLabel, ElementName=LogDataGrid}" />
                     </DataGridTextColumn.Header>
                 </DataGridTextColumn>
                 <DataGridTextColumn Binding="{Binding Level}" Width="90">
                     <DataGridTextColumn.Header>
-                        <TextBlock Text="{Binding DataContext.ColumnLevelLabel, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                        <TextBlock Text="{Binding DataContext.ColumnLevelLabel, ElementName=LogDataGrid}" />
                     </DataGridTextColumn.Header>
                 </DataGridTextColumn>
                 <DataGridTextColumn Binding="{Binding Category}" Width="150">
                     <DataGridTextColumn.Header>
-                        <TextBlock Text="{Binding DataContext.ColumnCategoryLabel, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                        <TextBlock Text="{Binding DataContext.ColumnCategoryLabel, ElementName=LogDataGrid}" />
                     </DataGridTextColumn.Header>
                 </DataGridTextColumn>
                 <DataGridTextColumn Binding="{Binding Message}" Width="*">
                     <DataGridTextColumn.Header>
-                        <TextBlock Text="{Binding DataContext.ColumnMessageLabel, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                        <TextBlock Text="{Binding DataContext.ColumnMessageLabel, ElementName=LogDataGrid}" />
                     </DataGridTextColumn.Header>
                 </DataGridTextColumn>
                 <DataGridTextColumn Binding="{Binding Details}" Width="300">
                     <DataGridTextColumn.Header>
-                        <TextBlock Text="{Binding DataContext.ColumnDetailsLabel, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                        <TextBlock Text="{Binding DataContext.ColumnDetailsLabel, ElementName=LogDataGrid}" />
                     </DataGridTextColumn.Header>
                 </DataGridTextColumn>
             </DataGrid.Columns>
