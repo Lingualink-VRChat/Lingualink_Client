@@ -752,4 +752,181 @@
   <data name="StatusPausedForInput" xml:space="preserve">
     <value>Listening paused for text input...</value>
   </data>
-</root>
+  <data name="ConversationHistory" xml:space="preserve">
+    <value>Conversation History</value>
+  </data>
+  <data name="Logs" xml:space="preserve">
+    <value>Logs</value>
+  </data>
+  <data name="History" xml:space="preserve">
+    <value>History</value>
+  </data>
+  <data name="HistorySessionsHeader" xml:space="preserve">
+    <value>Sessions</value>
+  </data>
+  <data name="HistoryEntriesHeader" xml:space="preserve">
+    <value>Entry Details</value>
+  </data>
+  <data name="HistoryStoragePath" xml:space="preserve">
+    <value>Storage Path</value>
+  </data>
+  <data name="HistoryChangePath" xml:space="preserve">
+    <value>Change Path</value>
+  </data>
+  <data name="HistoryOpenFolder" xml:space="preserve">
+    <value>Open Folder</value>
+  </data>
+  <data name="HistorySearchPlaceholder" xml:space="preserve">
+    <value>Search history...</value>
+  </data>
+  <data name="HistoryFilterSource" xml:space="preserve">
+    <value>Source</value>
+  </data>
+  <data name="HistoryFilterStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="HistoryFilterFrom" xml:space="preserve">
+    <value>From</value>
+  </data>
+  <data name="HistoryFilterTo" xml:space="preserve">
+    <value>To</value>
+  </data>
+  <data name="HistorySearchInTranslations" xml:space="preserve">
+    <value>Search translations</value>
+  </data>
+  <data name="HistoryCopySelected" xml:space="preserve">
+    <value>Copy Selected</value>
+  </data>
+  <data name="HistoryCopyAll" xml:space="preserve">
+    <value>Copy All</value>
+  </data>
+  <data name="HistoryExportMarkdown" xml:space="preserve">
+    <value>Export Markdown</value>
+  </data>
+  <data name="HistoryExportJson" xml:space="preserve">
+    <value>Export JSON</value>
+  </data>
+  <data name="HistoryFolderMissing" xml:space="preserve">
+    <value>The storage folder could not be found.</value>
+  </data>
+  <data name="HistoryOpenFolderFailed" xml:space="preserve">
+    <value>Unable to open the history folder: {0}</value>
+  </data>
+  <data name="HistorySelectFolderDialog" xml:space="preserve">
+    <value>Select a new folder for conversation history.</value>
+  </data>
+  <data name="HistoryPromptMigrateData" xml:space="preserve">
+    <value>Move existing history data to the new folder?</value>
+  </data>
+  <data name="HistoryChangePathFailed" xml:space="preserve">
+    <value>Failed to change the history storage path.</value>
+  </data>
+  <data name="HistoryFilterAll" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="HistoryFilterAudio" xml:space="preserve">
+    <value>Audio</value>
+  </data>
+  <data name="HistoryFilterText" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="HistoryFilterSuccess" xml:space="preserve">
+    <value>Success</value>
+  </data>
+  <data name="HistoryFilterFailure" xml:space="preserve">
+    <value>Failure</value>
+  </data>
+  <data name="HistoryStatusSuccess" xml:space="preserve">
+    <value>Success</value>
+  </data>
+  <data name="HistoryStatusFailure" xml:space="preserve">
+    <value>Failure</value>
+  </data>
+  <data name="HistorySourceAudio" xml:space="preserve">
+    <value>Audio</value>
+  </data>
+  <data name="HistorySourceText" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="HistorySourceUnknown" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
+  <data name="HistoryNoTargets" xml:space="preserve">
+    <value>No targets</value>
+  </data>
+  <data name="HistorySessionTooltip" xml:space="preserve">
+    <value>Entries: {0} (Success: {1}, Failure: {2})&#x0a;Last activity: {3}</value>
+  </data>
+  <data name="LogSearchPlaceholder" xml:space="preserve">
+    <value>Search logs...</value>
+  </data>
+  <data name="LogCategoryLabel" xml:space="preserve">
+    <value>Category</value>
+  </data>
+  <data name="LogLevelLabel" xml:space="preserve">
+    <value>Levels</value>
+  </data>
+  <data name="LogAutoScroll" xml:space="preserve">
+    <value>Auto scroll</value>
+  </data>
+  <data name="LogLevelTrace" xml:space="preserve">
+    <value>Trace</value>
+  </data>
+  <data name="LogLevelDebug" xml:space="preserve">
+    <value>Debug</value>
+  </data>
+  <data name="LogLevelInfo" xml:space="preserve">
+    <value>Info</value>
+  </data>
+  <data name="LogLevelWarning" xml:space="preserve">
+    <value>Warning</value>
+  </data>
+  <data name="LogLevelError" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="LogLevelCritical" xml:space="preserve">
+    <value>Critical</value>
+  </data>
+  <data name="LogColumnTime" xml:space="preserve">
+    <value>Time</value>
+  </data>
+  <data name="LogColumnLevel" xml:space="preserve">
+    <value>Level</value>
+  </data>
+  <data name="LogColumnCategory" xml:space="preserve">
+    <value>Category</value>
+  </data>
+  <data name="LogColumnMessage" xml:space="preserve">
+    <value>Message</value>
+  </data>
+  <data name="LogColumnDetails" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="LogCategoryAll" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="HistoryColumnTime" xml:space="preserve">
+    <value>Time</value>
+  </data>
+  <data name="HistoryColumnSource" xml:space="preserve">
+    <value>Source</value>
+  </data>
+  <data name="HistoryColumnStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="HistoryColumnTargets" xml:space="preserve">
+    <value>Targets</value>
+  </data>
+  <data name="HistoryColumnDuration" xml:space="preserve">
+    <value>Duration</value>
+  </data>
+  <data name="HistoryColumnSummary" xml:space="preserve">
+    <value>Summary</value>
+  </data>
+  <data name="HistoryDetailsOriginal" xml:space="preserve">
+    <value>Original</value>
+  </data>
+  <data name="HistoryDetailsProcessed" xml:space="preserve">
+    <value>Processed</value>
+  </data></root>
+

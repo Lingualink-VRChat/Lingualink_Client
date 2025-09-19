@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
@@ -701,4 +701,180 @@
   <data name="StatusPausedForInput" xml:space="preserve">
     <value>テキスト入力のため、リスニングを一時停止しました...</value>
   </data>
-</root>
+  <data name="ConversationHistory" xml:space="preserve">
+    <value>会話履歴</value>
+  </data>
+  <data name="Logs" xml:space="preserve">
+    <value>ログ</value>
+  </data>
+  <data name="History" xml:space="preserve">
+    <value>履歴</value>
+  </data>
+  <data name="HistorySessionsHeader" xml:space="preserve">
+    <value>セッション</value>
+  </data>
+  <data name="HistoryEntriesHeader" xml:space="preserve">
+    <value>エントリ詳細</value>
+  </data>
+  <data name="HistoryStoragePath" xml:space="preserve">
+    <value>保存パス</value>
+  </data>
+  <data name="HistoryChangePath" xml:space="preserve">
+    <value>パスを変更</value>
+  </data>
+  <data name="HistoryOpenFolder" xml:space="preserve">
+    <value>フォルダーを開く</value>
+  </data>
+  <data name="HistorySearchPlaceholder" xml:space="preserve">
+    <value>履歴を検索...</value>
+  </data>
+  <data name="HistoryFilterSource" xml:space="preserve">
+    <value>ソース</value>
+  </data>
+  <data name="HistoryFilterStatus" xml:space="preserve">
+    <value>ステータス</value>
+  </data>
+  <data name="HistoryFilterFrom" xml:space="preserve">
+    <value>開始日</value>
+  </data>
+  <data name="HistoryFilterTo" xml:space="preserve">
+    <value>終了日</value>
+  </data>
+  <data name="HistorySearchInTranslations" xml:space="preserve">
+    <value>翻訳結果を検索</value>
+  </data>
+  <data name="HistoryCopySelected" xml:space="preserve">
+    <value>選択をコピー</value>
+  </data>
+  <data name="HistoryCopyAll" xml:space="preserve">
+    <value>すべてコピー</value>
+  </data>
+  <data name="HistoryExportMarkdown" xml:space="preserve">
+    <value>Markdown にエクスポート</value>
+  </data>
+  <data name="HistoryExportJson" xml:space="preserve">
+    <value>JSON にエクスポート</value>
+  </data>
+  <data name="HistoryFolderMissing" xml:space="preserve">
+    <value>履歴フォルダーが見つかりません。</value>
+  </data>
+  <data name="HistoryOpenFolderFailed" xml:space="preserve">
+    <value>履歴フォルダーを開けません: {0}</value>
+  </data>
+  <data name="HistorySelectFolderDialog" xml:space="preserve">
+    <value>会話履歴を保存する新しいフォルダーを選択してください。</value>
+  </data>
+  <data name="HistoryPromptMigrateData" xml:space="preserve">
+    <value>既存の履歴データを新しいフォルダーに移動しますか？</value>
+  </data>
+  <data name="HistoryChangePathFailed" xml:space="preserve">
+    <value>履歴の保存パスの変更に失敗しました。</value>
+  </data>
+  <data name="HistoryFilterAll" xml:space="preserve">
+    <value>すべて</value>
+  </data>
+  <data name="HistoryFilterAudio" xml:space="preserve">
+    <value>音声</value>
+  </data>
+  <data name="HistoryFilterText" xml:space="preserve">
+    <value>テキスト</value>
+  </data>
+  <data name="HistoryFilterSuccess" xml:space="preserve">
+    <value>成功</value>
+  </data>
+  <data name="HistoryFilterFailure" xml:space="preserve">
+    <value>失敗</value>
+  </data>
+  <data name="HistoryStatusSuccess" xml:space="preserve">
+    <value>成功</value>
+  </data>
+  <data name="HistoryStatusFailure" xml:space="preserve">
+    <value>失敗</value>
+  </data>
+  <data name="HistorySourceAudio" xml:space="preserve">
+    <value>音声</value>
+  </data>
+  <data name="HistorySourceText" xml:space="preserve">
+    <value>テキスト</value>
+  </data>
+  <data name="HistorySourceUnknown" xml:space="preserve">
+    <value>不明</value>
+  </data>
+  <data name="HistoryNoTargets" xml:space="preserve">
+    <value>対象なし</value>
+  </data>
+  <data name="HistorySessionTooltip" xml:space="preserve">
+    <value>合計: {0}（成功: {1}、失敗: {2}）&#x0a;最終更新: {3}</value>
+  </data>
+  <data name="LogSearchPlaceholder" xml:space="preserve">
+    <value>ログを検索...</value>
+  </data>
+  <data name="LogCategoryLabel" xml:space="preserve">
+    <value>カテゴリ</value>
+  </data>
+  <data name="LogLevelLabel" xml:space="preserve">
+    <value>レベル</value>
+  </data>
+  <data name="LogAutoScroll" xml:space="preserve">
+    <value>自動スクロール</value>
+  </data>
+  <data name="LogLevelTrace" xml:space="preserve">
+    <value>トレース</value>
+  </data>
+  <data name="LogLevelDebug" xml:space="preserve">
+    <value>デバッグ</value>
+  </data>
+  <data name="LogLevelInfo" xml:space="preserve">
+    <value>情報</value>
+  </data>
+  <data name="LogLevelWarning" xml:space="preserve">
+    <value>警告</value>
+  </data>
+  <data name="LogLevelError" xml:space="preserve">
+    <value>エラー</value>
+  </data>
+  <data name="LogLevelCritical" xml:space="preserve">
+    <value>重大</value>
+  </data>
+  <data name="LogColumnTime" xml:space="preserve">
+    <value>時間</value>
+  </data>
+  <data name="LogColumnLevel" xml:space="preserve">
+    <value>レベル</value>
+  </data>
+  <data name="LogColumnCategory" xml:space="preserve">
+    <value>カテゴリ</value>
+  </data>
+  <data name="LogColumnMessage" xml:space="preserve">
+    <value>メッセージ</value>
+  </data>
+  <data name="LogColumnDetails" xml:space="preserve">
+    <value>詳細</value>
+  </data>
+  <data name="LogCategoryAll" xml:space="preserve">
+    <value>すべて</value>
+  </data>
+  <data name="HistoryColumnTime" xml:space="preserve">
+    <value>時刻</value>
+  </data>
+  <data name="HistoryColumnSource" xml:space="preserve">
+    <value>ソース</value>
+  </data>
+  <data name="HistoryColumnStatus" xml:space="preserve">
+    <value>状態</value>
+  </data>
+  <data name="HistoryColumnTargets" xml:space="preserve">
+    <value>ターゲット</value>
+  </data>
+  <data name="HistoryColumnDuration" xml:space="preserve">
+    <value>時間</value>
+  </data>
+  <data name="HistoryColumnSummary" xml:space="preserve">
+    <value>概要</value>
+  </data>
+  <data name="HistoryDetailsOriginal" xml:space="preserve">
+    <value>原文</value>
+  </data>
+  <data name="HistoryDetailsProcessed" xml:space="preserve">
+    <value>処理後</value>
+  </data></root>

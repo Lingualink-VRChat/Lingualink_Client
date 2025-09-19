@@ -751,4 +751,180 @@
   <data name="StatusPausedForInput" xml:space="preserve">
     <value>为进行文本输入，监听已暂停...</value>
   </data>
-</root>
+  <data name="ConversationHistory" xml:space="preserve">
+    <value>对话历史</value>
+  </data>
+  <data name="Logs" xml:space="preserve">
+    <value>日志</value>
+  </data>
+  <data name="History" xml:space="preserve">
+    <value>历史</value>
+  </data>
+  <data name="HistorySessionsHeader" xml:space="preserve">
+    <value>会话</value>
+  </data>
+  <data name="HistoryEntriesHeader" xml:space="preserve">
+    <value>条目详情</value>
+  </data>
+  <data name="HistoryStoragePath" xml:space="preserve">
+    <value>存储路径</value>
+  </data>
+  <data name="HistoryChangePath" xml:space="preserve">
+    <value>更改路径</value>
+  </data>
+  <data name="HistoryOpenFolder" xml:space="preserve">
+    <value>打开文件夹</value>
+  </data>
+  <data name="HistorySearchPlaceholder" xml:space="preserve">
+    <value>搜索历史...</value>
+  </data>
+  <data name="HistoryFilterSource" xml:space="preserve">
+    <value>来源</value>
+  </data>
+  <data name="HistoryFilterStatus" xml:space="preserve">
+    <value>状态</value>
+  </data>
+  <data name="HistoryFilterFrom" xml:space="preserve">
+    <value>起始日期</value>
+  </data>
+  <data name="HistoryFilterTo" xml:space="preserve">
+    <value>结束日期</value>
+  </data>
+  <data name="HistorySearchInTranslations" xml:space="preserve">
+    <value>搜索翻译文本</value>
+  </data>
+  <data name="HistoryCopySelected" xml:space="preserve">
+    <value>复制所选</value>
+  </data>
+  <data name="HistoryCopyAll" xml:space="preserve">
+    <value>复制全部</value>
+  </data>
+  <data name="HistoryExportMarkdown" xml:space="preserve">
+    <value>导出为 Markdown</value>
+  </data>
+  <data name="HistoryExportJson" xml:space="preserve">
+    <value>导出为 JSON</value>
+  </data>
+  <data name="HistoryFolderMissing" xml:space="preserve">
+    <value>找不到历史记录目录。</value>
+  </data>
+  <data name="HistoryOpenFolderFailed" xml:space="preserve">
+    <value>无法打开历史记录目录：{0}</value>
+  </data>
+  <data name="HistorySelectFolderDialog" xml:space="preserve">
+    <value>请选择保存对话历史的新文件夹。</value>
+  </data>
+  <data name="HistoryPromptMigrateData" xml:space="preserve">
+    <value>是否将现有历史记录移动到新文件夹？</value>
+  </data>
+  <data name="HistoryChangePathFailed" xml:space="preserve">
+    <value>历史记录存储路径更改失败。</value>
+  </data>
+  <data name="HistoryFilterAll" xml:space="preserve">
+    <value>全部</value>
+  </data>
+  <data name="HistoryFilterAudio" xml:space="preserve">
+    <value>语音</value>
+  </data>
+  <data name="HistoryFilterText" xml:space="preserve">
+    <value>文本</value>
+  </data>
+  <data name="HistoryFilterSuccess" xml:space="preserve">
+    <value>成功</value>
+  </data>
+  <data name="HistoryFilterFailure" xml:space="preserve">
+    <value>失败</value>
+  </data>
+  <data name="HistoryStatusSuccess" xml:space="preserve">
+    <value>成功</value>
+  </data>
+  <data name="HistoryStatusFailure" xml:space="preserve">
+    <value>失败</value>
+  </data>
+  <data name="HistorySourceAudio" xml:space="preserve">
+    <value>语音</value>
+  </data>
+  <data name="HistorySourceText" xml:space="preserve">
+    <value>文本</value>
+  </data>
+  <data name="HistorySourceUnknown" xml:space="preserve">
+    <value>未知</value>
+  </data>
+  <data name="HistoryNoTargets" xml:space="preserve">
+    <value>无目标</value>
+  </data>
+  <data name="HistorySessionTooltip" xml:space="preserve">
+    <value>总数：{0}（成功：{1}，失败：{2}）&#x0a;上次更新时间：{3}</value>
+  </data>
+  <data name="LogSearchPlaceholder" xml:space="preserve">
+    <value>搜索日志...</value>
+  </data>
+  <data name="LogCategoryLabel" xml:space="preserve">
+    <value>分类</value>
+  </data>
+  <data name="LogLevelLabel" xml:space="preserve">
+    <value>级别</value>
+  </data>
+  <data name="LogAutoScroll" xml:space="preserve">
+    <value>自动滚动</value>
+  </data>
+  <data name="LogLevelTrace" xml:space="preserve">
+    <value>跟踪</value>
+  </data>
+  <data name="LogLevelDebug" xml:space="preserve">
+    <value>调试</value>
+  </data>
+  <data name="LogLevelInfo" xml:space="preserve">
+    <value>信息</value>
+  </data>
+  <data name="LogLevelWarning" xml:space="preserve">
+    <value>警告</value>
+  </data>
+  <data name="LogLevelError" xml:space="preserve">
+    <value>错误</value>
+  </data>
+  <data name="LogLevelCritical" xml:space="preserve">
+    <value>严重</value>
+  </data>
+  <data name="LogColumnTime" xml:space="preserve">
+    <value>时间</value>
+  </data>
+  <data name="LogColumnLevel" xml:space="preserve">
+    <value>级别</value>
+  </data>
+  <data name="LogColumnCategory" xml:space="preserve">
+    <value>分类</value>
+  </data>
+  <data name="LogColumnMessage" xml:space="preserve">
+    <value>消息</value>
+  </data>
+  <data name="LogColumnDetails" xml:space="preserve">
+    <value>详情</value>
+  </data>
+  <data name="LogCategoryAll" xml:space="preserve">
+    <value>全部</value>
+  </data>
+  <data name="HistoryColumnTime" xml:space="preserve">
+    <value>时间</value>
+  </data>
+  <data name="HistoryColumnSource" xml:space="preserve">
+    <value>来源</value>
+  </data>
+  <data name="HistoryColumnStatus" xml:space="preserve">
+    <value>状态</value>
+  </data>
+  <data name="HistoryColumnTargets" xml:space="preserve">
+    <value>目标</value>
+  </data>
+  <data name="HistoryColumnDuration" xml:space="preserve">
+    <value>时长</value>
+  </data>
+  <data name="HistoryColumnSummary" xml:space="preserve">
+    <value>摘要</value>
+  </data>
+  <data name="HistoryDetailsOriginal" xml:space="preserve">
+    <value>原文</value>
+  </data>
+  <data name="HistoryDetailsProcessed" xml:space="preserve">
+    <value>处理后</value>
+  </data></root>

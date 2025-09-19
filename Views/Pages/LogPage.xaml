@@ -11,40 +11,121 @@
     mc:Ignorable="d">
 
     <Grid Margin="15">
-        <!--  Increased margin for a page view  -->
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <!--  Log Label & Clear Button  -->
             <RowDefinition Height="*" />
-            <!--  Log TextBox  -->
         </Grid.RowDefinitions>
 
-        <StackPanel
-            Grid.Row="0"
-            Margin="0,0,0,10"
-            Orientation="Horizontal">
-            <Label
-                VerticalAlignment="Center"
-                Content="{Binding RunningLogLabel}"
-                FontSize="16"
-                FontWeight="SemiBold" />
-            <ui:Button
-                Margin="15,0,0,0"
-                Padding="8,4"
-                HorizontalAlignment="Right"
-                VerticalAlignment="Center"
-                Command="{Binding ClearLogCommand}"
-                Content="{Binding ClearLogLabel}" />
+        <StackPanel Grid.Row="0" Orientation="Vertical" Margin="0,0,0,12">
+            <StackPanel Orientation="Horizontal">
+                <ui:TextBox
+                    Width="260"
+                    Margin="0,0,12,0"
+                    Padding="8,4"
+                    PlaceholderText="{Binding SearchPlaceholder}"
+                    Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" />
+                <ComboBox
+                    Width="200"
+                    ItemsSource="{Binding CategoryOptions}"
+                    SelectedValue="{Binding SelectedCategory}"
+                    SelectedValuePath="Value"
+                    DisplayMemberPath="Label" />
+                <CheckBox
+                    Margin="12,4,0,0"
+                    Content="{Binding AutoScrollLabel}"
+                    IsChecked="{Binding AutoScroll}" />
+            </StackPanel>
+
+            <StackPanel Orientation="Vertical" Margin="0,8,0,0">
+                <TextBlock
+                    FontSize="12"
+                    Foreground="Gray"
+                    Margin="0,0,0,4"
+                    Text="{Binding LevelLabel}" />
+                <WrapPanel ItemHeight="28" ItemWidth="90">
+                    <CheckBox Content="{Binding TraceLabel}" IsChecked="{Binding ShowTrace}" />
+                    <CheckBox Content="{Binding DebugLabel}" IsChecked="{Binding ShowDebug}" />
+                    <CheckBox Content="{Binding InfoLabel}" IsChecked="{Binding ShowInfo}" />
+                    <CheckBox Content="{Binding WarningLabel}" IsChecked="{Binding ShowWarning}" />
+                    <CheckBox Content="{Binding ErrorLabel}" IsChecked="{Binding ShowError}" />
+                    <CheckBox Content="{Binding CriticalLabel}" IsChecked="{Binding ShowCritical}" />
+                </WrapPanel>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                <ui:Button
+                    Margin="0,0,8,0"
+                    Padding="10,6"
+                    Appearance="Secondary"
+                    Command="{Binding ClearLogCommand}"
+                    Content="{Binding ClearLogLabel}" />
+                <ui:Button
+                    Margin="0,0,8,0"
+                    Padding="10,6"
+                    Appearance="Secondary"
+                    Command="{Binding CopySelectedCommand}"
+                    CommandParameter="{Binding SelectedItems, ElementName=LogDataGrid}"
+                    Content="{Binding CopySelectedLabel}" />
+                <ui:Button
+                    Margin="0,0,8,0"
+                    Padding="10,6"
+                    Appearance="Secondary"
+                    Command="{Binding CopyAllCommand}"
+                    Content="{Binding CopyAllLabel}" />
+                <ui:Button
+                    Margin="0,0,8,0"
+                    Padding="10,6"
+                    Appearance="Secondary"
+                    Command="{Binding ExportCommand}"
+                    CommandParameter="markdown"
+                    Content="{Binding ExportMarkdownLabel}" />
+                <ui:Button
+                    Padding="10,6"
+                    Appearance="Secondary"
+                    Command="{Binding ExportCommand}"
+                    CommandParameter="json"
+                    Content="{Binding ExportJsonLabel}" />
+            </StackPanel>
         </StackPanel>
 
-        <ui:TextBox
+        <DataGrid
+            x:Name="LogDataGrid"
             Grid.Row="1"
-            AcceptsReturn="True"
-            FontFamily="Consolas"
-            FontSize="12"
+            AutoGenerateColumns="False"
+            EnableRowVirtualization="True"
+            CanUserAddRows="False"
             IsReadOnly="True"
-            Text="{Binding FormattedLogMessages, Mode=OneWay}"
-            TextWrapping="Wrap"
-            VerticalScrollBarVisibility="Auto" />
+            ItemsSource="{Binding EntriesView}"
+            SelectionMode="Extended"
+            SelectionUnit="FullRow"
+            HeadersVisibility="Column">
+            <DataGrid.Columns>
+                <DataGridTextColumn Binding="{Binding Timestamp, StringFormat=yyyy-MM-dd HH:mm:ss.fff}" Width="170">
+                    <DataGridTextColumn.Header>
+                        <TextBlock Text="{Binding DataContext.ColumnTimeLabel, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding Level}" Width="90">
+                    <DataGridTextColumn.Header>
+                        <TextBlock Text="{Binding DataContext.ColumnLevelLabel, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding Category}" Width="150">
+                    <DataGridTextColumn.Header>
+                        <TextBlock Text="{Binding DataContext.ColumnCategoryLabel, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding Message}" Width="*">
+                    <DataGridTextColumn.Header>
+                        <TextBlock Text="{Binding DataContext.ColumnMessageLabel, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding Details}" Width="300">
+                    <DataGridTextColumn.Header>
+                        <TextBlock Text="{Binding DataContext.ColumnDetailsLabel, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                    </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+            </DataGrid.Columns>
+        </DataGrid>
     </Grid>
 </Page>
