@@ -289,8 +289,13 @@ namespace lingualink_client.ViewModels.Components
                 return;
             }
 
-            var export = await _historyService.ExportAsync(new[] { SelectedEntry.Model }, ConversationExportFormat.PlainText).ConfigureAwait(false);
-            await CopyTextToClipboardAsync(export).ConfigureAwait(false);
+            var summary = SelectedEntry.Summary?.Trim();
+            if (string.IsNullOrWhiteSpace(summary))
+            {
+                return;
+            }
+
+            await CopyTextToClipboardAsync(summary).ConfigureAwait(false);
         }
 
         private bool CanCopySelected() => SelectedEntry != null;
@@ -303,8 +308,25 @@ namespace lingualink_client.ViewModels.Components
                 return;
             }
 
-            var export = await _historyService.ExportAsync(Entries.Select(e => e.Model), ConversationExportFormat.PlainText).ConfigureAwait(false);
-            await CopyTextToClipboardAsync(export).ConfigureAwait(false);
+            var text = BuildSummaryExport(Entries);
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                return;
+            }
+
+            await CopyTextToClipboardAsync(text).ConfigureAwait(false);
+        }
+
+        private static string BuildSummaryExport(IEnumerable<ConversationEntryItemViewModel> entries)
+        {
+            var summaries = entries
+                .Select(entry => entry.Summary?.Trim())
+                .Where(summary => !string.IsNullOrWhiteSpace(summary))
+                .ToList();
+
+            return summaries.Count == 0
+                ? string.Empty
+                : string.Join(Environment.NewLine, summaries);
         }
 
         private Task CopyTextToClipboardAsync(string text)
