@@ -1,4 +1,4 @@
-﻿<Page
+<Page
     x:Class="lingualink_client.Views.SettingPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -22,11 +22,11 @@
             </Grid.RowDefinitions>
 
             <!-- Page Title -->
-            <TextBlock 
-                Grid.Row="0" 
-                Text="{Binding PageTitle}" 
-                FontSize="18" 
-                FontWeight="Bold" 
+            <TextBlock
+                Grid.Row="0"
+                Text="{Binding PageTitle}"
+                FontSize="18"
+                FontWeight="Bold"
                 Margin="0,0,0,20" />
 
             <!-- Interface Language Section -->
@@ -43,7 +43,7 @@
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
-                <TextBlock 
+                <TextBlock
                     Text="{Binding LanguageHint}"
                     TextWrapping="Wrap"
                     Margin="0,5,0,0"
@@ -52,7 +52,66 @@
                     FontSize="11" />
             </StackPanel>
 
-            <!-- (Former log section removed to avoid duplication with dedicated Logs page) -->
-    </Grid>
-</ScrollViewer>
+            <!-- Update Section -->
+            <StackPanel Grid.Row="2" Margin="0,0,0,30">
+                <Label Content="{Binding UpdateSectionTitle}" FontWeight="Bold" FontSize="14" />
+
+                <Grid Margin="0,10,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="{Binding CurrentVersionLabel}" FontWeight="SemiBold" />
+                    <TextBlock Grid.Column="1" Margin="12,0,0,0" Text="{Binding CurrentVersion}" />
+                </Grid>
+
+                <Grid Margin="0,5,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="{Binding LatestVersionLabel}" FontWeight="SemiBold" />
+                    <TextBlock Grid.Column="1" Margin="12,0,0,0" Text="{Binding LatestVersion}" />
+                </Grid>
+
+                <ui:Button
+                    Margin="0,12,0,0"
+                    Command="{Binding CheckForUpdateCommand}"
+                    Content="{Binding CheckForUpdatesLabel}" />
+
+                <StackPanel
+                    Margin="0,12,0,0"
+                    Visibility="{Binding HasUpdate, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <ui:Button
+                        Command="{Binding DownloadAndUpdateCommand}"
+                        Content="{Binding DownloadAndUpdateLabel}" />
+
+                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0" VerticalAlignment="Center" Visibility="{Binding IsDownloading, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <TextBlock
+                            Text="{Binding DownloadProgressLabel}"
+                            VerticalAlignment="Center"
+                            Margin="0,0,12,0" />
+                        <ProgressBar
+                            Width="200"
+                            Height="16"
+                            Maximum="100"
+                            Value="{Binding DownloadProgress}" />
+                    </StackPanel>
+
+                    <Border
+                        Margin="0,12,0,0"
+                        BorderBrush="#FFE0E0E0"
+                        BorderThickness="1"
+                        CornerRadius="4"
+                        Padding="10"
+                        Visibility="{Binding HasUpdate, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="120">
+                            <TextBlock Text="{Binding UpdateNotes}" TextWrapping="Wrap" />
+                        </ScrollViewer>
+                    </Border>
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
 </Page>
+

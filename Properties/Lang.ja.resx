@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
@@ -877,4 +877,60 @@
   </data>
   <data name="HistoryDetailsProcessed" xml:space="preserve">
     <value>処理後</value>
-  </data></root>
+  </data>  <data name="UpdateSettings" xml:space="preserve">
+    <value>アップデート</value>
+  </data>
+  <data name="UpdateCurrentVersion" xml:space="preserve">
+    <value>現在のバージョン</value>
+  </data>
+  <data name="UpdateLatestVersion" xml:space="preserve">
+    <value>最新バージョン</value>
+  </data>
+  <data name="UpdateCheckButton" xml:space="preserve">
+    <value>アップデートを確認</value>
+  </data>
+  <data name="UpdateDownloadButton" xml:space="preserve">
+    <value>ダウンロードして更新</value>
+  </data>
+  <data name="UpdateDownloadProgress" xml:space="preserve">
+    <value>ダウンロード進捗</value>
+  </data>
+  <data name="UpdateStatusNotChecked" xml:space="preserve">
+    <value>まだ確認されていません</value>
+  </data>
+  <data name="UpdateStatusChecking" xml:space="preserve">
+    <value>確認中...</value>
+  </data>
+  <data name="UpdateStatusUpToDate" xml:space="preserve">
+    <value>最新の状態です</value>
+  </data>
+  <data name="UpdateStatusFailed" xml:space="preserve">
+    <value>確認に失敗しました</value>
+  </data>
+  <data name="UpdateStatusUnavailable" xml:space="preserve">
+    <value>このビルドではアップデートできません</value>
+  </data>
+  <data name="UpdateErrorCheck" xml:space="preserve">
+    <value>アップデートの確認に失敗しました</value>
+  </data>
+  <data name="UpdateDialogDownloadPrompt" xml:space="preserve">
+    <value>更新がダウンロードされました。今すぐ再起動して適用しますか？</value>
+  </data>
+  <data name="UpdateReadyTitle" xml:space="preserve">
+    <value>アップデート準備完了</value>
+  </data>
+  <data name="UpdateErrorDownload" xml:space="preserve">
+    <value>アップデートのダウンロードに失敗しました</value>
+  </data>
+  <data name="UpdateErrorTitle" xml:space="preserve">
+    <value>エラー</value>
+  </data>
+  <data name="UpdateNotesUnavailable" xml:space="preserve">
+    <value>リリースノートはありません。</value>
+  </data>
+  <data name="UpdateVersionUnknown" xml:space="preserve">
+    <value>不明</value>
+  </data>
+</root>
+
+

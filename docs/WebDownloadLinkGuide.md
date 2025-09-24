@@ -15,7 +15,7 @@
 ## 2. 如何判定“最新版本”
 `RELEASES-<channelSuffix>` 文件是一个使用制表符分隔的文本清单，每行代表一个版本。最后一行即为最新版本。例如：
 ```
-<sha1>\t<filesize>\tLinguaLinkClient-SelfContained-3.3.0-self-contained-full.nupkg\t3.3.0
+<sha1>\t<filesize>\tLinguaLinkClient-SelfContained-3.4.0-self-contained-full.nupkg\t3.4.0
 ```
 字段含义：
 - 列 1：包的 SHA1 哈希（Velopack 用于校验）。

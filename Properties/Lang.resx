@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
@@ -928,5 +928,62 @@
   </data>
   <data name="HistoryDetailsProcessed" xml:space="preserve">
     <value>Processed</value>
-  </data></root>
+  </data>  <data name="UpdateSettings" xml:space="preserve">
+    <value>Updates</value>
+  </data>
+  <data name="UpdateCurrentVersion" xml:space="preserve">
+    <value>Current Version</value>
+  </data>
+  <data name="UpdateLatestVersion" xml:space="preserve">
+    <value>Latest Version</value>
+  </data>
+  <data name="UpdateCheckButton" xml:space="preserve">
+    <value>Check for Updates</value>
+  </data>
+  <data name="UpdateDownloadButton" xml:space="preserve">
+    <value>Download and Update</value>
+  </data>
+  <data name="UpdateDownloadProgress" xml:space="preserve">
+    <value>Download progress</value>
+  </data>
+  <data name="UpdateStatusNotChecked" xml:space="preserve">
+    <value>Not checked yet</value>
+  </data>
+  <data name="UpdateStatusChecking" xml:space="preserve">
+    <value>Checking...</value>
+  </data>
+  <data name="UpdateStatusUpToDate" xml:space="preserve">
+    <value>Up to date</value>
+  </data>
+  <data name="UpdateStatusFailed" xml:space="preserve">
+    <value>Check failed</value>
+  </data>
+  <data name="UpdateStatusUnavailable" xml:space="preserve">
+    <value>Updates unavailable in this build</value>
+  </data>
+  <data name="UpdateErrorCheck" xml:space="preserve">
+    <value>Failed to check for updates</value>
+  </data>
+  <data name="UpdateDialogDownloadPrompt" xml:space="preserve">
+    <value>Update downloaded. Restart now to apply?</value>
+  </data>
+  <data name="UpdateReadyTitle" xml:space="preserve">
+    <value>Update Ready</value>
+  </data>
+  <data name="UpdateErrorDownload" xml:space="preserve">
+    <value>Failed to download update</value>
+  </data>
+  <data name="UpdateErrorTitle" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="UpdateNotesUnavailable" xml:space="preserve">
+    <value>No release notes available.</value>
+  </data>
+  <data name="UpdateVersionUnknown" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
+</root>
+
+
+
 

@@ -1,4 +1,4 @@
-﻿# LinguaLink Client 发布指南
+# LinguaLink Client 发布指南
 
 本文档记录了在本地构建并发布 Windows 客户端的推荐流程，覆盖密钥存储、打包脚本的使用以及将产物推送到对象存储（兼容 S3 的 rains3 桶）。每次发版前请完成以下准备。
 
@@ -48,7 +48,7 @@ Velopack 会把该文件嵌入发布包，客户端弹窗能读取最新更新�
 
 ```powershell
 # 在仓库根目录执行，-Version 可省略（默认继承 csproj 中的版本号）
-powershell -ExecutionPolicy Bypass -File scripts/Build-Release.ps1 -Version 3.3.0
+powershell -ExecutionPolicy Bypass -File scripts/Build-Release.ps1 -Version 3.4.0
 ```
 
 脚本会：
@@ -75,13 +75,13 @@ powershell -ExecutionPolicy Bypass -File scripts/Build-Release.ps1 -Version 3.3.
 powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -DryRun
 
 # 正式上传两个通道
-powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -Version 3.3.0
+powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -Version 3.4.0
 
 # 仅上传自包含版本
-powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -SelfContainedOnly -Version 3.3.0
+powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -SelfContainedOnly -Version 3.4.0
 
 # 仅上传框架依赖版本
-powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -FrameworkOnly -Version 3.3.0
+powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -FrameworkOnly -Version 3.4.0
 ```
 
 脚本说明：

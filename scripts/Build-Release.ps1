@@ -1,5 +1,5 @@
-﻿param(
-    [string]$Version = "3.3.0",
+param(
+    [string]$Version = "3.4.0",
     [switch]$SkipSelfContained,
     [switch]$SkipFrameworkDependent,
     [switch]$SkipPublish,
@@ -108,13 +108,40 @@ if (-not $SkipPackage) {
         Write-Info "Velopack 打包自包含版本"
         $args = Build-VpkArgs "$packIdBase-SelfContained" $releaseSelfDir $publishSelfDir 'self-contained'
         Invoke-CommandSafe $vpkExe $args
+
+        $generatedManifest = Join-Path $releaseSelfDir 'RELEASES-self-contained'
+        $targetManifest = Join-Path $releaseSelfDir 'RELEASES'
+        if (Test-Path $generatedManifest) {
+            Write-Info "重命名 $generatedManifest 為 $targetManifest"
+            if ($DryRun) {
+                Write-Info "DryRun 模式：不執行重命名"
+            } else {
+                Move-Item -Path $generatedManifest -Destination $targetManifest -Force
+            }
+        } else {
+            Write-Warn "未找到生成的清單文件: $generatedManifest"
+        }
     }
 
     if (-not $SkipFrameworkDependent) {
         Write-Info "Velopack 打包框架依賴版本"
         $args = Build-VpkArgs "$packIdBase-Framework" $releaseFxDir $publishFxDir 'framework'
         Invoke-CommandSafe $vpkExe $args
+
+        $generatedManifest = Join-Path $releaseFxDir 'RELEASES-framework'
+        $targetManifest = Join-Path $releaseFxDir 'RELEASES'
+        if (Test-Path $generatedManifest) {
+            Write-Info "重命名 $generatedManifest 為 $targetManifest"
+            if ($DryRun) {
+                Write-Info "DryRun 模式：不執行重命名"
+            } else {
+                Move-Item -Path $generatedManifest -Destination $targetManifest -Force
+            }
+        } else {
+            Write-Warn "未找到生成的清單文件: $generatedManifest"
+        }
     }
 }
 
 Write-Info "Artifacts generated in $artifactsRoot"
+

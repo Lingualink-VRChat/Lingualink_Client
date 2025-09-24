@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
@@ -927,4 +927,60 @@
   </data>
   <data name="HistoryDetailsProcessed" xml:space="preserve">
     <value>处理后</value>
-  </data></root>
+  </data>  <data name="UpdateSettings" xml:space="preserve">
+    <value>更新</value>
+  </data>
+  <data name="UpdateCurrentVersion" xml:space="preserve">
+    <value>当前版本</value>
+  </data>
+  <data name="UpdateLatestVersion" xml:space="preserve">
+    <value>最新版本</value>
+  </data>
+  <data name="UpdateCheckButton" xml:space="preserve">
+    <value>检查更新</value>
+  </data>
+  <data name="UpdateDownloadButton" xml:space="preserve">
+    <value>下载并更新</value>
+  </data>
+  <data name="UpdateDownloadProgress" xml:space="preserve">
+    <value>下载进度</value>
+  </data>
+  <data name="UpdateStatusNotChecked" xml:space="preserve">
+    <value>尚未检查</value>
+  </data>
+  <data name="UpdateStatusChecking" xml:space="preserve">
+    <value>正在检查...</value>
+  </data>
+  <data name="UpdateStatusUpToDate" xml:space="preserve">
+    <value>已是最新版本</value>
+  </data>
+  <data name="UpdateStatusFailed" xml:space="preserve">
+    <value>检查失败</value>
+  </data>
+  <data name="UpdateStatusUnavailable" xml:space="preserve">
+    <value>此构建不支持更新</value>
+  </data>
+  <data name="UpdateErrorCheck" xml:space="preserve">
+    <value>检查更新失败</value>
+  </data>
+  <data name="UpdateDialogDownloadPrompt" xml:space="preserve">
+    <value>更新已下载。是否立即重启应用更新？</value>
+  </data>
+  <data name="UpdateReadyTitle" xml:space="preserve">
+    <value>更新就绪</value>
+  </data>
+  <data name="UpdateErrorDownload" xml:space="preserve">
+    <value>下载更新失败</value>
+  </data>
+  <data name="UpdateErrorTitle" xml:space="preserve">
+    <value>错误</value>
+  </data>
+  <data name="UpdateNotesUnavailable" xml:space="preserve">
+    <value>未提供更新日志。</value>
+  </data>
+  <data name="UpdateVersionUnknown" xml:space="preserve">
+    <value>未知</value>
+  </data>
+</root>
+
+
