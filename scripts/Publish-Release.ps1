@@ -13,6 +13,80 @@ function Write-Info($message) { Write-Host "[INFO] $message" -ForegroundColor Cy
 function Write-Warn($message) { Write-Host "[WARN] $message" -ForegroundColor Yellow }
 function Write-ErrorAndExit($message, $code = 1) { Write-Host "[ERROR] $message" -ForegroundColor Red; exit $code }
 
+function Normalize-Prefix {
+    param([string]$Prefix)
+
+    if ([string]::IsNullOrWhiteSpace($Prefix)) {
+        return ""
+    }
+
+    $normalized = $Prefix -replace '[\\]+','/'
+    $segments = $normalized.Split('/', [System.StringSplitOptions]::RemoveEmptyEntries)
+    return ($segments -join '/')
+}
+
+function Join-UrlSegments {
+    param(
+        [Parameter(Mandatory = $true)][string]$BaseUrl,
+        [string[]]$Segments
+    )
+
+    $result = $BaseUrl.TrimEnd('/')
+
+    foreach ($segment in $Segments) {
+        if ([string]::IsNullOrWhiteSpace($segment)) {
+            continue
+        }
+
+        $clean = ($segment -replace '[\\]+','/').Trim('/')
+        if ($clean) {
+            $result = "$result/$clean"
+        }
+    }
+
+    return $result
+}
+
+function Get-PublicBaseUrls {
+    param(
+        [Parameter(Mandatory = $true)][Uri]$Endpoint,
+        [string]$Bucket
+    )
+
+    $candidates = New-Object System.Collections.Generic.List[string]
+    $baseUrl = $Endpoint.AbsoluteUri.TrimEnd('/')
+    $candidates.Add($baseUrl)
+
+    if ([string]::IsNullOrWhiteSpace($Bucket)) {
+        return ($candidates | Select-Object -Unique)
+    }
+
+    $bucketTrimmed = $Bucket.Trim()
+    if (-not [string]::IsNullOrWhiteSpace($bucketTrimmed)) {
+        if (-not $Endpoint.Host.StartsWith("$bucketTrimmed.", [StringComparison]::OrdinalIgnoreCase)) {
+            $virtualBuilder = [UriBuilder]::new($Endpoint)
+            $virtualBuilder.Host = "$bucketTrimmed.$($Endpoint.Host)"
+            $virtualBuilder.Path = '/'
+            $candidates.Add($virtualBuilder.Uri.AbsoluteUri.TrimEnd('/'))
+        }
+
+        $pathBuilder = [UriBuilder]::new($Endpoint)
+        $existingPath = $pathBuilder.Path.Trim('/')
+        if (-not [string]::IsNullOrWhiteSpace($existingPath)) {
+            $firstSegment = $existingPath.Split('/')[0]
+            if (-not $firstSegment.Equals($bucketTrimmed, [StringComparison]::OrdinalIgnoreCase)) {
+                $pathBuilder.Path = "$existingPath/$bucketTrimmed"
+            }
+        } else {
+            $pathBuilder.Path = $bucketTrimmed
+        }
+
+        $candidates.Add($pathBuilder.Uri.AbsoluteUri.TrimEnd('/'))
+    }
+
+    return ($candidates | Where-Object { $_ } | Select-Object -Unique)
+}
+
 # 获取脚本和仓库根目录
 $scriptRoot = Split-Path -Parent $PSCommandPath
 $repoRoot = Split-Path -Parent $scriptRoot
@@ -41,6 +115,17 @@ foreach ($key in $required) {
     if (-not $config.$key) {
         Write-ErrorAndExit "配置项 $key 缺失，请在 $ConfigPath 中补充。"
     }
+}
+
+# 解析 Endpoint
+try {
+    $endpointUri = [Uri]$config.Endpoint
+} catch {
+    Write-ErrorAndExit "Endpoint 无法解析为合法 URI: $($_.Exception.Message)"
+}
+
+if (-not $endpointUri.IsAbsoluteUri) {
+    Write-ErrorAndExit "Endpoint 必须是绝对地址，例如 https://example.com"
 }
 
 # 参数验证
@@ -81,42 +166,39 @@ if (-not $env:AWS_RESPONSE_CHECKSUM_VALIDATION) {
     $env:AWS_RESPONSE_CHECKSUM_VALIDATION = 'WHEN_REQUIRED'
 }
 
-# 同步函数
 function Invoke-Sync {
     param(
         [string]$Source,
-        [string]$Prefix
+        [string]$Prefix,
+        [Uri]$EndpointUri,
+        [string]$Bucket,
+        [string]$ChannelName
     )
-    
+
     if (-not (Test-Path $Source)) {
         Write-Warn "跳过: 未找到 $Source"
         return
     }
-    
-    # 规范化前缀，确保以斜杠结尾，避免部分 S3 兼容端在 ListObjectsV2 时返回 NoSuchKey
-    $prefixNormalized = $Prefix
-    if ($null -ne $prefixNormalized) {
-        $prefixNormalized = ($prefixNormalized -replace '^[\\/]+','') -replace '[\\/]+$',''
-        if ($prefixNormalized -ne "" -and -not $prefixNormalized.EndsWith('/')) {
-            $prefixNormalized += '/'
-        }
+
+    $normalizedPrefix = Normalize-Prefix $Prefix
+    $target = "s3://$Bucket"
+    if ($normalizedPrefix) {
+        $target = "$target/$normalizedPrefix"
     }
 
-    $target = "s3://$($config.Bucket)/$prefixNormalized"
-    # 使用 cp 命令避免 sync 的校验和问题
-    $args = @('s3','cp',$Source,$target,'--endpoint-url',$config.Endpoint,'--recursive','--no-verify-ssl')
-    
+    $args = @('s3','cp',$Source,$target,'--endpoint-url',$EndpointUri.AbsoluteUri,'--recursive','--no-verify-ssl')
+
     if ($Version) {
-        Write-Info "上传版本 $Version 到 $target"
+        Write-Info "上传版本 $Version 到 $target ($ChannelName)"
     } else {
-        Write-Info "上传到 $target"
+        Write-Info "上传到 $target ($ChannelName)"
     }
-    
+
     if ($DryRun) {
         $args += '--dryrun'
         Write-Info "DryRun 模式：未实际上传。"
     }
-    
+
     try {
         $process = Start-Process -FilePath 'aws' -ArgumentList $args -NoNewWindow -Wait -PassThru
         if ($process.ExitCode -ne 0) {
@@ -125,20 +207,49 @@ function Invoke-Sync {
     } catch {
         throw "同步到 $target 时失败: $($_.Exception.Message)"
     }
+
+    $publicBaseUrls = Get-PublicBaseUrls -Endpoint $EndpointUri -Bucket $Bucket
+    $releaseUrls = @()
+
+    foreach ($baseUrl in $publicBaseUrls) {
+        $releaseUrls += (Join-UrlSegments -BaseUrl $baseUrl -Segments @($normalizedPrefix, 'RELEASES'))
+    }
+
+    foreach ($url in ($releaseUrls | Select-Object -Unique)) {
+        Write-Info "RELEASES 清单 ($ChannelName): $url"
+    }
+
+    if (-not $DryRun) {
+        $verified = $false
+        foreach ($url in ($releaseUrls | Select-Object -Unique)) {
+            try {
+                $response = Invoke-WebRequest -Uri $url -Method Head -UseBasicParsing -TimeoutSec 15 -ErrorAction Stop
+                Write-Info "验证成功 ($ChannelName): $url (HTTP $($response.StatusCode))"
+                $verified = $true
+                break
+            } catch {
+                Write-Warn "验证失败 ($ChannelName): $url - $($_.Exception.Message)"
+            }
+        }
+
+        if (-not $verified) {
+            Write-Warn "未能验证候选 Release URL ($ChannelName)，请稍后手动确认。"
+        }
+    }
 }
 
 # 执行同步操作
 try {
     if (-not $FrameworkOnly) {
         Write-Info "开始同步自包含版本..."
-        Invoke-Sync -Source $scSource -Prefix $config.SelfContainedPrefix
+        Invoke-Sync -Source $scSource -Prefix $config.SelfContainedPrefix -EndpointUri $endpointUri -Bucket $config.Bucket -ChannelName '自包含'
     }
-    
+
     if (-not $SelfContainedOnly) {
         Write-Info "开始同步框架依赖版本..."
-        Invoke-Sync -Source $fdSource -Prefix $config.FrameworkPrefix
+        Invoke-Sync -Source $fdSource -Prefix $config.FrameworkPrefix -EndpointUri $endpointUri -Bucket $config.Bucket -ChannelName '框架依赖'
     }
-    
+
     Write-Host "[SUCCESS] 发布完成。" -ForegroundColor Green
     exit 0
 } catch {
@@ -152,4 +263,3 @@ try {
     Remove-Item Env:AWS_REQUEST_CHECKSUM_CALCULATION -ErrorAction SilentlyContinue
     Remove-Item Env:AWS_RESPONSE_CHECKSUM_VALIDATION -ErrorAction SilentlyContinue
 }
-

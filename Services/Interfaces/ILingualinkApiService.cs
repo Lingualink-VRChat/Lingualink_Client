@@ -3,6 +3,7 @@ using NAudio.Wave;
 using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace lingualink_client.Services.Interfaces
@@ -27,7 +28,8 @@ namespace lingualink_client.Services.Interfaces
             WaveFormat waveFormat,
             IEnumerable<string> targetLanguages,
             string task = "translate",
-            string triggerReason = "manual");
+            string triggerReason = "manual",
+            CancellationToken cancellationToken = default);
 
         /// <summary>
         /// 处理文本翻译
@@ -39,25 +41,26 @@ namespace lingualink_client.Services.Interfaces
         Task<ApiResult> ProcessTextAsync(
             string text, 
             IEnumerable<string> targetLanguages,
-            string? sourceLanguage = null);
+            string? sourceLanguage = null,
+            CancellationToken cancellationToken = default);
 
         /// <summary>
         /// 验证API连接和认证
         /// </summary>
         /// <returns>验证结果</returns>
-        Task<bool> ValidateConnectionAsync();
+        Task<bool> ValidateConnectionAsync(CancellationToken cancellationToken = default);
 
         /// <summary>
         /// 获取系统支持的功能和语言
         /// </summary>
         /// <returns>系统能力信息</returns>
-        Task<SystemCapabilities?> GetCapabilitiesAsync();
+        Task<SystemCapabilities?> GetCapabilitiesAsync(CancellationToken cancellationToken = default);
 
         /// <summary>
         /// 获取支持的语言列表
         /// </summary>
         /// <returns>语言列表</returns>
-        Task<LanguageInfo[]?> GetSupportedLanguagesAsync();
+        Task<LanguageInfo[]?> GetSupportedLanguagesAsync(CancellationToken cancellationToken = default);
     }
 
     /// <summary>
@@ -161,3 +164,4 @@ namespace lingualink_client.Services.Interfaces
         public string[] Aliases { get; set; } = Array.Empty<string>();
     }
 }
+

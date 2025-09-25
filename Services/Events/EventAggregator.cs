@@ -2,7 +2,8 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
+using System.Windows;
+using System.Windows.Threading;
 using lingualink_client.Services.Interfaces;
 
 namespace lingualink_client.Services.Events
@@ -14,11 +15,19 @@ namespace lingualink_client.Services.Events
     {
         private readonly ConcurrentDictionary<Type, List<Delegate>> _subscriptions = new();
         private readonly object _lockObject = new object();
+        private readonly Dispatcher? _dispatcher;
+
+        public EventAggregator()
+        {
+            _dispatcher = Application.Current?.Dispatcher ?? Dispatcher.CurrentDispatcher;
+        }
 
         public void Publish<T>(T eventData) where T : class
         {
             if (eventData == null)
+            {
                 return;
+            }
 
             var eventType = typeof(T);
             Debug.WriteLine($"EventAggregator: Publishing event of type {eventType.Name}");
@@ -31,23 +40,36 @@ namespace lingualink_client.Services.Events
                     handlersCopy = new List<Delegate>(handlers);
                 }
 
-                foreach (var handler in handlersCopy)
+                void ExecuteHandlers()
                 {
-                    try
+                    foreach (var handler in handlersCopy)
                     {
-                        if (handler is Action<T> typedHandler)
+                        try
                         {
-                            typedHandler(eventData);
+                            if (handler is Action<T> typedHandler)
+                            {
+                                typedHandler(eventData);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine($"EventAggregator: Error executing handler for {eventType.Name}: {ex.Message}");
+                            // 继续执行其他处理器，不因为一个处理器出错而影响其他处理器
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine($"EventAggregator: Error executing handler for {eventType.Name}: {ex.Message}");
-                        // 继续执行其他处理器，不因为一个处理器出错而影响其他处理器
-                    }
+
+                    Debug.WriteLine($"EventAggregator: Event {eventType.Name} published to {handlersCopy.Count} handlers");
                 }
 
-                Debug.WriteLine($"EventAggregator: Event {eventType.Name} published to {handlersCopy.Count} handlers");
+                if (_dispatcher != null && !_dispatcher.CheckAccess())
+                {
+                    Debug.WriteLine($"EventAggregator: Dispatching event {eventType.Name} to UI thread");
+                    _dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(ExecuteHandlers));
+                }
+                else
+                {
+                    ExecuteHandlers();
+                }
             }
             else
             {
@@ -58,7 +80,9 @@ namespace lingualink_client.Services.Events
         public void Subscribe<T>(Action<T> handler) where T : class
         {
             if (handler == null)
+            {
                 return;
+            }
 
             var eventType = typeof(T);
             Debug.WriteLine($"EventAggregator: Subscribing handler for event type {eventType.Name}");
@@ -86,7 +110,9 @@ namespace lingualink_client.Services.Events
         public void Unsubscribe<T>(Action<T> handler) where T : class
         {
             if (handler == null)
+            {
                 return;
+            }
 
             var eventType = typeof(T);
             Debug.WriteLine($"EventAggregator: Unsubscribing handler for event type {eventType.Name}");
@@ -98,7 +124,7 @@ namespace lingualink_client.Services.Events
                     if (handlers.Remove(handler))
                     {
                         Debug.WriteLine($"EventAggregator: Handler unsubscribed. Remaining handlers for {eventType.Name}: {handlers.Count}");
-                        
+
                         // 如果没有处理器了，移除这个事件类型
                         if (handlers.Count == 0)
                         {
@@ -121,7 +147,7 @@ namespace lingualink_client.Services.Events
         public void Clear()
         {
             Debug.WriteLine("EventAggregator: Clearing all subscriptions");
-            
+
             lock (_lockObject)
             {
                 var eventTypeCount = _subscriptions.Count;
@@ -130,4 +156,4 @@ namespace lingualink_client.Services.Events
             }
         }
     }
-} 
+}

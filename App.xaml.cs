@@ -1,11 +1,11 @@
 using lingualink_client.ViewModels;
 using lingualink_client.Services;
+using lingualink_client.Services.Interfaces;
 using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using Velopack;
 
 namespace lingualink_client
 {
@@ -88,38 +88,40 @@ namespace lingualink_client
         private async Task CheckForUpdatesAsync()
         {
 #if SELF_CONTAINED || FRAMEWORK_DEPENDENT
-            string updateUrl;
-
-#if SELF_CONTAINED
-            updateUrl = "https://download.cn-nb1.rains3.com/lingualink/stable-self-contained";
-#elif FRAMEWORK_DEPENDENT
-            updateUrl = "https://download.cn-nb1.rains3.com/lingualink/stable-framework-dependent";
-#else
-            updateUrl = string.Empty;
-#endif
-
-            if (string.IsNullOrEmpty(updateUrl))
+            if (!ServiceContainer.TryResolve<IUpdateService>(out var updateService) || updateService is null)
             {
+                Debug.WriteLine("Update service unavailable.");
+                return;
+            }
+
+            if (!updateService.IsSupported)
+            {
+                Debug.WriteLine("Update not supported on this platform.");
                 return;
             }
 
             try
             {
-                if (SharedIndexWindowViewModel is null)
+                var result = await updateService.CheckForUpdatesAsync().ConfigureAwait(false);
+
+                if (!result.IsSupported)
                 {
+                    Debug.WriteLine("Update feed disabled.");
                     return;
                 }
 
-                var updateManager = new UpdateManager(updateUrl);
-                var updateInfo = await updateManager.CheckForUpdate();
-
-                if (updateInfo.ReleasesToApply.Any())
+                if (result.Error is not null)
                 {
-                    SharedIndexWindowViewModel.SetUpdateInfo(updateManager, updateInfo);
+                    Debug.WriteLine($"Failed to check for updates: {result.Error.Message}");
+                    return;
+                }
+
+                if (result.HasUpdate && result.Session is not null)
+                {
+                    SharedIndexWindowViewModel.SetUpdateSession(result.Session);
                 }
                 else
                 {
-                    updateManager.Dispose();
                     Debug.WriteLine("No updates available.");
                 }
             }
@@ -144,4 +146,6 @@ namespace lingualink_client
         }
     }
 }
+
+
 

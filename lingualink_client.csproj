@@ -1,5 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
@@ -11,30 +11,33 @@
     <AssemblyName>lingualink_client</AssemblyName>
     <Platform>x64</Platform>
     <PlatformTarget>x64</PlatformTarget>
-
     <!-- Version Information -->
     <Version>3.4.0</Version>
     <AssemblyVersion>3.4.0.0</AssemblyVersion>
     <FileVersion>3.4.0.0</FileVersion>
     <ProductVersion>3.4.0</ProductVersion>
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseSelfContained|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)'=='ReleaseSelfContained'">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <DefineConstants>$(DefineConstants);RELEASE;SELF_CONTAINED</DefineConstants>
   </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseFrameworkDependent|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)'=='ReleaseFrameworkDependent'">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <DefineConstants>$(DefineConstants);RELEASE;FRAMEWORK_DEPENDENT</DefineConstants>
   </PropertyGroup>
-
+  <PropertyGroup Condition="'$(MSBuildProjectName)'=='$(AssemblyName)_wpftmp'">
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
+  </PropertyGroup>
   <ItemGroup>
     <None Remove="Assets\Icons\icon.png" />
   </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="Concentus.Oggfile" Version="1.0.6" />
@@ -46,12 +49,10 @@
     <PackageReference Include="Concentus" Version="2.2.2" />
     <PackageReference Include="LiteDB" Version="5.0.18" />
   </ItemGroup>
-
   <ItemGroup>
     <Resource Include="Assets/Icons/icon_128x128.ico" />
     <Resource Include="Assets\Icons\icon.png" />
   </ItemGroup>
-
   <ItemGroup>
     <Compile Update="Properties\Lang.zh-CN.Designer.cs">
       <DependentUpon>Lang.zh-CN.resx</DependentUpon>
@@ -69,7 +70,6 @@
       <DependentUpon>Lang.resx</DependentUpon>
     </Compile>
   </ItemGroup>
-
   <ItemGroup>
     <EmbeddedResource Update="Properties\Lang.zh-CN.resx">
       <LastGenOutput>Lang.zh-CN.Designer.cs</LastGenOutput>
@@ -84,5 +84,49 @@
       <LastGenOutput>Lang.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
-
+  <PropertyGroup>
+    <InformationalVersion Condition="'$(SourceRevisionId)'!=''">$(Version)+$(SourceRevisionId)</InformationalVersion>
+  </PropertyGroup>
+  <PropertyGroup>
+    <InformationalVersion Condition="'$(SourceRevisionId)'=='' and '$(InformationalVersion)'==''">$(Version)</InformationalVersion>
+  </PropertyGroup>
+  <Target Name="GenerateCustomAssemblyInfo" BeforeTargets="CoreCompile" Condition="'$(MSBuildProjectName)'=='$(AssemblyName)'">
+    <ItemGroup>
+      <AssemblyAttributes Include="System.Reflection.AssemblyCompanyAttribute">
+        <_Parameter1>$(AssemblyName)</_Parameter1>
+      </AssemblyAttributes>
+      <AssemblyAttributes Include="System.Reflection.AssemblyConfigurationAttribute">
+        <_Parameter1>$(Configuration)</_Parameter1>
+      </AssemblyAttributes>
+      <AssemblyAttributes Include="System.Reflection.AssemblyFileVersionAttribute">
+        <_Parameter1>$(FileVersion)</_Parameter1>
+      </AssemblyAttributes>
+      <AssemblyAttributes Include="System.Reflection.AssemblyInformationalVersionAttribute">
+        <_Parameter1>$(InformationalVersion)</_Parameter1>
+      </AssemblyAttributes>
+      <AssemblyAttributes Include="System.Reflection.AssemblyProductAttribute">
+        <_Parameter1>$(AssemblyName)</_Parameter1>
+      </AssemblyAttributes>
+      <AssemblyAttributes Include="System.Reflection.AssemblyTitleAttribute">
+        <_Parameter1>$(AssemblyName)</_Parameter1>
+      </AssemblyAttributes>
+      <AssemblyAttributes Include="System.Reflection.AssemblyVersionAttribute">
+        <_Parameter1>$(AssemblyVersion)</_Parameter1>
+      </AssemblyAttributes>
+      <AssemblyAttributes Include="System.Runtime.Versioning.TargetFrameworkAttribute">
+        <_Parameter1>.NETCoreApp,Version=v8.0</_Parameter1>
+      </AssemblyAttributes>
+      <AssemblyAttributes Include="System.Runtime.Versioning.TargetPlatformAttribute">
+        <_Parameter1>Windows7.0</_Parameter1>
+      </AssemblyAttributes>
+      <AssemblyAttributes Include="System.Runtime.Versioning.SupportedOSPlatformAttribute">
+        <_Parameter1>Windows7.0</_Parameter1>
+      </AssemblyAttributes>
+    </ItemGroup>
+    <WriteCodeFragment Language="C#" OutputFile="$(IntermediateOutputPath)GeneratedAssemblyInfo.cs" AssemblyAttributes="@(AssemblyAttributes)" />
+    <ItemGroup>
+      <Compile Include="$(IntermediateOutputPath)GeneratedAssemblyInfo.cs" />
+    </ItemGroup>
+  </Target>
 </Project>
+

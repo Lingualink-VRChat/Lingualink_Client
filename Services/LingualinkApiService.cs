@@ -9,6 +9,7 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace lingualink_client.Services
@@ -79,7 +80,8 @@ namespace lingualink_client.Services
             WaveFormat waveFormat,
             IEnumerable<string> targetLanguages,
             string task = "translate",
-            string triggerReason = "manual")
+            string triggerReason = "manual",
+            CancellationToken cancellationToken = default)
         {
             if (audioData.Length == 0)
             {
@@ -91,6 +93,8 @@ namespace lingualink_client.Services
             }
 
             var targetLangArray = targetLanguages.ToArray();
+
+            cancellationToken.ThrowIfCancellationRequested();
 
             // [核心修复] 只有在任务是"翻译"时，才要求目标语言。
             if (task == "translate" && targetLangArray.Length == 0)
@@ -155,8 +159,8 @@ namespace lingualink_client.Services
                 Debug.WriteLine($"[LingualinkApiService] Request JSON: {jsonContent}");
 
                 var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
-                var response = await _httpClient.PostAsync(requestUrl, content);
-                var responseContent = await response.Content.ReadAsStringAsync();
+                var response = await _httpClient.PostAsync(requestUrl, content, cancellationToken);
+                var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
 
                 // [详细日志] 记录响应状态和完整JSON内容
                 Debug.WriteLine($"[LingualinkApiService] Response Status: {response.StatusCode} ({(int)response.StatusCode})");
@@ -243,9 +247,10 @@ namespace lingualink_client.Services
         }
 
         public async Task<ApiResult> ProcessTextAsync(
-            string text, 
+            string text,
             IEnumerable<string> targetLanguages,
-            string? sourceLanguage = null)
+            string? sourceLanguage = null,
+            CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(text))
             {
@@ -257,6 +262,8 @@ namespace lingualink_client.Services
             }
 
             var targetLangArray = targetLanguages.ToArray();
+
+            cancellationToken.ThrowIfCancellationRequested();
             if (targetLangArray.Length == 0)
             {
                 return new ApiResult 
@@ -289,8 +296,8 @@ namespace lingualink_client.Services
                 Debug.WriteLine($"[LingualinkApiService] Text Request JSON: {jsonContent}");
 
                 var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
-                var response = await _httpClient.PostAsync(requestUrl, content);
-                var responseContent = await response.Content.ReadAsStringAsync();
+                var response = await _httpClient.PostAsync(requestUrl, content, cancellationToken);
+                var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
 
                 // [详细日志] 记录响应状态和完整JSON内容
                 Debug.WriteLine($"[LingualinkApiService] Text Response Status: {response.StatusCode} ({(int)response.StatusCode})");
@@ -376,16 +383,16 @@ namespace lingualink_client.Services
             }
         }
 
-        public async Task<bool> ValidateConnectionAsync()
+        public async Task<bool> ValidateConnectionAsync(CancellationToken cancellationToken = default)
         {
             try
             {
                 var requestUrl = new Uri(_serverUrl.TrimEnd('/') + "/health");
-                var response = await _httpClient.GetAsync(requestUrl);
+                var response = await _httpClient.GetAsync(requestUrl, cancellationToken);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var content = await response.Content.ReadAsStringAsync();
+                    var content = await response.Content.ReadAsStringAsync(cancellationToken);
                     var healthResponse = JsonSerializer.Deserialize<HealthResponse>(content, new JsonSerializerOptions
                     {
                         PropertyNameCaseInsensitive = true
@@ -403,16 +410,16 @@ namespace lingualink_client.Services
             }
         }
 
-        public async Task<SystemCapabilities?> GetCapabilitiesAsync()
+        public async Task<SystemCapabilities?> GetCapabilitiesAsync(CancellationToken cancellationToken = default)
         {
             try
             {
                 var requestUrl = new Uri(_serverUrl.TrimEnd('/') + "/capabilities");
-                var response = await _httpClient.GetAsync(requestUrl);
+                var response = await _httpClient.GetAsync(requestUrl, cancellationToken);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var content = await response.Content.ReadAsStringAsync();
+                    var content = await response.Content.ReadAsStringAsync(cancellationToken);
                     return JsonSerializer.Deserialize<SystemCapabilities>(content, new JsonSerializerOptions
                     {
                         PropertyNameCaseInsensitive = true
@@ -428,16 +435,16 @@ namespace lingualink_client.Services
             }
         }
 
-        public async Task<LanguageInfo[]?> GetSupportedLanguagesAsync()
+        public async Task<LanguageInfo[]?> GetSupportedLanguagesAsync(CancellationToken cancellationToken = default)
         {
             try
             {
                 var requestUrl = new Uri(_serverUrl.TrimEnd('/') + "/languages");
-                var response = await _httpClient.GetAsync(requestUrl);
+                var response = await _httpClient.GetAsync(requestUrl, cancellationToken);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var content = await response.Content.ReadAsStringAsync();
+                    var content = await response.Content.ReadAsStringAsync(cancellationToken);
                     var languageResponse = JsonSerializer.Deserialize<LanguageListResponse>(content, new JsonSerializerOptions
                     {
                         PropertyNameCaseInsensitive = true
@@ -565,3 +572,4 @@ namespace lingualink_client.Services
         public string? Error { get; set; }
     }
 }
+

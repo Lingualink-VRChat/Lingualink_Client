@@ -1,16 +1,18 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using lingualink_client.Models;
+using lingualink_client.Models.Updates;
 using lingualink_client.Services;
 using lingualink_client.Services.Interfaces;
 using lingualink_client.ViewModels.Components;
 using lingualink_client.ViewModels.Events;
 using lingualink_client.ViewModels.Managers;
-using Velopack;
 using MessageBox = System.Windows.MessageBox;
 
 namespace lingualink_client.ViewModels
@@ -33,13 +35,13 @@ namespace lingualink_client.ViewModels
         private readonly ITargetLanguageManager _targetLanguageManager;
         private readonly IMicrophoneManager _microphoneManager;
         private readonly IEventAggregator _eventAggregator;
+        private readonly IUpdateService _updateService;
         [ObservableProperty]
         private bool isUpdateAvailable;
 
         public IRelayCommand ShowUpdateDialogCommand { get; }
 
-        private UpdateManager? _updateManager;
-        private UpdateInfo? _pendingUpdateInfo;
+        private UpdateSession? _activeUpdateSession;
 
         public IndexWindowViewModel()
         {
@@ -48,6 +50,7 @@ namespace lingualink_client.ViewModels
             _targetLanguageManager = ServiceContainer.Resolve<ITargetLanguageManager>();
             _microphoneManager = ServiceContainer.Resolve<IMicrophoneManager>();
             _eventAggregator = ServiceContainer.Resolve<IEventAggregator>();
+            _updateService = ServiceContainer.Resolve<IUpdateService>();
 
             // 初始化组件ViewModels
             MainControl = new MainControlViewModel();
@@ -67,6 +70,11 @@ namespace lingualink_client.ViewModels
             SetupComponentCommunication();
 
             ShowUpdateDialogCommand = new RelayCommand(ShowUpdateDialog);
+
+            if (_updateService.ActiveSession is { HasUpdate: true } existingSession)
+            {
+                SetUpdateSession(existingSession);
+            }
         }
 
         /// <summary>
@@ -101,32 +109,37 @@ namespace lingualink_client.ViewModels
             await _microphoneManager.RefreshAsync();
         }
 
-        public void SetUpdateInfo(UpdateManager manager, UpdateInfo info)
+        public void SetUpdateSession(UpdateSession session)
         {
+            if (session is null)
+            {
+                return;
+            }
+
             Application.Current.Dispatcher.Invoke(() =>
             {
-                _updateManager = manager;
-                _pendingUpdateInfo = info;
-                IsUpdateAvailable = true;
+                _activeUpdateSession = session;
+                IsUpdateAvailable = session.HasUpdate;
             });
         }
 
         private void ShowUpdateDialog()
         {
-            if (!IsUpdateAvailable || _pendingUpdateInfo is null || _updateManager is null)
+            var session = _activeUpdateSession;
+            if (!IsUpdateAvailable || session is null || !session.HasUpdate || session.TargetRelease is null)
             {
                 return;
             }
 
-            var deltaVersions = (_pendingUpdateInfo.DeltasToTarget ?? Array.Empty<VelopackAsset>())
-                .Select(asset => $"• {asset.Version}");
-            var allVersions = deltaVersions.Append($"• {_pendingUpdateInfo.TargetFullRelease.Version}");
-            var plannedVersions = string.Join(Environment.NewLine, allVersions);
+            var targetVersionLabel = session.TargetVersion?.ToString() ?? "(未知版本)";
+            var plannedVersions = string.Join(Environment.NewLine,
+                (session.DeltaReleases?.Select(asset => $"• {asset.Version}") ?? Enumerable.Empty<string>())
+                    .Append($"• {targetVersionLabel}"));
 
-            var releaseNotes = _pendingUpdateInfo.TargetFullRelease.NotesMarkdown;
+            var releaseNotes = session.ReleaseNotesMarkdown;
             var displayNotes = string.IsNullOrWhiteSpace(releaseNotes) ? "(未提供更新日志)" : releaseNotes;
 
-            var message = $"发现新版本: {_pendingUpdateInfo.TargetFullRelease.Version}\n\n即将应用的版本:\n{plannedVersions}\n\n更新日志:\n{displayNotes}\n\n是否立即更新？";
+            var message = $"发现新版本: {targetVersionLabel}\n\n即将应用的版本:\n{plannedVersions}\n\n更新日志:\n{displayNotes}\n\n是否立即更新？";
 
             var result = MessageBox.Show(message, "更新提示", MessageBoxButton.YesNo, MessageBoxImage.Information);
             if (result == MessageBoxResult.Yes)
@@ -137,7 +150,8 @@ namespace lingualink_client.ViewModels
 
         private async void StartUpdate()
         {
-            if (_updateManager is null || _pendingUpdateInfo is null)
+            var session = _activeUpdateSession;
+            if (session is null || !session.HasUpdate)
             {
                 return;
             }
@@ -145,20 +159,15 @@ namespace lingualink_client.ViewModels
             try
             {
                 MessageBox.Show("正在后台下载更新，请稍候...", "更新中");
-                await _updateManager.DownloadUpdatesAsync(_pendingUpdateInfo, null, CancellationToken.None);
+                await _updateService.DownloadAsync(session, null, CancellationToken.None);
                 MessageBox.Show("更新已下载，可稍后手动重启。", "更新完成", MessageBoxButton.OK, MessageBoxImage.Information);
+                await _updateService.ApplyAsync(session, restart: false, silent: false, CancellationToken.None);
+                _activeUpdateSession = null;
                 IsUpdateAvailable = false;
-                await _updateManager.WaitExitThenApplyUpdatesAsync(_pendingUpdateInfo, silent: false, restart: false);
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"更新过程中发生错误: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-            finally
-            {
-                _pendingUpdateInfo = null;
-                _updateManager = null;
-                IsUpdateAvailable = false;
             }
         }
 
@@ -211,6 +220,12 @@ namespace lingualink_client.ViewModels
             // 取消订阅事件聚合器事件
             _eventAggregator.Unsubscribe<SettingsChangedEvent>(OnGlobalSettingsChanged);
 
+            if (_activeUpdateSession is not null)
+            {
+                _updateService.ReleaseSession(_activeUpdateSession);
+                _activeUpdateSession = null;
+            }
+
             MainControl?.Dispose();
             MicrophoneSelection?.Dispose();
             TargetLanguage?.Dispose();
@@ -218,4 +233,20 @@ namespace lingualink_client.ViewModels
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

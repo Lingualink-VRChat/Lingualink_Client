@@ -62,6 +62,10 @@ namespace lingualink_client.Services
             var sharedStateViewModel = new SharedStateViewModel();
             ServiceContainer.Register<SharedStateViewModel, SharedStateViewModel>(sharedStateViewModel);
 
+            // 注册自动更新服务
+            var updateService = new VelopackUpdateService();
+            ServiceContainer.Register<IUpdateService, VelopackUpdateService>(updateService);
+
             // 注册新的API服务（延迟初始化，因为需要配置参数）
             // LingualinkApiService 将在需要时通过工厂方法创建
 
@@ -119,3 +123,4 @@ namespace lingualink_client.Services
         }
     }
 } 
+

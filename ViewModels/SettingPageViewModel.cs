@@ -1,6 +1,6 @@
 using System;
-using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using WpfMessageBox = System.Windows.MessageBox;
@@ -8,6 +8,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using lingualink_client.Models;
 using lingualink_client.Services;
+using lingualink_client.Models.Updates;
+using lingualink_client.Services.Interfaces;
 using Velopack;
 
 namespace lingualink_client.ViewModels
@@ -15,10 +17,10 @@ namespace lingualink_client.ViewModels
     public partial class SettingPageViewModel : ViewModelBase
     {
         private readonly SettingsService _settingsService;
+        private readonly IUpdateService _updateService;
         private AppSettings _appSettings;
 
-        private UpdateManager? _updateManager;
-        private UpdateInfo? _pendingUpdate;
+        private UpdateSession? _activeSession;
         private UpdateStatus _latestStatus = UpdateStatus.NotChecked;
 
         public string PageTitle => LanguageManager.GetString("GeneralSettings");
@@ -55,9 +57,19 @@ namespace lingualink_client.ViewModels
         public SettingPageViewModel()
         {
             _settingsService = new SettingsService();
+            _updateService = ServiceContainer.Resolve<IUpdateService>();
             _appSettings = _settingsService.LoadSettings();
 
             CurrentVersion = ResolveCurrentVersion();
+
+            if (_updateService.ActiveSession is { HasUpdate: true } existingSession)
+            {
+                _activeSession = existingSession;
+                HasUpdate = true;
+                _latestStatus = UpdateStatus.UpdateAvailable;
+                UpdateNotes = existingSession.ReleaseNotesMarkdown ?? LanguageManager.GetString("UpdateNotesUnavailable");
+            }
+
             RefreshLatestVersionText();
 
             LanguageManager.LanguageChanged += () =>
@@ -83,11 +95,11 @@ namespace lingualink_client.ViewModels
                 return;
             }
 
-            var updateUrl = GetUpdateFeedUrl();
-            if (string.IsNullOrWhiteSpace(updateUrl))
+            if (!_updateService.IsSupported || string.IsNullOrWhiteSpace(_updateService.FeedUrl))
             {
                 _latestStatus = UpdateStatus.Disabled;
                 HasUpdate = false;
+                UpdateNotes = string.Empty;
                 RefreshLatestVersionText();
                 return;
             }
@@ -98,34 +110,59 @@ namespace lingualink_client.ViewModels
                 _latestStatus = UpdateStatus.Checking;
                 RefreshLatestVersionText();
 
-                DisposeUpdateManager();
-                _updateManager = new UpdateManager(updateUrl);
+                var result = await _updateService.CheckForUpdatesAsync().ConfigureAwait(false);
 
-                var updateInfo = await _updateManager.CheckForUpdatesAsync();
-                _pendingUpdate = updateInfo;
-
-#pragma warning disable CS8602
-                var baseVersion = updateInfo.BaseRelease?.Version?.ToString();
-                var targetVersion = updateInfo.TargetFullRelease?.Version?.ToString();
-                var isDowngrade = updateInfo.IsDowngrade;
-                var hasTarget = !string.IsNullOrWhiteSpace(targetVersion);
-                var isNewer = hasTarget && !string.Equals(baseVersion, targetVersion, StringComparison.OrdinalIgnoreCase) && !isDowngrade;
-
-                if (isNewer && targetVersion is { Length: > 0 } resolvedTarget)
+                if (result.Error is not null)
                 {
-                    _latestStatus = UpdateStatus.UpdateAvailable;
-                    HasUpdate = true;
-                    LatestVersion = resolvedTarget;
-                    UpdateNotes = ExtractReleaseNotes(updateInfo);
-                }
-                else
-                {
-                    _latestStatus = UpdateStatus.UpToDate;
+                    _latestStatus = UpdateStatus.Failed;
                     HasUpdate = false;
                     UpdateNotes = string.Empty;
                     RefreshLatestVersionText();
+                    ShowError(LanguageManager.GetString("UpdateErrorCheck"), result.Error);
+                    return;
                 }
-#pragma warning restore CS8602
+
+                if (!result.IsSupported)
+                {
+                    _latestStatus = UpdateStatus.Disabled;
+                    HasUpdate = false;
+                    UpdateNotes = string.Empty;
+                    RefreshLatestVersionText();
+                    return;
+                }
+
+                if (result.InstalledVersion is { } installed)
+                {
+                    CurrentVersion = installed.ToString();
+                }
+                else
+                {
+                    CurrentVersion = ResolveCurrentVersion();
+                }
+
+                if (result.HasUpdate && result.Session is not null)
+                {
+                    _activeSession = result.Session;
+                    HasUpdate = true;
+                    _latestStatus = UpdateStatus.UpdateAvailable;
+                    UpdateNotes = string.IsNullOrWhiteSpace(result.ReleaseNotesMarkdown)
+                        ? LanguageManager.GetString("UpdateNotesUnavailable")
+                        : result.ReleaseNotesMarkdown!;
+                }
+                else
+                {
+                    if (_activeSession is not null)
+                    {
+                        _updateService.ReleaseSession(_activeSession);
+                        _activeSession = null;
+                    }
+
+                    HasUpdate = false;
+                    _latestStatus = UpdateStatus.UpToDate;
+                    UpdateNotes = string.Empty;
+                }
+
+                RefreshLatestVersionText();
             }
             catch (Exception ex)
             {
@@ -145,7 +182,7 @@ namespace lingualink_client.ViewModels
         [RelayCommand(CanExecute = nameof(CanDownloadUpdate))]
         private async Task DownloadAndUpdateAsync()
         {
-            if (_updateManager is null || _pendingUpdate is null)
+            if (_activeSession is null || !_activeSession.HasUpdate)
             {
                 return;
             }
@@ -155,10 +192,12 @@ namespace lingualink_client.ViewModels
                 IsDownloading = true;
                 DownloadProgress = 0;
 
-                await _updateManager.DownloadUpdatesAsync(_pendingUpdate, progress =>
+                var progress = new Progress<int>(value =>
                 {
-                    Application.Current.Dispatcher.Invoke(() => DownloadProgress = progress);
+                    DownloadProgress = value;
                 });
+
+                await _updateService.DownloadAsync(_activeSession, progress, CancellationToken.None).ConfigureAwait(false);
 
                 var prompt = LanguageManager.GetString("UpdateDialogDownloadPrompt");
                 var title = LanguageManager.GetString("UpdateReadyTitle");
@@ -166,7 +205,8 @@ namespace lingualink_client.ViewModels
 
                 if (result == MessageBoxResult.Yes)
                 {
-                    await _updateManager.WaitExitThenApplyUpdatesAsync(_pendingUpdate, silent: false, restart: true);
+                    await _updateService.ApplyAsync(_activeSession, restart: true, silent: false, CancellationToken.None).ConfigureAwait(false);
+                    _activeSession = null;
                     HasUpdate = false;
                     _latestStatus = UpdateStatus.UpToDate;
                     RefreshLatestVersionText();
@@ -213,24 +253,19 @@ namespace lingualink_client.ViewModels
                     LatestVersion = LanguageManager.GetString("UpdateStatusUnavailable");
                     break;
                 case UpdateStatus.UpdateAvailable:
-                    if (_pendingUpdate is not null)
+                    if (_activeSession?.TargetVersion is not null)
                     {
-                        LatestVersion = _pendingUpdate.TargetFullRelease.Version.ToString();
+                        LatestVersion = _activeSession.TargetVersion.ToString();
+                    }
+                    else
+                    {
+                        LatestVersion = LanguageManager.GetString("UpdateStatusUpToDate");
                     }
                     break;
             }
         }
 
-        private static string ExtractReleaseNotes(UpdateInfo info)
-        {
-            var notes = info.TargetFullRelease.NotesMarkdown;
-            if (string.IsNullOrWhiteSpace(notes))
-            {
-                return LanguageManager.GetString("UpdateNotesUnavailable");
-            }
 
-            return notes.Trim();
-        }
 
         private static void ShowError(string message, Exception exception)
         {
@@ -238,17 +273,16 @@ namespace lingualink_client.ViewModels
             WpfMessageBox.Show($"{message}: {exception.Message}", errorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
         }
 
-        private static string ResolveCurrentVersion()
+        private string ResolveCurrentVersion()
         {
             try
             {
-#if SELF_CONTAINED || FRAMEWORK_DEPENDENT
-                var veloApp = VelopackApp.Current;
-                if (veloApp?.Version is not null)
+                var installed = _updateService.GetInstalledVersion();
+                if (installed is not null)
                 {
-                    return veloApp.Version.ToString();
+                    return installed.ToString();
                 }
-#endif
+
                 var assembly = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
                 var version = assembly?.GetName().Version;
                 return version?.ToString() ?? LanguageManager.GetString("UpdateVersionUnknown");
@@ -259,40 +293,20 @@ namespace lingualink_client.ViewModels
             }
         }
 
-        private static string GetUpdateFeedUrl()
-        {
-#if SELF_CONTAINED
-            return "https://download.cn-nb1.rains3.com/lingualink/stable-self-contained";
-#elif FRAMEWORK_DEPENDENT
-            return "https://download.cn-nb1.rains3.com/lingualink/stable-framework-dependent";
-#else
-            return string.Empty;
-#endif
-        }
-
-        private void DisposeUpdateManager()
-        {
-            if (_updateManager is IDisposable disposable)
-            {
-                disposable.Dispose();
-            }
-            _updateManager = null;
-        }
-
         partial void OnHasUpdateChanged(bool value)
         {
             if (!value)
             {
                 UpdateNotes = string.Empty;
-                if (_latestStatus != UpdateStatus.UpdateAvailable)
+                if (_latestStatus == UpdateStatus.UpdateAvailable)
                 {
-                    _pendingUpdate = null;
-                    DisposeUpdateManager();
+                    _latestStatus = UpdateStatus.UpToDate;
                 }
             }
 
             CheckForUpdateCommand?.NotifyCanExecuteChanged();
             DownloadAndUpdateCommand?.NotifyCanExecuteChanged();
+            RefreshLatestVersionText();
         }
 
         partial void OnIsCheckingUpdateChanged(bool value)
@@ -323,6 +337,20 @@ namespace lingualink_client.ViewModels
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
