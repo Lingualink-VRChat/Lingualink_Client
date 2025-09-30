@@ -1,3 +1,21 @@
+<#
+.SYNOPSIS
+    将 Build-Release.ps1 生成的 Velopack 产物同步到对象存储。
+.DESCRIPTION
+    读取 release-settings.json，配置 AWS 兼容凭证，并使用 aws s3 cp 上传自包含版与框架依赖版的发布目录。
+.PARAMETER Version
+    用于日志输出，可帮助区分上传的目标版本。
+.PARAMETER ConfigPath
+    指定配置文件路径，默认优先使用 %APPDATA%\LinguaLink\release-settings.json。
+.PARAMETER SelfContainedOnly
+    仅上传自包含通道。
+.PARAMETER FrameworkOnly
+    仅上传框架依赖通道。
+.PARAMETER DryRun
+    预演上传命令，不写入远端。
+.EXAMPLE
+    powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -Version 3.4.6
+#>
 param(
     [string]$Version,
     [string]$ConfigPath,

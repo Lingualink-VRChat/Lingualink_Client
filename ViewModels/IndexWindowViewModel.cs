@@ -160,10 +160,28 @@ namespace lingualink_client.ViewModels
             {
                 MessageBox.Show("正在后台下载更新，请稍候...", "更新中");
                 await _updateService.DownloadAsync(session, null, CancellationToken.None);
-                MessageBox.Show("更新已下载，可稍后手动重启。", "更新完成", MessageBoxButton.OK, MessageBoxImage.Information);
-                await _updateService.ApplyAsync(session, restart: false, silent: false, CancellationToken.None);
-                _activeUpdateSession = null;
+
+                MessageBox.Show("更新已下载，程序将重新启动完成安装。", "更新准备就绪", MessageBoxButton.OK, MessageBoxImage.Information);
+
                 IsUpdateAvailable = false;
+                _activeUpdateSession = null;
+
+                try
+                {
+                    await _updateService.ApplyAsync(session, restart: true, silent: false, CancellationToken.None);
+                }
+                catch (Exception applyEx)
+                {
+                    if (ServiceContainer.TryResolve<ILoggingManager>(out var logger) && logger is not null)
+                    {
+                        logger.AddMessage($"[Update] Apply failed: {applyEx.Message}");
+                    }
+
+                    MessageBox.Show($"安排安装更新时发生错误: {applyEx.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                await Application.Current.Dispatcher.InvokeAsync(() => Application.Current.Shutdown());
             }
             catch (Exception ex)
             {

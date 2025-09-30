@@ -2,6 +2,7 @@ using NAudio.Wave;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using lingualink_client.Models;
 using lingualink_client.Services.Interfaces;
@@ -22,6 +23,60 @@ namespace lingualink_client.Services
 
     public class AudioService : IDisposable
     {
+        private static readonly object VadNativeLibraryLock = new();
+        private static bool VadNativeLibraryLoaded;
+
+        private static void EnsureVadNativeLibraryLoaded(ILoggingManager logger)
+        {
+            if (VadNativeLibraryLoaded)
+            {
+                return;
+            }
+
+            lock (VadNativeLibraryLock)
+            {
+                if (VadNativeLibraryLoaded)
+                {
+                    return;
+                }
+
+                var baseDirectory = AppContext.BaseDirectory;
+                var architectureFolder = Environment.Is64BitProcess ? "win-x64" : "win-x86";
+                var candidatePaths = new[]
+                {
+                    Path.Combine(baseDirectory, "WebRtcVad.dll"),
+                    Path.Combine(baseDirectory, "runtimes", architectureFolder, "native", "WebRtcVad.dll")
+                };
+
+                foreach (var candidate in candidatePaths)
+                {
+                    if (!File.Exists(candidate))
+                    {
+                        continue;
+                    }
+
+                    if (NativeLibrary.TryLoad(candidate, out var _))
+                    {
+                        VadNativeLibraryLoaded = true;
+                        logger.AddMessage($"Loaded WebRtcVad native library from {candidate}", LogLevel.Debug, "Audio");
+                        return;
+                    }
+
+                    logger.AddMessage($"Failed to load WebRtcVad native library from {candidate}", LogLevel.Warning, "Audio");
+                }
+
+                if (NativeLibrary.TryLoad("WebRtcVad.dll", out var _))
+                {
+                    VadNativeLibraryLoaded = true;
+                    logger.AddMessage("Loaded WebRtcVad native library via default search path", LogLevel.Debug, "Audio");
+                    return;
+                }
+
+                logger.AddMessage("Unable to load WebRtcVad native library from known locations", LogLevel.Error, "Audio");
+                throw new DllNotFoundException($"Unable to load WebRtcVad.dll. Expected to find it in application root or runtimes/{architectureFolder}/native.");
+            }
+        }
+
         // --- VAD 和音频处理相关常量 ---
         private const FrameLength VAD_FRAME_LENGTH = FrameLength.Is30ms;
         private const SampleRate VAD_SAMPLE_RATE_ENUM = SampleRate.Is16kHz;
@@ -122,6 +177,8 @@ namespace lingualink_client.Services
 
             try
             {
+                EnsureVadNativeLibraryLoaded(_logger);
+
                 _vadInstance = new WebRtcVad
                 {
                     OperatingMode = OperatingMode.Aggressive,

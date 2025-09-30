@@ -9,6 +9,9 @@ namespace lingualink_client.Models
         public string TargetLanguages { get; set; } = "英文,日文"; // Default: English, Japanese
         public string ServerUrl { get; set; } = "https://api2.lingualink.aiatechco.com/api/v1/";
 
+        // Optional override for update feed (useful for debugging update service)
+        public string UpdateFeedOverride { get; set; } = string.Empty;
+
         // API Authentication Settings
         public string ApiKey { get; set; } = "";
         public bool AuthEnabled { get; } = true;
@@ -61,3 +64,4 @@ namespace lingualink_client.Models
         }
     }
 }
+

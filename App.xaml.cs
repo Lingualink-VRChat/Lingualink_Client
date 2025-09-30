@@ -1,16 +1,39 @@
 using lingualink_client.ViewModels;
 using lingualink_client.Services;
 using lingualink_client.Services.Interfaces;
+using lingualink_client.Services.Logging;
 using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using Velopack;
 
 namespace lingualink_client
 {
     public partial class App : System.Windows.Application
     {
+        private static readonly VelopackLoggerAdapter BootstrapLogger = new();
+
+        [STAThread]
+        private static void Main(string[] args)
+        {
+            try
+            {
+                VelopackApp.Build()
+                    .SetLogger(BootstrapLogger)
+                    .Run();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Velopack bootstrap failed: {ex}");
+            }
+
+            var app = new App();
+            app.InitializeComponent();
+            app.Run();
+        }
+
         public IndexWindowViewModel SharedIndexWindowViewModel { get; private set; } = null!;
 
         protected override void OnStartup(StartupEventArgs e)
@@ -24,16 +47,22 @@ namespace lingualink_client
 
             base.OnStartup(e);
 
-            // 1. 初始化服务容器
+            // 1. ???????
             ServiceInitializer.Initialize();
 
-            // 2. 加载设置并设置UI语言
+            // 2. ???????UI??
             var settingsService = new Services.SettingsService();
             var appSettings = settingsService.LoadSettings();
             LanguageManager.ChangeLanguage(appSettings.GlobalLanguage);
 
-            // 3. 创建主ViewModel (现在是同步创建，异步初始化将在ViewModel内部进行)
+            // 3. ???ViewModel (???????????????ViewModel????)
             SharedIndexWindowViewModel = new IndexWindowViewModel();
+
+            // ? Velopack ???????????????????
+            if (ServiceContainer.TryResolve<ILoggingManager>(out var loggingManager) && loggingManager is not null)
+            {
+                BootstrapLogger.AttachLoggingManager(loggingManager);
+            }
 
             _ = CheckForUpdatesAsync();
         }
@@ -139,13 +168,10 @@ namespace lingualink_client
         {
             SharedIndexWindowViewModel?.Dispose(); // Ensure ViewModel is disposed
 
-            // 清理服务容器
+            // ??????
             ServiceInitializer.Cleanup();
 
             base.OnExit(e);
         }
     }
 }
-
-
-

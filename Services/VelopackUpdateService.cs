@@ -1,6 +1,8 @@
 using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using lingualink_client.Models;
 using lingualink_client.Models.Updates;
 using lingualink_client.Services.Interfaces;
 using NuGet.Versioning;
@@ -9,9 +11,6 @@ using Velopack.Locators;
 
 namespace lingualink_client.Services
 {
-    /// <summary>
-    /// 基于 Velopack 的自动更新服务实现，只在 Windows x64 环境下启用。
-    /// </summary>
     public sealed class VelopackUpdateService : IUpdateService
     {
         private readonly object _syncRoot = new();
@@ -28,9 +27,25 @@ namespace lingualink_client.Services
             FeedUrl = ResolveFeedUrl();
         }
 
-        public bool IsSupported => OperatingSystem.IsWindows() && Environment.Is64BitOperatingSystem;
+        public bool IsSupported
+        {
+            get
+            {
+                if (!OperatingSystem.IsWindows() || !Environment.Is64BitOperatingSystem)
+                {
+                    return false;
+                }
 
-        public string? FeedUrl { get; private set; }
+                if (!VelopackLocator.IsCurrentSet)
+                {
+                    return false;
+                }
+
+                return VelopackLocator.Current?.CurrentlyInstalledVersion is not null;
+            }
+        }
+
+        public string? FeedUrl { get; }
 
         public UpdateSession? ActiveSession { get; private set; }
 
@@ -46,94 +61,106 @@ namespace lingualink_client.Services
             }
             catch (Exception ex)
             {
-                _loggingManager?.AddMessage($"[Update] Failed to read installed version: {ex.Message}");
+                LogWarning($"Failed to read installed version: {ex.Message}");
                 return null;
             }
         }
 
         public async Task<UpdateCheckResult> CheckForUpdatesAsync(CancellationToken cancellationToken = default)
         {
-            if (_disposed)
-            {
-                throw new ObjectDisposedException(nameof(VelopackUpdateService));
-            }
+            ThrowIfDisposed();
+            cancellationToken.ThrowIfCancellationRequested();
 
             var installedVersion = GetInstalledVersion();
 
             if (!IsSupported)
             {
                 ReleaseActiveSession();
+                LogInfo("Update check skipped: current process is not running from a packaged install.");
                 return new UpdateCheckResult(false, installedVersion, null);
             }
 
-            var feedUrl = FeedUrl;
-            if (string.IsNullOrWhiteSpace(feedUrl))
+            if (string.IsNullOrWhiteSpace(FeedUrl))
             {
                 ReleaseActiveSession();
+                LogInfo("Update check skipped: update feed is not configured for this build.");
                 return new UpdateCheckResult(false, installedVersion, null);
             }
+
+            UpdateManager? manager = null;
 
             try
             {
-                var updateManager = new UpdateManager(feedUrl);
-                var updateInfo = await updateManager.CheckForUpdatesAsync().ConfigureAwait(false);
-                var currentVersion = updateManager.CurrentVersion ?? installedVersion;
+                manager = new UpdateManager(FeedUrl);
+                LogInfo($"Checking for updates at {FeedUrl}");
 
-                if (updateInfo is null)
+                var info = await manager.CheckForUpdatesAsync().ConfigureAwait(false);
+                var currentVersion = manager.CurrentVersion ?? installedVersion;
+
+                if (!HasApplicableUpdate(info, currentVersion))
                 {
+                    
+                    manager = null;
                     ReleaseActiveSession();
+                    LogInfo("No updates available.");
                     return new UpdateCheckResult(true, currentVersion, null);
                 }
 
-                var hasUpdate = ShouldApplyUpdate(updateInfo, currentVersion);
-
-                if (!hasUpdate)
-                {
-                    ReleaseActiveSession();
-                    return new UpdateCheckResult(true, currentVersion, null);
-                }
-
-                var session = new UpdateSession(updateManager, updateInfo, feedUrl, currentVersion, hasUpdate);
+                var session = new UpdateSession(manager, info!, FeedUrl, currentVersion, hasUpdate: true);
+                manager = null; // ownership transferred to the session
                 ReplaceActiveSession(session);
+
+                LogInfo($"Update available: {session.TargetVersion}");
                 return new UpdateCheckResult(true, currentVersion, session);
+            }
+            catch (OperationCanceledException)
+            {
+                ReleaseActiveSession();
+                throw;
             }
             catch (Exception ex)
             {
-                _loggingManager?.AddMessage($"[Update] Check failed: {ex.Message}");
                 ReleaseActiveSession();
+                LogError("Failed to check for updates.", ex);
                 return new UpdateCheckResult(true, installedVersion, null, ex);
             }
         }
 
-        public Task DownloadAsync(UpdateSession session, IProgress<int>? progress = null, CancellationToken cancellationToken = default)
+        public async Task DownloadAsync(UpdateSession session, IProgress<int>? progress = null, CancellationToken cancellationToken = default)
         {
+            ThrowIfDisposed();
             if (session is null)
             {
                 throw new ArgumentNullException(nameof(session));
             }
 
-            if (_disposed)
-            {
-                throw new ObjectDisposedException(nameof(VelopackUpdateService));
-            }
+            cancellationToken.ThrowIfCancellationRequested();
 
-            return session.DownloadAsync(progress, cancellationToken);
+            LogInfo($"Downloading update {session.TargetVersion}");
+            await session.DownloadAsync(progress, cancellationToken).ConfigureAwait(false);
+            LogInfo("Download completed.");
         }
 
         public async Task ApplyAsync(UpdateSession session, bool restart, bool silent, CancellationToken cancellationToken = default)
         {
+            ThrowIfDisposed();
             if (session is null)
             {
                 throw new ArgumentNullException(nameof(session));
             }
 
-            if (_disposed)
-            {
-                throw new ObjectDisposedException(nameof(VelopackUpdateService));
-            }
+            cancellationToken.ThrowIfCancellationRequested();
 
-            await session.WaitExitThenApplyAsync(silent, restart).ConfigureAwait(false);
-            ReleaseSession(session);
+            try
+            {
+                LogInfo("Scheduling update to be applied on exit.");
+                await session.WaitExitThenApplyAsync(silent, restart).ConfigureAwait(false);
+                LogInfo("Update scheduled successfully.");
+            }
+            finally
+            {
+                ReleaseSession(session);
+            }
         }
 
         public void ReleaseSession(UpdateSession session)
@@ -186,25 +213,19 @@ namespace lingualink_client.Services
             }
         }
 
-        private static bool ShouldApplyUpdate(UpdateInfo updateInfo, SemanticVersion? currentVersion)
+        private static bool HasApplicableUpdate(UpdateInfo? info, SemanticVersion? currentVersion)
         {
-            var target = updateInfo.TargetFullRelease;
-            if (target?.Version is null)
+            if (info?.TargetFullRelease?.Version is null)
             {
                 return false;
             }
 
-            if (updateInfo.IsDowngrade)
+            if (info.IsDowngrade)
             {
                 return false;
             }
 
-            if (currentVersion is null)
-            {
-                return true;
-            }
-
-            return target.Version > currentVersion;
+            return currentVersion is null || info.TargetFullRelease.Version > currentVersion;
         }
 
         private static string? ResolveFeedUrl()
@@ -227,9 +248,33 @@ namespace lingualink_client.Services
 
             return url.EndsWith("/", StringComparison.Ordinal) ? url : url + "/";
         }
+
+        private void LogInfo(string message)
+        {
+            _loggingManager?.AddMessage(message, LogLevel.Info, "Update");
+            Debug.WriteLine($"[Update] {message}");
+        }
+
+        private void LogWarning(string message)
+        {
+            _loggingManager?.AddMessage(message, LogLevel.Warning, "Update");
+            Debug.WriteLine($"[Update] WARNING: {message}");
+        }
+
+        private void LogError(string message, Exception exception)
+        {
+            _loggingManager?.AddMessage(message, LogLevel.Error, "Update", exception.ToString());
+            Debug.WriteLine($"[Update] ERROR: {message} -> {exception}");
+        }
+
+        private void ThrowIfDisposed()
+        {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException(nameof(VelopackUpdateService));
+            }
+        }
     }
 }
-
-
 
 

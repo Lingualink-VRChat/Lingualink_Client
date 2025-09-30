@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NuGet.Versioning;
@@ -68,6 +70,23 @@ namespace lingualink_client.Models.Updates
         /// </summary>
         public VelopackAsset[]? DeltaReleases => UpdateInfo.DeltasToTarget;
 
+        /// <summary>
+        /// 构建目标完整包的完整下载地址（如可解析）。
+        /// </summary>
+        public string? TargetAssetUrl => TryBuildAssetUrl(TargetRelease);
+
+        /// <summary>
+        /// 构建增量补丁的完整下载地址（如可解析）。
+        /// </summary>
+        public IReadOnlyList<string> DeltaAssetUrls =>
+            DeltaReleases is null
+                ? Array.Empty<string>()
+                : DeltaReleases
+                    .Select(asset => TryBuildAssetUrl(asset))
+                    .Where(url => !string.IsNullOrWhiteSpace(url))
+                    .Select(url => url!)
+                    .ToArray();
+
         internal UpdateManager Manager => _updateManager;
 
         public Task DownloadAsync(IProgress<int>? progress = null, CancellationToken cancellationToken = default)
@@ -85,6 +104,49 @@ namespace lingualink_client.Models.Updates
             }
 
             return _updateManager.WaitExitThenApplyUpdatesAsync(TargetRelease, silent, restart);
+        }
+
+        public string? TryBuildAssetUrl(VelopackAsset? asset)
+        {
+            if (asset is null)
+            {
+                return null;
+            }
+
+            var fileName = asset.FileName;
+            if (string.IsNullOrWhiteSpace(fileName))
+            {
+                return null;
+            }
+
+            if (!string.IsNullOrWhiteSpace(FeedUrl))
+            {
+                if (Uri.TryCreate(FeedUrl, UriKind.Absolute, out var baseUri))
+                {
+                    if (Uri.TryCreate(baseUri, fileName, out var combined))
+                    {
+                        return combined.AbsoluteUri;
+                    }
+                }
+                else
+                {
+                    var sanitized = FeedUrl.TrimEnd('/') + "/";
+                    return sanitized + fileName.TrimStart('/');
+                }
+            }
+
+            if (Uri.TryCreate(fileName, UriKind.Absolute, out var absolute))
+            {
+                return absolute.AbsoluteUri;
+            }
+
+            if (!string.IsNullOrWhiteSpace(FeedUrl))
+            {
+                var separator = FeedUrl.EndsWith("/", StringComparison.Ordinal) ? string.Empty : "/";
+                return FeedUrl + separator + fileName.TrimStart('/');
+            }
+
+            return fileName;
         }
 
         public void Dispose()
@@ -115,8 +177,3 @@ namespace lingualink_client.Models.Updates
         }
     }
 }
-
-
-
-
-

@@ -61,3 +61,5 @@ guide.md
 # Local release credentials
 scripts/release-settings.json
 artifacts/
+
+CSharpWpf/

@@ -110,7 +110,7 @@ namespace lingualink_client.ViewModels
                 _latestStatus = UpdateStatus.Checking;
                 RefreshLatestVersionText();
 
-                var result = await _updateService.CheckForUpdatesAsync().ConfigureAwait(false);
+                var result = await _updateService.CheckForUpdatesAsync();
 
                 if (result.Error is not null)
                 {
@@ -197,7 +197,7 @@ namespace lingualink_client.ViewModels
                     DownloadProgress = value;
                 });
 
-                await _updateService.DownloadAsync(_activeSession, progress, CancellationToken.None).ConfigureAwait(false);
+                await _updateService.DownloadAsync(_activeSession, progress, CancellationToken.None);
 
                 var prompt = LanguageManager.GetString("UpdateDialogDownloadPrompt");
                 var title = LanguageManager.GetString("UpdateReadyTitle");
@@ -205,11 +205,13 @@ namespace lingualink_client.ViewModels
 
                 if (result == MessageBoxResult.Yes)
                 {
-                    await _updateService.ApplyAsync(_activeSession, restart: true, silent: false, CancellationToken.None).ConfigureAwait(false);
+                    await _updateService.ApplyAsync(_activeSession, restart: true, silent: false, CancellationToken.None);
                     _activeSession = null;
                     HasUpdate = false;
                     _latestStatus = UpdateStatus.UpToDate;
                     RefreshLatestVersionText();
+
+                    Application.Current.Shutdown();
                 }
             }
             catch (Exception ex)

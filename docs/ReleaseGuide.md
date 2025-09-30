@@ -2,6 +2,11 @@
 
 本文档记录了在本地构建并发布 Windows 客户端的推荐流程，覆盖密钥存储、打包脚本的使用以及将产物推送到对象存储（兼容 S3 的 rains3 桶）。每次发版前请完成以下准备。
 
+## 快速脚本总览
+
+- `scripts/Build-Release.ps1`：清理 `artifacts/` 目录，分别运行自包含与框架依赖的 `dotnet publish`，随后调用 `vpk pack` 生成 Velopack 发行内容。支持 `-DryRun`、`-Skip*` 等参数，适合本地快速验证或复用现有构建产物。
+- `scripts/Publish-Release.ps1`：读取 release-settings 配置，检查 AWS CLI、处理互斥参数，并使用 `aws s3 cp` 将 `artifacts/` 下的发行目录同步到 rains3。`-DryRun` 可预演上传列表，命令结束后会自动清理临时凭证环境变量。
+
 ## 1. 环境准备
 
 1. 安装 .NET SDK 8.0 及以上版本（使用 `dotnet --version` 验证）。
@@ -48,7 +53,7 @@ Velopack 会把该文件嵌入发布包，客户端弹窗能读取最新更新�
 
 ```powershell
 # 在仓库根目录执行，-Version 可省略（默认继承 csproj 中的版本号）
-powershell -ExecutionPolicy Bypass -File scripts/Build-Release.ps1 -Version 3.4.0
+powershell -ExecutionPolicy Bypass -File scripts/Build-Release.ps1 -Version 3.4.6
 ```
 
 脚本会：
@@ -75,13 +80,13 @@ powershell -ExecutionPolicy Bypass -File scripts/Build-Release.ps1 -Version 3.4.
 powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -DryRun
 
 # 正式上传两个通道
-powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -Version 3.4.0
+powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -Version 3.4.6
 
 # 仅上传自包含版本
-powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -SelfContainedOnly -Version 3.4.0
+powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -SelfContainedOnly -Version 3.4.6
 
 # 仅上传框架依赖版本
-powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -FrameworkOnly -Version 3.4.0
+powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -FrameworkOnly -Version 3.4.6
 ```
 
 脚本说明：
