@@ -53,7 +53,7 @@ Velopack 会把该文件嵌入发布包，客户端弹窗能读取最新更新�
 
 ```powershell
 # 在仓库根目录执行，-Version 可省略（默认继承 csproj 中的版本号）
-powershell -ExecutionPolicy Bypass -File scripts/Build-Release.ps1 -Version 3.4.6
+powershell -ExecutionPolicy Bypass -File scripts/Build-Release.ps1 -Version 3.4.7
 ```
 
 脚本会：
@@ -80,13 +80,13 @@ powershell -ExecutionPolicy Bypass -File scripts/Build-Release.ps1 -Version 3.4.
 powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -DryRun
 
 # 正式上传两个通道
-powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -Version 3.4.6
+powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -Version 3.4.7
 
 # 仅上传自包含版本
-powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -SelfContainedOnly -Version 3.4.6
+powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -SelfContainedOnly -Version 3.4.7
 
 # 仅上传框架依赖版本
-powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -FrameworkOnly -Version 3.4.6
+powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -FrameworkOnly -Version 3.4.7
 ```
 
 脚本说明：

@@ -16,10 +16,10 @@
 .PARAMETER DryRun
     仅打印将执行的命令，不实际运行。
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File scripts/Build-Release.ps1 -Version 3.4.6
+    powershell -ExecutionPolicy Bypass -File scripts/Build-Release.ps1 -Version 3.4.7
 #>
 param(
-    [string]$Version = "3.4.6",
+    [string]$Version = "3.4.7",
     [switch]$SkipSelfContained,
     [switch]$SkipFrameworkDependent,
     [switch]$SkipPublish,
@@ -94,14 +94,50 @@ function Invoke-CommandSafe([string]$command, [string[]]$arguments) {
     }
 }
 
+function Flatten-WebRtcNative([string]$publishDir) {
+    if (-not (Test-Path $publishDir)) {
+        return
+    }
+
+    $nativeDir = Join-Path (Join-Path (Join-Path $publishDir 'runtimes') 'win-x64') 'native'
+    if (-not (Test-Path $nativeDir)) {
+        Write-Warn "未找到 WebRtcVad 原生库目录: $nativeDir"
+        return
+    }
+
+    $nativeFiles = @('WebRtcVad.dll', 'WebRtcVad.exp', 'WebRtcVad.lib')
+    foreach ($fileName in $nativeFiles) {
+        $sourcePath = Join-Path $nativeDir $fileName
+        if (-not (Test-Path $sourcePath)) {
+            Write-Warn "缺少原生库文件: $sourcePath"
+            continue
+        }
+
+        $destinationPath = Join-Path $publishDir $fileName
+        Write-Info "复制 $fileName 至发布根目录: $destinationPath"
+        if (-not $DryRun) {
+            Copy-Item -Path $sourcePath -Destination $destinationPath -Force
+        }
+    }
+}
+
 if (-not $SkipPublish) {
     if (-not $SkipSelfContained) {
         Write-Info "dotnet publish 自包含版本"
         Invoke-CommandSafe 'dotnet' @('publish', $projectPath, '-c', 'ReleaseSelfContained', '-r', 'win-x64', '--self-contained', 'true', "-p:Version=$Version", '-o', $publishSelfDir)
+        Flatten-WebRtcNative $publishSelfDir
     }
     if (-not $SkipFrameworkDependent) {
         Write-Info "dotnet publish 框架依赖版本"
         Invoke-CommandSafe 'dotnet' @('publish', $projectPath, '-c', 'ReleaseFrameworkDependent', '-r', 'win-x64', '--self-contained', 'false', "-p:Version=$Version", '-o', $publishFxDir)
+        Flatten-WebRtcNative $publishFxDir
+    }
+} else {
+    if (-not $SkipSelfContained) {
+        Flatten-WebRtcNative $publishSelfDir
+    }
+    if (-not $SkipFrameworkDependent) {
+        Flatten-WebRtcNative $publishFxDir
     }
 }
 

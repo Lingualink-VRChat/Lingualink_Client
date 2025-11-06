@@ -14,7 +14,7 @@
 .PARAMETER DryRun
     预演上传命令，不写入远端。
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -Version 3.4.6
+    powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -Version 3.4.7
 #>
 param(
     [string]$Version,
