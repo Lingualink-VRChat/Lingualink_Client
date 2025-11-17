@@ -17,7 +17,7 @@ using CommunityToolkit.Mvvm.Input;
 using lingualink_client.Models;
 using lingualink_client.Services;
 using lingualink_client.Services.Interfaces;
-using lingualink_client.ViewModels.Events;
+using lingualink_client.Services.Events;
 using Forms = System.Windows.Forms;
 using MessageBox = System.Windows.MessageBox;
 

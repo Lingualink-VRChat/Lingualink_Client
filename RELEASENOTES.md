@@ -1,7 +1,17 @@
 # Release Notes – 3.4.7
 
+## 简体中文 (zh-CN)
+
 - **feat:** 新增自动更新功能，应用启动时将检查并提示可用更新。
 - **feat:** 引入对话历史管理功能，支持会话持久化存储与多语言（中、日、英）界面。
 - **feat:** 增强日志管理系统，提供日志筛选、复制及导出（JSON / Markdown）功能。
 - **feat:** 优化对话历史的剪贴板体验，改为复制核心摘要信息而非完整条目。
 - **chore:** 统一并优化发布流程，引入自动化构建与发布脚本，并更新发布指南以兼容 S3。
+
+## English (en)
+
+- **feat:** Add automatic update support; the app now checks for and prompts available updates on startup.
+- **feat:** Introduce conversation history management with persistent storage and multilingual (Chinese, Japanese, English) UI.
+- **feat:** Enhance the logging center with filtering, copy, and JSON/Markdown export capabilities.
+- **feat:** Improve clipboard experience for conversation history by copying concise summary information instead of full entries.
+- **chore:** Unify and streamline the release process with automated build/publish scripts and updated documentation for S3-compatible storage.

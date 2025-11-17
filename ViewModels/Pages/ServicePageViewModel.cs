@@ -331,7 +331,7 @@ namespace lingualink_client.ViewModels
 
                     // 通过事件聚合器通知设置变更
                     var eventAggregator = ServiceContainer.Resolve<Services.Interfaces.IEventAggregator>();
-                    eventAggregator.Publish(new ViewModels.Events.SettingsChangedEvent
+                    eventAggregator.Publish(new Services.Events.SettingsChangedEvent
                     {
                         Settings = updatedSettingsFromThisPage,
                         ChangeSource = "ServicePage"

@@ -1,7 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using lingualink_client.Services;
 using lingualink_client.Services.Interfaces;
-using lingualink_client.ViewModels.Events;
+using lingualink_client.Services.Events;
 
 namespace lingualink_client.ViewModels
 {

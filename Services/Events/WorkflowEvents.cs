@@ -4,7 +4,7 @@ using lingualink_client.Models;
 using lingualink_client.Services;
 using lingualink_client.Services.Interfaces;
 
-namespace lingualink_client.ViewModels.Events
+namespace lingualink_client.Services.Events
 {
     public enum TranslationSource
     {

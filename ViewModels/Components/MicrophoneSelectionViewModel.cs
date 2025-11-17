@@ -44,7 +44,7 @@ namespace lingualink_client.ViewModels.Components
 
             // 通过事件聚合器订阅事件
             var eventAggregator = ServiceContainer.Resolve<Services.Interfaces.IEventAggregator>();
-            eventAggregator.Subscribe<ViewModels.Events.MicrophoneChangedEvent>(OnMicrophoneChanged);
+            eventAggregator.Subscribe<Services.Events.MicrophoneChangedEvent>(OnMicrophoneChanged);
 
             // 订阅语言变更事件
             LanguageManager.LanguageChanged += OnLanguageChanged;
@@ -53,7 +53,7 @@ namespace lingualink_client.ViewModels.Components
             _ = RefreshMicrophonesAsync();
         }
 
-        private void OnMicrophoneChanged(ViewModels.Events.MicrophoneChangedEvent e)
+        private void OnMicrophoneChanged(Services.Events.MicrophoneChangedEvent e)
         {
             OnPropertyChanged(nameof(SelectedMicrophone));
         }
@@ -101,7 +101,7 @@ namespace lingualink_client.ViewModels.Components
 
             // 取消订阅事件聚合器事件
             var eventAggregator = ServiceContainer.Resolve<Services.Interfaces.IEventAggregator>();
-            eventAggregator.Unsubscribe<ViewModels.Events.MicrophoneChangedEvent>(OnMicrophoneChanged);
+            eventAggregator.Unsubscribe<Services.Events.MicrophoneChangedEvent>(OnMicrophoneChanged);
         }
     }
 } 

@@ -5,7 +5,6 @@ using lingualink_client.Services;
 using lingualink_client.Services.Interfaces;
 using lingualink_client.Services.Managers;
 using lingualink_client.Services.Events;
-using lingualink_client.ViewModels.Events;
 using lingualink_client.ViewModels.Components;
 using System;
 using System.Threading.Tasks;

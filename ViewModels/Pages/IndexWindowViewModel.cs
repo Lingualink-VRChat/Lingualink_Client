@@ -11,7 +11,7 @@ using lingualink_client.Models.Updates;
 using lingualink_client.Services;
 using lingualink_client.Services.Interfaces;
 using lingualink_client.ViewModels.Components;
-using lingualink_client.ViewModels.Events;
+using lingualink_client.Services.Events;
 using lingualink_client.ViewModels.Managers;
 using MessageBox = System.Windows.MessageBox;
 
@@ -204,7 +204,7 @@ namespace lingualink_client.ViewModels
             // 不再需要手动连接事件
         }
 
-        private void OnGlobalSettingsChanged(ViewModels.Events.SettingsChangedEvent e)
+        private void OnGlobalSettingsChanged(SettingsChangedEvent e)
         {
             // 确保UI更新在UI线程上进行
             Application.Current.Dispatcher.Invoke(() =>

@@ -61,11 +61,11 @@ namespace lingualink_client.ViewModels.Components
 
             // 通过事件聚合器订阅事件
             var eventAggregator = ServiceContainer.Resolve<Services.Interfaces.IEventAggregator>();
-            eventAggregator.Subscribe<ViewModels.Events.MicrophoneChangedEvent>(OnMicrophoneChanged);
-            eventAggregator.Subscribe<ViewModels.Events.SettingsChangedEvent>(OnGlobalSettingsChanged);
-            eventAggregator.Subscribe<ViewModels.Events.StatusUpdatedEvent>(OnOrchestratorStatusUpdated);
-            eventAggregator.Subscribe<ViewModels.Events.TranslationCompletedEvent>(OnTranslationCompleted);
-            eventAggregator.Subscribe<ViewModels.Events.OscMessageSentEvent>(OnOscMessageSent);
+            eventAggregator.Subscribe<Services.Events.MicrophoneChangedEvent>(OnMicrophoneChanged);
+            eventAggregator.Subscribe<Services.Events.SettingsChangedEvent>(OnGlobalSettingsChanged);
+            eventAggregator.Subscribe<Services.Events.StatusUpdatedEvent>(OnOrchestratorStatusUpdated);
+            eventAggregator.Subscribe<Services.Events.TranslationCompletedEvent>(OnTranslationCompleted);
+            eventAggregator.Subscribe<Services.Events.OscMessageSentEvent>(OnOscMessageSent);
         }
 
         private void OnMicrophoneManagerPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -90,7 +90,7 @@ namespace lingualink_client.ViewModels.Components
             OnPropertyChanged(nameof(WorkHintLabel));
         }
 
-        private void OnGlobalSettingsChanged(ViewModels.Events.SettingsChangedEvent e)
+        private void OnGlobalSettingsChanged(Services.Events.SettingsChangedEvent e)
         {
             System.Diagnostics.Debug.WriteLine($"[MainControlViewModel] OnGlobalSettingsChanged() called from {e.ChangeSource}");
 
@@ -165,7 +165,7 @@ namespace lingualink_client.ViewModels.Components
             ToggleWorkCommand.NotifyCanExecuteChanged();
         }
 
-        private void OnMicrophoneChanged(ViewModels.Events.MicrophoneChangedEvent e)
+        private void OnMicrophoneChanged(Services.Events.MicrophoneChangedEvent e)
         {
             var microphone = e.SelectedMicrophone;
             if (microphone != null)
@@ -203,18 +203,18 @@ namespace lingualink_client.ViewModels.Components
             ToggleWorkCommand.NotifyCanExecuteChanged();
         }
 
-        private void OnOrchestratorStatusUpdated(ViewModels.Events.StatusUpdatedEvent e)
+        private void OnOrchestratorStatusUpdated(Services.Events.StatusUpdatedEvent e)
         {
             Application.Current.Dispatcher.Invoke(() => StatusText = e.Status);
         }
 
-        private void OnTranslationCompleted(ViewModels.Events.TranslationCompletedEvent e)
+        private void OnTranslationCompleted(Services.Events.TranslationCompletedEvent e)
         {
             // 事件已经是正确的格式，可以直接处理或转发给其他组件
             // 这里可以添加额外的处理逻辑
         }
 
-        private void OnOscMessageSent(ViewModels.Events.OscMessageSentEvent e)
+        private void OnOscMessageSent(Services.Events.OscMessageSentEvent e)
         {
             // 这里可以触发事件给其他组件
             // 暂时保留为空，后续可以扩展
@@ -290,11 +290,11 @@ namespace lingualink_client.ViewModels.Components
 
             // 取消订阅事件聚合器事件
             var eventAggregator = ServiceContainer.Resolve<Services.Interfaces.IEventAggregator>();
-            eventAggregator.Unsubscribe<ViewModels.Events.MicrophoneChangedEvent>(OnMicrophoneChanged);
-            eventAggregator.Unsubscribe<ViewModels.Events.SettingsChangedEvent>(OnGlobalSettingsChanged);
-            eventAggregator.Unsubscribe<ViewModels.Events.StatusUpdatedEvent>(OnOrchestratorStatusUpdated);
-            eventAggregator.Unsubscribe<ViewModels.Events.TranslationCompletedEvent>(OnTranslationCompleted);
-            eventAggregator.Unsubscribe<ViewModels.Events.OscMessageSentEvent>(OnOscMessageSent);
+            eventAggregator.Unsubscribe<Services.Events.MicrophoneChangedEvent>(OnMicrophoneChanged);
+            eventAggregator.Unsubscribe<Services.Events.SettingsChangedEvent>(OnGlobalSettingsChanged);
+            eventAggregator.Unsubscribe<Services.Events.StatusUpdatedEvent>(OnOrchestratorStatusUpdated);
+            eventAggregator.Unsubscribe<Services.Events.TranslationCompletedEvent>(OnTranslationCompleted);
+            eventAggregator.Unsubscribe<Services.Events.OscMessageSentEvent>(OnOscMessageSent);
 
             _orchestrator?.Dispose();
         }

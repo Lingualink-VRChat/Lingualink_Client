@@ -1,7 +1,7 @@
 using lingualink_client.Services;
 using lingualink_client.Services.Interfaces;
 using lingualink_client.Models;
-using lingualink_client.ViewModels.Events;
+using lingualink_client.Services.Events;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -173,7 +173,7 @@ namespace lingualink_client.ViewModels
 
             // 通过事件聚合器通知设置变更
             var eventAggregator = ServiceContainer.Resolve<Services.Interfaces.IEventAggregator>();
-            eventAggregator.Publish(new ViewModels.Events.SettingsChangedEvent
+            eventAggregator.Publish(new Services.Events.SettingsChangedEvent
             {
                 Settings = settingsToSave,
                 ChangeSource = "MessageTemplatePage"

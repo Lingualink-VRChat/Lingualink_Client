@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using LiteDB;
-using lingualink_client.ViewModels.Events;
+using lingualink_client.Services.Events;
 
 namespace lingualink_client.Models
 {

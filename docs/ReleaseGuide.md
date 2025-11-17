@@ -37,15 +37,21 @@
 
 ## 3. 生成更新日志
 
-编辑仓库根目录的 `RELEASENOTES.md`，列出本次版本改动，例如：
+编辑仓库根目录的 `RELEASENOTES.md`，列出本次版本改动。为了兼顾多语言用户，推荐在同一个文件中使用多语言小节，例如：
 
 ```markdown
+# Release Notes – 3.4.7
+
+## 简体中文 (zh-CN)
 - feat: 支持多语言字幕导出
 - fix: 修复语言包初始化偶发崩溃
-- chore: 调整 VRChat OSC 超时配置
+
+## English (en)
+- feat: Support multilingual subtitle export
+- fix: Fix intermittent crash during language pack initialization
 ```
 
-Velopack 会把该文件嵌入发布包，客户端弹窗能读取最新更新内容。
+Velopack 会把该文件嵌入发布包，客户端更新弹窗会原样展示整份 Markdown，用户可以在其中找到自己熟悉的语言。
 
 ## 4. 构建与打包
 

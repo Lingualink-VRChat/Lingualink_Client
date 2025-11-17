@@ -1,7 +1,39 @@
 ﻿# Repository Guidelines
 
 ## Project Structure & Module Organization
-LinguaLink Client is a WPF MVVM application targeting `net8.0-windows`. `App.xaml` and `MainWindow.xaml` bootstrap the shell, while `Views/` holds page XAML and `ViewModels/` hosts CommunityToolkit.Mvvm-based logic. Domain models sit in `Models/`, shared helpers in `Services/` and `Converters/`, and reusable assets in `Assets/`. Architecture notes and feature rationales live in `docs/`.
+LinguaLink Client is a WPF MVVM application targeting `net8.0-windows`.
+
+- Shell & entry
+  - `App.xaml` / `App.xaml.cs`: application bootstrap, resource dictionaries, global converters.
+  - `MainWindow.xaml` / `MainWindow.xaml.cs`: root window hosting the main navigation frame.
+- Presentation layer
+  - `Views/Pages/`: XAML pages for each feature area (Index, Settings, Service, Account, TextEntry, MessageTemplate, etc.).
+  - `Views/Components/`: reusable visual components (e.g., conversation history, log panel, main control, microphone selector).
+  - `Converters/`: value converters used directly from XAML.
+- Presentation logic (ViewModels)
+  - `ViewModels/Pages/`: page-level view models that drive `Views/Pages` and coordinate feature-specific state.
+  - `ViewModels/Components/`: component-level view models backing `Views/Components`.
+  - `ViewModels/Managers/`: UI-facing managers that implement `INotifyPropertyChanged` and encapsulate selection/state workflows (e.g., microphone & target-language managers) used by view models.
+  - `ViewModels/SharedStateViewModel` and `ViewModels/ViewModelBase`: shared observable state and the common MVVM base type.
+- Domain models
+  - `Models/`: core domain types such as `AppSettings`, API/translation models, logging and conversation history types.
+  - `Models/Updates/`: models related to update discovery and sessions.
+- Application services
+  - `Services/Managers/`: high-level orchestrators and managers (audio/text translation pipelines, conversation history, logging).
+  - `Services/Events/`: the event aggregator implementation and cross-layer event contracts used by services and view models.
+  - `Services/Interfaces/`: service interfaces used for DI/service location.
+  - `Services/Logging/`: adapters that bridge to external logging infrastructure (e.g., Velopack).
+- Infrastructure & integration
+  - `Services/Audio/`: low-level audio capture/encoding helpers and microphone access.
+  - `Services/Api/`: LinguaLink API client, factory and response processing.
+  - `Services/Localization/`: language-related helpers and display-name mapping for backend language codes.
+  - `Services/Infrastructure/`: service container/initializer and settings persistence.
+  - `Services/Updates/`: update service implementations and Velopack integration.
+  - `Services/Ui/`: non-XAML UI helpers such as the modern message box wrapper.
+  - `Assets/`: icons and other static assets.
+- Documentation
+  - `docs/`: project-level docs (`Summary.md`, `ReleaseGuide.md`, and `docs/README.md` as the index).
+  - `docs/reference/`: cross-project or external-system docs (e.g., Lingualink Core API, web download link guide).
 
 ## Build, Test, and Development Commands
 Run all commands from the repository root:
