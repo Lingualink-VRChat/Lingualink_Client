@@ -28,14 +28,16 @@ namespace lingualink_client.Services.Managers
 
         public TextTranslationOrchestrator(
             AppSettings appSettings,
-            ILoggingManager loggingManager)
+            ILoggingManager loggingManager,
+            ILingualinkApiService? apiService = null,
+            IEventAggregator? eventAggregator = null)
         {
-            _appSettings = appSettings;
-            _loggingManager = loggingManager;
-            _eventAggregator = ServiceContainer.Resolve<IEventAggregator>();
+            _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
+            _loggingManager = loggingManager ?? throw new ArgumentNullException(nameof(loggingManager));
+            _eventAggregator = eventAggregator ?? ServiceContainer.Resolve<IEventAggregator>();
 
-            // 使用新的API服务工厂创建API服务
-            _apiService = LingualinkApiServiceFactory.CreateApiService(_appSettings);
+            // 使用新的API服务工厂创建API服务（允许通过依赖注入覆盖）
+            _apiService = apiService ?? LingualinkApiServiceFactory.CreateApiService(_appSettings);
 
             // 初始化OSC服务
             if (_appSettings.EnableOsc)

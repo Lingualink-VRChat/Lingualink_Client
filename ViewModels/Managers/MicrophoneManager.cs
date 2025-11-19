@@ -20,6 +20,8 @@ namespace lingualink_client.ViewModels.Managers
     {
         private readonly IEventAggregator _eventAggregator;
         private readonly ILoggingManager _logger;
+        private readonly SettingsService _settingsService;
+        private AppSettings _appSettings;
         private readonly Services.MicrophoneService _microphoneService;
         private MMDeviceWrapper? _selectedMicrophone;
         private bool _isRefreshing = false;
@@ -93,10 +95,12 @@ namespace lingualink_client.ViewModels.Managers
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        public MicrophoneManager()
+        public MicrophoneManager(SettingsService? settingsService = null)
         {
             _eventAggregator = ServiceContainer.Resolve<IEventAggregator>();
             _logger = ServiceContainer.Resolve<ILoggingManager>();
+            _settingsService = settingsService ?? new SettingsService();
+            _appSettings = _settingsService.LoadSettings();
             _microphoneService = new Services.MicrophoneService();
             
             Microphones = new ObservableCollection<MMDeviceWrapper>();
@@ -134,10 +138,22 @@ namespace lingualink_client.ViewModels.Managers
                     Microphones.Add(mic);
                 }
 
-                // 选择默认麦克风
+                // 选择默认或上次使用的麦克风
                 if (Microphones.Any())
                 {
-                    SelectedMicrophone = defaultMic ?? Microphones.First();
+                    MMDeviceWrapper? selected = null;
+
+                    if (!string.IsNullOrWhiteSpace(_appSettings.LastSelectedMicrophoneId))
+                    {
+                        selected = Microphones.FirstOrDefault(m => m.ID == _appSettings.LastSelectedMicrophoneId);
+                    }
+
+                    if (selected == null)
+                    {
+                        selected = defaultMic ?? Microphones.First();
+                    }
+
+                    SelectedMicrophone = selected;
                     _logger.AddMessage($"Found {Microphones.Count} microphone(s), selected: {SelectedMicrophone.FriendlyName}");
                 }
                 else
@@ -199,6 +215,9 @@ namespace lingualink_client.ViewModels.Managers
                 else
                 {
                     _logger.AddMessage($"Selected microphone: {newValue.FriendlyName}");
+
+                    // Persist selected microphone to settings
+                    PersistSelectedMicrophone(newValue);
                 }
             }
 
@@ -208,6 +227,24 @@ namespace lingualink_client.ViewModels.Managers
                 SelectedMicrophone = newValue,
                 IsRefreshing = IsRefreshing
             });
+        }
+
+        private void PersistSelectedMicrophone(MMDeviceWrapper newValue)
+        {
+            try
+            {
+                var settings = _settingsService.LoadSettings();
+                settings.LastSelectedMicrophoneId = newValue.ID;
+                _settingsService.SaveSettings(settings);
+                _appSettings = settings;
+
+                Debug.WriteLine($"MicrophoneManager: Persisted selected microphone ID {newValue.ID}");
+            }
+            catch (Exception ex)
+            {
+                _logger.AddMessage($"Failed to persist selected microphone: {ex.Message}");
+                Debug.WriteLine($"MicrophoneManager: Failed to persist selected microphone: {ex}");
+            }
         }
     }
 } 

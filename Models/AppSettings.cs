@@ -50,6 +50,16 @@ namespace lingualink_client.Models
         public int ConversationHistoryRetentionDays { get; set; } = 90;
         public bool ConversationHistoryIncludeFailures { get; set; } = false;
 
+        // Microphone selection - remember last used device
+        public string LastSelectedMicrophoneId { get; set; } = string.Empty;
+
+        // Account / server selection
+        public bool UseCustomServer { get; set; } = true;
+        public string CustomServerUrl { get; set; } = "https://api2.lingualink.aiatechco.com/api/v1/";
+        public string CustomApiKey { get; set; } = string.Empty;
+        public string OfficialServerUrl { get; set; } = "https://api.lingualink.aiatechco.com/api/v1/";
+        public string OfficialApiKey { get; set; } = string.Empty;
+
         // Get the currently selected template
         public MessageTemplate GetSelectedTemplate()
         {

@@ -1,10 +1,87 @@
 # LinguaLink Client 发布指南
 
-本文档记录了在本地构建并发布 Windows 客户端的推荐流程，覆盖密钥存储、打包脚本的使用以及将产物推送到对象存储（兼容 S3 的 rains3 桶）。每次发版前请完成以下准备。
+本文档记录了在本地构建并发布 Windows 客户端的推荐流程，覆盖密钥存储、打包脚本的使用以及将产物推送到对象存储（兼容 S3 的 rains3 桶）。
+
+> 如果你只是“按惯例发一个新版本”，直接看下一节的**一条龙快速发布流程**即可；后面的章节是对各步骤的补充说明。
+
+## 一条龙快速发布流程（推荐）
+
+从已有版本升级到一个新版本的大致步骤如下（示例版本号以 `3.4.7 → 3.4.8` 为例）：
+
+1. **更新版本号（可选，但推荐）**
+   - 使用脚本统一修改版本号：
+     ```powershell
+     # 预览（不写文件）
+     powershell -ExecutionPolicy Bypass -File scripts/Bump-Version.ps1 -OldVersion 3.4.7 -NewVersion 3.4.8 -DryRun
+
+     # 确认无误后实际写入
+     powershell -ExecutionPolicy Bypass -File scripts/Bump-Version.ps1 -OldVersion 3.4.7 -NewVersion 3.4.8
+     ```
+   - 该脚本会同步更新 `lingualink_client.csproj`、脚本示例命令、文档和 `RELEASENOTES.md` 标题中的版本号。
+
+2. **编写多语言 Release Notes**
+   - 编辑仓库根目录 `RELEASENOTES.md`，按版本 + 语言分节维护更新内容，例如：
+     ```markdown
+     # Release Notes – 3.4.8
+
+     ## 简体中文 (zh-CN)
+     - feat: 新增 XXX 功能
+     - fix: 修复 YYY 问题
+
+     ## English (en)
+     - feat: Add XXX feature
+     - fix: Fix YYY bug
+     ```
+   - Velopack 会把这份 Markdown 嵌入客户端更新弹窗，用户可以直接在弹窗中选择自己熟悉的语言阅读。
+
+3. **本地构建检查**
+   - 在仓库根目录执行：
+     ```powershell
+     dotnet build lingualink_client.csproj -c Release
+     ```
+   - 确认没有编译错误后再进入发布步骤。
+
+4. **打包自包含版 + 框架依赖版**
+   - 在仓库根目录执行（`-Version` 可以省略，默认使用 csproj 中的版本号）：
+     ```powershell
+     powershell -ExecutionPolicy Bypass -File scripts/Build-Release.ps1 -Version 3.4.8
+     ```
+   - 脚本会生成：
+     - `artifacts/Releases-SelfContained`
+     - `artifacts/Releases-FrameworkDependent`
+
+5. **上传到 rains3（正式发布）**
+   - 先预演上传（不真正写入远端）：
+     ```powershell
+     powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -DryRun -Version 3.4.8
+     ```
+   - 确认列表无误后，执行实际上传（两个通道都推）：
+     ```powershell
+     powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -Version 3.4.8
+     ```
+   - 只上传某一个通道时，可使用：
+     ```powershell
+     # 仅自包含版
+     powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -SelfContainedOnly -Version 3.4.8
+
+     # 仅框架依赖版
+     powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -FrameworkOnly -Version 3.4.8
+     ```
+
+6. **发版后验证**
+   - 打开客户端，确认：
+     - 能正常启动并连接后端。
+     - 右上角“发现新版本！”等更新提醒工作正常。
+   - 访问下载地址（例如 `https://download.cn-nb1.rains3.com/lingualink/stable-self-contained/RELEASES`），确认最新一行版本号与刚发布的版本一致。
+
+以上完成后，即视为一次完整的 Release 流程；更细节的说明请参见下文各小节。
+
+---
 
 ## 快速脚本总览
 
-- `scripts/Build-Release.ps1`：清理 `artifacts/` 目录，分别运行自包含与框架依赖的 `dotnet publish`，随后调用 `vpk pack` 生成 Velopack 发行内容。支持 `-DryRun`、`-Skip*` 等参数，适合本地快速验证或复用现有构建产物。
+- `scripts/Bump-Version.ps1`：在发版前统一更新仓库内的版本号字符串（csproj、脚本示例命令、文档、RELEASENOTES 标题等）。
+- `scripts/Build-Release.ps1`：清理 `artifacts/` 目录，分别运行自包含与框架依赖配置的 `dotnet publish`，随后调用 `vpk pack` 生成 Velopack 发行内容。支持 `-DryRun`、`-Skip*` 等参数，适合本地快速验证或复用现有构建产物。
 - `scripts/Publish-Release.ps1`：读取 release-settings 配置，检查 AWS CLI、处理互斥参数，并使用 `aws s3 cp` 将 `artifacts/` 下的发行目录同步到 rains3。`-DryRun` 可预演上传列表，命令结束后会自动清理临时凭证环境变量。
 
 ## 1. 环境准备

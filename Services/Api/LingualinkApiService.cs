@@ -385,9 +385,10 @@ namespace lingualink_client.Services
 
         public async Task<bool> ValidateConnectionAsync(CancellationToken cancellationToken = default)
         {
+            var requestUrl = new Uri(_serverUrl.TrimEnd('/') + "/health");
+
             try
             {
-                var requestUrl = new Uri(_serverUrl.TrimEnd('/') + "/health");
                 var response = await _httpClient.GetAsync(requestUrl, cancellationToken);
 
                 if (response.IsSuccessStatusCode)
@@ -401,12 +402,13 @@ namespace lingualink_client.Services
                     return healthResponse?.Status == "healthy";
                 }
 
-                return false;
+                // 非成功状态码时抛出异常，便于上层显示具体错误
+                throw new HttpRequestException($"Health check failed with status code {(int)response.StatusCode} ({response.StatusCode}).");
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"[LingualinkApiService] Connection validation failed: {ex.Message}");
-                return false;
+                throw;
             }
         }
 

@@ -6,7 +6,6 @@ using System.Windows;
 using WpfMessageBox = System.Windows.MessageBox;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using lingualink_client.Models;
 using lingualink_client.Services;
 using lingualink_client.Models.Updates;
 using lingualink_client.Services.Interfaces;
@@ -16,9 +15,7 @@ namespace lingualink_client.ViewModels
 {
     public partial class SettingPageViewModel : ViewModelBase
     {
-        private readonly SettingsService _settingsService;
         private readonly IUpdateService _updateService;
-        private AppSettings _appSettings;
 
         private UpdateSession? _activeSession;
         private UpdateStatus _latestStatus = UpdateStatus.NotChecked;
@@ -54,11 +51,11 @@ namespace lingualink_client.ViewModels
         [ObservableProperty]
         private string updateNotes = string.Empty;
 
-        public SettingPageViewModel()
+        public SettingPageViewModel(
+            SettingsService? settingsService = null,
+            IUpdateService? updateService = null)
         {
-            _settingsService = new SettingsService();
-            _updateService = ServiceContainer.Resolve<IUpdateService>();
-            _appSettings = _settingsService.LoadSettings();
+            _updateService = updateService ?? ServiceContainer.Resolve<IUpdateService>();
 
             CurrentVersion = ResolveCurrentVersion();
 
@@ -227,7 +224,6 @@ namespace lingualink_client.ViewModels
 
         public void RefreshSettings()
         {
-            _appSettings = _settingsService.LoadSettings();
             CurrentVersion = ResolveCurrentVersion();
         }
 
@@ -339,31 +335,6 @@ namespace lingualink_client.ViewModels
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

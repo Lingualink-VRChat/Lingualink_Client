@@ -26,6 +26,7 @@ namespace lingualink_client.ViewModels.Components
     public partial class ConversationHistoryViewModel : ViewModelBase, IDisposable
     {
         private const string ClipboardCategory = "Clipboard";
+        private const string HistoryCategory = "History";
         private readonly IConversationHistoryService _historyService;
         private readonly Dispatcher _dispatcher;
         private readonly ObservableCollection<FilterOption<TranslationSource?>> _sourceFilterOptions = new();
@@ -155,7 +156,7 @@ namespace lingualink_client.ViewModels.Components
             }
             catch (Exception ex)
             {
-                _loggingManager.AddMessage($"Failed to load sessions: {ex.Message}", LogLevel.Error, "History", ex.Message);
+                _loggingManager.AddMessage($"Failed to load sessions: {ex.Message}", LogLevel.Error, HistoryCategory, ex.Message);
                 sessions = Array.Empty<ConversationSession>();
             }
 

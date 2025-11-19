@@ -53,7 +53,7 @@ namespace lingualink_client
             // 2. ???????UI??
             var settingsService = new Services.SettingsService();
             var appSettings = settingsService.LoadSettings();
-            LanguageManager.ChangeLanguage(appSettings.GlobalLanguage);
+            AppLanguageHelper.ApplyLanguage(appSettings);
 
             // 3. ???ViewModel (???????????????ViewModel????)
             SharedIndexWindowViewModel = new IndexWindowViewModel();

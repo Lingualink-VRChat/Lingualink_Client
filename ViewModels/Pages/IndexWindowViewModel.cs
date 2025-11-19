@@ -43,10 +43,10 @@ namespace lingualink_client.ViewModels
 
         private UpdateSession? _activeUpdateSession;
 
-        public IndexWindowViewModel()
+        public IndexWindowViewModel(SettingsService? settingsService = null)
         {
             // 初始化服务/管理器
-            _settingsService = new SettingsService();
+            _settingsService = settingsService ?? new SettingsService();
             _targetLanguageManager = ServiceContainer.Resolve<ITargetLanguageManager>();
             _microphoneManager = ServiceContainer.Resolve<IMicrophoneManager>();
             _eventAggregator = ServiceContainer.Resolve<IEventAggregator>();
@@ -191,9 +191,6 @@ namespace lingualink_client.ViewModels
 
         private void SetupComponentCommunication()
         {
-            // 初始化管理器数据
-            InitializeManagers();
-            
             // 设置组件间的事件通信
             SetupTranslationResultUpdates();
         }
@@ -227,12 +224,6 @@ namespace lingualink_client.ViewModels
             });
         }
 
-        private void InitializeManagers()
-        {
-            // 这个方法现在在构造函数中内联处理
-            // 保留为空或删除
-        }
-
         public void Dispose()
         {
             // 取消订阅事件聚合器事件
@@ -251,20 +242,3 @@ namespace lingualink_client.ViewModels
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -42,11 +42,14 @@ namespace lingualink_client.Services.Managers
         public event EventHandler<ConversationEntrySavedEventArgs>? EntrySaved;
         public event EventHandler? StoragePathChanged;
 
-        public ConversationHistoryService()
+        public ConversationHistoryService(
+            SettingsService? settingsService = null,
+            IEventAggregator? eventAggregator = null,
+            ILoggingManager? loggingManager = null)
         {
-            _eventAggregator = ServiceContainer.Resolve<IEventAggregator>();
-            _loggingManager = ServiceContainer.Resolve<ILoggingManager>();
-            _settingsService = new SettingsService();
+            _eventAggregator = eventAggregator ?? ServiceContainer.Resolve<IEventAggregator>();
+            _loggingManager = loggingManager ?? ServiceContainer.Resolve<ILoggingManager>();
+            _settingsService = settingsService ?? new SettingsService();
             _settings = _settingsService.LoadSettings();
 
             InitializeStorage(_settings);

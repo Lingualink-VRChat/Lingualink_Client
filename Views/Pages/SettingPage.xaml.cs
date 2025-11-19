@@ -61,9 +61,8 @@ namespace lingualink_client.Views
         {
             if (e.AddedItems.Count > 0 && e.AddedItems[0] is CultureInfo cultureInfo)
             {
-                LanguageManager.ChangeLanguage(cultureInfo.Name);
-
                 _appSettings.GlobalLanguage = cultureInfo.Name;
+                AppLanguageHelper.ApplyLanguage(_appSettings);
                 _settingsService.SaveSettings(_appSettings);
             }
         }

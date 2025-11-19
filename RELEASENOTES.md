@@ -1,17 +1,21 @@
-# Release Notes – 3.4.7
+# Release Notes – 3.4.8
 
 ## 简体中文 (zh-CN)
 
-- **feat:** 新增自动更新功能，应用启动时将检查并提示可用更新。
-- **feat:** 引入对话历史管理功能，支持会话持久化存储与多语言（中、日、英）界面。
-- **feat:** 增强日志管理系统，提供日志筛选、复制及导出（JSON / Markdown）功能。
-- **feat:** 优化对话历史的剪贴板体验，改为复制核心摘要信息而非完整条目。
-- **chore:** 统一并优化发布流程，引入自动化构建与发布脚本，并更新发布指南以兼容 S3。
+- **fix:** 修复消息模板页面在加载设置时意外重写 `app_settings.json`，导致自定义模板文本在进入页面后被清空的问题，现在仅在用户实际修改时才保存。
+- **feat:** 为麦克风管理器新增“记住上次选择的设备”功能，优先按设备 ID 恢复上次使用的麦克风，如不存在则回退到系统默认或第一个可用设备。
+- **fix:** 修复账号设置页“使用自定义服务器”开关状态无法正确持久化的问题，现在会随其他账号设置一并写入 `app_settings.json` 并在重启后恢复。
+- **feat:** 将官方服务与自定义服务器拆分为两套独立配置（`OfficialServerUrl` / `OfficialApiKey` 与 `CustomServerUrl` / `CustomApiKey`），切换开关时会记住各自的 URL 和密钥，方便来回切换而不互相覆盖。
+- **improve:** 改进“测试连接”按钮的错误反馈逻辑，`/health` 检查失败时会返回具体的 HTTP 状态码或异常信息，而不再统一显示 “An unknown error occurred”。
+- **refactor:** 抽取全局语言应用与保存逻辑为 `AppLanguageHelper`，统一 `GlobalLanguage` 的读写路径，减少各页面/服务对语言细节的重复实现。
+- **refactor:** 进一步收紧设置相关 ViewModel 的依赖和死代码（例如清理未使用的 `SettingsService` 字段、移除无效初始化方法），为后续可选依赖注入和测试铺路。
 
 ## English (en)
 
-- **feat:** Add automatic update support; the app now checks for and prompts available updates on startup.
-- **feat:** Introduce conversation history management with persistent storage and multilingual (Chinese, Japanese, English) UI.
-- **feat:** Enhance the logging center with filtering, copy, and JSON/Markdown export capabilities.
-- **feat:** Improve clipboard experience for conversation history by copying concise summary information instead of full entries.
-- **chore:** Unify and streamline the release process with automated build/publish scripts and updated documentation for S3-compatible storage.
+- **fix:** Fixed an issue where opening the message template page could overwrite `app_settings.json` and clear `UserCustomTemplateText`; settings are now only saved when the user actually edits the template.
+- **feat:** Added “remember last selected microphone” support in the microphone manager, restoring the last device by ID on startup and falling back to the system default or first available device when necessary.
+- **fix:** Persisted the “Use custom server” toggle on the account page so the selected mode survives restarts instead of always defaulting to the custom server.
+- **feat:** Split official and custom server configuration into two separate sets (`OfficialServerUrl` / `OfficialApiKey` and `CustomServerUrl` / `CustomApiKey`), allowing you to switch modes without losing either configuration.
+- **improve:** Improved the “Test connection” flow to surface detailed HTTP status/exception messages from the `/health` endpoint instead of always reporting “An unknown error occurred.”
+- **refactor:** Introduced `AppLanguageHelper` to centralize applying and persisting `GlobalLanguage`, reducing duplicated language logic across pages and services.
+- **refactor:** Tightened settings-related view models by removing unused `SettingsService` fields and obsolete initialization methods, improving cohesion for future optional DI and testing.

@@ -160,7 +160,7 @@ namespace lingualink_client.ViewModels.Managers
             _appSettings.TargetLanguages = string.Join(",", selectedLangsList);
 
             // [核心Bug修复] 在保存前，确保GlobalLanguage是最新的
-            _appSettings.GlobalLanguage = System.Threading.Thread.CurrentThread.CurrentUICulture.Name;
+            AppLanguageHelper.CaptureCurrentLanguage(_appSettings);
 
             _settingsService.SaveSettings(_appSettings);
 

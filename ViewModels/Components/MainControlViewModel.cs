@@ -20,6 +20,7 @@ namespace lingualink_client.ViewModels.Components
         private readonly ILoggingManager _loggingManager;
         private readonly IMicrophoneManager _microphoneManager;
         private readonly SettingsService _settingsService;
+        private readonly IEventAggregator _eventAggregator;
         private IAudioTranslationOrchestrator? _orchestrator;
         private AppSettings _appSettings = null!;
 
@@ -35,11 +36,13 @@ namespace lingualink_client.ViewModels.Components
         // 本地化标签
         public string WorkHintLabel => LanguageManager.GetString("WorkHint");
 
-        public MainControlViewModel()
+        public MainControlViewModel(
+            SettingsService? settingsService = null)
         {
             _loggingManager = ServiceContainer.Resolve<ILoggingManager>();
             _microphoneManager = ServiceContainer.Resolve<IMicrophoneManager>();
-            _settingsService = new SettingsService();
+            _settingsService = settingsService ?? new SettingsService();
+            _eventAggregator = ServiceContainer.Resolve<IEventAggregator>();
 
             // 设置初始本地化值
             _statusText = LanguageManager.GetString("StatusInitializing");
@@ -60,12 +63,11 @@ namespace lingualink_client.ViewModels.Components
             _microphoneManager.PropertyChanged += OnMicrophoneManagerPropertyChanged;
 
             // 通过事件聚合器订阅事件
-            var eventAggregator = ServiceContainer.Resolve<Services.Interfaces.IEventAggregator>();
-            eventAggregator.Subscribe<Services.Events.MicrophoneChangedEvent>(OnMicrophoneChanged);
-            eventAggregator.Subscribe<Services.Events.SettingsChangedEvent>(OnGlobalSettingsChanged);
-            eventAggregator.Subscribe<Services.Events.StatusUpdatedEvent>(OnOrchestratorStatusUpdated);
-            eventAggregator.Subscribe<Services.Events.TranslationCompletedEvent>(OnTranslationCompleted);
-            eventAggregator.Subscribe<Services.Events.OscMessageSentEvent>(OnOscMessageSent);
+            _eventAggregator.Subscribe<Services.Events.MicrophoneChangedEvent>(OnMicrophoneChanged);
+            _eventAggregator.Subscribe<Services.Events.SettingsChangedEvent>(OnGlobalSettingsChanged);
+            _eventAggregator.Subscribe<Services.Events.StatusUpdatedEvent>(OnOrchestratorStatusUpdated);
+            _eventAggregator.Subscribe<Services.Events.TranslationCompletedEvent>(OnTranslationCompleted);
+            _eventAggregator.Subscribe<Services.Events.OscMessageSentEvent>(OnOscMessageSent);
         }
 
         private void OnMicrophoneManagerPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -289,12 +291,11 @@ namespace lingualink_client.ViewModels.Components
             _microphoneManager.PropertyChanged -= OnMicrophoneManagerPropertyChanged;
 
             // 取消订阅事件聚合器事件
-            var eventAggregator = ServiceContainer.Resolve<Services.Interfaces.IEventAggregator>();
-            eventAggregator.Unsubscribe<Services.Events.MicrophoneChangedEvent>(OnMicrophoneChanged);
-            eventAggregator.Unsubscribe<Services.Events.SettingsChangedEvent>(OnGlobalSettingsChanged);
-            eventAggregator.Unsubscribe<Services.Events.StatusUpdatedEvent>(OnOrchestratorStatusUpdated);
-            eventAggregator.Unsubscribe<Services.Events.TranslationCompletedEvent>(OnTranslationCompleted);
-            eventAggregator.Unsubscribe<Services.Events.OscMessageSentEvent>(OnOscMessageSent);
+            _eventAggregator.Unsubscribe<Services.Events.MicrophoneChangedEvent>(OnMicrophoneChanged);
+            _eventAggregator.Unsubscribe<Services.Events.SettingsChangedEvent>(OnGlobalSettingsChanged);
+            _eventAggregator.Unsubscribe<Services.Events.StatusUpdatedEvent>(OnOrchestratorStatusUpdated);
+            _eventAggregator.Unsubscribe<Services.Events.TranslationCompletedEvent>(OnTranslationCompleted);
+            _eventAggregator.Unsubscribe<Services.Events.OscMessageSentEvent>(OnOscMessageSent);
 
             _orchestrator?.Dispose();
         }

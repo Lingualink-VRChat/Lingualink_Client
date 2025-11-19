@@ -52,9 +52,9 @@ namespace lingualink_client.ViewModels
         [NotifyCanExecuteChangedFor(nameof(SendCommand))] // 当IsSending变化时，也应更新命令状态
         private bool _isSending = false;
 
-        public TextEntryPageViewModel()
+        public TextEntryPageViewModel(SettingsService? settingsService = null)
         {
-            _settingsService = new SettingsService();
+            _settingsService = settingsService ?? new SettingsService();
             _appSettings = _settingsService.LoadSettings();
             _eventAggregator = ServiceContainer.Resolve<IEventAggregator>();
             _loggingManager = ServiceContainer.Resolve<ILoggingManager>(); // 解析日志管理器

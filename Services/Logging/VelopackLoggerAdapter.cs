@@ -40,7 +40,7 @@ namespace lingualink_client.Services.Logging
             }
         }
 
-        public void Log(VelopackLogLevel logLevel, string message, Exception? exception)
+        public void Log(VelopackLogLevel logLevel, string? message, Exception? exception)
         {
             if (logLevel < VelopackLogLevel.Information)
             {
@@ -67,7 +67,7 @@ namespace lingualink_client.Services.Logging
             }
         }
 
-        private static string FormatMessage(string message, Exception? exception)
+        private static string FormatMessage(string? message, Exception? exception)
         {
             var text = string.IsNullOrWhiteSpace(message) ? string.Empty : message.Trim();
 

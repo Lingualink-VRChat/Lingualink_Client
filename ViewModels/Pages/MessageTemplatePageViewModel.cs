@@ -17,6 +17,7 @@ namespace lingualink_client.ViewModels
     {
         private readonly SettingsService _settingsService;
         private AppSettings _appSettings;
+        private bool _isLoadingSettings;
 
         public string MessageTemplateSettings => LanguageManager.GetString("MessageTemplateSettings");
         public string UseCustomTemplate => LanguageManager.GetString("UseCustomTemplate");
@@ -36,9 +37,9 @@ namespace lingualink_client.ViewModels
 
         public ObservableCollection<PlaceholderItem> PlaceholderList { get; } = new();
 
-        public MessageTemplatePageViewModel()
+        public MessageTemplatePageViewModel(SettingsService? settingsService = null)
         {
-            _settingsService = new SettingsService();
+            _settingsService = settingsService ?? new SettingsService();
             _appSettings = _settingsService.LoadSettings();
 
             LanguageManager.LanguageChanged += () => {
@@ -70,15 +71,24 @@ namespace lingualink_client.ViewModels
 
         private void LoadSettings()
         {
-            _appSettings = _settingsService.LoadSettings();
+            _isLoadingSettings = true;
+            try
+            {
+                _appSettings = _settingsService.LoadSettings();
 
-            UseCustomTemplateEnabled = _appSettings.UseCustomTemplate;
+                // Load the user's custom template text and mode without triggering saves
+                UseCustomTemplateEnabled = _appSettings.UseCustomTemplate;
 
-            // Load the user's custom template text, preserving their previous work
-            CustomTemplateText = _appSettings.UserCustomTemplateText;
+                // Load the user's custom template text, preserving their previous work
+                CustomTemplateText = _appSettings.UserCustomTemplateText;
 
-            UpdatePreview();
-            ValidateTemplate(); // 加载设置后验证
+                UpdatePreview();
+                ValidateTemplate(); // 加载设置后验证
+            }
+            finally
+            {
+                _isLoadingSettings = false;
+            }
         }
 
         private void InitializePlaceholders()
@@ -94,6 +104,12 @@ namespace lingualink_client.ViewModels
         partial void OnUseCustomTemplateEnabledChanged(bool value)
         {
             _appSettings.UseCustomTemplate = value;
+
+            if (_isLoadingSettings)
+            {
+                return;
+            }
+
             SaveSettings();
         }
 
@@ -101,6 +117,12 @@ namespace lingualink_client.ViewModels
         {
             // Save the user's custom template text immediately
             _appSettings.UserCustomTemplateText = value;
+
+            if (_isLoadingSettings)
+            {
+                return;
+            }
+
             SaveSettings();
             UpdatePreview();
             ValidateTemplate(); // 文本变化时验证
@@ -166,7 +188,7 @@ namespace lingualink_client.ViewModels
             settingsToSave.UserCustomTemplateText = this.CustomTemplateText;
 
             // 确保保存当前的界面语言，避免语言切换bug
-            settingsToSave.GlobalLanguage = System.Threading.Thread.CurrentThread.CurrentUICulture.Name;
+            AppLanguageHelper.CaptureCurrentLanguage(settingsToSave);
 
             _settingsService.SaveSettings(settingsToSave);
             _appSettings = settingsToSave; // 更新ViewModel的缓存设置

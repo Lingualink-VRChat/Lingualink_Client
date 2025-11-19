@@ -483,23 +483,16 @@
                 </StackPanel>
             </ui:CardExpander>
 
-            <!-- 保存/撤销按钮 -->
+            <!-- 恢复默认设置按钮（自动保存，无需手动保存/撤销） -->
             <StackPanel
                 Grid.Row="5"
                 Margin="0,10,0,0"
                 HorizontalAlignment="Right"
                 Orientation="Horizontal">
                 <ui:Button
-                    Width="80"
-                    Margin="0,0,10,0"
-                    Command="{Binding SaveCommand}"
-                    Content="{Binding SaveLabel}"
-                    IsDefault="True" />
-                <ui:Button
-                    Width="80"
-                    Command="{Binding RevertCommand}"
-                    Content="{Binding RevertLabel}"
-                    IsCancel="False" />
+                    Width="120"
+                    Command="{Binding ResetToDefaultsCommand}"
+                    Content="{Binding ResetToDefaultsLabel}" />
             </StackPanel>
         </Grid>
     </ui:PassiveScrollViewer>

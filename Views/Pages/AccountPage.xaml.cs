@@ -11,13 +11,10 @@ namespace lingualink_client.Views
     /// </summary>
     public partial class AccountPage : Page
     {
-        private readonly AccountPageViewModel _viewModel;
-
         public AccountPage()
         {
             InitializeComponent();
-            _viewModel = new AccountPageViewModel(new SettingsService());
-            DataContext = _viewModel;
+            DataContext = new AccountPageViewModel();
         }
 
         /// <summary>
@@ -25,10 +22,10 @@ namespace lingualink_client.Views
         /// </summary>
         private void ApiKeyPasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
         {
-            if (sender is Wpf.Ui.Controls.PasswordBox passwordBox && _viewModel != null)
+            if (sender is Wpf.Ui.Controls.PasswordBox passwordBox && DataContext is AccountPageViewModel viewModel)
             {
                 System.Diagnostics.Debug.WriteLine($"[AccountPage] ApiKey PasswordBox changed to: '{passwordBox.Password}'");
-                _viewModel.ApiKey = passwordBox.Password;
+                viewModel.ApiKey = passwordBox.Password;
             }
         }
     }

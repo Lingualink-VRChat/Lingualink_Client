@@ -5,6 +5,7 @@
     将仓库内的版本号从旧值更新为新值，包括：
     - lingualink_client.csproj 中的 Version / AssemblyVersion / FileVersion / ProductVersion
     - scripts/Build-Release.ps1 中的默认 Version 和示例命令
+    - scripts/Publish-Release.ps1 中的示例命令
     - docs/ReleaseGuide.md 和 docs/reference/WebDownloadLinkGuide.md 中的示例版本
     - RELEASENOTES.md 标题中的版本号
 .PARAMETER OldVersion
@@ -112,4 +113,3 @@ if ($DryRun) {
 } else {
     Write-Info "版本号更新完成，请运行：dotnet build 和 scripts/Build-Release.ps1 验证。"
 }
-

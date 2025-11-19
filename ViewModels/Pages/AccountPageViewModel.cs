@@ -1,10 +1,12 @@
 using System;
+using System.ComponentModel;
+using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 using lingualink_client.Models;
 using lingualink_client.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System.Threading.Tasks;
 using lingualink_client.Services.Interfaces;
 // 使用现代化MessageBox替换系统默认的MessageBox
 using MessageBox = lingualink_client.Services.MessageBox;
@@ -15,6 +17,9 @@ namespace lingualink_client.ViewModels
     {
         private readonly SettingsService _settingsService;
         private AppSettings _currentSettings;
+        private bool _isLoadingSettings;
+        private readonly DispatcherTimer _autoSaveTimer;
+        private bool _hasPendingChanges;
 
         // 语言相关的标签
         public string AccountSettingsLabel => LanguageManager.GetString("AccountSettings");
@@ -65,7 +70,7 @@ namespace lingualink_client.ViewModels
         [ObservableProperty] private string _serverUrl = string.Empty;
         [ObservableProperty] private string _apiKey = string.Empty;
 
-        // 属性变更监听
+        // 属性变更监听（主要用于调试）
         partial void OnApiKeyChanged(string value)
         {
             System.Diagnostics.Debug.WriteLine($"[AccountPageViewModel] ApiKey property changed to: '{value}'");
@@ -76,15 +81,25 @@ namespace lingualink_client.ViewModels
             System.Diagnostics.Debug.WriteLine($"[AccountPageViewModel] ServerUrl property changed to: '{value}'");
         }
 
-        public AccountPageViewModel(SettingsService settingsService)
+        public AccountPageViewModel(SettingsService? settingsService = null)
         {
-            _settingsService = settingsService;
+            _settingsService = settingsService ?? new SettingsService();
             _currentSettings = _settingsService.LoadSettings();
             
             LoadSettingsFromModel(_currentSettings);
             
             // 订阅语言变化事件
             SubscribeToLanguageChanges();
+
+            // 初始化自动保存计时器（防抖）
+            _autoSaveTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(1)
+            };
+            _autoSaveTimer.Tick += AutoSaveTimerOnTick;
+
+            // 监听属性变更，用于触发自动保存
+            PropertyChanged += OnAccountPropertyChanged;
         }
 
         private void SubscribeToLanguageChanges()
@@ -123,15 +138,127 @@ namespace lingualink_client.ViewModels
 
         private void LoadSettingsFromModel(AppSettings settings)
         {
-            // 目前默认使用自定义服务
-            UseCustomServer = true; // 默认启用自定义服务器
+            _isLoadingSettings = true;
+            try
+            {
+                _currentSettings = settings;
 
-            ServerUrl = settings.ServerUrl;
-            ApiKey = settings.ApiKey;
+                // 从设置中恢复是否使用自定义服务器
+                UseCustomServer = settings.UseCustomServer;
 
-            // 官方服务相关的设置暂时保持默认值
-            IsLoggedIn = false;
-            LoggedInUsername = string.Empty;
+                if (UseCustomServer)
+                {
+                    // 优先使用单独存储的自定义服务器配置，否则回退到当前全局配置
+                    ServerUrl = string.IsNullOrWhiteSpace(settings.CustomServerUrl)
+                        ? settings.ServerUrl
+                        : settings.CustomServerUrl;
+
+                    ApiKey = string.IsNullOrEmpty(settings.CustomApiKey)
+                        ? settings.ApiKey
+                        : settings.CustomApiKey;
+                }
+                else
+                {
+                    // 使用官方服务配置；如果未显式设置则使用默认官方地址
+                    ServerUrl = string.IsNullOrWhiteSpace(settings.OfficialServerUrl)
+                        ? "https://api.lingualink.aiatechco.com/api/v1/"
+                        : settings.OfficialServerUrl;
+
+                    ApiKey = settings.OfficialApiKey;
+                }
+
+                // 官方服务相关的设置暂时保持默认值
+                IsLoggedIn = false;
+                LoggedInUsername = string.Empty;
+            }
+            finally
+            {
+                _isLoadingSettings = false;
+            }
+        }
+
+        private void OnAccountPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == null || _isLoadingSettings)
+            {
+                return;
+            }
+
+            if (!IsAutoSaveProperty(e.PropertyName))
+            {
+                return;
+            }
+
+            _hasPendingChanges = true;
+
+            if (_autoSaveTimer.IsEnabled)
+            {
+                _autoSaveTimer.Stop();
+            }
+
+            _autoSaveTimer.Start();
+        }
+
+        private void AutoSaveTimerOnTick(object? sender, EventArgs e)
+        {
+            _autoSaveTimer.Stop();
+
+            if (!_hasPendingChanges)
+            {
+                return;
+            }
+
+            _hasPendingChanges = false;
+
+            SaveInternal(showConfirmation: false, changeSource: "AccountPageAutoSave");
+        }
+
+        private static bool IsAutoSaveProperty(string propertyName)
+        {
+            return propertyName == nameof(UseCustomServer)
+                   || propertyName == nameof(ServerUrl)
+                   || propertyName == nameof(ApiKey);
+        }
+
+        partial void OnUseCustomServerChanged(bool value)
+        {
+            if (_currentSettings == null || _isLoadingSettings)
+            {
+                return;
+            }
+
+            // 在切换模式时，不立刻写盘，只在保存时持久化。
+            if (value)
+            {
+                // 切换到自定义服务器：先记录当前官方配置，再恢复自定义配置
+                _currentSettings.OfficialServerUrl = ServerUrl;
+                _currentSettings.OfficialApiKey = ApiKey;
+
+                var customUrl = string.IsNullOrWhiteSpace(_currentSettings.CustomServerUrl)
+                    ? _currentSettings.ServerUrl
+                    : _currentSettings.CustomServerUrl;
+
+                var customKey = string.IsNullOrEmpty(_currentSettings.CustomApiKey)
+                    ? _currentSettings.ApiKey
+                    : _currentSettings.CustomApiKey;
+
+                ServerUrl = customUrl;
+                ApiKey = customKey;
+            }
+            else
+            {
+                // 切换到官方服务：先记录当前自定义配置，再恢复官方配置
+                _currentSettings.CustomServerUrl = ServerUrl;
+                _currentSettings.CustomApiKey = ApiKey;
+
+                if (string.IsNullOrWhiteSpace(_currentSettings.OfficialServerUrl))
+                {
+                    _currentSettings.OfficialServerUrl = "https://api.lingualink.aiatechco.com/api/v1/";
+                }
+
+                ServerUrl = _currentSettings.OfficialServerUrl;
+                ApiKey = _currentSettings.OfficialApiKey;
+            }
         }
 
         private bool ValidateAndBuildSettings(out AppSettings? updatedSettings)
@@ -163,12 +290,20 @@ namespace lingualink_client.ViewModels
                 }
             }
 
+            // 持久化当前认证模式选择
+            updatedSettings.UseCustomServer = this.UseCustomServer;
+
             // 只有在使用自定义服务器时才更新URL和API密钥
             if (UseCustomServer)
             {
                 System.Diagnostics.Debug.WriteLine($"[AccountPageViewModel] Using custom server - updating settings");
                 System.Diagnostics.Debug.WriteLine($"[AccountPageViewModel] ViewModel values - ServerUrl: '{this.ServerUrl}', ApiKey: '{this.ApiKey}'");
 
+                // 保存自定义服务器配置
+                updatedSettings.CustomServerUrl = this.ServerUrl;
+                updatedSettings.CustomApiKey = this.ApiKey;
+
+                // 将全局 ServerUrl/ApiKey 也指向当前自定义配置
                 updatedSettings.ServerUrl = this.ServerUrl;
                 updatedSettings.ApiKey = this.ApiKey;
 
@@ -178,58 +313,65 @@ namespace lingualink_client.ViewModels
             {
                 System.Diagnostics.Debug.WriteLine($"[AccountPageViewModel] Using official service - clearing custom settings");
 
-                // 使用官方服务时，清空自定义设置或使用默认的官方服务设置
-                updatedSettings.ServerUrl = "https://api.lingualink.aiatechco.com/api/v1/";
-                updatedSettings.ApiKey = string.Empty; // 官方服务将通过登录token处理认证
+                // 使用官方服务时，仅更新官方服务相关配置，保留已有官方 APIKey
+                updatedSettings.OfficialServerUrl = string.IsNullOrWhiteSpace(updatedSettings.OfficialServerUrl)
+                    ? "https://api.lingualink.aiatechco.com/api/v1/"
+                    : updatedSettings.OfficialServerUrl;
+
+                // 将全局 ServerUrl/ApiKey 指向官方服务配置
+                updatedSettings.ServerUrl = updatedSettings.OfficialServerUrl;
+                updatedSettings.ApiKey = updatedSettings.OfficialApiKey;
             }
 
             return true;
         }
 
-        [RelayCommand]
-        private void Save()
+        private void SaveInternal(bool showConfirmation, string changeSource)
         {
-            System.Diagnostics.Debug.WriteLine($"[AccountPageViewModel] ===== SAVE COMMAND TRIGGERED =====");
-            System.Diagnostics.Debug.WriteLine($"[AccountPageViewModel] Save() called - Current ApiKey: '{ApiKey}', UseCustomServer: {UseCustomServer}");
+            System.Diagnostics.Debug.WriteLine($"[AccountPageViewModel] SaveInternal() called - Source: {changeSource}, Current ApiKey: '{ApiKey}', UseCustomServer: {UseCustomServer}");
 
-            if (ValidateAndBuildSettings(out AppSettings? updatedSettings))
+            if (!ValidateAndBuildSettings(out AppSettings? updatedSettings) || updatedSettings == null)
             {
-                if (updatedSettings != null)
-                {
-                    updatedSettings.GlobalLanguage = System.Threading.Thread.CurrentThread.CurrentUICulture.Name;
+                return;
+            }
 
-                    System.Diagnostics.Debug.WriteLine($"[AccountPageViewModel] Attempting to save ApiKey: '{updatedSettings.ApiKey}'");
-                    System.Diagnostics.Debug.WriteLine($"[AccountPageViewModel] About to save settings - ApiKey: '{updatedSettings.ApiKey}', ServerUrl: '{updatedSettings.ServerUrl}'");
+            AppLanguageHelper.CaptureCurrentLanguage(updatedSettings);
 
-                    _settingsService.SaveSettings(updatedSettings);
-                    _currentSettings = updatedSettings;
+            System.Diagnostics.Debug.WriteLine($"[AccountPageViewModel] About to save settings - ApiKey: '{updatedSettings.ApiKey}', ServerUrl: '{updatedSettings.ServerUrl}'");
 
-                    System.Diagnostics.Debug.WriteLine($"[AccountPageViewModel] Settings saved, raising SettingsChanged event");
+            _settingsService.SaveSettings(updatedSettings);
+            _currentSettings = updatedSettings;
 
-                    // 通过事件聚合器通知设置变更
-                    var eventAggregator = ServiceContainer.Resolve<Services.Interfaces.IEventAggregator>();
-                    eventAggregator.Publish(new Services.Events.SettingsChangedEvent
-                    {
-                        Settings = updatedSettings,
-                        ChangeSource = "AccountPage"
-                    });
+            _hasPendingChanges = false;
+            if (_autoSaveTimer.IsEnabled)
+            {
+                _autoSaveTimer.Stop();
+            }
 
-                    MessageBox.Show(LanguageManager.GetString("SettingsSavedSuccess"),
-                                   LanguageManager.GetString("SuccessTitle"),
-                                   MessageBoxButton.OK, MessageBoxImage.Information);
-                }
+            System.Diagnostics.Debug.WriteLine($"[AccountPageViewModel] Settings saved, raising SettingsChanged event");
+
+            // 通过事件聚合器通知设置变更
+            var eventAggregator = ServiceContainer.Resolve<Services.Interfaces.IEventAggregator>();
+            eventAggregator.Publish(new Services.Events.SettingsChangedEvent
+            {
+                Settings = updatedSettings,
+                ChangeSource = changeSource
+            });
+
+            if (showConfirmation)
+            {
+                MessageBox.Show(
+                    LanguageManager.GetString("SettingsSavedSuccess"),
+                    LanguageManager.GetString("SuccessTitle"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
             }
         }
 
         [RelayCommand]
-        private void Revert()
+        private void Save()
         {
-            _currentSettings = _settingsService.LoadSettings();
-            LoadSettingsFromModel(_currentSettings);
-            
-            MessageBox.Show(LanguageManager.GetString("SettingsReverted"),
-                           LanguageManager.GetString("InfoTitle"),
-                           MessageBoxButton.OK, MessageBoxImage.Information);
+            SaveInternal(showConfirmation: true, changeSource: "AccountPage");
         }
 
         [RelayCommand]

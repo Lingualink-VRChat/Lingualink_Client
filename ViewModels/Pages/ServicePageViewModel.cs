@@ -1,10 +1,12 @@
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Net;
 using System.Windows;
+using System.Windows.Threading;
 using lingualink_client.Models;
 using lingualink_client.Services;
-using System;
-using System.Net;
 using CommunityToolkit.Mvvm.ComponentModel; // 添加
 using CommunityToolkit.Mvvm.Input;       // 添加
 // 使用现代化MessageBox替换系统默认的MessageBox
@@ -16,6 +18,8 @@ namespace lingualink_client.ViewModels
     {
         private readonly SettingsService _settingsService;
         private AppSettings _currentSettings; 
+        private readonly DispatcherTimer _autoSaveTimer;
+        private bool _hasPendingChanges;
 
         // SaveCommand 和 RevertCommand 将被 [RelayCommand] 生成
         // public DelegateCommand SaveCommand { get; } // 移除此行
@@ -39,6 +43,7 @@ namespace lingualink_client.ViewModels
         public string SaveLabel => LanguageManager.GetString("Save");
         public string RevertLabel => LanguageManager.GetString("Revert");
         public string VolumeThresholdHint => LanguageManager.GetString("VolumeThresholdHint");
+        public string ResetToDefaultsLabel => LanguageManager.GetString("ResetToDefaults");
         
         // 音频编码相关标签
         public string OpusComplexityLabel => LanguageManager.GetString("OpusComplexity");
@@ -87,15 +92,23 @@ namespace lingualink_client.ViewModels
         [ObservableProperty] private double _quietBoostRmsThresholdDbFs;
         [ObservableProperty] private double _quietBoostGainDb;
         
-        public ServicePageViewModel(SettingsService settingsService)
+        public ServicePageViewModel(SettingsService? settingsService = null)
         {
-            _settingsService = settingsService;
+            _settingsService = settingsService ?? new SettingsService();
             _currentSettings = _settingsService.LoadSettings();
-            
-            // 命令不再需要手动初始化
-            // No need to initialize SaveCommand, RevertCommand here
 
+            // 先从模型加载设置到 ViewModel 属性
             LoadSettingsFromModel(_currentSettings);
+
+            // 初始化自动保存计时器（轻量防抖）
+            _autoSaveTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(1)
+            };
+            _autoSaveTimer.Tick += AutoSaveTimerOnTick;
+
+            // 监听属性变更，用于触发自动保存
+            PropertyChanged += OnServicePagePropertyChanged;
 
             // 订阅语言变化，更新依赖语言管理器字符串的属性
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(PostSpeechRecordingDurationLabel));
@@ -108,13 +121,14 @@ namespace lingualink_client.ViewModels
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(MinVoiceDurationHint));
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(MaxVoiceDurationHint));
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(EnableOscLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(OscIpAddressLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(OscPortLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(SendImmediatelyLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(PlayNotificationSoundLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(SaveLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(RevertLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(VolumeThresholdHint));
+              LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(OscIpAddressLabel));
+              LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(OscPortLabel));
+              LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(SendImmediatelyLabel));
+              LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(PlayNotificationSoundLabel));
+              LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(SaveLabel));
+              LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(RevertLabel));
+              LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(ResetToDefaultsLabel));
+              LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(VolumeThresholdHint));
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(OpusComplexityLabel));
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(AudioEncodingLabel));
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(OpusComplexityHint));
@@ -137,7 +151,62 @@ namespace lingualink_client.ViewModels
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(QuietBoostGainLabel));
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(AudioNormalizationHint));
             LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(QuietBoostRmsThresholdHint));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(QuietBoostGainHint));
+              LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(QuietBoostGainHint));
+          }
+
+        private void OnServicePagePropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == null)
+            {
+                return;
+            }
+
+            if (!IsAutoSaveProperty(e.PropertyName))
+            {
+                return;
+            }
+
+            _hasPendingChanges = true;
+
+            if (_autoSaveTimer.IsEnabled)
+            {
+                _autoSaveTimer.Stop();
+            }
+
+            _autoSaveTimer.Start();
+        }
+
+        private void AutoSaveTimerOnTick(object? sender, EventArgs e)
+        {
+            _autoSaveTimer.Stop();
+
+            if (!_hasPendingChanges)
+            {
+                return;
+            }
+
+            _hasPendingChanges = false;
+
+            SaveSettingsInternal(showConfirmation: false, changeSource: "ServicePageAutoSave");
+        }
+
+        private static bool IsAutoSaveProperty(string propertyName)
+        {
+            return propertyName == nameof(PostSpeechRecordingDurationSeconds)
+                   || propertyName == nameof(MinVoiceDurationSeconds)
+                   || propertyName == nameof(MaxVoiceDurationSeconds)
+                   || propertyName == nameof(MinRecordingVolumeThreshold)
+                   || propertyName == nameof(EnableOsc)
+                   || propertyName == nameof(OscIpAddress)
+                   || propertyName == nameof(OscPort)
+                   || propertyName == nameof(OscSendImmediately)
+                   || propertyName == nameof(OscPlayNotificationSound)
+                   || propertyName == nameof(OpusComplexity)
+                   || propertyName == nameof(EnableAudioNormalization)
+                   || propertyName == nameof(NormalizationTargetDb)
+                   || propertyName == nameof(EnableQuietBoost)
+                   || propertyName == nameof(QuietBoostRmsThresholdDbFs)
+                   || propertyName == nameof(QuietBoostGainDb);
         }
 
         // MinRecordingVolumeThreshold 属性的 OnChanged 回调
@@ -315,31 +384,48 @@ namespace lingualink_client.ViewModels
             return true;
         }
 
+        private void SaveSettingsInternal(bool showConfirmation, string changeSource)
+        {
+            if (!ValidateAndBuildSettings(out AppSettings? updatedSettingsFromThisPage) || updatedSettingsFromThisPage == null)
+            {
+                return;
+            }
+
+            // 确保保存当前的界面语言，避免语言切换bug
+            AppLanguageHelper.CaptureCurrentLanguage(updatedSettingsFromThisPage);
+
+            _settingsService.SaveSettings(updatedSettingsFromThisPage);
+            _currentSettings = updatedSettingsFromThisPage; // Update local copy with the combined settings
+
+            _hasPendingChanges = false;
+            if (_autoSaveTimer.IsEnabled)
+            {
+                _autoSaveTimer.Stop();
+            }
+
+            // 通过事件聚合器通知设置变更
+            var eventAggregator = ServiceContainer.Resolve<Services.Interfaces.IEventAggregator>();
+            eventAggregator.Publish(new Services.Events.SettingsChangedEvent
+            {
+                Settings = updatedSettingsFromThisPage,
+                ChangeSource = changeSource
+            });
+
+            if (showConfirmation)
+            {
+                MessageBox.Show(
+                    LanguageManager.GetString("SettingsSavedSuccess"),
+                    LanguageManager.GetString("SuccessTitle"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+        }
+
         // RelayCommand 方法
         [RelayCommand] // 标记为 RelayCommand
         private void Save() // 方法名与命令名对应，无需参数
         {
-            if (ValidateAndBuildSettings(out AppSettings? updatedSettingsFromThisPage))
-            {
-                if (updatedSettingsFromThisPage != null)
-                {
-                    // 确保保存当前的界面语言，避免语言切换bug
-                    updatedSettingsFromThisPage.GlobalLanguage = System.Threading.Thread.CurrentThread.CurrentUICulture.Name;
-                    
-                    _settingsService.SaveSettings(updatedSettingsFromThisPage);
-                    _currentSettings = updatedSettingsFromThisPage; // Update local copy with the combined settings
-
-                    // 通过事件聚合器通知设置变更
-                    var eventAggregator = ServiceContainer.Resolve<Services.Interfaces.IEventAggregator>();
-                    eventAggregator.Publish(new Services.Events.SettingsChangedEvent
-                    {
-                        Settings = updatedSettingsFromThisPage,
-                        ChangeSource = "ServicePage"
-                    });
-
-                    MessageBox.Show(LanguageManager.GetString("SettingsSavedSuccess"), LanguageManager.GetString("SuccessTitle"), MessageBoxButton.OK, MessageBoxImage.Information);
-                }
-            }
+            SaveSettingsInternal(showConfirmation: true, changeSource: "ServicePage");
         }
 
         // RelayCommand 方法
@@ -350,6 +436,36 @@ namespace lingualink_client.ViewModels
             _currentSettings = _settingsService.LoadSettings();
             LoadSettingsFromModel(_currentSettings);
             MessageBox.Show(LanguageManager.GetString("SettingsReverted"), LanguageManager.GetString("InfoTitle"), MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        // 恢复默认设置
+        [RelayCommand]
+        private void ResetToDefaults()
+        {
+            var defaultSettings = new AppSettings();
+
+            // 使用 AppSettings 中的默认值重置当前页相关设置
+            PostSpeechRecordingDurationSeconds = defaultSettings.PostSpeechRecordingDurationSeconds;
+            MinVoiceDurationSeconds = defaultSettings.MinVoiceDurationSeconds;
+            MaxVoiceDurationSeconds = defaultSettings.MaxVoiceDurationSeconds;
+            MinRecordingVolumeThreshold = defaultSettings.MinRecordingVolumeThreshold;
+
+            EnableOsc = defaultSettings.EnableOsc;
+            OscIpAddress = defaultSettings.OscIpAddress;
+            OscPort = defaultSettings.OscPort;
+            OscSendImmediately = defaultSettings.OscSendImmediately;
+            OscPlayNotificationSound = defaultSettings.OscPlayNotificationSound;
+            
+            OpusComplexity = defaultSettings.OpusComplexity;
+
+            EnableAudioNormalization = defaultSettings.EnableAudioNormalization;
+            NormalizationTargetDb = defaultSettings.NormalizationTargetDb;
+            EnableQuietBoost = defaultSettings.EnableQuietBoost;
+            QuietBoostRmsThresholdDbFs = defaultSettings.QuietBoostRmsThresholdDbFs;
+            QuietBoostGainDb = defaultSettings.QuietBoostGainDb;
+
+            // 重置后立即保存一次
+            SaveSettingsInternal(showConfirmation: true, changeSource: "ServicePageResetToDefaults");
         }
     }
 }
