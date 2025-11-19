@@ -15,7 +15,7 @@ namespace lingualink_client.ViewModels
 {
     public partial class TextEntryPageViewModel : ViewModelBase, IDisposable
     {
-        private readonly SettingsService _settingsService;
+        private readonly ISettingsManager _settingsManager;
         private AppSettings _appSettings;
         private TextTranslationOrchestrator _orchestrator; // 移除 readonly
         private readonly IEventAggregator _eventAggregator;
@@ -52,10 +52,13 @@ namespace lingualink_client.ViewModels
         [NotifyCanExecuteChangedFor(nameof(SendCommand))] // 当IsSending变化时，也应更新命令状态
         private bool _isSending = false;
 
-        public TextEntryPageViewModel(SettingsService? settingsService = null)
+        public TextEntryPageViewModel(ISettingsManager? settingsManager = null)
         {
-            _settingsService = settingsService ?? new SettingsService();
-            _appSettings = _settingsService.LoadSettings();
+            _settingsManager = settingsManager
+                               ?? (ServiceContainer.TryResolve<ISettingsManager>(out var resolved) && resolved != null
+                                   ? resolved
+                                   : new SettingsManager());
+            _appSettings = _settingsManager.LoadSettings();
             _eventAggregator = ServiceContainer.Resolve<IEventAggregator>();
             _loggingManager = ServiceContainer.Resolve<ILoggingManager>(); // 解析日志管理器
             _sharedStateViewModel = ServiceContainer.Resolve<SharedStateViewModel>(); // 解析共享状态
@@ -101,7 +104,7 @@ namespace lingualink_client.ViewModels
         private void OnGlobalSettingsChanged(SettingsChangedEvent e)
         {
             _loggingManager.AddMessage("Settings changed, re-initializing TextEntry orchestrator...");
-            _appSettings = _settingsService.LoadSettings();
+            _appSettings = _settingsManager.LoadSettings();
             Application.Current.Dispatcher.Invoke(() =>
             {
                 // 注意：这里不再需要取消订阅 StatusUpdated 事件，因为它现在是全局事件

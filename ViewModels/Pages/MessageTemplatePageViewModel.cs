@@ -1,5 +1,4 @@
 using lingualink_client.Services;
-using lingualink_client.Services.Interfaces;
 using lingualink_client.Models;
 using lingualink_client.Services.Events;
 using System;
@@ -10,12 +9,13 @@ using System.Text;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using lingualink_client.Services.Interfaces;
 
 namespace lingualink_client.ViewModels
 {
     public partial class MessageTemplatePageViewModel : ViewModelBase
     {
-        private readonly SettingsService _settingsService;
+        private readonly ISettingsManager _settingsManager;
         private AppSettings _appSettings;
         private bool _isLoadingSettings;
 
@@ -37,22 +37,15 @@ namespace lingualink_client.ViewModels
 
         public ObservableCollection<PlaceholderItem> PlaceholderList { get; } = new();
 
-        public MessageTemplatePageViewModel(SettingsService? settingsService = null)
+        public MessageTemplatePageViewModel(ISettingsManager? settingsManager = null)
         {
-            _settingsService = settingsService ?? new SettingsService();
-            _appSettings = _settingsService.LoadSettings();
+            _settingsManager = settingsManager
+                               ?? (ServiceContainer.TryResolve<ISettingsManager>(out var resolved) && resolved != null
+                                   ? resolved
+                                   : new SettingsManager());
+            _appSettings = _settingsManager.LoadSettings();
 
-            LanguageManager.LanguageChanged += () => {
-                OnPropertyChanged(nameof(MessageTemplateSettings));
-                OnPropertyChanged(nameof(UseCustomTemplate));
-                OnPropertyChanged(nameof(CustomTemplateTextLabel));
-                OnPropertyChanged(nameof(AvailablePlaceholders));
-                OnPropertyChanged(nameof(PreviewTemplate));
-                OnPropertyChanged(nameof(ResetToDefaults));
-
-                // Refresh placeholders when language changes
-                InitializePlaceholders();
-            };
+            LanguageManager.LanguageChanged += OnLanguageChanged;
 
             // 订阅语言初始化事件
             var eventAggregator = ServiceContainer.Resolve<IEventAggregator>();
@@ -74,7 +67,7 @@ namespace lingualink_client.ViewModels
             _isLoadingSettings = true;
             try
             {
-                _appSettings = _settingsService.LoadSettings();
+                _appSettings = _settingsManager.LoadSettings();
 
                 // Load the user's custom template text and mode without triggering saves
                 UseCustomTemplateEnabled = _appSettings.UseCustomTemplate;
@@ -99,6 +92,14 @@ namespace lingualink_client.ViewModels
             {
                 PlaceholderList.Add(placeholder);
             }
+        }
+
+        private void OnLanguageChanged()
+        {
+            // 刷新本地化标签
+            OnPropertyChanged(string.Empty);
+            // 并根据当前语言重新构建占位符显示
+            InitializePlaceholders();
         }
 
         partial void OnUseCustomTemplateEnabledChanged(bool value)
@@ -180,26 +181,21 @@ namespace lingualink_client.ViewModels
 
         private void SaveSettings()
         {
-            // 重新加载最新设置作为基础，确保不会覆盖其他页面的更改
-            AppSettings settingsToSave = _settingsService.LoadSettings();
-
-            // 应用此页面管理的特定设置
-            settingsToSave.UseCustomTemplate = this.UseCustomTemplateEnabled;
-            settingsToSave.UserCustomTemplateText = this.CustomTemplateText;
-
-            // 确保保存当前的界面语言，避免语言切换bug
-            AppLanguageHelper.CaptureCurrentLanguage(settingsToSave);
-
-            _settingsService.SaveSettings(settingsToSave);
-            _appSettings = settingsToSave; // 更新ViewModel的缓存设置
-
-            // 通过事件聚合器通知设置变更
-            var eventAggregator = ServiceContainer.Resolve<Services.Interfaces.IEventAggregator>();
-            eventAggregator.Publish(new Services.Events.SettingsChangedEvent
+            if (!_settingsManager.TryUpdateAndSave(
+                    "MessageTemplatePage",
+                    settings =>
+                    {
+                        // 应用此页面管理的特定设置
+                        settings.UseCustomTemplate = this.UseCustomTemplateEnabled;
+                        settings.UserCustomTemplateText = this.CustomTemplateText;
+                        return true;
+                    },
+                    out var settingsToSave) || settingsToSave == null)
             {
-                Settings = settingsToSave,
-                ChangeSource = "MessageTemplatePage"
-            });
+                return;
+            }
+
+            _appSettings = settingsToSave; // 更新ViewModel的缓存设置
         }
 
         private void ValidateTemplate()

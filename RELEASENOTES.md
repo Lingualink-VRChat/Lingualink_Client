@@ -9,6 +9,8 @@
 - **improve:** 改进“测试连接”按钮的错误反馈逻辑，`/health` 检查失败时会返回具体的 HTTP 状态码或异常信息，而不再统一显示 “An unknown error occurred”。
 - **refactor:** 抽取全局语言应用与保存逻辑为 `AppLanguageHelper`，统一 `GlobalLanguage` 的读写路径，减少各页面/服务对语言细节的重复实现。
 - **refactor:** 进一步收紧设置相关 ViewModel 的依赖和死代码（例如清理未使用的 `SettingsService` 字段、移除无效初始化方法），为后续可选依赖注入和测试铺路。
+- **refactor:** 新增 `ISettingsManager`/`SettingsManager` 作为设置读写与事件发布的统一入口，并让账号设置页、服务设置页、消息模板页以及文本输入/主页只读场景统一通过它访问 `AppSettings`，显著减少重复的 `LoadSettings`/`SaveSettings`/`SettingsChangedEvent` 管道代码。
+- **refactor:** 简化多语言刷新逻辑，多个 ViewModel 不再逐个手写 `LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(XXXLabel));` 列表，而是统一通过 `OnPropertyChanged(string.Empty)` 触发整页本地化绑定刷新，降低新增文案时的维护成本。
 
 ## English (en)
 
@@ -19,3 +21,5 @@
 - **improve:** Improved the “Test connection” flow to surface detailed HTTP status/exception messages from the `/health` endpoint instead of always reporting “An unknown error occurred.”
 - **refactor:** Introduced `AppLanguageHelper` to centralize applying and persisting `GlobalLanguage`, reducing duplicated language logic across pages and services.
 - **refactor:** Tightened settings-related view models by removing unused `SettingsService` fields and obsolete initialization methods, improving cohesion for future optional DI and testing.
+- **refactor:** Introduced `ISettingsManager`/`SettingsManager` as a single entry point for loading, updating, saving, and broadcasting `AppSettings` changes, and migrated the account/service/message-template pages plus TextEntry/IndexWindow read-only paths to use it, significantly reducing duplicated `LoadSettings`/`SaveSettings`/`SettingsChangedEvent` pipelines.
+- **refactor:** Simplified localization refresh patterns by replacing long chains of `LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(XXXLabel));` with a single `OnPropertyChanged(string.Empty)` per view model, making it easier to keep UI labels in sync when adding or changing localized strings.

@@ -30,7 +30,7 @@ namespace lingualink_client.ViewModels
         public TranslationResultViewModel TranslationResult { get; }
 
         // 服务和管理器
-        private readonly SettingsService _settingsService;
+        private readonly ISettingsManager _settingsManager;
         private AppSettings _appSettings;
         private readonly ITargetLanguageManager _targetLanguageManager;
         private readonly IMicrophoneManager _microphoneManager;
@@ -43,10 +43,13 @@ namespace lingualink_client.ViewModels
 
         private UpdateSession? _activeUpdateSession;
 
-        public IndexWindowViewModel(SettingsService? settingsService = null)
+        public IndexWindowViewModel(ISettingsManager? settingsManager = null)
         {
             // 初始化服务/管理器
-            _settingsService = settingsService ?? new SettingsService();
+            _settingsManager = settingsManager
+                               ?? (ServiceContainer.TryResolve<ISettingsManager>(out var resolved) && resolved != null
+                                   ? resolved
+                                   : new SettingsManager());
             _targetLanguageManager = ServiceContainer.Resolve<ITargetLanguageManager>();
             _microphoneManager = ServiceContainer.Resolve<IMicrophoneManager>();
             _eventAggregator = ServiceContainer.Resolve<IEventAggregator>();
@@ -58,7 +61,7 @@ namespace lingualink_client.ViewModels
             TargetLanguage = new TargetLanguageViewModel();
             TranslationResult = new TranslationResultViewModel();
 
-            _appSettings = _settingsService.LoadSettings();
+            _appSettings = _settingsManager.LoadSettings();
 
             // 启动异步初始化，但不等待
             _ = InitializeApplicationAsync();
@@ -207,7 +210,7 @@ namespace lingualink_client.ViewModels
             Application.Current.Dispatcher.Invoke(() =>
             {
                 // 重新加载最新设置
-                _appSettings = _settingsService.LoadSettings();
+                _appSettings = _settingsManager.LoadSettings();
 
                 // The TargetLanguageManager needs to know about the UseCustomTemplate change
                 // It will adjust its AreLanguagesEnabled property.

@@ -42,6 +42,10 @@ namespace lingualink_client.Services
             var eventAggregator = new EventAggregator();
             ServiceContainer.Register<IEventAggregator, EventAggregator>(eventAggregator);
 
+            // 注册设置管理器（基于 SettingsService 封装加载/保存/事件逻辑）
+            var settingsManager = new SettingsManager();
+            ServiceContainer.Register<ISettingsManager, SettingsManager>(settingsManager);
+
             // 注册日志管理器
             var loggingManager = new LoggingManager();
             ServiceContainer.Register<ILoggingManager, LoggingManager>(loggingManager);

@@ -1,5 +1,4 @@
 ﻿// File: Views/Pages/ServicePage.xaml.cs
-using lingualink_client.Services; // For SettingsService
 using lingualink_client.ViewModels;
 using System.Windows;
 using System.Windows.Controls;

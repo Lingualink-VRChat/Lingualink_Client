@@ -7,16 +7,17 @@ using System.Windows;
 using System.Windows.Threading;
 using lingualink_client.Models;
 using lingualink_client.Services;
-using CommunityToolkit.Mvvm.ComponentModel; // 添加
-using CommunityToolkit.Mvvm.Input;       // 添加
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using lingualink_client.Services.Interfaces;
 // 使用现代化MessageBox替换系统默认的MessageBox
 using MessageBox = lingualink_client.Services.MessageBox;
 
 namespace lingualink_client.ViewModels
 {
-    public partial class ServicePageViewModel : ViewModelBase // 声明为 partial
+    public partial class ServicePageViewModel : ViewModelBase
     {
-        private readonly SettingsService _settingsService;
+        private readonly ISettingsManager _settingsManager;
         private AppSettings _currentSettings; 
         private readonly DispatcherTimer _autoSaveTimer;
         private bool _hasPendingChanges;
@@ -92,10 +93,13 @@ namespace lingualink_client.ViewModels
         [ObservableProperty] private double _quietBoostRmsThresholdDbFs;
         [ObservableProperty] private double _quietBoostGainDb;
         
-        public ServicePageViewModel(SettingsService? settingsService = null)
+        public ServicePageViewModel(ISettingsManager? settingsManager = null)
         {
-            _settingsService = settingsService ?? new SettingsService();
-            _currentSettings = _settingsService.LoadSettings();
+            _settingsManager = settingsManager
+                               ?? (ServiceContainer.TryResolve<ISettingsManager>(out var resolved) && resolved != null
+                                   ? resolved
+                                   : new SettingsManager());
+            _currentSettings = _settingsManager.LoadSettings();
 
             // 先从模型加载设置到 ViewModel 属性
             LoadSettingsFromModel(_currentSettings);
@@ -110,49 +114,14 @@ namespace lingualink_client.ViewModels
             // 监听属性变更，用于触发自动保存
             PropertyChanged += OnServicePagePropertyChanged;
 
-            // 订阅语言变化，更新依赖语言管理器字符串的属性
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(PostSpeechRecordingDurationLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(MinVoiceDurationLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(MaxVoiceDurationLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(MinVolumeThresholdLabel));
+            // 订阅语言变化事件，统一刷新本地化标签绑定
+            LanguageManager.LanguageChanged += OnLanguageChanged;
+        }
 
-            // 语音设置提示文本的语言变化订阅
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(PostSpeechRecordingDurationHint));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(MinVoiceDurationHint));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(MaxVoiceDurationHint));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(EnableOscLabel));
-              LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(OscIpAddressLabel));
-              LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(OscPortLabel));
-              LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(SendImmediatelyLabel));
-              LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(PlayNotificationSoundLabel));
-              LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(SaveLabel));
-              LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(RevertLabel));
-              LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(ResetToDefaultsLabel));
-              LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(VolumeThresholdHint));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(OpusComplexityLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(AudioEncodingLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(OpusComplexityHint));
-            
-            // 新增分组标题的语言变化订阅
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(VoiceRecognitionSettingsLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(VoiceRecognitionSettingsHint));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(VrchatIntegrationLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(VrchatIntegrationHint));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(AudioProcessingLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(AudioProcessingHint));
-
-            // 音频增强标签的语言变化订阅
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(AudioEnhancementLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(AudioEnhancementHint));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(EnableAudioNormalizationLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(NormalizationTargetDbLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(EnableQuietBoostLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(QuietBoostRmsThresholdLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(QuietBoostGainLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(AudioNormalizationHint));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(QuietBoostRmsThresholdHint));
-              LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(QuietBoostGainHint));
-          }
+        private void OnLanguageChanged()
+        {
+            OnPropertyChanged(string.Empty);
+        }
 
         private void OnServicePagePropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
@@ -321,10 +290,12 @@ namespace lingualink_client.ViewModels
             QuietBoostGainDb = settings.QuietBoostGainDb;
         }
 
-        private bool ValidateAndBuildSettings(out AppSettings? updatedSettings)
+        private bool UpdateSettingsFromView(AppSettings? updatedSettings)
         {
-            // 重新加载最新设置作为基础，确保不会覆盖其他页面的更改
-            updatedSettings = _settingsService.LoadSettings();
+            if (updatedSettings == null)
+            {
+                updatedSettings = new AppSettings();
+            }
 
             // 移除服务器URL和API密钥的验证，这些现在在账户页面处理
             
@@ -358,8 +329,6 @@ namespace lingualink_client.ViewModels
                 return false;
             }
             
-            if (updatedSettings == null) updatedSettings = new AppSettings(); // Should not happen if LoadSettings worked
-
             // 更新只由当前页面管理的设置（不包括ServerUrl和ApiKey）
             updatedSettings.PostSpeechRecordingDurationSeconds = this.PostSpeechRecordingDurationSeconds;
             updatedSettings.MinVoiceDurationSeconds = this.MinVoiceDurationSeconds;
@@ -386,15 +355,12 @@ namespace lingualink_client.ViewModels
 
         private void SaveSettingsInternal(bool showConfirmation, string changeSource)
         {
-            if (!ValidateAndBuildSettings(out AppSettings? updatedSettingsFromThisPage) || updatedSettingsFromThisPage == null)
+            if (!_settingsManager.TryUpdateAndSave(changeSource, s => UpdateSettingsFromView(s), out var updatedSettingsFromThisPage) ||
+                updatedSettingsFromThisPage == null)
             {
                 return;
             }
 
-            // 确保保存当前的界面语言，避免语言切换bug
-            AppLanguageHelper.CaptureCurrentLanguage(updatedSettingsFromThisPage);
-
-            _settingsService.SaveSettings(updatedSettingsFromThisPage);
             _currentSettings = updatedSettingsFromThisPage; // Update local copy with the combined settings
 
             _hasPendingChanges = false;
@@ -433,7 +399,7 @@ namespace lingualink_client.ViewModels
         private void Revert() // 方法名与命令名对应，无需参数
         {
             // 重新加载所有设置，包括可能由 IndexPage 更改的目标语言
-            _currentSettings = _settingsService.LoadSettings();
+            _currentSettings = _settingsManager.LoadSettings();
             LoadSettingsFromModel(_currentSettings);
             MessageBox.Show(LanguageManager.GetString("SettingsReverted"), LanguageManager.GetString("InfoTitle"), MessageBoxButton.OK, MessageBoxImage.Information);
         }

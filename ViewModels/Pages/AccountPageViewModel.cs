@@ -15,7 +15,7 @@ namespace lingualink_client.ViewModels
 {
     public partial class AccountPageViewModel : ViewModelBase
     {
-        private readonly SettingsService _settingsService;
+        private readonly ISettingsManager _settingsManager;
         private AppSettings _currentSettings;
         private bool _isLoadingSettings;
         private readonly DispatcherTimer _autoSaveTimer;
@@ -81,15 +81,18 @@ namespace lingualink_client.ViewModels
             System.Diagnostics.Debug.WriteLine($"[AccountPageViewModel] ServerUrl property changed to: '{value}'");
         }
 
-        public AccountPageViewModel(SettingsService? settingsService = null)
+        public AccountPageViewModel(ISettingsManager? settingsManager = null)
         {
-            _settingsService = settingsService ?? new SettingsService();
-            _currentSettings = _settingsService.LoadSettings();
+            _settingsManager = settingsManager
+                               ?? (ServiceContainer.TryResolve<ISettingsManager>(out var resolved) && resolved != null
+                                   ? resolved
+                                   : new SettingsManager());
+            _currentSettings = _settingsManager.LoadSettings();
             
             LoadSettingsFromModel(_currentSettings);
             
-            // 订阅语言变化事件
-            SubscribeToLanguageChanges();
+            // 订阅语言变化事件（统一刷新所有本地化绑定）
+            LanguageManager.LanguageChanged += OnLanguageChanged;
 
             // 初始化自动保存计时器（防抖）
             _autoSaveTimer = new DispatcherTimer
@@ -102,38 +105,10 @@ namespace lingualink_client.ViewModels
             PropertyChanged += OnAccountPropertyChanged;
         }
 
-        private void SubscribeToLanguageChanges()
+        private void OnLanguageChanged()
         {
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(AccountSettingsLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(AuthenticationModeLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(OfficialServiceLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(CustomServiceLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(OfficialServiceHint));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(CustomServiceHint));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(UserLoginLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(UsernameLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(PasswordLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(LoginLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(LogoutLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(LoginStatusLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(NotLoggedInLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(ComingSoonLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(CustomServerSettingsLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(ServerUrlLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(ApiKeyLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(SaveLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(RevertLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(OfficialServiceLoginLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(OfficialServiceSubtitleLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(AdvancedOptionsLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(UseCustomServerLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(UseCustomServerHint));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(GetStartedLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(CreateAccountLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(ForgotPasswordLabel));
-            LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(ConnectionTestLabel));
-
-
+            // 空字符串表示刷新该 ViewModel 的所有绑定属性，适合本地化场景
+            OnPropertyChanged(string.Empty);
         }
 
         private void LoadSettingsFromModel(AppSettings settings)
@@ -261,13 +236,9 @@ namespace lingualink_client.ViewModels
             }
         }
 
-        private bool ValidateAndBuildSettings(out AppSettings? updatedSettings)
+        private bool UpdateSettingsFromView(AppSettings updatedSettings)
         {
             System.Diagnostics.Debug.WriteLine($"[AccountPageViewModel] ValidateAndBuildSettings() called");
-
-            // 重新加载最新设置作为基础，确保不会覆盖其他页面的更改
-            updatedSettings = _settingsService.LoadSettings();
-
             System.Diagnostics.Debug.WriteLine($"[AccountPageViewModel] Loaded latest settings base - ApiKey: '{updatedSettings.ApiKey}', ServerUrl: '{updatedSettings.ServerUrl}'");
 
             // 只有在使用自定义服务器时才需要验证URL和API密钥
@@ -330,16 +301,11 @@ namespace lingualink_client.ViewModels
         {
             System.Diagnostics.Debug.WriteLine($"[AccountPageViewModel] SaveInternal() called - Source: {changeSource}, Current ApiKey: '{ApiKey}', UseCustomServer: {UseCustomServer}");
 
-            if (!ValidateAndBuildSettings(out AppSettings? updatedSettings) || updatedSettings == null)
+            if (!_settingsManager.TryUpdateAndSave(changeSource, UpdateSettingsFromView, out var updatedSettings) || updatedSettings == null)
             {
                 return;
             }
 
-            AppLanguageHelper.CaptureCurrentLanguage(updatedSettings);
-
-            System.Diagnostics.Debug.WriteLine($"[AccountPageViewModel] About to save settings - ApiKey: '{updatedSettings.ApiKey}', ServerUrl: '{updatedSettings.ServerUrl}'");
-
-            _settingsService.SaveSettings(updatedSettings);
             _currentSettings = updatedSettings;
 
             _hasPendingChanges = false;
@@ -349,14 +315,6 @@ namespace lingualink_client.ViewModels
             }
 
             System.Diagnostics.Debug.WriteLine($"[AccountPageViewModel] Settings saved, raising SettingsChanged event");
-
-            // 通过事件聚合器通知设置变更
-            var eventAggregator = ServiceContainer.Resolve<Services.Interfaces.IEventAggregator>();
-            eventAggregator.Publish(new Services.Events.SettingsChangedEvent
-            {
-                Settings = updatedSettings,
-                ChangeSource = changeSource
-            });
 
             if (showConfirmation)
             {
