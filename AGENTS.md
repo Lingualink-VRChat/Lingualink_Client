@@ -56,3 +56,7 @@ Follow the conventional commit prefixes already in history (`feat:`, `chore:`, `
 
 ## Configuration & Security Notes
 Store LinguaLink Server endpoints and API keys in user settings; never hard-code secrets or commit sample keys. When updating network code, ensure default URLs remain local (`http://localhost:8080/api/v1/`) and guard OSC ports behind user-configurable settings to avoid collisions.
+
+## Clipboard Usage Notes
+- Clipboard writes should go through the Win32-based helper in `Services/Ui/ClipboardHelper.cs` (e.g., `ClipboardHelper.TrySetText(...)`) instead of direct `System.Windows.Clipboard` / `System.Windows.Forms.Clipboard` calls.
+- When adding new copy-to-clipboard features, prefer the existing async helper patterns in `ViewModels/Components/LogViewModel.cs` and `ViewModels/Components/ConversationHistoryViewModel.cs` to avoid `ExternalException` when third-party tools temporarily lock the clipboard (e.g., remote desktop or clipboard sync apps).

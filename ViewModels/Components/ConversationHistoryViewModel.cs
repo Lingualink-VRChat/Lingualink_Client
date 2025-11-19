@@ -337,14 +337,21 @@ namespace lingualink_client.ViewModels.Components
                 return Task.CompletedTask;
             }
 
-            try
+            _dispatcher.Invoke(() =>
             {
-                _dispatcher.Invoke(() => Forms.Clipboard.SetText(text, Forms.TextDataFormat.Text));
-            }
-            catch (ExternalException ex)
-            {
-                _loggingManager.AddMessage($"Clipboard copy failed: {ex.Message}", LogLevel.Warning, ClipboardCategory, ex.ToString());
-            }
+                try
+                {
+                    if (!ClipboardHelper.TrySetText(text))
+                    {
+                        _loggingManager.AddMessage("Clipboard copy failed: Win32 clipboard operation returned false.",
+                            LogLevel.Warning, ClipboardCategory);
+                    }
+                }
+                catch (ExternalException ex)
+                {
+                    _loggingManager.AddMessage($"Clipboard copy failed: {ex.Message}", LogLevel.Warning, ClipboardCategory, ex.ToString());
+                }
+            });
 
             return Task.CompletedTask;
         }

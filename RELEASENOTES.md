@@ -11,6 +11,7 @@
 - **refactor:** 进一步收紧设置相关 ViewModel 的依赖和死代码（例如清理未使用的 `SettingsService` 字段、移除无效初始化方法），为后续可选依赖注入和测试铺路。
 - **refactor:** 新增 `ISettingsManager`/`SettingsManager` 作为设置读写与事件发布的统一入口，并让账号设置页、服务设置页、消息模板页以及文本输入/主页只读场景统一通过它访问 `AppSettings`，显著减少重复的 `LoadSettings`/`SaveSettings`/`SettingsChangedEvent` 管道代码。
 - **refactor:** 简化多语言刷新逻辑，多个 ViewModel 不再逐个手写 `LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(XXXLabel));` 列表，而是统一通过 `OnPropertyChanged(string.Empty)` 触发整页本地化绑定刷新，降低新增文案时的维护成本。
+- **improve:** 提升剪贴板复制的稳定性：日志面板和会话历史在复制文本时改用基于 Win32 API 的 `ClipboardHelper.TrySetText`，在远程桌面/剪贴板同步工具（如 RustDesk）临时占用剪贴板时通过重试机制降低 `ExternalException` 失败概率。
 
 ## English (en)
 
@@ -23,3 +24,4 @@
 - **refactor:** Tightened settings-related view models by removing unused `SettingsService` fields and obsolete initialization methods, improving cohesion for future optional DI and testing.
 - **refactor:** Introduced `ISettingsManager`/`SettingsManager` as a single entry point for loading, updating, saving, and broadcasting `AppSettings` changes, and migrated the account/service/message-template pages plus TextEntry/IndexWindow read-only paths to use it, significantly reducing duplicated `LoadSettings`/`SaveSettings`/`SettingsChangedEvent` pipelines.
 - **refactor:** Simplified localization refresh patterns by replacing long chains of `LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(XXXLabel));` with a single `OnPropertyChanged(string.Empty)` per view model, making it easier to keep UI labels in sync when adding or changing localized strings.
+- **improve:** Hardened clipboard operations for log and conversation history copy actions by routing them through a Win32-based `ClipboardHelper.TrySetText`, adding retries to reduce `ExternalException` failures when third-party tools (e.g., remote desktop or clipboard sync apps) temporarily lock the clipboard.
