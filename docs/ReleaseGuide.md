@@ -6,7 +6,7 @@
 
 ## 一条龙快速发布流程（推荐）
 
-从已有版本升级到一个新版本的大致步骤如下（示例版本号以 $Version 为例）：
+从已有版本升级到一个新版本的大致步骤如下（示例版本号以 `3.4.9` 为例）：
 
 1. **更新版本号（可选，但推荐）**
    - 使用脚本统一修改版本号：
@@ -79,6 +79,24 @@
      - 右上角“发现新版本！”等更新提醒工作正常。
    - 访问下载地址（例如 `https://download.cn-nb1.rains3.com/lingualink/stable-self-contained/RELEASES`），确认最新一行版本号与刚发布的版本一致。
 
+7. **归档 Release Notes 并清空模板（可选，但推荐）**
+   - 在确认 3.4.9 版本已成功发布并验证通过后，可运行归档脚本，将当前 `RELEASENOTES.md` 归档到 `docs/releases/`，并为后续版本准备空模板：
+     ```powershell
+     powershell -ExecutionPolicy Bypass -File scripts/Archive-ReleaseNotes.ps1 -IncludePrevious 2
+     ```
+   - 该脚本会：
+     - 把当前版本的 Release Notes 写入 `docs/releases/3.4.9.md`；
+     - 尝试从 Git 历史中补齐前 2 个版本的 Release Notes；
+     - 将仓库根目录的 `RELEASENOTES.md` 重置为：
+       ```markdown
+       # Release Notes – 3.4.9
+
+       ## 简体中文 (zh-CN)
+
+       ## English (en)
+       ```
+     - 下一个版本发版前，只需在这个模板下继续补充中英文条目即可。
+
 以上完成后，即视为一次完整的 Release 流程；更细节的说明请参见下文各小节。
 
 ---
@@ -88,7 +106,7 @@
 - `scripts/Bump-Version.ps1`：在发版前统一更新客户端的版本号（仅修改 `lingualink_client.csproj` 中的 Version 字段及发布指南中的示例版本号）。
 - `scripts/Build-Release.ps1`：清理 `artifacts/` 目录，分别运行自包含与框架依赖配置的 `dotnet publish`，随后调用 `vpk pack` 生成 Velopack 发行内容。支持 `-DryRun`、`-Skip*` 等参数，适合本地快速验证或复用现有构建产物。
 - `scripts/Publish-Release.ps1`：读取 release-settings 配置，检查 AWS CLI、处理互斥参数，并使用 `aws s3 cp` 将 `artifacts/` 下的发行目录同步到 rains3。`-DryRun` 可预演上传列表，命令结束后会自动清理临时凭证环境变量。
-- `scripts/Archive-ReleaseNotes.ps1`：将当前根目录 `RELEASENOTES.md` 的内容归档为 `docs/releases/<版本号>.md`，并可选从 Git 历史中补齐前 N 个版本的 Release Notes，方便官网或前端统一读取历史更新日志。
+- `scripts/Archive-ReleaseNotes.ps1`：将当前根目录 `RELEASENOTES.md` 的内容归档为 `docs/releases/<版本号>.md`，并可选从 Git 历史中补齐前 N 个版本的 Release Notes；在非 DryRun 模式下还会将根目录 `RELEASENOTES.md` 重置为当前版本号的空模板，方便下一次编辑。
 
 ## 1. 环境准备
 

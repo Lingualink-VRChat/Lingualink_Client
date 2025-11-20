@@ -6,6 +6,10 @@
     - 将当前内容写入 docs/releases/<Version>.md。
     - 当指定 -IncludePrevious 时，从 Git 历史中的 RELEASENOTES.md 记录中解析更早的版本，
       为每个版本生成对应的 docs/releases/<Version>.md（若不存在或指定 -Force）。
+    - 在非 DryRun 模式下，归档完成后会将根目录 RELEASENOTES.md 重置为给定版本号的空模板，方便后续填入新内容：
+      # Release Notes – <Version>
+      ## 简体中文 (zh-CN)
+      ## English (en)
 .PARAMETER Version
     当前版本号（例如 3.4.9）。若未指定，则从 RELEASENOTES.md 第一行的标题中解析。
 .PARAMETER IncludePrevious
@@ -87,7 +91,7 @@ function Write-ArchiveFile {
     $targetPath = Join-Path $outputDir "$TargetVersion.md"
     $relative = "docs/releases/$TargetVersion.md"
 
-    if (Test-Path $targetPath -and -not $Force) {
+    if ((Test-Path $targetPath) -and -not $Force) {
         Write-Warn "跳过（文件已存在，未指定 -Force）：$relative"
         return
     }
@@ -160,5 +164,23 @@ if ($IncludePrevious -gt 0) {
     }
 }
 
-Write-Info "Release Notes 归档流程完成。"
+if (-not $DryRun) {
+    Write-Info "重置根目录 RELEASENOTES.md 为空模板。"
 
+    $templateLines = @(
+        "# Release Notes – $Version",
+        "",
+        "## 简体中文 (zh-CN)",
+        "",
+        "## English (en)",
+        ""
+    )
+
+    try {
+        Set-Content -Path $releaseNotesPath -Value $templateLines -Encoding UTF8
+    } catch {
+        Write-Warn "重置 RELEASENOTES.md 失败：$($_.Exception.Message)"
+    }
+}
+
+Write-Info "Release Notes 归档流程完成。"
