@@ -12,96 +12,93 @@
     d:DataContext="{d:DesignInstance Type=vm:IndexWindowViewModel}"
     mc:Ignorable="d">
 
-    <Grid Margin="10">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <!--  Only one column now  -->
-        </Grid.ColumnDefinitions>
-
+    <Grid Margin="{DynamicResource PageContentMargin}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
+        <!-- Update Notification -->
         <ui:Button
             Grid.Row="0"
-            Grid.Column="0"
             HorizontalAlignment="Right"
             VerticalAlignment="Top"
-            Margin="0,0,0,10"
+            Margin="0,0,0,8"
             Padding="12,6"
             Content="发现新版本！"
             Command="{Binding ShowUpdateDialogCommand}"
-            Visibility="{Binding IsUpdateAvailable, Converter={StaticResource BooleanToVisibilityConverter}}" />
+            Visibility="{Binding IsUpdateAvailable, Converter={StaticResource BooleanToVisibilityConverter}}" 
+            Appearance="Info"/>
 
-        <!--  Main Controls (was Left Column)  -->
-        <Grid Grid.Row="1" Grid.Column="0">
-            <!--  Margin="0,0,5,0" removed  -->
+        <!--  Main Content  -->
+        <Grid Grid.Row="1">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <!--  Mic Selection  -->
-                <RowDefinition Height="Auto" />
-                <!--  Target Languages Expander  -->
-                <RowDefinition Height="Auto" />
-                <!--  Work Button  -->
-                <RowDefinition Height="Auto" />
-                <!--  Status Text  -->
-                <RowDefinition Height="*" />
-                <!--  Translation Result  -->
-                <RowDefinition Height="Auto" />
-                <!--  Hint  -->
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
             <!-- 麦克风选择组件 -->
-            <StackPanel
-                Grid.Row="0"
-                Margin="0,0,0,10"
-                Orientation="Horizontal"
-                DataContext="{Binding MicrophoneSelection}">
-                <Label VerticalAlignment="Center" Content="{Binding SelectMicrophoneLabel}" />
-                <ComboBox
-                    Width="200"
-                    Margin="5,0,0,0"
-                    VerticalAlignment="Center"
-                    DisplayMemberPath="FriendlyName"
-                    IsEnabled="{Binding IsMicrophoneComboBoxEnabled}"
-                    ItemsSource="{Binding Microphones}"
-                    SelectedItem="{Binding SelectedMicrophone}" />
-                <ui:Button
-                    Margin="10,0,0,0"
-                    Padding="5,2"
-                    VerticalAlignment="Center"
-                    Command="{Binding RefreshMicrophonesCommand}"
-                    Content="{Binding RefreshLabel}" />
-                <StatusBar
-                    Margin="10,0,0,0"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Center"
-                    Background="Transparent"
-                    Opacity="0.7"
-                    Visibility="{Binding IsRefreshingMicrophones, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <StatusBarItem>
-                        <ui:TextBlock Text="{Binding RefreshingMicrophonesLabel}" />
-                    </StatusBarItem>
-                </StatusBar>
-            </StackPanel>
+            <Border Grid.Row="0"
+                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource ControlElevationBorderBrush}"
+                    BorderThickness="1" 
+                    CornerRadius="8" 
+                    Padding="12"
+                    Margin="0,0,0,12">
+                <StackPanel DataContext="{Binding MicrophoneSelection}">
+                    <TextBlock Text="{Binding SelectMicrophoneLabel}" 
+                               FontWeight="SemiBold" 
+                               Margin="0,0,0,8"/>
+                    
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        
+                        <ComboBox
+                            Grid.Column="0"
+                            HorizontalAlignment="Stretch"
+                            DisplayMemberPath="FriendlyName"
+                            IsEnabled="{Binding IsMicrophoneComboBoxEnabled}"
+                            ItemsSource="{Binding Microphones}"
+                            SelectedItem="{Binding SelectedMicrophone}" />
+                            
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="10,0,0,0">
+                            <ui:Button
+                                Command="{Binding RefreshMicrophonesCommand}"
+                                Content="{Binding RefreshLabel}"
+                                Appearance="Secondary" 
+                                Icon="{ui:SymbolIcon ArrowClockwise24}"/>
+                                
+                            <ui:ProgressRing
+                                Margin="10,0,0,0"
+                                IsIndeterminate="True" 
+                                Width="20" 
+                                Height="20"
+                                Visibility="{Binding IsRefreshingMicrophones, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
 
             <!-- 目标语言组件 -->
             <ui:CardExpander
                 Grid.Row="1"
-                Margin="0,0,0,10"
                 DataContext="{Binding TargetLanguage}"
                 Header="{Binding TargetLanguagesLabel}"
-                IsExpanded="True">
-                <StackPanel Margin="10,5,0,0">
+                Icon="{ui:SymbolIcon LocalLanguage24}"
+                IsExpanded="True"
+                Margin="0,0,0,12">
+                <StackPanel Margin="0,0,0,0">
                     <!-- Template Active Hint -->
-                    <ui:TextBlock
-                        Margin="0,0,0,10"
-                        FontStyle="Italic"
-                        Foreground="Orange"
-                        Text="{Binding TemplateActiveHintLabel}"
-                        TextWrapping="Wrap"
-                        Visibility="{Binding AreLanguagesEnabled, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Invert}" />
+                    <ui:InfoBar
+                        Margin="0,0,0,8"
+                        Severity="Warning"
+                        IsClosable="False"
+                        IsOpen="{Binding AreLanguagesEnabled, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Invert}"
+                        Message="{Binding TemplateActiveHintLabel}" />
                     
                     <!-- ItemsControl with button-based reordering -->
                     <ItemsControl x:Name="LanguageItemsControl"
@@ -112,50 +109,50 @@
                                         CornerRadius="6"
                                         BorderBrush="{DynamicResource ControlElevationBorderBrush}"
                                         BorderThickness="1"
-                                        Padding="8,4"
-                                        Margin="0,3,0,3">
+                                        Padding="12,8"
+                                        Margin="0,0,0,8">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto" /> <!-- Move Buttons -->
-                                            <ColumnDefinition Width="Auto" /> <!-- Label -->
+                                            <ColumnDefinition Width="80" />   <!-- Label -->
                                             <ColumnDefinition Width="*" />    <!-- ComboBox -->
                                             <ColumnDefinition Width="Auto" /> <!-- Remove Button -->
                                         </Grid.ColumnDefinitions>
 
                                         <!-- Move Buttons -->
                                         <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,12,0"
+                                                    Orientation="Horizontal"
                                                     IsEnabled="{Binding DataContext.AreLanguagesEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ui:CardExpander}}}">
-                                            <ui:Button Padding="4,0" Command="{Binding MoveUpCommand}" Appearance="Secondary">
-                                                <ui:SymbolIcon Symbol="ChevronUp24" FontSize="12" />
+                                            <ui:Button Padding="4" Margin="0,0,4,0" Command="{Binding MoveUpCommand}" Appearance="Transparent">
+                                                <ui:SymbolIcon Symbol="ChevronUp24" FontSize="14" />
                                             </ui:Button>
-                                            <ui:Button Padding="4,0" Command="{Binding MoveDownCommand}" Appearance="Secondary">
-                                                <ui:SymbolIcon Symbol="ChevronDown24" FontSize="12" />
+                                            <ui:Button Padding="4" Command="{Binding MoveDownCommand}" Appearance="Transparent">
+                                                <ui:SymbolIcon Symbol="ChevronDown24" FontSize="14" />
                                             </ui:Button>
                                         </StackPanel>
 
-                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                            <ui:TextBlock
-                                                Margin="0,0,8,0"
-                                                VerticalAlignment="Center"
-                                                Text="{Binding Label}" />
-                                        </StackPanel>
+                                        <TextBlock
+                                            Grid.Column="1"
+                                            VerticalAlignment="Center"
+                                            FontWeight="Medium"
+                                            Text="{Binding Label}" />
 
                                         <ComboBox
                                             Grid.Column="2"
-                                            MinWidth="150"
-                                            MaxWidth="200"
                                             HorizontalAlignment="Stretch"
                                             ItemsSource="{Binding AvailableLanguages}"
                                             SelectedItem="{Binding SelectedDisplayLanguage}"
                                             DisplayMemberPath="DisplayName"
                                             IsEnabled="{Binding DataContext.AreLanguagesEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ui:CardExpander}}}" />
+                                            
                                         <ui:Button
                                             Grid.Column="3"
-                                            Margin="8,0,0,0"
-                                            Padding="5,2"
+                                            Margin="12,0,0,0"
                                             VerticalAlignment="Center"
                                             Command="{Binding RemoveItemCommand}"
-                                            Content="{Binding RemoveLabel}"
+                                            Appearance="Secondary"
+                                            Icon="{ui:SymbolIcon Delete24}"
+                                            ToolTip="{Binding RemoveLabel}"
                                             IsEnabled="{Binding DataContext.AreLanguagesEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ui:CardExpander}}}"
                                             Visibility="{Binding CanRemove, Converter={StaticResource BooleanToVisibilityConverter}}" />
                                     </Grid>
@@ -163,64 +160,95 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
+                    
                     <ui:Button
                         Margin="0,5,0,0"
-                        Padding="5,2"
                         HorizontalAlignment="Left"
                         Command="{Binding AddLanguageCommand}"
                         Content="{Binding AddLanguageLabel}"
+                        Icon="{ui:SymbolIcon Add24}"
+                        Appearance="Secondary"
                         IsEnabled="{Binding AreLanguagesEnabled}" />
                 </StackPanel>
             </ui:CardExpander>
 
-            <!-- 主控制组件 -->
-            <StackPanel Grid.Row="2" Margin="0,0,0,10" DataContext="{Binding MainControl}">
-                <ui:Button
-                    Padding="10,5"
-                    HorizontalAlignment="Left"
-                    Command="{Binding ToggleWorkCommand}"
-                    Content="{Binding WorkButtonContent}" />
-                <ui:TextBlock
-                    Margin="0,10,0,0"
-                    FontSize="14"
-                    Text="{Binding StatusText}" />
-            </StackPanel>
+            <!-- Bottom Split Area -->
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1.62*" />
+                    <ColumnDefinition Width="12" /> <!-- Gap -->
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
 
-            <!-- 翻译结果组件 -->
-            <Grid Grid.Row="4" Margin="0,0,0,10" DataContext="{Binding TranslationResult}">
-                <Grid.RowDefinitions>
-                    <!-- 只保留两行：一个标签，一个文本框 -->
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
+                <!-- Left: Translation Result (Formerly Right) -->
+                <Border Grid.Column="0"
+                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{DynamicResource ControlElevationBorderBrush}"
+                        BorderThickness="1" 
+                        CornerRadius="8" 
+                        Padding="0"
+                        VerticalAlignment="Stretch"
+                        DataContext="{Binding TranslationResult}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
 
-                <!-- VRChat Output (现在是唯一的结果显示) -->
-                <ui:TextBlock
-                    Grid.Row="0"
-                    Margin="0,10,0,5"
-                    FontWeight="SemiBold"
-                    Text="{Binding VrcOutputLabel}" />
-                <ui:TextBox
-                    Grid.Row="1"
-                    AcceptsReturn="True"
-                    IsReadOnly="True"
-                    Text="{Binding ProcessedText, Mode=OneWay}"
-                    TextWrapping="Wrap"
-                    VerticalScrollBarVisibility="Auto"
-                    MinHeight="160"
-                    Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
-                    BorderBrush="{DynamicResource AccentTextFillColorPrimaryBrush}"
-                    BorderThickness="2" />
+                        <Border Grid.Row="0" 
+                                BorderBrush="{DynamicResource DividerStrokeColorDefaultBrush}"
+                                BorderThickness="0,0,0,1"
+                                Padding="16,12">
+                            <TextBlock
+                                FontWeight="SemiBold"
+                                Text="{Binding VrcOutputLabel}" />
+                        </Border>
+                        
+                        <ui:TextBox
+                            Grid.Row="1"
+                            Margin="12"
+                            AcceptsReturn="True"
+                            IsReadOnly="True"
+                            Text="{Binding ProcessedText, Mode=OneWay}"
+                            TextWrapping="Wrap"
+                            VerticalScrollBarVisibility="Auto"
+                            MinHeight="80"
+                            BorderThickness="0"
+                            Background="Transparent" />
+                    </Grid>
+                </Border>
+
+                <!-- Right: Start Listening & Status (Formerly Left) -->
+                <Border Grid.Column="2"
+                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{DynamicResource ControlElevationBorderBrush}"
+                        BorderThickness="1" 
+                        CornerRadius="8" 
+                        Padding="12"
+                        VerticalAlignment="Stretch">
+                    <StackPanel DataContext="{Binding MainControl}">
+                        <ui:Button
+                            HorizontalAlignment="Left"
+                            Command="{Binding ToggleWorkCommand}"
+                            Content="{Binding WorkButtonContent}"
+                            Appearance="Primary"
+                            Icon="{ui:SymbolIcon Mic24}" />
+                            
+                        <TextBlock
+                            Margin="0,12,0,0"
+                            FontSize="14"
+                            Text="{Binding StatusText}" 
+                            TextWrapping="Wrap"/>
+                        
+                        <TextBlock
+                            Margin="0,12,0,0"
+                            FontStyle="Italic"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            Text="{Binding WorkHintLabel}" 
+                            TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
             </Grid>
-
-            <ui:TextBlock
-                Grid.Row="5"
-                FontStyle="Italic"
-                Foreground="Gray"
-                Text="{Binding MainControl.WorkHintLabel}" />
         </Grid>
-
-        <!--  GridSplitter and Right Column for Log REMOVED  -->
-
     </Grid>
 </Page>

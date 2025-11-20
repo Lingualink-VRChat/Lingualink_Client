@@ -42,8 +42,8 @@ namespace lingualink_client.Views
                     return;
                 }
 
-                LogDataGrid.ScrollIntoView(entry);
-                LogDataGrid.SelectedItem = entry;
+                LogListBox.ScrollIntoView(entry);
+                LogListBox.SelectedItem = entry;
             });
         }
 

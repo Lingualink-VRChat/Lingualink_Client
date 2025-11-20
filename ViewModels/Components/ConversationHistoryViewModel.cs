@@ -88,17 +88,12 @@ namespace lingualink_client.ViewModels.Components
         private bool? selectedStatusFilter;
 
         [ObservableProperty]
-        private DateTime? fromDate;
-
-        [ObservableProperty]
-        private DateTime? toDate;
-
-        [ObservableProperty]
         private bool isSessionsLoading;
 
         [ObservableProperty]
         private bool isEntriesLoading;
 
+        public string PageTitle => LanguageManager.GetString("ConversationHistory");
         public string SessionsHeader => LanguageManager.GetString("HistorySessionsHeader");
         public string EntriesHeader => LanguageManager.GetString("HistoryEntriesHeader");
         public string StoragePathLabel => LanguageManager.GetString("HistoryStoragePath");
@@ -108,8 +103,6 @@ namespace lingualink_client.ViewModels.Components
         public string SearchPlaceholder => LanguageManager.GetString("HistorySearchPlaceholder");
         public string SourceFilterLabel => LanguageManager.GetString("HistoryFilterSource");
         public string StatusFilterLabel => LanguageManager.GetString("HistoryFilterStatus");
-        public string DateFromLabel => LanguageManager.GetString("HistoryFilterFrom");
-        public string DateToLabel => LanguageManager.GetString("HistoryFilterTo");
         public string IncludeTranslationsLabel => LanguageManager.GetString("HistorySearchInTranslations");
         public string CopySelectedLabel => LanguageManager.GetString("HistoryCopySelected");
         public string CopyAllLabel => LanguageManager.GetString("HistoryCopyAll");
@@ -386,39 +379,15 @@ namespace lingualink_client.ViewModels.Components
 
         private ConversationHistoryQuery BuildQuery(string sessionId)
         {
-            var (fromUtc, toUtc) = GetDateRangeUtc();
-
             return new ConversationHistoryQuery
             {
                 SessionId = sessionId,
                 Source = SelectedSourceFilter,
                 IsSuccess = SelectedStatusFilter,
-                FromUtc = fromUtc,
-                ToUtc = toUtc,
                 SearchText = string.IsNullOrWhiteSpace(SearchText) ? null : SearchText,
                 SearchInTranslations = SearchInTranslations,
                 SortDescending = true
             };
-        }
-
-        private (DateTime? fromUtc, DateTime? toUtc) GetDateRangeUtc()
-        {
-            DateTime? fromUtc = null;
-            DateTime? toUtc = null;
-
-            if (FromDate.HasValue)
-            {
-                var local = DateTime.SpecifyKind(FromDate.Value.Date, DateTimeKind.Local);
-                fromUtc = local.ToUniversalTime();
-            }
-
-            if (ToDate.HasValue)
-            {
-                var local = DateTime.SpecifyKind(ToDate.Value.Date.AddDays(1).AddTicks(-1), DateTimeKind.Local);
-                toUtc = local.ToUniversalTime();
-            }
-
-            return (fromUtc, toUtc);
         }
 
         private void ScheduleRefreshEntries(TimeSpan? delay = null)
@@ -447,7 +416,7 @@ namespace lingualink_client.ViewModels.Components
             {
                 try
                 {
-                    await Task.Delay(delayValue, cts.Token).ConfigureAwait(false);
+                   await Task.Delay(delayValue, cts.Token).ConfigureAwait(false);
                     await RefreshEntriesInternalAsync(cts.Token, sessionId).ConfigureAwait(false);
                 }
                 catch (OperationCanceledException)
@@ -497,16 +466,6 @@ namespace lingualink_client.ViewModels.Components
             ScheduleRefreshEntries();
         }
 
-        partial void OnFromDateChanged(DateTime? value)
-        {
-            ScheduleRefreshEntries();
-        }
-
-        partial void OnToDateChanged(DateTime? value)
-        {
-            ScheduleRefreshEntries();
-        }
-
         private void OnEntrySaved(object? sender, ConversationEntrySavedEventArgs e)
         {
             if (_isDisposed)
@@ -547,18 +506,6 @@ namespace lingualink_client.ViewModels.Components
             }
 
             if (SelectedStatusFilter.HasValue && entry.IsSuccess != SelectedStatusFilter.Value)
-            {
-                return false;
-            }
-
-            var (fromUtc, toUtc) = GetDateRangeUtc();
-
-            if (fromUtc.HasValue && entry.TimestampUtc < fromUtc.Value)
-            {
-                return false;
-            }
-
-            if (toUtc.HasValue && entry.TimestampUtc > toUtc.Value)
             {
                 return false;
             }
@@ -638,6 +585,7 @@ namespace lingualink_client.ViewModels.Components
         {
             RefreshFilterOptions();
 
+            OnPropertyChanged(nameof(PageTitle));
             OnPropertyChanged(nameof(SessionsHeader));
             OnPropertyChanged(nameof(EntriesHeader));
             OnPropertyChanged(nameof(StoragePathLabel));
@@ -647,8 +595,6 @@ namespace lingualink_client.ViewModels.Components
             OnPropertyChanged(nameof(SearchPlaceholder));
             OnPropertyChanged(nameof(SourceFilterLabel));
             OnPropertyChanged(nameof(StatusFilterLabel));
-            OnPropertyChanged(nameof(DateFromLabel));
-            OnPropertyChanged(nameof(DateToLabel));
             OnPropertyChanged(nameof(IncludeTranslationsLabel));
             OnPropertyChanged(nameof(CopySelectedLabel));
             OnPropertyChanged(nameof(CopyAllLabel));

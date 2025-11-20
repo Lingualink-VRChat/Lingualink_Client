@@ -734,12 +734,6 @@
   <data name="HistoryFilterStatus" xml:space="preserve">
     <value>ステータス</value>
   </data>
-  <data name="HistoryFilterFrom" xml:space="preserve">
-    <value>開始日</value>
-  </data>
-  <data name="HistoryFilterTo" xml:space="preserve">
-    <value>終了日</value>
-  </data>
   <data name="HistorySearchInTranslations" xml:space="preserve">
     <value>翻訳結果を検索</value>
   </data>

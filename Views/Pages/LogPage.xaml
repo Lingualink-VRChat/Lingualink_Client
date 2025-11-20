@@ -6,17 +6,27 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:vm="clr-namespace:lingualink_client.ViewModels.Components"
+    xmlns:models="clr-namespace:lingualink_client.Models"
     Title="LogPage"
     d:DataContext="{d:DesignInstance Type=vm:LogViewModel}"
     mc:Ignorable="d">
 
-    <Grid Margin="15">
+    <Page.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+    </Page.Resources>
+
+    <Grid Margin="{DynamicResource PageContentMargin}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0" Orientation="Vertical" Margin="0,0,0,12">
+            <!-- Page Title -->
+            <TextBlock
+                Text="{Binding RunningLogLabel}"
+                Style="{DynamicResource PageTitleTextBlockStyle}" />
+
             <StackPanel Orientation="Horizontal">
                 <ui:TextBox
                     Width="260"
@@ -64,7 +74,7 @@
                     Padding="10,6"
                     Appearance="Secondary"
                     Command="{Binding CopySelectedCommand}"
-                    CommandParameter="{Binding SelectedItems, ElementName=LogDataGrid}"
+                    CommandParameter="{Binding SelectedItems, ElementName=LogListBox}"
                     Content="{Binding CopySelectedLabel}" />
                 <ui:Button
                     Margin="0,0,8,0"
@@ -88,44 +98,138 @@
             </StackPanel>
         </StackPanel>
 
-        <DataGrid
-            x:Name="LogDataGrid"
+        <ListBox
+            x:Name="LogListBox"
             Grid.Row="1"
-            AutoGenerateColumns="False"
-            EnableRowVirtualization="True"
-            CanUserAddRows="False"
-            IsReadOnly="True"
             ItemsSource="{Binding EntriesView}"
             SelectionMode="Extended"
-            SelectionUnit="FullRow"
-            HeadersVisibility="Column">
-            <DataGrid.Columns>
-                <DataGridTextColumn Binding="{Binding Timestamp, StringFormat=yyyy-MM-dd HH:mm:ss.fff}" Width="170">
-                    <DataGridTextColumn.Header>
-                        <TextBlock Text="{Binding DataContext.ColumnTimeLabel, ElementName=LogDataGrid}" />
-                    </DataGridTextColumn.Header>
-                </DataGridTextColumn>
-                <DataGridTextColumn Binding="{Binding Level}" Width="90">
-                    <DataGridTextColumn.Header>
-                        <TextBlock Text="{Binding DataContext.ColumnLevelLabel, ElementName=LogDataGrid}" />
-                    </DataGridTextColumn.Header>
-                </DataGridTextColumn>
-                <DataGridTextColumn Binding="{Binding Category}" Width="150">
-                    <DataGridTextColumn.Header>
-                        <TextBlock Text="{Binding DataContext.ColumnCategoryLabel, ElementName=LogDataGrid}" />
-                    </DataGridTextColumn.Header>
-                </DataGridTextColumn>
-                <DataGridTextColumn Binding="{Binding Message}" Width="*">
-                    <DataGridTextColumn.Header>
-                        <TextBlock Text="{Binding DataContext.ColumnMessageLabel, ElementName=LogDataGrid}" />
-                    </DataGridTextColumn.Header>
-                </DataGridTextColumn>
-                <DataGridTextColumn Binding="{Binding Details}" Width="300">
-                    <DataGridTextColumn.Header>
-                        <TextBlock Text="{Binding DataContext.ColumnDetailsLabel, ElementName=LogDataGrid}" />
-                    </DataGridTextColumn.Header>
-                </DataGridTextColumn>
-            </DataGrid.Columns>
-        </DataGrid>
+            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+            Padding="0,0,12,12"
+            BorderThickness="0"
+            Background="Transparent">
+
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="ListBoxItem" BasedOn="{StaticResource DefaultListBoxItemStyle}">
+                    <Setter Property="Padding" Value="0" />
+                    <Setter Property="Margin" Value="0,0,0,8" />
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                </Style>
+            </ListBox.ItemContainerStyle>
+
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <ui:Card Padding="12" Margin="0">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Header Row -->
+                            <Grid Grid.Row="0" Margin="0,0,0,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/> <!-- Level -->
+                                    <ColumnDefinition Width="Auto"/> <!-- Time -->
+                                    <ColumnDefinition Width="*"/>    <!-- Category -->
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Level Badge -->
+                                <Border Grid.Column="0" CornerRadius="4" Padding="6,2" Margin="0,0,8,0"
+                                        x:Name="LevelBadge">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorSecondaryBrush}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Level}" Value="{x:Static models:LogLevel.Warning}">
+                                                    <Setter Property="Background" Value="#40FFA500"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Level}" Value="{x:Static models:LogLevel.Error}">
+                                                    <Setter Property="Background" Value="#40FF0000"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Level}" Value="{x:Static models:LogLevel.Critical}">
+                                                    <Setter Property="Background" Value="#408B0000"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Level}" Value="{x:Static models:LogLevel.Debug}">
+                                                    <Setter Property="Background" Value="#20808080"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    
+                                    <TextBlock Text="{Binding Level}" FontSize="11" FontWeight="Bold"
+                                               x:Name="LevelText">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Level}" Value="{x:Static models:LogLevel.Warning}">
+                                                        <Setter Property="Foreground" Value="#D0FFA500"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Level}" Value="{x:Static models:LogLevel.Error}">
+                                                        <Setter Property="Foreground" Value="#FFFF0000"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Level}" Value="{x:Static models:LogLevel.Critical}">
+                                                        <Setter Property="Foreground" Value="#FFFF0000"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Level}" Value="{x:Static models:LogLevel.Debug}">
+                                                        <Setter Property="Foreground" Value="Gray"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Border>
+
+                                <!-- Time -->
+                                <TextBlock Grid.Column="1" 
+                                           Text="{Binding Timestamp, StringFormat=HH:mm:ss.fff}"
+                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                           FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0"/>
+
+                                <!-- Category -->
+                                <TextBlock Grid.Column="2"
+                                           Text="{Binding Category}"
+                                           FontWeight="SemiBold"
+                                           TextTrimming="CharacterEllipsis"
+                                           HorizontalAlignment="Right"
+                                           Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"
+                                           FontSize="12" VerticalAlignment="Center"/>
+                            </Grid>
+
+                            <!-- Message -->
+                            <TextBlock Grid.Row="1" 
+                                       Text="{Binding Message}" 
+                                       TextWrapping="Wrap" 
+                                       FontSize="13"
+                                       Margin="0,2,0,0" />
+
+                            <!-- Details -->
+                            <TextBlock Grid.Row="2"
+                                       x:Name="DetailsBox"
+                                       Text="{Binding Details}"
+                                       TextWrapping="Wrap"
+                                       Margin="0,8,0,0"
+                                       FontFamily="Consolas"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Details}" Value="">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Details}" Value="{x:Null}">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Grid>
+                    </ui:Card>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
     </Grid>
 </Page>

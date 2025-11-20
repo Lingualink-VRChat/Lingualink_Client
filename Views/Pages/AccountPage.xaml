@@ -13,215 +13,192 @@
     d:DesignWidth="800"
     mc:Ignorable="d">
     <ui:PassiveScrollViewer VerticalScrollBarVisibility="Auto">
-        <Grid Margin="15">
+        <Grid Margin="{DynamicResource PageContentMargin}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" /> <!-- 官方服务大卡片 -->
                 <RowDefinition Height="Auto" /> <!-- 高级选项分隔 -->
                 <RowDefinition Height="Auto" /> <!-- 自定义服务设置 -->
                 <RowDefinition Height="*" />   <!-- 占位符 -->
-                <RowDefinition Height="Auto" /> <!-- 保存/撤销按钮 -->
             </Grid.RowDefinitions>
 
             <!-- 1. 官方服务 - 主要且醒目的卡片 -->
             <ui:Card
                 Grid.Row="0"
                 Margin="0,0,0,20"
-                Padding="30">
-                <StackPanel>
-                    <!-- 标题和副标题 -->
-                    <ui:TextBlock
-                        FontSize="20"
-                        FontWeight="SemiBold"
-                        Text="{Binding OfficialServiceLoginLabel}"
-                        Margin="0,0,0,5" />
+                Padding="24">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
                     
-                    <ui:TextBlock
-                        FontSize="14"
-                        Foreground="Gray"
-                        Text="{Binding OfficialServiceSubtitleLabel}"
-                        Margin="0,0,0,20" />
-
-                    <!-- 即将推出提示 -->
-                    <ui:InfoBar
-                        IsOpen="True"
-                        IsClosable="False"
-                        Severity="Informational"
-                        Title="{Binding ComingSoonLabel}"
-                        Message="{Binding OfficialServiceHint}"
-                        Margin="0,0,0,20" />
-
-                    <!-- 登录表单区域 -->
-                    <Grid IsEnabled="False" Opacity="0.6">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-
-                        <!-- 用户名 -->
-                        <Label Grid.Row="0" Grid.Column="0" Content="{Binding UsernameLabel}" />
-                        <ui:TextBox
-                            Grid.Row="1"
-                            Grid.Column="0"
-                            Margin="0,0,10,15"
-                            Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"
-                            PlaceholderText="Enter your username" />
-
-                        <!-- 密码 -->
-                        <Label Grid.Row="0" Grid.Column="1" Content="{Binding PasswordLabel}" />
-                        <ui:PasswordBox
-                            Grid.Row="1"
-                            Grid.Column="1"
-                            Margin="10,0,0,15"
-                            Password="{Binding UserPassword, UpdateSourceTrigger=PropertyChanged}"
-                            PlaceholderText="Enter your password" />
-
-                        <!-- 登录状态 -->
+                    <!-- Icon -->
+                    <ui:SymbolIcon Symbol="PersonCircle24" FontSize="48" VerticalAlignment="Top" Margin="0,4,0,0"/>
+                    
+                    <StackPanel Grid.Column="1" Margin="24,0,0,0">
+                        <!-- 标题和副标题 -->
                         <ui:TextBlock
-                            Grid.Row="2"
-                            Grid.Column="0"
-                            Grid.ColumnSpan="2"
-                            Margin="0,0,0,15"
-                            Text="{Binding NotLoggedInLabel}"
-                            Foreground="Gray" />
+                            FontSize="20"
+                            FontWeight="SemiBold"
+                            Text="{Binding OfficialServiceLoginLabel}"
+                            Margin="0,0,0,4" />
+                        
+                        <ui:TextBlock
+                            FontSize="14"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            Text="{Binding OfficialServiceSubtitleLabel}"
+                            Margin="0,0,0,16" />
 
-                        <!-- 按钮组 -->
-                        <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal">
-                            <ui:Button
-                                Width="120"
-                                Margin="0,0,10,0"
-                                Command="{Binding LoginCommand}"
-                                Content="{Binding LoginLabel}"
-                                Appearance="Primary" />
-                            <ui:Button
-                                Width="100"
-                                Margin="0,0,10,0"
-                                Command="{Binding LogoutCommand}"
-                                Content="{Binding LogoutLabel}"
-                                Appearance="Secondary" />
-                            <ui:Button
-                                Width="120"
-                                Content="{Binding CreateAccountLabel}"
-                                Appearance="Secondary" />
-                        </StackPanel>
+                        <!-- 即将推出提示 -->
+                        <ui:InfoBar
+                            IsOpen="True"
+                            IsClosable="False"
+                            Severity="Informational"
+                            Title="{Binding ComingSoonLabel}"
+                            Message="{Binding OfficialServiceHint}"
+                            Margin="0,0,0,20" />
 
-                        <!-- 忘记密码链接 -->
-                        <ui:HyperlinkButton
-                            Grid.Row="4"
-                            Grid.Column="0"
-                            Grid.ColumnSpan="2"
-                            Margin="0,10,0,0"
-                            Content="{Binding ForgotPasswordLabel}"
-                            HorizontalAlignment="Left" />
-                    </Grid>
-                </StackPanel>
+                        <!-- 登录表单区域 -->
+                        <Grid IsEnabled="False" Opacity="0.6">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- 用户名 -->
+                            <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,12,16">
+                                <Label Content="{Binding UsernameLabel}" Margin="0,0,0,4"/>
+                                <ui:TextBox
+                                    Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"
+                                    PlaceholderText="Enter your username" />
+                            </StackPanel>
+
+                            <!-- 密码 -->
+                            <StackPanel Grid.Row="0" Grid.Column="1" Margin="12,0,0,16">
+                                <Label Content="{Binding PasswordLabel}" Margin="0,0,0,4"/>
+                                <ui:PasswordBox
+                                    Password="{Binding UserPassword, UpdateSourceTrigger=PropertyChanged}"
+                                    PlaceholderText="Enter your password" />
+                            </StackPanel>
+
+                            <!-- 登录状态 -->
+                            <ui:TextBlock
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                Grid.ColumnSpan="2"
+                                Margin="0,0,0,16"
+                                Text="{Binding NotLoggedInLabel}"
+                                Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+
+                            <!-- 按钮组 -->
+                            <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal">
+                                <ui:Button
+                                    Width="120"
+                                    Margin="0,0,12,0"
+                                    Command="{Binding LoginCommand}"
+                                    Content="{Binding LoginLabel}"
+                                    Appearance="Primary" />
+                                <ui:Button
+                                    Width="100"
+                                    Margin="0,0,12,0"
+                                    Command="{Binding LogoutCommand}"
+                                    Content="{Binding LogoutLabel}"
+                                    Appearance="Secondary" />
+                                <ui:Button
+                                    Width="120"
+                                    Content="{Binding CreateAccountLabel}"
+                                    Appearance="Secondary" />
+                            </StackPanel>
+
+                            <!-- 忘记密码链接 -->
+                            <ui:HyperlinkButton
+                                Grid.Row="3"
+                                Grid.Column="0"
+                                Grid.ColumnSpan="2"
+                                Margin="0,12,0,0"
+                                Content="{Binding ForgotPasswordLabel}"
+                                HorizontalAlignment="Left" />
+                        </Grid>
+                    </StackPanel>
+                </Grid>
             </ui:Card>
 
             <!-- 2. 高级选项分隔线 -->
-            <StackPanel Grid.Row="1" Margin="0,0,0,15">
-                <Separator Margin="0,0,0,10" />
+            <StackPanel Grid.Row="1" Margin="0,0,0,12">
                 <ui:TextBlock
                     FontSize="14"
                     FontWeight="SemiBold"
                     Text="{Binding AdvancedOptionsLabel}"
-                    HorizontalAlignment="Center"
-                    Foreground="Gray" />
-                <Separator Margin="0,10,0,0" />
+                    Margin="0,0,0,8" />
             </StackPanel>
 
             <!-- 3. 自定义服务器选项 -->
-            <ui:Card
+            <ui:CardExpander
                 Grid.Row="2"
-                Margin="0,0,0,15"
-                Padding="20">
-                <StackPanel>
-                    <!-- 自定义服务器开关 -->
-                    <Grid Margin="0,0,0,10">
+                Margin="0,0,0,24"
+                IsExpanded="{Binding UseCustomServer, Mode=OneWay}"
+                Icon="{ui:SymbolIcon Server24}">
+                <ui:CardExpander.Header>
+                    <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        
-                        <ui:ToggleSwitch
-                            Grid.Column="0"
-                            IsChecked="{Binding UseCustomServer, UpdateSourceTrigger=PropertyChanged}" />
-                        
-                        <StackPanel Grid.Column="1" Margin="15,0,0,0">
-                            <ui:TextBlock
-                                FontWeight="SemiBold"
-                                Text="{Binding UseCustomServerLabel}" />
-                            <ui:TextBlock
-                                FontSize="11"
-                                Foreground="Gray"
-                                Text="{Binding UseCustomServerHint}"
-                                TextWrapping="Wrap" />
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding UseCustomServerLabel}" FontWeight="Medium" FontSize="14"/>
+                            <TextBlock Text="{Binding UseCustomServerHint}" 
+                                     FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" 
+                                     TextWrapping="Wrap" Margin="0,2,0,0"/>
                         </StackPanel>
+                        <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding UseCustomServer, UpdateSourceTrigger=PropertyChanged}" />
                     </Grid>
+                </ui:CardExpander.Header>
+                
+                <StackPanel Margin="0,10,0,0" IsEnabled="{Binding UseCustomServer}">
+                    <!-- 服务器 URL -->
+                    <StackPanel Margin="0,0,0,16">
+                        <Label Content="{Binding ServerUrlLabel}" Margin="0,0,0,6"/>
+                        <ui:TextBox
+                            Height="36"
+                            VerticalContentAlignment="Center"
+                            Text="{Binding ServerUrl, UpdateSourceTrigger=PropertyChanged}"
+                            PlaceholderText="https://api2.lingualink.aiatechco.com/api/v1/" />
+                    </StackPanel>
 
-                    <!-- 自定义服务器设置 -->
-                    <Border
-                        IsEnabled="{Binding UseCustomServer}"
-                        Background="Transparent">
-                        <Border.Style>
-                            <Style TargetType="Border">
-                                <Setter Property="Opacity" Value="1"/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding UseCustomServer}" Value="False">
-                                        <Setter Property="Opacity" Value="0.5"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Border.Style>
-                        <StackPanel>
-                            <Separator Margin="0,10,0,15" />
-                            
-                            <!-- 服务器 URL -->
-                            <Label Content="{Binding ServerUrlLabel}" />
-                            <ui:TextBox
-                                Height="40"
-                                Margin="0,0,0,10"
-                                VerticalContentAlignment="Center"
-                                Text="{Binding ServerUrl, UpdateSourceTrigger=PropertyChanged}"
-                                PlaceholderText="https://api2.lingualink.aiatechco.com/api/v1/" />
+                    <!-- API 密钥 -->
+                    <StackPanel Margin="0,0,0,16">
+                        <Label Content="{Binding ApiKeyLabel}" Margin="0,0,0,6"/>
+                        <ui:PasswordBox
+                            x:Name="ApiKeyPasswordBox"
+                            Password="{Binding ApiKey, UpdateSourceTrigger=PropertyChanged}"
+                            PasswordChanged="ApiKeyPasswordBox_PasswordChanged"
+                            PlaceholderText="Enter your API key here" />
+                    </StackPanel>
 
-                            <!-- API 密钥 -->
-                            <Label Content="{Binding ApiKeyLabel}" />
-                            <ui:PasswordBox
-                                x:Name="ApiKeyPasswordBox"
-                                Margin="0,0,0,15"
-                                Password="{Binding ApiKey, UpdateSourceTrigger=PropertyChanged}"
-                                PasswordChanged="ApiKeyPasswordBox_PasswordChanged"
-                                PlaceholderText="Enter your API key here" />
-
-
-
-                            <!-- 测试连接按钮 -->
-                            <StackPanel Orientation="Horizontal">
-                                <ui:Button
-                                    Width="120"
-                                    Content="{Binding ConnectionTestLabel}"
-                                    Appearance="Secondary"
-                                    Command="{Binding TestConnectionCommand}" />
-                                <ui:TextBlock
-                                    Margin="15,0,0,0"
-                                    VerticalAlignment="Center"
-                                    FontSize="11"
-                                    Foreground="Gray"
-                                    Text="Click to test your server connection" />
-                            </StackPanel>
-                        </StackPanel>
-                    </Border>
+                    <!-- 测试连接按钮 -->
+                    <StackPanel Orientation="Horizontal">
+                        <ui:Button
+                            Width="140"
+                            Content="{Binding ConnectionTestLabel}"
+                            Appearance="Secondary"
+                            Icon="{ui:SymbolIcon PlugConnected24}"
+                            Command="{Binding TestConnectionCommand}" />
+                        <ui:TextBlock
+                            Margin="16,0,0,0"
+                            VerticalAlignment="Center"
+                            FontSize="12"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            Text="Click to test your server connection" />
+                    </StackPanel>
                 </StackPanel>
-            </ui:Card>
-
-            <!-- 账户页改为自动保存，因此不再需要保存/撤销按钮 -->
+            </ui:CardExpander>
         </Grid>
     </ui:PassiveScrollViewer>
-</Page> 
+</Page>

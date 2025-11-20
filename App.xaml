@@ -13,6 +13,14 @@
                 <ui:ControlsDictionary />
             </ResourceDictionary.MergedDictionaries>
             <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+            <!-- Global page content margin for consistent spacing -->
+            <Thickness x:Key="PageContentMargin">12,10,12,12</Thickness>
+            <!-- Shared page title style -->
+            <Style x:Key="PageTitleTextBlockStyle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="20" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="Margin" Value="0,0,0,16" />
+            </Style>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

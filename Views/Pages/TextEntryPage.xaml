@@ -11,112 +11,115 @@
     mc:Ignorable="d">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <Grid Margin="15">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" /> <!-- Page Title -->
-                <RowDefinition Height="Auto" /> <!-- Input Area -->
-                <RowDefinition Height="Auto" /> <!-- Output Area -->
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
-
+        <StackPanel Margin="{DynamicResource PageContentMargin}">
+            
             <!-- Page Title -->
             <TextBlock
-                Grid.Row="0"
-                Margin="0,0,0,20"
-                FontSize="18"
-                FontWeight="Bold"
-                Text="{Binding PageTitle}" />
+                Text="{Binding PageTitle}"
+                Style="{DynamicResource PageTitleTextBlockStyle}" />
 
-            <!-- Input Area -->
-            <Grid Grid.Row="1" Margin="0,0,0,15">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" /> <!-- 按钮和提示 -->
-                    <RowDefinition Height="Auto" /> <!-- 输入状态提醒 -->
-                </Grid.RowDefinitions>
+            <!-- Input Card -->
+            <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource ControlElevationBorderBrush}"
+                    BorderThickness="1" 
+                    CornerRadius="8" 
+                    Padding="12"
+                    Margin="0,0,0,12">
+                <StackPanel>
+                    <Label Content="{Binding InputTextLabel}" FontWeight="Medium" Margin="0,0,0,4"/>
+                    
+                    <ui:TextBox
+                        x:Name="InputTextBox"
+                        MinHeight="80"
+                        AcceptsReturn="True"
+                        Text="{Binding InputText, UpdateSourceTrigger=PropertyChanged}"
+                        TextWrapping="Wrap"
+                        VerticalScrollBarVisibility="Auto"
+                        KeyDown="InputTextBox_KeyDown"
+                        GotFocus="InputTextBox_GotFocus"
+                        LostFocus="InputTextBox_LostFocus" 
+                        PlaceholderText="在此处输入文本..." />
 
-                <Label Grid.Row="0" Content="{Binding InputTextLabel}" />
-                <ui:TextBox
-                    Grid.Row="1"
-                    x:Name="InputTextBox"
-                    MinHeight="80"
-                    AcceptsReturn="True"
-                    Text="{Binding InputText, UpdateSourceTrigger=PropertyChanged}"
-                    TextWrapping="Wrap"
-                    VerticalScrollBarVisibility="Auto"
-                    KeyDown="InputTextBox_KeyDown"
-                    GotFocus="InputTextBox_GotFocus"
-                    LostFocus="InputTextBox_LostFocus" />
-
-                <!-- 修改按钮区域 -->
-                <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
-                    <!-- 发送按钮 -->
-                    <ui:Button
-                        Appearance="Primary"
-                        Content="{Binding SendLabel}"
-                        Command="{Binding SendCommand}"
-                        Icon="{ui:SymbolIcon Send24}" />
-
-                    <!-- [修复] 移除了错误的 IsEnabled 绑定 -->
-                    <ui:Button
-                        Margin="10,0,0,0"
-                        Appearance="Secondary"
-                        Content="{Binding WorkButtonContent}"
-                        Command="{Binding ToggleWorkCommand}"
-                        Icon="{ui:SymbolIcon Mic24}" />
-
-                    <!-- 提示文本 -->
+                    <!-- Input Status Hint -->
                     <ui:TextBlock
-                        Margin="15,0,0,0"
-                        Text="{Binding TextEntryHint}"
-                        Foreground="Gray"
-                        FontSize="11"
-                        VerticalAlignment="Center"/>
+                        Margin="0,4,0,0"
+                        Text="{Binding InputStatusText}"
+                        Foreground="{DynamicResource SystemFillColorCautionBrush}"
+                        FontSize="12"
+                        FontWeight="Medium"
+                        Visibility="{Binding IsInputStatusVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
+                        TextWrapping="Wrap" />
+
+                    <!-- Actions -->
+                    <Grid Margin="0,12,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock
+                            Grid.Column="0"
+                            Text="{Binding TextEntryHint}"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            FontSize="12"
+                            VerticalAlignment="Center"
+                            TextWrapping="Wrap"/>
+
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <!-- Start Listening Button -->
+                            <ui:Button
+                                Margin="0,0,10,0"
+                                Appearance="Primary"
+                                Content="{Binding WorkButtonContent}"
+                                Command="{Binding ToggleWorkCommand}"
+                                Icon="{ui:SymbolIcon Mic24}" />
+                                
+                            <!-- Send Button -->
+                            <ui:Button
+                                Appearance="Primary"
+                                Content="{Binding SendLabel}"
+                                Command="{Binding SendCommand}"
+                                Icon="{ui:SymbolIcon Send24}" />
+                        </StackPanel>
+                    </Grid>
                 </StackPanel>
+            </Border>
 
-                <!-- 输入状态提醒 -->
-                <ui:TextBlock
-                    Grid.Row="3"
-                    Margin="0,5,0,0"
-                    Text="{Binding InputStatusText}"
-                    Foreground="Orange"
-                    FontSize="12"
-                    FontWeight="Medium"
-                    Visibility="{Binding IsInputStatusVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
-                    TextWrapping="Wrap" />
-            </Grid>
+            <!-- Output Card -->
+            <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource ControlElevationBorderBrush}"
+                    BorderThickness="1" 
+                    CornerRadius="8" 
+                    Padding="0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
 
-            <!-- Output Area -->
-            <Grid Grid.Row="2" Margin="0,10,0,15">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
+                    <Border Grid.Row="0" 
+                            BorderBrush="{DynamicResource DividerStrokeColorDefaultBrush}"
+                            BorderThickness="0,0,0,1"
+                            Padding="12,8">
+                        <TextBlock
+                            FontWeight="SemiBold"
+                            Text="{Binding SentToVrcLabel}" />
+                    </Border>
 
-                <Label Grid.Row="0" Content="{Binding SentToVrcLabel}" />
-                <ui:TextBox
-                    Grid.Row="1"
-                    MinHeight="120"
-                    IsReadOnly="True"
-                    AcceptsReturn="True"
-                    Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
-                    Text="{Binding ProcessedText, Mode=OneWay}"
-                    TextWrapping="Wrap"
-                    VerticalScrollBarVisibility="Auto" />
-            </Grid>
-
-            <!-- [移除] Status Text -->
-            <!--
-            <ui:TextBlock
-                Grid.Row="3"
-                Margin="0,5,0,0"
-                FontSize="12"
-                Foreground="Gray"
-                Text="{Binding StatusText}"
-                TextWrapping="Wrap" />
-            -->
-
-        </Grid>
+                    <ui:TextBox
+                        Grid.Row="1"
+                        Margin="12"
+                        MinHeight="80"
+                        IsReadOnly="True"
+                        AcceptsReturn="True"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Text="{Binding ProcessedText, Mode=OneWay}"
+                        TextWrapping="Wrap"
+                        VerticalScrollBarVisibility="Auto" />
+                </Grid>
+            </Border>
+            
+        </StackPanel>
     </ScrollViewer>
 </Page>

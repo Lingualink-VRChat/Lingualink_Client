@@ -9,136 +9,139 @@
     xmlns:vm="clr-namespace:lingualink_client.ViewModels"
     Title="MessageTemplatePage"
     d:DataContext="{d:DesignInstance Type=vm:MessageTemplatePageViewModel}"
-    d:DesignHeight="450"
+    d:DesignHeight="600"
     d:DesignWidth="800"
     mc:Ignorable="d">
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <Grid Margin="15,0">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
 
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="{DynamicResource PageContentMargin}">
+            
             <!-- Page Title -->
             <TextBlock 
-                Grid.Row="0" 
                 Text="{Binding MessageTemplateSettings}" 
-                FontSize="18" 
-                FontWeight="Bold" 
-                Margin="0,0,0,20" />
+                Style="{DynamicResource PageTitleTextBlockStyle}" />
 
             <!-- Enable Custom Template -->
-            <CheckBox
-                Grid.Row="1"
-                Content="{Binding UseCustomTemplate}"
-                IsChecked="{Binding UseCustomTemplateEnabled, Mode=TwoWay}"
-                Margin="0,0,0,20" />
+            <ui:CardControl Icon="{ui:SymbolIcon EditSettings24}" Margin="0,0,0,12" Padding="12">
+                <ui:CardControl.Header>
+                    <StackPanel>
+                        <TextBlock Text="{Binding UseCustomTemplate}" FontWeight="Medium"/>
+                        <TextBlock 
+                            Text="Enable to customize the output format sent to VRChat" 
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            FontSize="11"/>
+                    </StackPanel>
+                </ui:CardControl.Header>
+                <ui:ToggleSwitch IsChecked="{Binding UseCustomTemplateEnabled, Mode=TwoWay}" />
+            </ui:CardControl>
 
-            <!-- 新增: 模板验证警告 -->
+            <!-- 模板验证警告 -->
             <ui:InfoBar
-                Grid.Row="2"
-                Margin="0,0,0,15"
                 IsClosable="False"
                 IsOpen="{Binding IsTemplateOverLimit}"
                 Severity="Warning"
                 Title="{Binding ValidationTitle}"
                 Message="{Binding ValidationMessage}"
-                Visibility="{Binding IsTemplateOverLimit, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                Visibility="{Binding IsTemplateOverLimit, Converter={StaticResource BooleanToVisibilityConverter}}"
+                Margin="0,0,0,12" />
 
-            <!-- Template Configuration -->
-            <Grid Grid.Row="3" IsEnabled="{Binding UseCustomTemplateEnabled}">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-
-                <!-- Template Content -->
-                <Label Grid.Row="0" Content="{Binding CustomTemplateTextLabel}" Margin="0,5,0,2" />
-                <TextBox 
-                    Grid.Row="1"
-                    Text="{Binding CustomTemplateText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                    AcceptsReturn="True"
-                    TextWrapping="Wrap"
-                    Height="100"
-                    VerticalScrollBarVisibility="Auto"
-                    Margin="0,0,0,15" />
-
-                <!-- Available Placeholders -->
-                <Label Grid.Row="2" Content="{Binding AvailablePlaceholders}" Margin="0,5,0,2" />
-                <ItemsControl Grid.Row="3" ItemsSource="{Binding PlaceholderList}" Margin="0,0,0,15">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <WrapPanel Orientation="Horizontal" />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Button
-                                Content="{Binding DisplayName}"
-                                Command="{Binding DataContext.InsertPlaceholderCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                CommandParameter="{Binding Value}"
-                                Margin="2"
-                                Padding="5,2"
-                                FontSize="10"
-                                Background="{DynamicResource ControlFillColorSecondaryBrush}"
-                                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                                Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                                BorderThickness="1" />
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-
-                <!-- Template Preview -->
-                <Label Grid.Row="4" Content="{Binding PreviewTemplate}" Margin="0,5,0,2" />
-                <Border 
-                    Grid.Row="5"
-                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" 
-                    BorderThickness="1" 
-                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" 
-                    Padding="10"
-                    MinHeight="80"
-                    MaxHeight="150"
-                    Margin="0,0,0,15">
-                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
-                        <TextBlock 
-                            Text="{Binding TemplatePreview}"
+            <!-- Template Editor Section -->
+            <StackPanel IsEnabled="{Binding UseCustomTemplateEnabled}">
+                
+                <!-- Editor Card -->
+                <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{DynamicResource ControlElevationBorderBrush}"
+                        BorderThickness="1" 
+                        CornerRadius="8" 
+                        Padding="12"
+                        Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Text="{Binding CustomTemplateTextLabel}" FontWeight="Medium" Margin="0,0,0,4"/>
+                        
+                        <ui:TextBox 
+                            Text="{Binding CustomTemplateText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                            AcceptsReturn="True"
                             TextWrapping="Wrap"
-                            FontFamily="Consolas"
-                            FontSize="12"
-                            LineHeight="16"
-                            Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                    </ScrollViewer>
+                            MinHeight="80"
+                            VerticalScrollBarVisibility="Auto"
+                            Margin="0,0,0,12"
+                            PlaceholderText="Enter your template here..."/>
+
+                        <TextBlock Text="{Binding AvailablePlaceholders}" FontWeight="Medium" Margin="0,0,0,4"/>
+                        
+                        <ItemsControl ItemsSource="{Binding PlaceholderList}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <ui:Button
+                                        Content="{Binding DisplayName}"
+                                        Command="{Binding DataContext.InsertPlaceholderCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                        CommandParameter="{Binding Value}"
+                                        Margin="0,0,6,6"
+                                        Appearance="Secondary"
+                                        Padding="8,3" 
+                                        FontSize="11"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        
+                        <ui:Button
+                            Margin="0,6,0,0"
+                            Content="{Binding ResetToDefaults}"
+                            Command="{Binding ResetTemplateCommand}"
+                            Appearance="Secondary"
+                            Icon="{ui:SymbolIcon ArrowReset24}"
+                            HorizontalAlignment="Left" />
+                    </StackPanel>
                 </Border>
 
-            </Grid>
+                <!-- Preview Card -->
+                <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{DynamicResource ControlElevationBorderBrush}"
+                        BorderThickness="1" 
+                        CornerRadius="8" 
+                        Padding="0"
+                        Margin="0,0,0,12">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
 
-            <!-- Reset Button -->
-            <Button
-                Grid.Row="4"
-                Content="{Binding ResetToDefaults}"
-                Command="{Binding ResetTemplateCommand}"
-                HorizontalAlignment="Left"
-                Margin="15,10,0,0"
-                Padding="10,5"
-                IsEnabled="{Binding UseCustomTemplateEnabled}" />
-
-            <!-- Template Hint -->
-            <TextBlock
-                Grid.Row="5"
-                x:Name="TemplateHintText"
-                TextWrapping="Wrap"
-                Margin="15,15,15,20"
-                FontStyle="Italic"
-                Foreground="Gray"
-                FontSize="11" />
-        </Grid>
+                        <Border Grid.Row="0" 
+                                BorderBrush="{DynamicResource DividerStrokeColorDefaultBrush}"
+                                BorderThickness="0,0,0,1"
+                                Padding="12,8">
+                            <TextBlock
+                                FontWeight="SemiBold"
+                                Text="{Binding PreviewTemplate}" />
+                        </Border>
+                        
+                        <ScrollViewer Grid.Row="1" MaxHeight="100" VerticalScrollBarVisibility="Auto">
+                            <TextBlock 
+                                Margin="12"
+                                Text="{Binding TemplatePreview}"
+                                TextWrapping="Wrap"
+                                FontFamily="Consolas"
+                                FontSize="12"
+                                LineHeight="16"
+                                Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+                
+                <!-- Template Hint -->
+                <TextBlock
+                    x:Name="TemplateHintText"
+                    TextWrapping="Wrap"
+                    FontStyle="Italic"
+                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                    FontSize="12" />
+            </StackPanel>
+        </StackPanel>
     </ScrollViewer>
-</Page> 
+</Page>

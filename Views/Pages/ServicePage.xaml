@@ -10,487 +10,422 @@
     xmlns:vm="clr-namespace:lingualink_client.ViewModels"
     Title="ServicePage"
     d:DataContext="{d:DesignInstance Type=vm:ServicePageViewModel}"
-    d:DesignHeight="600"
+    d:DesignHeight="800"
     d:DesignWidth="800"
     mc:Ignorable="d">
+
     <ui:PassiveScrollViewer VerticalScrollBarVisibility="Auto">
-        <Grid Margin="15">
+        <Grid Margin="{DynamicResource PageContentMargin}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" /> <!-- 语音识别设置 -->
                 <RowDefinition Height="Auto" /> <!-- VRChat集成 -->
                 <RowDefinition Height="Auto" /> <!-- 音频处理 -->
                 <RowDefinition Height="Auto" /> <!-- 音频增强 -->
                 <RowDefinition Height="*" />   <!-- 占位符 -->
-                <RowDefinition Height="Auto" /> <!-- 保存/撤销按钮 -->
+                <RowDefinition Height="Auto" /> <!-- 复位按钮 -->
             </Grid.RowDefinitions>
 
             <!-- 1. 语音识别设置 -->
             <ui:CardExpander
                 Grid.Row="0"
-                Margin="0,0,0,15"
+                Margin="0,0,0,12"
                 Header="{Binding VoiceRecognitionSettingsLabel}"
-                IsExpanded="False">
-                <StackPanel Margin="10,5,0,0">
+                Icon="{ui:SymbolIcon MicPulse24}"
+                IsExpanded="True">
+                <StackPanel Margin="0">
                     <!-- 分组说明 -->
-                    <ui:TextBlock
-                        FontSize="11"
-                        FontStyle="Italic"
-                        Foreground="Gray"
-                        Margin="0,0,0,10"
-                        Text="{Binding VoiceRecognitionSettingsHint}"
-                        TextWrapping="Wrap" />
+                    <ui:InfoBar
+                        Severity="Informational"
+                        IsClosable="False"
+                        IsOpen="True"
+                        Message="{Binding VoiceRecognitionSettingsHint}"
+                        Margin="0,0,0,16" />
                     
                     <!-- 追加录音时长 -->
-                    <Grid Margin="0,0,0,10">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-
-                        <Label Grid.Row="0" Content="{Binding PostSpeechRecordingDurationLabel}" />
-                        <Grid Grid.Row="1" Margin="0,0,0,5">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <Slider
-                                Grid.Column="0"
-                                Margin="0,0,10,0"
-                                VerticalAlignment="Center"
-                                LargeChange="0.1"
-                                Maximum="0.7"
-                                Minimum="0.4"
-                                SmallChange="0.05"
-                                TickFrequency="0.1"
-                                Value="{Binding PostSpeechRecordingDurationSeconds, UpdateSourceTrigger=PropertyChanged}" />
-                            <ui:TextBox
-                                Grid.Column="1"
-                                Width="60"
-                                VerticalAlignment="Center"
-                                Text="{Binding PostSpeechRecordingDurationSeconds, UpdateSourceTrigger=PropertyChanged, StringFormat=F2}"
-                                TextAlignment="Right" />
-                        </Grid>
-                        <ui:TextBlock
-                            Grid.Row="2"
-                            FontSize="10"
-                            FontStyle="Italic"
-                            Foreground="Gray"
-                            Text="{Binding PostSpeechRecordingDurationHint}"
-                            TextWrapping="Wrap" />
-                    </Grid>
-
-                    <!-- 最小语音时长 -->
-                    <Grid Margin="0,0,0,10">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-
-                        <Label Grid.Row="0" Content="{Binding MinVoiceDurationLabel}" />
-                        <Grid Grid.Row="1" Margin="0,0,0,5">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <Slider
-                                Grid.Column="0"
-                                Margin="0,0,10,0"
-                                VerticalAlignment="Center"
-                                LargeChange="0.1"
-                                Maximum="0.7"
-                                Minimum="0.4"
-                                SmallChange="0.05"
-                                TickFrequency="0.1"
-                                Value="{Binding MinVoiceDurationSeconds, UpdateSourceTrigger=PropertyChanged}" />
-                            <ui:TextBox
-                                Grid.Column="1"
-                                Width="60"
-                                VerticalAlignment="Center"
-                                Text="{Binding MinVoiceDurationSeconds, UpdateSourceTrigger=PropertyChanged, StringFormat=F2}"
-                                TextAlignment="Right" />
-                        </Grid>
-                        <ui:TextBlock
-                            Grid.Row="2"
-                            FontSize="10"
-                            FontStyle="Italic"
-                            Foreground="Gray"
-                            Text="{Binding MinVoiceDurationHint}"
-                            TextWrapping="Wrap" />
-                    </Grid>
-
-                    <!-- 最大语音时长 -->
-                    <Grid Margin="0,0,0,10">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-
-                        <Label Grid.Row="0" Content="{Binding MaxVoiceDurationLabel}" />
-                        <Grid Grid.Row="1" Margin="0,0,0,5">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <Slider
-                                Grid.Column="0"
-                                Margin="0,0,10,0"
-                                VerticalAlignment="Center"
-                                LargeChange="1"
-                                Maximum="10"
-                                Minimum="1"
-                                SmallChange="0.5"
-                                TickFrequency="1"
-                                Value="{Binding MaxVoiceDurationSeconds, UpdateSourceTrigger=PropertyChanged}" />
-                            <ui:TextBox
-                                Grid.Column="1"
-                                Width="60"
-                                VerticalAlignment="Center"
-                                Text="{Binding MaxVoiceDurationSeconds, UpdateSourceTrigger=PropertyChanged, StringFormat=F1}"
-                                TextAlignment="Right" />
-                        </Grid>
-                        <ui:TextBlock
-                            Grid.Row="2"
-                            FontSize="10"
-                            FontStyle="Italic"
-                            Foreground="Gray"
-                            Text="{Binding MaxVoiceDurationHint}"
-                            TextWrapping="Wrap" />
-                    </Grid>
-                    
-                    <!-- 最小音量阈值 -->
-                    <Label Margin="0,5,0,0" Content="{Binding MinVolumeThresholdLabel}" />
-                    <Grid>
+                    <Grid Margin="0,0,0,20">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <Slider
-                            Grid.Column="0"
-                            Margin="0,0,5,5"
-                            VerticalAlignment="Center"
-                            LargeChange="0.01"
-                            Maximum="1.0"
-                            Minimum="0"
-                            SmallChange="0.001"
-                            TickFrequency="0.01"
-                            Value="{Binding MinRecordingVolumeThreshold, UpdateSourceTrigger=PropertyChanged}" />
-                        <ui:TextBox
-                            Grid.Column="1"
-                            Width="60"
-                            Margin="0,0,0,5"
-                            VerticalAlignment="Center"
-                            Text="{Binding MinRecordingVolumeThreshold, StringFormat='P1', UpdateSourceTrigger=PropertyChanged}"
-                            TextAlignment="Right" />
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,24,0">
+                            <TextBlock Text="{Binding PostSpeechRecordingDurationLabel}" FontWeight="Medium"/>
+                            <TextBlock Text="{Binding PostSpeechRecordingDurationHint}" 
+                                     FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" 
+                                     TextWrapping="Wrap" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Slider Width="140"
+                                    VerticalAlignment="Center"
+                                    LargeChange="0.1"
+                                    Maximum="0.7"
+                                    Minimum="0.4"
+                                    SmallChange="0.05"
+                                    TickFrequency="0.1"
+                                    Value="{Binding PostSpeechRecordingDurationSeconds, UpdateSourceTrigger=PropertyChanged}" />
+                            <ui:TextBox Width="60" Margin="12,0,0,0"
+                                      VerticalAlignment="Center"
+                                      Text="{Binding PostSpeechRecordingDurationSeconds, UpdateSourceTrigger=PropertyChanged, StringFormat=F2}"
+                                      TextAlignment="Right" />
+                        </StackPanel>
                     </Grid>
-                    <ui:TextBlock
-                        FontSize="10"
-                        FontStyle="Italic"
-                        Foreground="Gray"
-                        Text="{Binding VolumeThresholdHint}"
-                        TextWrapping="Wrap" />
+
+                    <Separator Margin="0,0,0,20"/>
+
+                    <!-- 最小语音时长 -->
+                    <Grid Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,24,0">
+                            <TextBlock Text="{Binding MinVoiceDurationLabel}" FontWeight="Medium"/>
+                            <TextBlock Text="{Binding MinVoiceDurationHint}" 
+                                     FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" 
+                                     TextWrapping="Wrap" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Slider Width="140"
+                                    VerticalAlignment="Center"
+                                    LargeChange="0.1"
+                                    Maximum="0.7"
+                                    Minimum="0.4"
+                                    SmallChange="0.05"
+                                    TickFrequency="0.1"
+                                    Value="{Binding MinVoiceDurationSeconds, UpdateSourceTrigger=PropertyChanged}" />
+                            <ui:TextBox Width="60" Margin="12,0,0,0"
+                                      VerticalAlignment="Center"
+                                      Text="{Binding MinVoiceDurationSeconds, UpdateSourceTrigger=PropertyChanged, StringFormat=F2}"
+                                      TextAlignment="Right" />
+                        </StackPanel>
+                    </Grid>
+
+                    <Separator Margin="0,0,0,20"/>
+
+                    <!-- 最大语音时长 -->
+                    <Grid Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,24,0">
+                            <TextBlock Text="{Binding MaxVoiceDurationLabel}" FontWeight="Medium"/>
+                            <TextBlock Text="{Binding MaxVoiceDurationHint}" 
+                                     FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" 
+                                     TextWrapping="Wrap" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Slider Width="140"
+                                    VerticalAlignment="Center"
+                                    LargeChange="1"
+                                    Maximum="10"
+                                    Minimum="1"
+                                    SmallChange="0.5"
+                                    TickFrequency="1"
+                                    Value="{Binding MaxVoiceDurationSeconds, UpdateSourceTrigger=PropertyChanged}" />
+                            <ui:TextBox Width="60" Margin="12,0,0,0"
+                                      VerticalAlignment="Center"
+                                      Text="{Binding MaxVoiceDurationSeconds, UpdateSourceTrigger=PropertyChanged, StringFormat=F1}"
+                                      TextAlignment="Right" />
+                        </StackPanel>
+                    </Grid>
+
+                    <Separator Margin="0,0,0,20"/>
+                    
+                    <!-- 最小音量阈值 -->
+                    <Grid Margin="0,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,24,0">
+                            <TextBlock Text="{Binding MinVolumeThresholdLabel}" FontWeight="Medium"/>
+                            <TextBlock Text="{Binding VolumeThresholdHint}" 
+                                     FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" 
+                                     TextWrapping="Wrap" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Slider Width="140"
+                                    VerticalAlignment="Center"
+                                    LargeChange="0.01"
+                                    Maximum="1.0"
+                                    Minimum="0"
+                                    SmallChange="0.001"
+                                    TickFrequency="0.01"
+                                    Value="{Binding MinRecordingVolumeThreshold, UpdateSourceTrigger=PropertyChanged}" />
+                            <ui:TextBox Width="60" Margin="12,0,0,0"
+                                      VerticalAlignment="Center"
+                                      Text="{Binding MinRecordingVolumeThreshold, StringFormat='P1', UpdateSourceTrigger=PropertyChanged}"
+                                      TextAlignment="Right" />
+                        </StackPanel>
+                    </Grid>
                 </StackPanel>
             </ui:CardExpander>
 
             <!-- 2. VRChat 集成 -->
             <ui:CardExpander
                 Grid.Row="1"
-                Margin="0,0,0,15"
+                Margin="0,0,0,12"
                 Header="{Binding VrchatIntegrationLabel}"
+                Icon="{ui:SymbolIcon Chat24}"
                 IsExpanded="False">
-                <StackPanel Margin="10,5,0,0">
-                    <!-- 分组说明 -->
+                <StackPanel Margin="0">
                     <ui:TextBlock
-                        FontSize="11"
-                        FontStyle="Italic"
-                        Foreground="Gray"
-                        Margin="0,0,0,10"
+                        FontSize="12"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Margin="0,0,0,16"
                         Text="{Binding VrchatIntegrationHint}"
                         TextWrapping="Wrap" />
                     
                     <!-- 启用OSC -->
-                    <CheckBox
-                        Margin="0,0,0,10"
-                        Content="{Binding EnableOscLabel}"
-                        IsChecked="{Binding EnableOsc}" />
+                    <Grid Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{Binding EnableOscLabel}" FontWeight="Medium" VerticalAlignment="Center"/>
+                        <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding EnableOsc}" />
+                    </Grid>
                     
                     <!-- OSC设置组 -->
-                    <Grid IsEnabled="{Binding EnableOsc}">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        
-                        <Label
-                            Grid.Row="0"
-                            Grid.Column="0"
-                            VerticalAlignment="Center"
-                            Content="{Binding OscIpAddressLabel}" />
-                        <ui:TextBox
-                            Grid.Row="0"
-                            Grid.Column="1"
-                            Margin="0,0,0,5"
-                            VerticalAlignment="Center"
-                            Text="{Binding OscIpAddress, UpdateSourceTrigger=PropertyChanged}" />
-                        
-                        <Label
-                            Grid.Row="1"
-                            Grid.Column="0"
-                            VerticalAlignment="Center"
-                            Content="{Binding OscPortLabel}" />
-                        <ui:TextBox
-                            Grid.Row="1"
-                            Grid.Column="1"
-                            Margin="0,0,0,10"
-                            VerticalAlignment="Center"
-                            Text="{Binding OscPort, UpdateSourceTrigger=PropertyChanged}" />
-                        
-                        <CheckBox
-                            Grid.Row="2"
-                            Grid.Column="0"
-                            Grid.ColumnSpan="2"
-                            Margin="0,0,0,5"
-                            Content="{Binding SendImmediatelyLabel}"
-                            IsChecked="{Binding OscSendImmediately}" />
-                        
-                        <CheckBox
-                            Grid.Row="3"
-                            Grid.Column="0"
-                            Grid.ColumnSpan="2"
-                            Margin="0,0,0,5"
-                            Content="{Binding PlayNotificationSoundLabel}"
-                            IsChecked="{Binding OscPlayNotificationSound}" />
-                    </Grid>
+                    <StackPanel IsEnabled="{Binding EnableOsc}">
+                        <Border Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
+                                BorderBrush="{DynamicResource ControlElevationBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Padding="12">
+                            <StackPanel>
+                                <!-- IP Address -->
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="200" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding OscIpAddressLabel}" VerticalAlignment="Center"/>
+                                    <ui:TextBox Grid.Column="1" Text="{Binding OscIpAddress, UpdateSourceTrigger=PropertyChanged}" />
+                                </Grid>
+
+                                <!-- Port -->
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="200" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding OscPortLabel}" VerticalAlignment="Center"/>
+                                    <ui:TextBox Grid.Column="1" Text="{Binding OscPort, UpdateSourceTrigger=PropertyChanged}" />
+                                </Grid>
+
+                                <!-- Send Immediately -->
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding SendImmediatelyLabel}" VerticalAlignment="Center"/>
+                                    <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding OscSendImmediately}" />
+                                </Grid>
+
+                                <!-- Notification Sound -->
+                                <Grid Margin="0,0,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding PlayNotificationSoundLabel}" VerticalAlignment="Center"/>
+                                    <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding OscPlayNotificationSound}" />
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
                 </StackPanel>
             </ui:CardExpander>
 
             <!-- 3. 音频处理 -->
             <ui:CardExpander
                 Grid.Row="2"
-                Margin="0,0,0,15"
+                Margin="0,0,0,12"
                 Header="{Binding AudioProcessingLabel}"
+                Icon="{ui:SymbolIcon Speaker224}"
                 IsExpanded="False">
-                <StackPanel Margin="10,5,0,0">
-                    <!-- 分组说明 -->
+                <StackPanel Margin="0">
                     <ui:TextBlock
-                        FontSize="11"
-                        FontStyle="Italic"
-                        Foreground="Gray"
-                        Margin="0,0,0,10"
+                        FontSize="12"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Margin="0,0,0,16"
                         Text="{Binding AudioProcessingHint}"
                         TextWrapping="Wrap" />
                     
-                    <!-- Opus压缩设置 (始终启用，固定16kbps比特率) -->
+                    <!-- Opus压缩复杂度 -->
                     <Grid Margin="0,0,0,0">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-
-                        <!-- Opus压缩复杂度 (固定16kbps比特率) -->
-                        <Label Grid.Row="0" Content="{Binding OpusComplexityLabel}" />
-                        <Grid Grid.Row="1" Margin="0,0,0,5">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <Slider
-                                Grid.Column="0"
-                                Margin="0,0,5,0"
-                                VerticalAlignment="Center"
-                                LargeChange="1"
-                                Maximum="10"
-                                Minimum="5"
-                                SmallChange="1"
-                                TickFrequency="1"
-                                Value="{Binding OpusComplexity, UpdateSourceTrigger=PropertyChanged}" />
-                            <ui:TextBox
-                                Grid.Column="1"
-                                Width="40"
-                                VerticalAlignment="Center"
-                                Text="{Binding OpusComplexity, UpdateSourceTrigger=PropertyChanged}"
-                                TextAlignment="Right" />
-                        </Grid>
-                        <ui:TextBlock
-                            Grid.Row="2"
-                            FontSize="10"
-                            FontStyle="Italic"
-                            Foreground="Gray"
-                            Text="{Binding OpusComplexityHint}"
-                            TextWrapping="Wrap" />
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,24,0">
+                            <TextBlock Text="{Binding OpusComplexityLabel}" FontWeight="Medium"/>
+                            <TextBlock Text="{Binding OpusComplexityHint}" 
+                                     FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" 
+                                     TextWrapping="Wrap" Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Slider Width="140"
+                                    VerticalAlignment="Center"
+                                    LargeChange="1"
+                                    Maximum="10"
+                                    Minimum="5"
+                                    SmallChange="1"
+                                    TickFrequency="1"
+                                    Value="{Binding OpusComplexity, UpdateSourceTrigger=PropertyChanged}" />
+                            <ui:TextBox Width="60" Margin="12,0,0,0"
+                                      VerticalAlignment="Center"
+                                      Text="{Binding OpusComplexity, UpdateSourceTrigger=PropertyChanged}"
+                                      TextAlignment="Right" />
+                        </StackPanel>
                     </Grid>
                 </StackPanel>
             </ui:CardExpander>
 
-            <!-- 音频增强设置 -->
+            <!-- 4. 音频增强设置 -->
             <ui:CardExpander
                 Grid.Row="3"
-                Margin="0,0,0,15"
+                Margin="0,0,0,12"
                 Header="{Binding AudioEnhancementLabel}"
+                Icon="{ui:SymbolIcon SoundWaveCircle24}"
                 IsExpanded="False">
-                <StackPanel Margin="10">
-                    <!-- 音频增强说明 -->
+                <StackPanel Margin="0">
                     <ui:TextBlock
-                        FontSize="10"
-                        FontStyle="Italic"
-                        Foreground="Gray"
-                        Margin="0,0,0,10"
+                        FontSize="12"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Margin="0,0,0,16"
                         Text="{Binding AudioEnhancementHint}"
                         TextWrapping="Wrap" />
 
                     <!-- 峰值归一化设置 -->
-                    <ui:ToggleSwitch
-                        Margin="0,0,0,10"
-                        Content="{Binding EnableAudioNormalizationLabel}"
-                        IsChecked="{Binding EnableAudioNormalization, UpdateSourceTrigger=PropertyChanged}" />
+                    <Grid Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding EnableAudioNormalizationLabel}" FontWeight="Medium"/>
+                        </StackPanel>
+                        <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding EnableAudioNormalization, UpdateSourceTrigger=PropertyChanged}" />
+                    </Grid>
 
-                    <!-- 归一化目标电平 -->
-                    <Grid Margin="0,0,0,10" IsEnabled="{Binding EnableAudioNormalization}">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-
-                        <Label Grid.Row="0" Content="{Binding NormalizationTargetDbLabel}" />
-                        <Grid Grid.Row="1" Margin="0,0,0,5">
+                    <!-- 归一化目标电平 (Dependent) -->
+                    <Grid Margin="0,0,0,20" IsEnabled="{Binding EnableAudioNormalization}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <Slider
-                                Grid.Column="0"
-                                Margin="0,0,10,0"
-                                VerticalAlignment="Center"
-                                LargeChange="1"
-                                Maximum="0"
-                                Minimum="-20"
-                                SmallChange="0.5"
-                                TickFrequency="1"
-                                Value="{Binding NormalizationTargetDb, UpdateSourceTrigger=PropertyChanged}" />
-                            <ui:TextBox
-                                Grid.Column="1"
-                                Width="50"
-                                VerticalAlignment="Center"
-                                Text="{Binding NormalizationTargetDb, UpdateSourceTrigger=PropertyChanged, StringFormat=F1}"
-                                TextAlignment="Right" />
+                            <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,24,0">
+                                <TextBlock Text="{Binding NormalizationTargetDbLabel}" FontWeight="Medium"/>
+                                <TextBlock Text="{Binding AudioNormalizationHint}" 
+                                         FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" 
+                                         TextWrapping="Wrap" Margin="0,4,0,0"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Slider Width="140"
+                                        VerticalAlignment="Center"
+                                        LargeChange="1"
+                                        Maximum="0"
+                                        Minimum="-20"
+                                        SmallChange="0.5"
+                                        TickFrequency="1"
+                                        Value="{Binding NormalizationTargetDb, UpdateSourceTrigger=PropertyChanged}" />
+                                <ui:TextBox Width="60" Margin="12,0,0,0"
+                                          VerticalAlignment="Center"
+                                          Text="{Binding NormalizationTargetDb, UpdateSourceTrigger=PropertyChanged, StringFormat=F1}"
+                                          TextAlignment="Right" />
+                            </StackPanel>
                         </Grid>
-                        <ui:TextBlock
-                            Grid.Row="2"
-                            FontSize="10"
-                            FontStyle="Italic"
-                            Foreground="Gray"
-                            Text="{Binding AudioNormalizationHint}"
-                            TextWrapping="Wrap" />
-                    </Grid>
+
+                    <Separator Margin="0,0,0,20"/>
 
                     <!-- 安静语音增强设置 -->
-                    <ui:ToggleSwitch
-                        Margin="0,0,0,10"
-                        Content="{Binding EnableQuietBoostLabel}"
-                        IsChecked="{Binding EnableQuietBoost, UpdateSourceTrigger=PropertyChanged}" />
-
-                    <!-- RMS 阈值设置 -->
-                    <Grid Margin="0,0,0,10" IsEnabled="{Binding EnableQuietBoost}">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-
-                        <Label Grid.Row="0" Content="{Binding QuietBoostRmsThresholdLabel}" />
-                        <Grid Grid.Row="1" Margin="0,0,0,5">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <Slider
-                                Grid.Column="0"
-                                Margin="0,0,10,0"
-                                VerticalAlignment="Center"
-                                LargeChange="5"
-                                Maximum="0"
-                                Minimum="-60"
-                                SmallChange="1"
-                                TickFrequency="5"
-                                Value="{Binding QuietBoostRmsThresholdDbFs, UpdateSourceTrigger=PropertyChanged}" />
-                            <ui:TextBox
-                                Grid.Column="1"
-                                Width="50"
-                                VerticalAlignment="Center"
-                                Text="{Binding QuietBoostRmsThresholdDbFs, UpdateSourceTrigger=PropertyChanged, StringFormat=F1}"
-                                TextAlignment="Right" />
-                        </Grid>
-                        <ui:TextBlock
-                            Grid.Row="2"
-                            FontSize="10"
-                            FontStyle="Italic"
-                            Foreground="Gray"
-                            Text="{Binding QuietBoostRmsThresholdHint}"
-                            TextWrapping="Wrap" />
+                    <Grid Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding EnableQuietBoostLabel}" FontWeight="Medium"/>
+                        </StackPanel>
+                        <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding EnableQuietBoost, UpdateSourceTrigger=PropertyChanged}" />
                     </Grid>
 
-                    <!-- 增益设置 -->
-                    <Grid Margin="0,0,0,0" IsEnabled="{Binding EnableQuietBoost}">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-
-                        <Label Grid.Row="0" Content="{Binding QuietBoostGainLabel}" />
-                        <Grid Grid.Row="1" Margin="0,0,0,5">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <Slider
-                                Grid.Column="0"
-                                Margin="0,0,10,0"
-                                VerticalAlignment="Center"
-                                LargeChange="2"
-                                Maximum="20"
-                                Minimum="0"
-                                SmallChange="0.5"
-                                TickFrequency="2"
-                                Value="{Binding QuietBoostGainDb, UpdateSourceTrigger=PropertyChanged}" />
-                            <ui:TextBox
-                                Grid.Column="1"
-                                Width="50"
-                                VerticalAlignment="Center"
-                                Text="{Binding QuietBoostGainDb, UpdateSourceTrigger=PropertyChanged, StringFormat=F1}"
-                                TextAlignment="Right" />
-                        </Grid>
-                        <ui:TextBlock
-                            Grid.Row="2"
-                            FontSize="10"
-                            FontStyle="Italic"
-                            Foreground="Gray"
-                            Text="{Binding QuietBoostGainHint}"
-                            TextWrapping="Wrap" />
-                    </Grid>
+                    <!-- 安静语音参数 (Dependent) -->
+                     <StackPanel Margin="0,0,0,0" IsEnabled="{Binding EnableQuietBoost}">
+                            <!-- RMS 阈值 -->
+                             <Grid Margin="0,0,0,16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,24,0">
+                                    <TextBlock Text="{Binding QuietBoostRmsThresholdLabel}" FontWeight="Medium"/>
+                                    <TextBlock Text="{Binding QuietBoostRmsThresholdHint}" 
+                                             FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" 
+                                             TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Slider Width="140"
+                                            VerticalAlignment="Center"
+                                            LargeChange="5"
+                                            Maximum="0"
+                                            Minimum="-60"
+                                            SmallChange="1"
+                                            TickFrequency="5"
+                                            Value="{Binding QuietBoostRmsThresholdDbFs, UpdateSourceTrigger=PropertyChanged}" />
+                                    <ui:TextBox Width="60" Margin="12,0,0,0"
+                                              VerticalAlignment="Center"
+                                              Text="{Binding QuietBoostRmsThresholdDbFs, UpdateSourceTrigger=PropertyChanged, StringFormat=F1}"
+                                              TextAlignment="Right" />
+                                </StackPanel>
+                            </Grid>
+                            
+                            <Separator Margin="0,0,0,16"/>
+                            
+                            <!-- 增益 -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,24,0">
+                                    <TextBlock Text="{Binding QuietBoostGainLabel}" FontWeight="Medium"/>
+                                    <TextBlock Text="{Binding QuietBoostGainHint}" 
+                                             FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" 
+                                             TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Slider Width="140"
+                                            VerticalAlignment="Center"
+                                            LargeChange="2"
+                                            Maximum="20"
+                                            Minimum="0"
+                                            SmallChange="0.5"
+                                            TickFrequency="2"
+                                            Value="{Binding QuietBoostGainDb, UpdateSourceTrigger=PropertyChanged}" />
+                                    <ui:TextBox Width="60" Margin="12,0,0,0"
+                                              VerticalAlignment="Center"
+                                              Text="{Binding QuietBoostGainDb, UpdateSourceTrigger=PropertyChanged, StringFormat=F1}"
+                                              TextAlignment="Right" />
+                                </StackPanel>
+                            </Grid>
+                         </StackPanel>
                 </StackPanel>
             </ui:CardExpander>
 
-            <!-- 恢复默认设置按钮（自动保存，无需手动保存/撤销） -->
+            <!-- 复位按钮 -->
             <StackPanel
                 Grid.Row="5"
-                Margin="0,10,0,0"
+                Margin="0,24,0,0"
                 HorizontalAlignment="Right"
                 Orientation="Horizontal">
                 <ui:Button
-                    Width="120"
+                    Width="150"
+                    Appearance="Secondary"
+                    Icon="{ui:SymbolIcon ArrowReset24}"
                     Command="{Binding ResetToDefaultsCommand}"
                     Content="{Binding ResetToDefaultsLabel}" />
             </StackPanel>

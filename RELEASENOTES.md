@@ -1,27 +1,21 @@
-# Release Notes – 3.4.8
+# Release Notes – 3.4.9
 
 ## 简体中文 (zh-CN)
 
-- **fix:** 修复消息模板页面在加载设置时意外重写 `app_settings.json`，导致自定义模板文本在进入页面后被清空的问题，现在仅在用户实际修改时才保存。
-- **feat:** 为麦克风管理器新增“记住上次选择的设备”功能，优先按设备 ID 恢复上次使用的麦克风，如不存在则回退到系统默认或第一个可用设备。
-- **fix:** 修复账号设置页“使用自定义服务器”开关状态无法正确持久化的问题，现在会随其他账号设置一并写入 `app_settings.json` 并在重启后恢复。
-- **feat:** 将官方服务与自定义服务器拆分为两套独立配置（`OfficialServerUrl` / `OfficialApiKey` 与 `CustomServerUrl` / `CustomApiKey`），切换开关时会记住各自的 URL 和密钥，方便来回切换而不互相覆盖。
-- **improve:** 改进“测试连接”按钮的错误反馈逻辑，`/health` 检查失败时会返回具体的 HTTP 状态码或异常信息，而不再统一显示 “An unknown error occurred”。
-- **refactor:** 抽取全局语言应用与保存逻辑为 `AppLanguageHelper`，统一 `GlobalLanguage` 的读写路径，减少各页面/服务对语言细节的重复实现。
-- **refactor:** 进一步收紧设置相关 ViewModel 的依赖和死代码（例如清理未使用的 `SettingsService` 字段、移除无效初始化方法），为后续可选依赖注入和测试铺路。
-- **refactor:** 新增 `ISettingsManager`/`SettingsManager` 作为设置读写与事件发布的统一入口，并让账号设置页、服务设置页、消息模板页以及文本输入/主页只读场景统一通过它访问 `AppSettings`，显著减少重复的 `LoadSettings`/`SaveSettings`/`SettingsChangedEvent` 管道代码。
-- **refactor:** 简化多语言刷新逻辑，多个 ViewModel 不再逐个手写 `LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(XXXLabel));` 列表，而是统一通过 `OnPropertyChanged(string.Empty)` 触发整页本地化绑定刷新，降低新增文案时的维护成本。
-- **improve:** 提升剪贴板复制的稳定性：日志面板和会话历史在复制文本时改用基于 Win32 API 的 `ClipboardHelper.TrySetText`，在远程桌面/剪贴板同步工具（如 RustDesk）临时占用剪贴板时通过重试机制降低 `ExternalException` 失败概率。
+- **improve:** 为各个页面引入全局页面边距和标题样式（`PageContentMargin` / `PageTitleTextBlockStyle`），统一设置页、历史页等页面的留白和标题视觉风格。
+- **improve:** 重构主页（Index）、文本输入、消息模板和语音服务等页面布局，采用卡片式分区展示输入、结果和配置区域，在窄窗口和高 DPI 下可读性更好。
+- **improve:** 将导航中的“Service”重命名为“Voice”，并在中英日多语言资源中同步更新标题与图标，使含义更贴近语音输入和 VRChat 使用场景。
+- **improve:** 会话历史页面调整为左右分栏布局，新增页面标题和独立的复制/导出工具栏，同时移除不常用的起止日期过滤条件，简化筛选项并改善滚动体验。
+- **improve:** 日志页面由表格视图改为卡片式时间线视图，根据日志级别高亮显示，并优化多选复制行为，便于在排查问题时快速阅读和复制关键信息。
+- **improve:** 消息模板页面采用卡片式布局和开关控件，支持一键插入占位符和查看实时预览，让自定义 VRChat 输出格式更直观。
+- **fix:** 修复主页在嵌套 ScrollViewer 场景下翻译结果文本框内部滚动不生效的问题，现在会在页面加载后禁用外层垂直滚动条，仅在内容区域滚动。
 
 ## English (en)
 
-- **fix:** Fixed an issue where opening the message template page could overwrite `app_settings.json` and clear `UserCustomTemplateText`; settings are now only saved when the user actually edits the template.
-- **feat:** Added “remember last selected microphone” support in the microphone manager, restoring the last device by ID on startup and falling back to the system default or first available device when necessary.
-- **fix:** Persisted the “Use custom server” toggle on the account page so the selected mode survives restarts instead of always defaulting to the custom server.
-- **feat:** Split official and custom server configuration into two separate sets (`OfficialServerUrl` / `OfficialApiKey` and `CustomServerUrl` / `CustomApiKey`), allowing you to switch modes without losing either configuration.
-- **improve:** Improved the “Test connection” flow to surface detailed HTTP status/exception messages from the `/health` endpoint instead of always reporting “An unknown error occurred.”
-- **refactor:** Introduced `AppLanguageHelper` to centralize applying and persisting `GlobalLanguage`, reducing duplicated language logic across pages and services.
-- **refactor:** Tightened settings-related view models by removing unused `SettingsService` fields and obsolete initialization methods, improving cohesion for future optional DI and testing.
-- **refactor:** Introduced `ISettingsManager`/`SettingsManager` as a single entry point for loading, updating, saving, and broadcasting `AppSettings` changes, and migrated the account/service/message-template pages plus TextEntry/IndexWindow read-only paths to use it, significantly reducing duplicated `LoadSettings`/`SaveSettings`/`SettingsChangedEvent` pipelines.
-- **refactor:** Simplified localization refresh patterns by replacing long chains of `LanguageManager.LanguageChanged += () => OnPropertyChanged(nameof(XXXLabel));` with a single `OnPropertyChanged(string.Empty)` per view model, making it easier to keep UI labels in sync when adding or changing localized strings.
-- **improve:** Hardened clipboard operations for log and conversation history copy actions by routing them through a Win32-based `ClipboardHelper.TrySetText`, adding retries to reduce `ExternalException` failures when third-party tools (e.g., remote desktop or clipboard sync apps) temporarily lock the clipboard.
+- **improve:** Introduced shared `PageContentMargin` and `PageTitleTextBlockStyle` resources and applied them across key pages to unify page padding and headings.
+- **improve:** Reworked the Index, Text Entry, Message Template, and Voice/Service pages into card‑based layouts that group input, output, and configuration areas, improving readability on narrow windows and high‑DPI displays.
+- **improve:** Renamed the navigation entry from “Service” to “Voice” (with a microphone icon) and updated all localized strings to better reflect the voice input / VRChat workflow.
+- **improve:** Redesigned the conversation history page into a two‑pane layout with a prominent page title, dedicated copy/export toolbar, and simplified filters (removing the rarely used date range) while ensuring scrolling happens inside the content grids instead of the whole page.
+- **improve:** Switched the log page from a dense data grid to a card‑style timeline that highlights log levels with color and improves multi‑select copy behavior, making it easier to read and share diagnostics.
+- **improve:** Refined the message template page with a card layout, toggle switch, placeholder buttons, and a live preview block to make customizing the VRChat output format more approachable.
+- **fix:** Fixed an issue where the Index page’s translation result TextBox would not scroll properly when nested inside the main NavigationView ScrollViewer by explicitly disabling the outer vertical scrollbar after the page is loaded.

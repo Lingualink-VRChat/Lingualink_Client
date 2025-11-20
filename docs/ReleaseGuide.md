@@ -6,23 +6,23 @@
 
 ## 一条龙快速发布流程（推荐）
 
-从已有版本升级到一个新版本的大致步骤如下（示例版本号以 `3.4.7 → 3.4.8` 为例）：
+从已有版本升级到一个新版本的大致步骤如下（示例版本号以 `3.4.9` 为例）：
 
 1. **更新版本号（可选，但推荐）**
    - 使用脚本统一修改版本号：
      ```powershell
      # 预览（不写文件）
-     powershell -ExecutionPolicy Bypass -File scripts/Bump-Version.ps1 -OldVersion 3.4.7 -NewVersion 3.4.8 -DryRun
+     powershell -ExecutionPolicy Bypass -File scripts/Bump-Version.ps1 -Version 3.4.9 -DryRun
 
      # 确认无误后实际写入
-     powershell -ExecutionPolicy Bypass -File scripts/Bump-Version.ps1 -OldVersion 3.4.7 -NewVersion 3.4.8
+     powershell -ExecutionPolicy Bypass -File scripts/Bump-Version.ps1 -Version 3.4.9
      ```
-   - 该脚本会同步更新 `lingualink_client.csproj`、脚本示例命令、文档和 `RELEASENOTES.md` 标题中的版本号。
+   - 该脚本会更新 `lingualink_client.csproj` 中的版本号字段，并同步刷新本发布指南中的示例版本号。
 
 2. **编写多语言 Release Notes**
    - 编辑仓库根目录 `RELEASENOTES.md`，按版本 + 语言分节维护更新内容，例如：
      ```markdown
-     # Release Notes – 3.4.8
+     # Release Notes – 3.4.9
 
      ## 简体中文 (zh-CN)
      - feat: 新增 XXX 功能
@@ -34,6 +34,11 @@
      ```
    - Velopack 会把这份 Markdown 嵌入客户端更新弹窗，用户可以直接在弹窗中选择自己熟悉的语言阅读。
 
+   - 如需在官网或前端页面展示历史版本更新日志，建议在此步骤之后运行归档脚本，将当前及前几版的 Release Notes 写入 `docs/releases/` 目录，例如（归档当前版本并补齐前 2 个历史版本）：
+     ```powershell
+     powershell -ExecutionPolicy Bypass -File scripts/Archive-ReleaseNotes.ps1 -IncludePrevious 2
+     ```
+
 3. **本地构建检查**
    - 在仓库根目录执行：
      ```powershell
@@ -42,9 +47,9 @@
    - 确认没有编译错误后再进入发布步骤。
 
 4. **打包自包含版 + 框架依赖版**
-   - 在仓库根目录执行（`-Version` 可以省略，默认使用 csproj 中的版本号）：
+   - 在仓库根目录执行（推荐显式传入 `-Version`，与上一节保持一致）：
      ```powershell
-     powershell -ExecutionPolicy Bypass -File scripts/Build-Release.ps1 -Version 3.4.8
+     powershell -ExecutionPolicy Bypass -File scripts/Build-Release.ps1 -Version 3.4.9
      ```
    - 脚本会生成：
      - `artifacts/Releases-SelfContained`
@@ -53,19 +58,19 @@
 5. **上传到 rains3（正式发布）**
    - 先预演上传（不真正写入远端）：
      ```powershell
-     powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -DryRun -Version 3.4.8
+     powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -DryRun -Version 3.4.9
      ```
    - 确认列表无误后，执行实际上传（两个通道都推）：
      ```powershell
-     powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -Version 3.4.8
+     powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -Version 3.4.9
      ```
    - 只上传某一个通道时，可使用：
      ```powershell
      # 仅自包含版
-     powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -SelfContainedOnly -Version 3.4.8
+     powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -SelfContainedOnly -Version 3.4.9
 
      # 仅框架依赖版
-     powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -FrameworkOnly -Version 3.4.8
+     powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -FrameworkOnly -Version 3.4.9
      ```
 
 6. **发版后验证**
@@ -80,9 +85,10 @@
 
 ## 快速脚本总览
 
-- `scripts/Bump-Version.ps1`：在发版前统一更新仓库内的版本号字符串（csproj、脚本示例命令、文档、RELEASENOTES 标题等）。
+- `scripts/Bump-Version.ps1`：在发版前统一更新客户端的版本号（仅修改 `lingualink_client.csproj` 中的 Version 字段及发布指南中的示例版本号）。
 - `scripts/Build-Release.ps1`：清理 `artifacts/` 目录，分别运行自包含与框架依赖配置的 `dotnet publish`，随后调用 `vpk pack` 生成 Velopack 发行内容。支持 `-DryRun`、`-Skip*` 等参数，适合本地快速验证或复用现有构建产物。
 - `scripts/Publish-Release.ps1`：读取 release-settings 配置，检查 AWS CLI、处理互斥参数，并使用 `aws s3 cp` 将 `artifacts/` 下的发行目录同步到 rains3。`-DryRun` 可预演上传列表，命令结束后会自动清理临时凭证环境变量。
+- `scripts/Archive-ReleaseNotes.ps1`：将当前根目录 `RELEASENOTES.md` 的内容归档为 `docs/releases/<版本号>.md`，并可选从 Git 历史中补齐前 N 个版本的 Release Notes，方便官网或前端统一读取历史更新日志。
 
 ## 1. 环境准备
 
@@ -135,8 +141,8 @@ Velopack 会把该文件嵌入发布包，客户端更新弹窗会原样展示�
 使用 PowerShell 脚本 `scripts/Build-Release.ps1` 自动生成自包含版和框架依赖版安装包及 Velopack 发行目录：
 
 ```powershell
-# 在仓库根目录执行，-Version 可省略（默认继承 csproj 中的版本号）
-powershell -ExecutionPolicy Bypass -File scripts/Build-Release.ps1 -Version 3.4.7
+# 在仓库根目录执行，推荐显式传入 -Version
+powershell -ExecutionPolicy Bypass -File scripts/Build-Release.ps1 -Version 3.4.9
 ```
 
 脚本会：
@@ -163,13 +169,13 @@ powershell -ExecutionPolicy Bypass -File scripts/Build-Release.ps1 -Version 3.4.
 powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -DryRun
 
 # 正式上传两个通道
-powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -Version 3.4.7
+powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -Version 3.4.9
 
 # 仅上传自包含版本
-powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -SelfContainedOnly -Version 3.4.7
+powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -SelfContainedOnly -Version 3.4.9
 
 # 仅上传框架依赖版本
-powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -FrameworkOnly -Version 3.4.7
+powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -FrameworkOnly -Version 3.4.9
 ```
 
 脚本说明：

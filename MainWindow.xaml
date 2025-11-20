@@ -38,6 +38,7 @@
                 <ToggleButton
                     VerticalAlignment="Top"
                     BorderThickness="0"
+                    Background="Transparent"
                     Checked="ThemesChanged"
                     Unchecked="ThemesChanged">
                     <ui:SymbolIcon Symbol="DarkTheme24" />
@@ -52,7 +53,7 @@
             OpenPaneLength="200">
             <ui:NavigationView.Header>
                 <ui:BreadcrumbBar
-                    Margin="42,32,0,0"
+                    Margin="42,16,42,0"
                     FontSize="28"
                     FontWeight="DemiBold" />
             </ui:NavigationView.Header>
@@ -90,11 +91,11 @@
                     </ui:NavigationViewItem.Icon>
                 </ui:NavigationViewItem>
                 <ui:NavigationViewItem
-                    Content="{Binding Service}"
+                    Content="{Binding Voice}"
                     NavigationCacheMode="Enabled"
                     TargetPageType="{x:Type pages:ServicePage}">
                     <ui:NavigationViewItem.Icon>
-                        <ui:SymbolIcon Symbol="ServerSurfaceMultiple16" />
+                        <ui:SymbolIcon Symbol="MicSettings24" />
                     </ui:NavigationViewItem.Icon>
                 </ui:NavigationViewItem>
                 <ui:NavigationViewItem
