@@ -67,11 +67,28 @@ foreach ($relativePath in $files) {
     }
 
     if ($DryRun) {
-        Write-Info "DryRun 模式：不写入修改，仅显示预览差异（前 5 行）"
-        $preview = $content.Split("`n") | Select-Object -First 5
-        $preview | ForEach-Object { Write-Host "    $_" }
+        Write-Info "DryRun 模式：不写入修改，预览包含版本号的行："
+
+        $lines = $content.Split("`n")
+        $matches = $lines | Where-Object { $_ -match [Regex]::Escape($Version) }
+
+        if (-not $matches -or $matches.Count -eq 0) {
+            Write-Warn "预览：未找到包含 $Version 的行（可能该文件中没有直接出现该字符串）。"
+        } else {
+            $matches | ForEach-Object { Write-Host "    $_" }
+        }
     } else {
-        Set-Content -Path $path -Value $content -Encoding UTF8
+        # 为避免文件被占用时出现部分写入或清空，先写入临时文件再原子替换
+        $tempPath = "$path.bump.tmp"
+        try {
+            Set-Content -Path $tempPath -Value $content -Encoding UTF8
+            Move-Item -Path $tempPath -Destination $path -Force
+        } catch {
+            if (Test-Path $tempPath) {
+                Remove-Item $tempPath -Force -ErrorAction SilentlyContinue
+            }
+            Write-ErrorAndExit "写入文件失败：$path - $($_.Exception.Message)"
+        }
     }
 }
 

@@ -1,4 +1,4 @@
-# LinguaLink Client 发布指南
+﻿# LinguaLink Client 发布指南
 
 本文档记录了在本地构建并发布 Windows 客户端的推荐流程，覆盖密钥存储、打包脚本的使用以及将产物推送到对象存储（兼容 S3 的 rains3 桶）。
 
@@ -6,7 +6,7 @@
 
 ## 一条龙快速发布流程（推荐）
 
-从已有版本升级到一个新版本的大致步骤如下（示例版本号以 `3.4.9` 为例）：
+从已有版本升级到一个新版本的大致步骤如下（示例版本号以 $Version 为例）：
 
 1. **更新版本号（可选，但推荐）**
    - 使用脚本统一修改版本号：
@@ -123,7 +123,7 @@
 编辑仓库根目录的 `RELEASENOTES.md`，列出本次版本改动。为了兼顾多语言用户，推荐在同一个文件中使用多语言小节，例如：
 
 ```markdown
-# Release Notes – 3.4.7
+# Release Notes – 3.4.9
 
 ## 简体中文 (zh-CN)
 - feat: 支持多语言字幕导出
@@ -211,3 +211,4 @@ powershell -ExecutionPolicy Bypass -File scripts/Publish-Release.ps1 -FrameworkO
 ---
 
 完成以上步骤，即可完成 LinguaLink Client 的手动构建与发布流程。后续可将 `scripts/Build-Release.ps1` 与 `Publish-Release.ps1` 融入 CI/CD，并改用平台密钥管理以实现全自动发布。
+

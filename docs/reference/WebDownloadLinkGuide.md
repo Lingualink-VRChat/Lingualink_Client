@@ -3,19 +3,19 @@
 本指南面向维护官网/下载页的前端同学，帮助你们在 LinguaLink 客户端出新版本时，第一时间把下载按钮指向最新构建，同时保证历史链接可回溯。
 
 ## 1. 文件在哪里
-- 客户端发布脚本会把产物同步到 rains3（S3 兼容）桶 `lingualink`。
+- 客户端发布脚本会把产物同步到 rains3（S3 兼容）端点，并通过下载域名 `https://download.cn-nb1.rains3.com` 暴露给前端使用；前端不需要关心底层桶名，只需要记住固定的前缀路径。
 - 自包含版与框架依赖版分别对应两个前缀：
   - `https://download.cn-nb1.rains3.com/lingualink/stable-self-contained/`
   - `https://download.cn-nb1.rains3.com/lingualink/stable-framework-dependent/`
 - 每个前缀都会包含三类清单/产物文件：
-  - `RELEASES-self-contained` / `RELEASES-framework`：Velopack 的主清单，记录版本号与 `.nupkg` 包。
+  - `RELEASES`：Velopack 的主清单，记录该通道下所有版本的 `.nupkg` 包信息（同一前缀自带“通道”，因此文件名不再带 `-self-contained` / `-framework` 后缀）。
   - `releases.self-contained.json` / `releases.framework.json`：包含版本、SHA、更新日志等元数据。
   - `assets.self-contained.json` / `assets.framework.json`：列出安装器、便携包等具体文件名，可直接拼成下载链接。
 
 ## 2. 如何判定“最新版本”
-`RELEASES-<channelSuffix>` 文件是一个使用制表符分隔的文本清单，每行代表一个版本。最后一行即为最新版本。例如：
+每个通道前缀下的 `RELEASES` 文件是一个使用制表符分隔的文本清单，每行代表一个版本。最后一行即为该通道的最新版本。例如（自包含通道）：
 ```
-<sha1>\t<filesize>\tLinguaLinkClient-SelfContained-3.4.7-self-contained-full.nupkg\t3.4.7
+<sha1>\t<filesize>\tLinguaLinkClient-SelfContained-3.4.9-self-contained-full.nupkg\t3.4.9
 ```
 字段含义：
 - 列 1：包的 SHA1 哈希（Velopack 用于校验）。
@@ -26,7 +26,7 @@
 前端只需读取最后一行的列 3/列 4，即可得到最新版本号与包名。
 
 ## 3. 推荐的前端实现流程
-1. 根据用户所需渠道（默认推荐自包含版）选定前缀 URL，并取出对应的清单文件名（`RELEASES-self-contained` 或 `RELEASES-framework`）。
+1. 根据用户所需渠道（默认推荐自包含版）选定前缀 URL，并取出对应的清单文件名（统一为 `RELEASES`）。
 2. 以 `GET` 请求拉取该清单，注意添加 `cache-control: no-cache` 或拼接时间戳避免 CDN 缓存。
 3. 把响应按换行拆分，过滤空行，选取最后一行，再以制表符分割得到 `.nupkg` 文件名和版本号。
 4. 可选：根据 `releases.<suffix>.json` 获取发布说明，在下载页展示版本说明或更新日志摘要。
@@ -40,11 +40,11 @@ const CHANNEL = 'stable-self-contained'; // 或 'stable-framework-dependent'
 
 const MANIFESTS = {
   'stable-self-contained': {
-    releases: 'RELEASES-self-contained',
+    releases: 'RELEASES',
     assets: 'assets.self-contained.json',
   },
   'stable-framework-dependent': {
-    releases: 'RELEASES-framework',
+    releases: 'RELEASES',
     assets: 'assets.framework.json',
   },
 } as const;
@@ -84,12 +84,12 @@ async function fetchLatestInstaller(channel: ChannelKey = 'stable-self-contained
 
 ## 4. 兼容性与缓存策略
 - 若担心 CDN 仍缓存旧清单，可在页面提供“刷新版本”按钮，重新调用上述逻辑。
-- 如需展示历史版本，可把 `RELEASES-<suffix>` 全量解析为数组并结合 `releases.<suffix>.json` 渲染表格。
+- 如需展示历史版本，可把每个通道前缀下的 `RELEASES` 全量解析为数组，并结合 `releases.<suffix>.json` 渲染表格。
 - 页面上请标注“自包含版 / 框架依赖版”等字样，避免用户混淆两个渠道。
 
 ## 5. 发布日检查清单
 - [ ] 确认客户端团队已完成 `Publish-Release.ps1` 上传。
-- [ ] 访问两个前缀的 `RELEASES-<suffix>`，核对最后一行版本号是否一致。
+- [ ] 分别访问自包含版与框架依赖版前缀下的 `RELEASES`，核对最后一行版本号是否一致。
 - [ ] 打开 `assets.<suffix>.json` 并验证安装器文件存在且可下载。
 - [ ] 如果页面使用缓存层（如 Service Worker、CDN 自建缓存），记得刷新缓存。
 - [ ] 更新页面上的发布日期或 “Last updated” 字段。
