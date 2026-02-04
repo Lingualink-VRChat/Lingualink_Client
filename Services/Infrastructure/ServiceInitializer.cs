@@ -1,3 +1,4 @@
+using lingualink_client.Services.Auth;
 using lingualink_client.Services.Events;
 using lingualink_client.Services.Interfaces;
 using lingualink_client.Services.Managers;
@@ -70,6 +71,15 @@ namespace lingualink_client.Services
             var updateService = new VelopackUpdateService();
             ServiceContainer.Register<IUpdateService, VelopackUpdateService>(updateService);
 
+            // 注册认证服务
+            // Auth Server 地址
+            var authServerUrl = "http://localhost:9080";
+            // 登录入口：Auth Server 的登录接口，会重定向到 Casdoor
+            // Auth Server 处理完 Casdoor 回调后，会重定向回客户端的 http://localhost:23456/callback
+            var loginPageUrl = $"{authServerUrl}/api/v1/auth/casdoor/login";
+            var authService = new AuthService(authServerUrl, loginPageUrl);
+            ServiceContainer.Register<IAuthService, AuthService>(authService);
+
             // 注册新的API服务（延迟初始化，因为需要配置参数）
             // LingualinkApiService 将在需要时通过工厂方法创建
 
@@ -94,6 +104,12 @@ namespace lingualink_client.Services
                 if (ServiceContainer.TryResolve<IConversationHistoryService>(out var conversationHistoryService) && conversationHistoryService != null)
                 {
                     conversationHistoryService.Dispose();
+                }
+
+                // 清理认证服务
+                if (ServiceContainer.TryResolve<IAuthService>(out var authService) && authService != null)
+                {
+                    authService.Dispose();
                 }
 
                 // 清理服务容器

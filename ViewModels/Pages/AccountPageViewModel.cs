@@ -1,9 +1,12 @@
 using System;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 using lingualink_client.Models;
+using lingualink_client.Models.Auth;
 using lingualink_client.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -16,6 +19,7 @@ namespace lingualink_client.ViewModels
     public partial class AccountPageViewModel : ViewModelBase
     {
         private readonly ISettingsManager _settingsManager;
+        private readonly IAuthService? _authService;
         private AppSettings _currentSettings;
         private bool _isLoadingSettings;
         private readonly DispatcherTimer _autoSaveTimer;
@@ -70,6 +74,47 @@ namespace lingualink_client.ViewModels
         [ObservableProperty] private string _serverUrl = string.Empty;
         [ObservableProperty] private string _apiKey = string.Empty;
 
+        // 新增：登录状态相关属性
+        [ObservableProperty]
+        private bool _isLoggingIn = false;
+
+        [ObservableProperty]
+        private UserProfile? _userProfile;
+
+        [ObservableProperty]
+        private string _subscriptionStatus = string.Empty;
+
+        [ObservableProperty]
+        private string _quotaDisplay = string.Empty;
+
+        // API Key 管理相关属性
+        [ObservableProperty]
+        private ObservableCollection<ApiKeyInfo> _apiKeys = new();
+
+        [ObservableProperty]
+        private bool _isLoadingApiKeys = false;
+
+        [ObservableProperty]
+        private string _newApiKeyName = string.Empty;
+
+        [ObservableProperty]
+        private bool _isCreatingApiKey = false;
+
+        [ObservableProperty]
+        private string? _newlyCreatedApiKey = null;
+
+        [ObservableProperty]
+        private bool _showNewApiKeyDialog = false;
+
+        // 当 InfoBar 关闭时清空已创建的 Key
+        partial void OnShowNewApiKeyDialogChanged(bool value)
+        {
+            if (!value)
+            {
+                NewlyCreatedApiKey = null;
+            }
+        }
+
         // 属性变更监听（主要用于调试）
         partial void OnApiKeyChanged(string value)
         {
@@ -81,13 +126,23 @@ namespace lingualink_client.ViewModels
             System.Diagnostics.Debug.WriteLine($"[AccountPageViewModel] ServerUrl property changed to: '{value}'");
         }
 
-        public AccountPageViewModel(ISettingsManager? settingsManager = null)
+        public AccountPageViewModel(ISettingsManager? settingsManager = null, IAuthService? authService = null)
         {
             _settingsManager = settingsManager
                                ?? (ServiceContainer.TryResolve<ISettingsManager>(out var resolved) && resolved != null
                                    ? resolved
                                    : new SettingsManager());
             _currentSettings = _settingsManager.LoadSettings();
+            
+            // 尝试获取 AuthService
+            if (authService != null)
+            {
+                _authService = authService;
+            }
+            else if (ServiceContainer.TryResolve<IAuthService>(out var resolvedAuth) && resolvedAuth != null)
+            {
+                _authService = resolvedAuth;
+            }
             
             LoadSettingsFromModel(_currentSettings);
             
@@ -103,6 +158,71 @@ namespace lingualink_client.ViewModels
 
             // 监听属性变更，用于触发自动保存
             PropertyChanged += OnAccountPropertyChanged;
+
+            // 订阅登录状态变化
+            if (_authService != null)
+            {
+                _authService.LoginStateChanged += OnAuthServiceLoginStateChanged;
+                // 初始化登录状态
+                UpdateLoginState();
+            }
+        }
+
+        private void OnAuthServiceLoginStateChanged(object? sender, bool isLoggedIn)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                UpdateLoginState();
+                
+                // 登录成功后自动加载 API Keys
+                if (isLoggedIn)
+                {
+                    _ = LoadApiKeysAsync();
+                }
+            });
+        }
+
+        private void UpdateLoginState()
+        {
+            if (_authService == null)
+            {
+                IsLoggedIn = false;
+                return;
+            }
+
+            IsLoggedIn = _authService.IsLoggedIn;
+            UserProfile = _authService.CurrentUser;
+
+            if (UserProfile != null)
+            {
+                LoggedInUsername = !string.IsNullOrEmpty(UserProfile.DisplayName)
+                    ? UserProfile.DisplayName
+                    : UserProfile.CasdoorName ?? "用户";
+
+                // 更新订阅状态显示
+                if (UserProfile.Subscription != null)
+                {
+                    SubscriptionStatus = UserProfile.Subscription.PlanName;
+                    QuotaDisplay = $"{UserProfile.Subscription.QuotaRemaining:N0} / {UserProfile.Subscription.QuotaTotal:N0}";
+                }
+                else
+                {
+                    SubscriptionStatus = "Free";
+                    QuotaDisplay = string.Empty;
+                }
+            }
+            else
+            {
+                LoggedInUsername = string.Empty;
+                SubscriptionStatus = string.Empty;
+                QuotaDisplay = string.Empty;
+            }
+
+            // 通知 UI 更新命令状态
+            LoginCommand.NotifyCanExecuteChanged();
+            LogoutCommand.NotifyCanExecuteChanged();
+            RefreshUserProfileCommand.NotifyCanExecuteChanged();
+            CreateApiKeyCommand.NotifyCanExecuteChanged();
         }
 
         private void OnLanguageChanged()
@@ -141,10 +261,6 @@ namespace lingualink_client.ViewModels
 
                     ApiKey = settings.OfficialApiKey;
                 }
-
-                // 官方服务相关的设置暂时保持默认值
-                IsLoggedIn = false;
-                LoggedInUsername = string.Empty;
             }
             finally
             {
@@ -332,24 +448,249 @@ namespace lingualink_client.ViewModels
             SaveInternal(showConfirmation: true, changeSource: "AccountPage");
         }
 
-        [RelayCommand]
-        private void Login()
+        #region 登录/登出
+
+        [RelayCommand(CanExecute = nameof(CanLogin))]
+        private async Task LoginAsync()
         {
-            // 官方服务登录逻辑 - 即将实现
-            MessageBox.Show(LanguageManager.GetString("ComingSoon"),
-                           LanguageManager.GetString("InfoTitle"),
-                           MessageBoxButton.OK, MessageBoxImage.Information);
+            if (_authService == null)
+            {
+                MessageBox.Show("认证服务未初始化",
+                    LanguageManager.GetString("ErrorTitle"),
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            IsLoggingIn = true;
+            LoginCommand.NotifyCanExecuteChanged();
+
+            try
+            {
+                var result = await _authService.LoginAsync();
+
+                if (!result.Success)
+                {
+                    MessageBox.Show(
+                        result.ErrorMessage ?? "登录失败",
+                        LanguageManager.GetString("ErrorTitle"),
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[AccountPageViewModel] Login exception: {ex.Message}");
+                MessageBox.Show(
+                    $"登录失败: {ex.Message}",
+                    LanguageManager.GetString("ErrorTitle"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsLoggingIn = false;
+                LoginCommand.NotifyCanExecuteChanged();
+            }
+        }
+
+        private bool CanLogin() => !IsLoggingIn && !IsLoggedIn && _authService != null;
+
+        [RelayCommand(CanExecute = nameof(CanLogout))]
+        private async Task LogoutAsync()
+        {
+            if (_authService == null)
+                return;
+
+            var result = MessageBox.Show(
+                "确定要退出登录吗？",
+                "确认退出",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                try
+                {
+                    await _authService.LogoutAsync();
+                    ApiKeys.Clear();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[AccountPageViewModel] Logout exception: {ex.Message}");
+                }
+            }
+        }
+
+        private bool CanLogout() => IsLoggedIn && _authService != null;
+
+        [RelayCommand(CanExecute = nameof(CanRefreshUserProfile))]
+        private async Task RefreshUserProfileAsync()
+        {
+            if (_authService == null)
+                return;
+
+            try
+            {
+                await _authService.RefreshUserProfileAsync();
+                UpdateLoginState();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[AccountPageViewModel] Refresh profile exception: {ex.Message}");
+            }
+        }
+
+        private bool CanRefreshUserProfile() => IsLoggedIn && _authService != null;
+
+        #endregion
+
+        #region API Key 管理
+
+        [RelayCommand]
+        private async Task LoadApiKeysAsync()
+        {
+            if (_authService == null || !IsLoggedIn)
+                return;
+
+            IsLoadingApiKeys = true;
+
+            try
+            {
+                var keys = await _authService.GetApiKeysAsync();
+                ApiKeys.Clear();
+                foreach (var key in keys)
+                {
+                    ApiKeys.Add(key);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[AccountPageViewModel] Load API keys exception: {ex.Message}");
+            }
+            finally
+            {
+                IsLoadingApiKeys = false;
+            }
+        }
+
+        [RelayCommand(CanExecute = nameof(CanCreateApiKey))]
+        private async Task CreateApiKeyAsync()
+        {
+            if (_authService == null || !IsLoggedIn)
+                return;
+
+            if (string.IsNullOrWhiteSpace(NewApiKeyName))
+            {
+                MessageBox.Show("请输入 API Key 名称", "提示", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            IsCreatingApiKey = true;
+            CreateApiKeyCommand.NotifyCanExecuteChanged();
+
+            try
+            {
+                var result = await _authService.CreateApiKeyAsync(NewApiKeyName.Trim());
+
+                if (result.Success && result.KeyInfo != null)
+                {
+                    // 添加到列表
+                    ApiKeys.Insert(0, result.KeyInfo);
+                    
+                    // 显示完整的 API Key（仅此一次）
+                    NewlyCreatedApiKey = result.FullKey;
+                    ShowNewApiKeyDialog = true;
+                    
+                    // 清空输入框
+                    NewApiKeyName = string.Empty;
+                }
+                else
+                {
+                    MessageBox.Show(
+                        result.ErrorMessage ?? "创建 API Key 失败",
+                        "错误",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[AccountPageViewModel] Create API key exception: {ex.Message}");
+                MessageBox.Show(
+                    $"创建 API Key 失败: {ex.Message}",
+                    "错误",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsCreatingApiKey = false;
+                CreateApiKeyCommand.NotifyCanExecuteChanged();
+            }
+        }
+
+        private bool CanCreateApiKey() => IsLoggedIn && !IsCreatingApiKey && _authService != null;
+
+        [RelayCommand]
+        private async Task DeleteApiKeyAsync(ApiKeyInfo? keyInfo)
+        {
+            if (_authService == null || keyInfo == null)
+                return;
+
+            var result = MessageBox.Show(
+                $"确定要删除 API Key \"{keyInfo.Name}\" 吗？\n此操作不可撤销。",
+                "确认删除",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (result != MessageBoxResult.Yes)
+                return;
+
+            try
+            {
+                var success = await _authService.DeleteApiKeyAsync(keyInfo.Id);
+                if (success)
+                {
+                    ApiKeys.Remove(keyInfo);
+                }
+                else
+                {
+                    MessageBox.Show("删除 API Key 失败", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[AccountPageViewModel] Delete API key exception: {ex.Message}");
+                MessageBox.Show(
+                    $"删除 API Key 失败: {ex.Message}",
+                    "错误",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
         }
 
         [RelayCommand]
-        private void Logout()
+        private void CopyApiKeyToClipboard(string? key)
         {
-            // 退出登录逻辑
-            IsLoggedIn = false;
-            LoggedInUsername = string.Empty;
-            Username = string.Empty;
-            UserPassword = string.Empty;
+            if (string.IsNullOrEmpty(key))
+                return;
+
+            if (ClipboardHelper.TrySetText(key))
+            {
+                MessageBox.Show("API Key 已复制到剪贴板", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
         }
+
+        [RelayCommand]
+        private void CloseNewApiKeyDialog()
+        {
+            ShowNewApiKeyDialog = false;
+            NewlyCreatedApiKey = null;
+        }
+
+        #endregion
+
+        #region 自定义服务器测试
 
         [RelayCommand(CanExecute = nameof(CanTestConnection))]
         private async Task TestConnectionAsync()
@@ -394,5 +735,7 @@ namespace lingualink_client.ViewModels
         {
             return !IsTestingConnection && !string.IsNullOrWhiteSpace(ServerUrl);
         }
+
+        #endregion
     }
 }
