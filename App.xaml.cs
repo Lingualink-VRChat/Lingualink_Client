@@ -7,7 +7,9 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using Microsoft.Web.WebView2.Core;
 using Velopack;
+using MessageBox = lingualink_client.Services.MessageBox;
 
 namespace lingualink_client
 {
@@ -47,8 +49,15 @@ namespace lingualink_client
 
             base.OnStartup(e);
 
+            CheckWebView2Runtime();
+
             // 1. ???????
             ServiceInitializer.Initialize();
+
+            if (ServiceContainer.TryResolve<IAuthService>(out var authService) && authService != null)
+            {
+                _ = RestoreAuthSessionAsync(authService);
+            }
 
             // 2. ???????UI??
             var settingsService = new Services.SettingsService();
@@ -65,6 +74,41 @@ namespace lingualink_client
             }
 
             _ = CheckForUpdatesAsync();
+        }
+
+        private static void CheckWebView2Runtime()
+        {
+            try
+            {
+                _ = CoreWebView2Environment.GetAvailableBrowserVersionString();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"WebView2 Runtime is not available: {ex.Message}");
+                var result = MessageBox.Show(
+                    "本应用需要 WebView2 Runtime 才能使用登录和订阅功能。是否前往下载？",
+                    "缺少 WebView2",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning);
+
+                if (result != MessageBoxResult.Yes)
+                {
+                    return;
+                }
+
+                try
+                {
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = "https://go.microsoft.com/fwlink/p/?LinkId=2124703",
+                        UseShellExecute = true
+                    });
+                }
+                catch (Exception launchEx)
+                {
+                    Debug.WriteLine($"Failed to launch WebView2 download URL: {launchEx.Message}");
+                }
+            }
         }
 
         private static bool ShouldSuppressAutoLaunch(string[]? args)
@@ -162,6 +206,18 @@ namespace lingualink_client
             Debug.WriteLine("Update check skipped for non-release configuration.");
             await Task.CompletedTask;
 #endif
+        }
+
+        private static async Task RestoreAuthSessionAsync(IAuthService authService)
+        {
+            try
+            {
+                await authService.TryRestoreSessionAsync();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Failed to restore auth session: {ex.Message}");
+            }
         }
 
         protected override void OnExit(ExitEventArgs e)

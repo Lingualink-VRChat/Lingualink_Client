@@ -329,7 +329,7 @@ namespace lingualink_client.ViewModels
                 return false;
             }
             
-            // 更新只由当前页面管理的设置（不包括ServerUrl和ApiKey）
+            // 更新只由当前页面管理的设置（不包括 ServerUrl/账户认证相关配置）
             updatedSettings.PostSpeechRecordingDurationSeconds = this.PostSpeechRecordingDurationSeconds;
             updatedSettings.MinVoiceDurationSeconds = this.MinVoiceDurationSeconds;
             updatedSettings.MaxVoiceDurationSeconds = this.MaxVoiceDurationSeconds;

@@ -32,7 +32,7 @@ namespace lingualink_client.Services
 
                     if (settings != null)
                     {
-                        System.Diagnostics.Debug.WriteLine($"[SettingsService] Loaded settings - ApiKey: '{settings.ApiKey}', ServerUrl: '{settings.ServerUrl}'");
+                        System.Diagnostics.Debug.WriteLine($"[SettingsService] Loaded settings - ServerUrl: '{settings.ServerUrl}'");
                         return settings;
                     }
                     else
@@ -72,7 +72,7 @@ namespace lingualink_client.Services
             try
             {
                 System.Diagnostics.Debug.WriteLine($"[SettingsService] Saving settings to: {_settingsFilePath}");
-                System.Diagnostics.Debug.WriteLine($"[SettingsService] ApiKey: '{settings.ApiKey}', ServerUrl: '{settings.ServerUrl}'");
+                System.Diagnostics.Debug.WriteLine($"[SettingsService] ServerUrl: '{settings.ServerUrl}'");
 
                 string json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
                 File.WriteAllText(_settingsFilePath, json);

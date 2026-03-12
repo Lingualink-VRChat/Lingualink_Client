@@ -130,7 +130,7 @@ namespace lingualink_client.ViewModels.Components
             int? previouslySelectedMicDeviceNumber = wasWorking ? _microphoneManager.SelectedMicrophone?.WaveInDeviceIndex : null;
 
             _appSettings = _settingsService.LoadSettings();
-            System.Diagnostics.Debug.WriteLine($"[MainControlViewModel] Loaded settings - ApiKey: '{_appSettings.ApiKey}', ServerUrl: '{_appSettings.ServerUrl}'");
+            System.Diagnostics.Debug.WriteLine($"[MainControlViewModel] Loaded settings - ServerUrl: '{_appSettings.ServerUrl}'");
 
             // 释放旧的协调器
             if (_orchestrator != null)

@@ -352,6 +352,108 @@
   <data name="InfoTitle" xml:space="preserve">
     <value>提示</value>
   </data>
+  <data name="ProviderBindingErrorTitle" xml:space="preserve">
+    <value>绑定失败</value>
+  </data>
+  <data name="ProviderBindingSuccessTitle" xml:space="preserve">
+    <value>账号绑定</value>
+  </data>
+  <data name="BindRequireLogin" xml:space="preserve">
+    <value>请先登录</value>
+  </data>
+  <data name="BindUnsupportedType" xml:space="preserve">
+    <value>不支持的绑定类型</value>
+  </data>
+  <data name="BindMissingUserInfo" xml:space="preserve">
+    <value>缺少用户信息，请重新登录</value>
+  </data>
+  <data name="BindInvalidCallbackUrl" xml:space="preserve">
+    <value>回调地址无效</value>
+  </data>
+  <data name="BindAuthUnavailable" xml:space="preserve">
+    <value>认证服务暂不可用</value>
+  </data>
+  <data name="BindStartFailedRetry" xml:space="preserve">
+    <value>发起绑定失败，请稍后重试</value>
+  </data>
+  <data name="BindCancelled" xml:space="preserve">
+    <value>绑定已取消</value>
+  </data>
+  <data name="BindMissingCallbackParams" xml:space="preserve">
+    <value>缺少回调参数</value>
+  </data>
+  <data name="BindStateExpired" xml:space="preserve">
+    <value>登录状态已失效，请重新发起绑定</value>
+  </data>
+  <data name="BindWechatAlreadyBoundOther" xml:space="preserve">
+    <value>该微信已绑定其他账号</value>
+  </data>
+  <data name="BindQqAlreadyBoundOther" xml:space="preserve">
+    <value>该 QQ 已绑定其他账号</value>
+  </data>
+  <data name="BindMissingProviderAccount" xml:space="preserve">
+    <value>未获取到第三方账号标识，请重新授权</value>
+  </data>
+  <data name="BindFailedRetry" xml:space="preserve">
+    <value>绑定失败，请重新尝试</value>
+  </data>
+  <data name="BindFailedLater" xml:space="preserve">
+    <value>绑定失败，请稍后重试</value>
+  </data>
+  <data name="BindMissingProviderAccountId" xml:space="preserve">
+    <value>缺少第三方账号标识</value>
+  </data>
+  <data name="BindRequestInvalid" xml:space="preserve">
+    <value>请求参数错误</value>
+  </data>
+  <data name="BindInvalidCallbackResult" xml:space="preserve">
+    <value>未收到有效的绑定结果回调</value>
+  </data>
+  <data name="EmailBindingErrorTitle" xml:space="preserve">
+    <value>邮箱绑定失败</value>
+  </data>
+  <data name="EmailBindingSuccessTitle" xml:space="preserve">
+    <value>邮箱绑定</value>
+  </data>
+  <data name="BindEmailSendCode" xml:space="preserve">
+    <value>发送验证码</value>
+  </data>
+  <data name="BindEmailSendCodeCountdown" xml:space="preserve">
+    <value>{0} 秒</value>
+  </data>
+  <data name="BindEmailCodeSent" xml:space="preserve">
+    <value>验证码已发送，请检查邮箱</value>
+  </data>
+  <data name="BindEmailCodeSendFailed" xml:space="preserve">
+    <value>验证码发送失败，请稍后重试</value>
+  </data>
+  <data name="BindEmailAlreadyBoundOther" xml:space="preserve">
+    <value>该邮箱已被其他账号绑定</value>
+  </data>
+  <data name="BindEmailCodeTooFrequent" xml:space="preserve">
+    <value>发送过于频繁，请稍后再试</value>
+  </data>
+  <data name="BindEmailInvalidFormat" xml:space="preserve">
+    <value>邮箱格式不正确</value>
+  </data>
+  <data name="BindEmailCodeInvalid" xml:space="preserve">
+    <value>验证码错误或已失效</value>
+  </data>
+  <data name="BindEmailPasswordTooShort" xml:space="preserve">
+    <value>密码至少 8 位</value>
+  </data>
+  <data name="BindEmailPasswordTooLong" xml:space="preserve">
+    <value>密码过长</value>
+  </data>
+  <data name="BindEmailPasswordMismatch" xml:space="preserve">
+    <value>两次输入的密码不一致</value>
+  </data>
+  <data name="BindEmailFailedLater" xml:space="preserve">
+    <value>绑定失败，请稍后重试</value>
+  </data>
+  <data name="BindEmailSuccess" xml:space="preserve">
+    <value>邮箱绑定成功</value>
+  </data>
   <data name="SettingsReverted" xml:space="preserve">
     <value>更改已撤销，设置已从上次保存的状态重新加载。</value>
   </data>

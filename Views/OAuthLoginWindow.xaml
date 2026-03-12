@@ -18,35 +18,11 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- 顶部标题栏 -->
-        <Border
-            Grid.Row="0"
-            Padding="16,12"
-            Background="{DynamicResource ControlFillColorDefaultBrush}">
-            <Grid>
-                <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
-                    <ui:SymbolIcon FontSize="20" Symbol="Person24" />
-                    <TextBlock
-                        Margin="12,0,0,0"
-                        FontSize="16"
-                        FontWeight="SemiBold"
-                        Text="登录到 LinguaLink" />
-                </StackPanel>
-                <ui:Button
-                    HorizontalAlignment="Right"
-                    Appearance="Transparent"
-                    Click="CloseButton_Click"
-                    Icon="{ui:SymbolIcon Dismiss24}"
-                    ToolTip="关闭" />
-            </Grid>
-        </Border>
-
         <!-- WebView2 容器 -->
-        <Grid Grid.Row="1">
+        <Grid Grid.Row="0">
             <!-- WebView2 控件 -->
             <wv2:WebView2
                 x:Name="LoginWebView"

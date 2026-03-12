@@ -352,6 +352,108 @@
   <data name="InfoTitle" xml:space="preserve">
     <value>Info</value>
   </data>
+  <data name="ProviderBindingErrorTitle" xml:space="preserve">
+    <value>Binding Failed</value>
+  </data>
+  <data name="ProviderBindingSuccessTitle" xml:space="preserve">
+    <value>Binding</value>
+  </data>
+  <data name="BindRequireLogin" xml:space="preserve">
+    <value>Please log in first.</value>
+  </data>
+  <data name="BindUnsupportedType" xml:space="preserve">
+    <value>Unsupported binding type.</value>
+  </data>
+  <data name="BindMissingUserInfo" xml:space="preserve">
+    <value>Missing user information. Please log in again.</value>
+  </data>
+  <data name="BindInvalidCallbackUrl" xml:space="preserve">
+    <value>Invalid callback address.</value>
+  </data>
+  <data name="BindAuthUnavailable" xml:space="preserve">
+    <value>Authentication service is temporarily unavailable.</value>
+  </data>
+  <data name="BindStartFailedRetry" xml:space="preserve">
+    <value>Failed to start binding. Please try again later.</value>
+  </data>
+  <data name="BindCancelled" xml:space="preserve">
+    <value>Binding was cancelled.</value>
+  </data>
+  <data name="BindMissingCallbackParams" xml:space="preserve">
+    <value>Missing callback parameters.</value>
+  </data>
+  <data name="BindStateExpired" xml:space="preserve">
+    <value>Login state has expired. Please start binding again.</value>
+  </data>
+  <data name="BindWechatAlreadyBoundOther" xml:space="preserve">
+    <value>This WeChat account is already bound to another account.</value>
+  </data>
+  <data name="BindQqAlreadyBoundOther" xml:space="preserve">
+    <value>This QQ account is already bound to another account.</value>
+  </data>
+  <data name="BindMissingProviderAccount" xml:space="preserve">
+    <value>Failed to obtain the third-party account identifier. Please authorize again.</value>
+  </data>
+  <data name="BindFailedRetry" xml:space="preserve">
+    <value>Binding failed. Please try again.</value>
+  </data>
+  <data name="BindFailedLater" xml:space="preserve">
+    <value>Binding failed. Please try again later.</value>
+  </data>
+  <data name="BindMissingProviderAccountId" xml:space="preserve">
+    <value>Missing third-party account identifier.</value>
+  </data>
+  <data name="BindRequestInvalid" xml:space="preserve">
+    <value>Invalid request parameters.</value>
+  </data>
+  <data name="BindInvalidCallbackResult" xml:space="preserve">
+    <value>No valid binding callback result was received.</value>
+  </data>
+  <data name="EmailBindingErrorTitle" xml:space="preserve">
+    <value>Email Binding Failed</value>
+  </data>
+  <data name="EmailBindingSuccessTitle" xml:space="preserve">
+    <value>Email Binding</value>
+  </data>
+  <data name="BindEmailSendCode" xml:space="preserve">
+    <value>Send Code</value>
+  </data>
+  <data name="BindEmailSendCodeCountdown" xml:space="preserve">
+    <value>{0}s</value>
+  </data>
+  <data name="BindEmailCodeSent" xml:space="preserve">
+    <value>Verification code sent. Please check your email.</value>
+  </data>
+  <data name="BindEmailCodeSendFailed" xml:space="preserve">
+    <value>Failed to send verification code. Please try again later.</value>
+  </data>
+  <data name="BindEmailAlreadyBoundOther" xml:space="preserve">
+    <value>This email is already bound to another account.</value>
+  </data>
+  <data name="BindEmailCodeTooFrequent" xml:space="preserve">
+    <value>Too many requests. Please try again later.</value>
+  </data>
+  <data name="BindEmailInvalidFormat" xml:space="preserve">
+    <value>Invalid email format.</value>
+  </data>
+  <data name="BindEmailCodeInvalid" xml:space="preserve">
+    <value>Invalid or expired verification code.</value>
+  </data>
+  <data name="BindEmailPasswordTooShort" xml:space="preserve">
+    <value>Password must be at least 8 characters.</value>
+  </data>
+  <data name="BindEmailPasswordTooLong" xml:space="preserve">
+    <value>Password is too long.</value>
+  </data>
+  <data name="BindEmailPasswordMismatch" xml:space="preserve">
+    <value>The passwords do not match.</value>
+  </data>
+  <data name="BindEmailFailedLater" xml:space="preserve">
+    <value>Email binding failed. Please try again later.</value>
+  </data>
+  <data name="BindEmailSuccess" xml:space="preserve">
+    <value>Email bound successfully.</value>
+  </data>
   <data name="SettingsReverted" xml:space="preserve">
     <value>Changes reverted, settings reloaded from last saved state.</value>
   </data>

@@ -360,6 +360,108 @@
   <data name="InfoTitle" xml:space="preserve">
     <value>情報</value>
   </data>
+  <data name="ProviderBindingErrorTitle" xml:space="preserve">
+    <value>連携失敗</value>
+  </data>
+  <data name="ProviderBindingSuccessTitle" xml:space="preserve">
+    <value>アカウント連携</value>
+  </data>
+  <data name="BindRequireLogin" xml:space="preserve">
+    <value>先にログインしてください</value>
+  </data>
+  <data name="BindUnsupportedType" xml:space="preserve">
+    <value>サポートされていない連携タイプです</value>
+  </data>
+  <data name="BindMissingUserInfo" xml:space="preserve">
+    <value>ユーザー情報が不足しています。再度ログインしてください</value>
+  </data>
+  <data name="BindInvalidCallbackUrl" xml:space="preserve">
+    <value>コールバック URL が無効です</value>
+  </data>
+  <data name="BindAuthUnavailable" xml:space="preserve">
+    <value>認証サービスを現在利用できません</value>
+  </data>
+  <data name="BindStartFailedRetry" xml:space="preserve">
+    <value>連携の開始に失敗しました。しばらくしてから再試行してください</value>
+  </data>
+  <data name="BindCancelled" xml:space="preserve">
+    <value>連携はキャンセルされました</value>
+  </data>
+  <data name="BindMissingCallbackParams" xml:space="preserve">
+    <value>コールバック パラメータが不足しています</value>
+  </data>
+  <data name="BindStateExpired" xml:space="preserve">
+    <value>ログイン状態の有効期限が切れました。もう一度連携を開始してください</value>
+  </data>
+  <data name="BindWechatAlreadyBoundOther" xml:space="preserve">
+    <value>この WeChat アカウントは既に他のアカウントに連携されています</value>
+  </data>
+  <data name="BindQqAlreadyBoundOther" xml:space="preserve">
+    <value>この QQ アカウントは既に他のアカウントに連携されています</value>
+  </data>
+  <data name="BindMissingProviderAccount" xml:space="preserve">
+    <value>サードパーティ アカウント識別子を取得できませんでした。再度認可してください</value>
+  </data>
+  <data name="BindFailedRetry" xml:space="preserve">
+    <value>連携に失敗しました。もう一度お試しください</value>
+  </data>
+  <data name="BindFailedLater" xml:space="preserve">
+    <value>連携に失敗しました。しばらくしてから再試行してください</value>
+  </data>
+  <data name="BindMissingProviderAccountId" xml:space="preserve">
+    <value>サードパーティ アカウント識別子が不足しています</value>
+  </data>
+  <data name="BindRequestInvalid" xml:space="preserve">
+    <value>リクエスト パラメータが正しくありません</value>
+  </data>
+  <data name="BindInvalidCallbackResult" xml:space="preserve">
+    <value>有効な連携コールバック結果を受信できませんでした</value>
+  </data>
+  <data name="EmailBindingErrorTitle" xml:space="preserve">
+    <value>メール連携失敗</value>
+  </data>
+  <data name="EmailBindingSuccessTitle" xml:space="preserve">
+    <value>メール連携</value>
+  </data>
+  <data name="BindEmailSendCode" xml:space="preserve">
+    <value>認証コード送信</value>
+  </data>
+  <data name="BindEmailSendCodeCountdown" xml:space="preserve">
+    <value>{0} 秒</value>
+  </data>
+  <data name="BindEmailCodeSent" xml:space="preserve">
+    <value>認証コードを送信しました。メールをご確認ください</value>
+  </data>
+  <data name="BindEmailCodeSendFailed" xml:space="preserve">
+    <value>認証コードの送信に失敗しました。しばらくしてから再試行してください</value>
+  </data>
+  <data name="BindEmailAlreadyBoundOther" xml:space="preserve">
+    <value>このメールアドレスは既に他のアカウントに連携されています</value>
+  </data>
+  <data name="BindEmailCodeTooFrequent" xml:space="preserve">
+    <value>送信が多すぎます。しばらくしてから再試行してください</value>
+  </data>
+  <data name="BindEmailInvalidFormat" xml:space="preserve">
+    <value>メールアドレスの形式が正しくありません</value>
+  </data>
+  <data name="BindEmailCodeInvalid" xml:space="preserve">
+    <value>認証コードが正しくないか、有効期限が切れています</value>
+  </data>
+  <data name="BindEmailPasswordTooShort" xml:space="preserve">
+    <value>パスワードは 8 文字以上で入力してください</value>
+  </data>
+  <data name="BindEmailPasswordTooLong" xml:space="preserve">
+    <value>パスワードが長すぎます</value>
+  </data>
+  <data name="BindEmailPasswordMismatch" xml:space="preserve">
+    <value>パスワードが一致しません</value>
+  </data>
+  <data name="BindEmailFailedLater" xml:space="preserve">
+    <value>メール連携に失敗しました。しばらくしてから再試行してください</value>
+  </data>
+  <data name="BindEmailSuccess" xml:space="preserve">
+    <value>メール連携が完了しました</value>
+  </data>
   <data name="SettingsReverted" xml:space="preserve">
     <value>変更が元に戻され、最後に保存された状態から設定が再読み込みされました。</value>
   </data>

@@ -11,11 +11,11 @@ Welcome to the Lingualink Core API v2.0. This document provides a comprehensive 
 
 ## 2. Authentication
 
-All protected endpoints require authentication via an **API Key**.
+All protected endpoints require authentication via a user **Bearer Access Token**.
 
-Provide the key in the request header:
+Provide the token in the request header:
 ```http
-X-API-Key: your-api-key-here
+Authorization: Bearer <access_token>
 ```
 
 ## 3. Core Concepts
@@ -60,7 +60,7 @@ Checks the operational status of the service.
 
 Retrieves the system's supported features, formats, and limits.
 -   **Authentication**: Required
--   **Example**: `curl -H "X-API-Key: ..." "http://localhost:8080/api/v1/capabilities"`
+-   **Example**: `curl -H "Authorization: Bearer <access_token>" "http://localhost:8080/api/v1/capabilities"`
 
 ---
 
@@ -68,7 +68,7 @@ Retrieves the system's supported features, formats, and limits.
 
 Returns a detailed list of all supported languages.
 -   **Authentication**: Required
--   **Example**: `curl -H "X-API-Key: ..." "http://localhost:8080/api/v1/languages"`
+-   **Example**: `curl -H "Authorization: Bearer <access_token>" "http://localhost:8080/api/v1/languages"`
 
 ---
 

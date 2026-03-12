@@ -9,7 +9,7 @@
 - 🌍 **多语言翻译**: 支持英文、日文、中文等多种语言翻译。
 - ✨ **动态语言加载**: 启动时从服务器动态获取支持的语言列表，无需硬编码。
 - ↕️ **目标语言排序**: 用户可以通过“上移”和“下移”按钮，自由调整目标翻译语言的显示顺序。
-- 🔐 **API 密钥认证**: 支持安全的后端 API v2.0 认证，并提供连接测试功能。
+- 🔐 **账户 Token 认证**: 通过登录获取用户 Access Token，翻译请求统一使用 Bearer 认证。
 - 🔊 **Opus 音频编码标准**: 默认启用 Opus (16kbps) 高效压缩音频，支持调节编码复杂度，显著减少带宽使用。
 - ✨ **音频增强处理**: 内置峰值归一化和安静语音增强功能，提升识别准确率。
 - 🎮 **VRChat 集成**: 直接发送翻译结果到 VRChat 聊天框。
@@ -29,7 +29,7 @@
 ## 快速开始
 
 1. 安装 [.NET 8.0 Runtime](https://dotnet.microsoft.com/download/dotnet/8.0)。
-2. 启动 LinguaLink Server（推荐 v2.0+），准备好 API Key。
+2. 启动 LinguaLink Server（推荐 v2.0+）与 Auth Server（或其集成环境）。
 3. 运行客户端并在 Account / Service / Settings 页面完成基础配置后保存。
 4. 在主页面选择麦克风与目标语言后点击 Start Listening，或在 Text Entry 页面使用文本输入。
 

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -21,35 +22,31 @@ namespace lingualink_client.Services
     public class LingualinkApiService : ILingualinkApiService
     {
         private readonly string _serverUrl;
-        private readonly string _apiKey;
         private readonly HttpClient _httpClient;
         private readonly AudioEncoderService? _audioEncoder;
         private readonly bool _useOpusEncoding;
+        private readonly string _apiKey;
+        private readonly Func<Task<string?>>? _accessTokenProvider;
+        private readonly Func<Task>? _unauthorizedHandler;
+        private int _unauthorizedHandled;
         private bool _disposed = false;
 
         public LingualinkApiService(
             string serverUrl,
-            string apiKey = "",
+            string? apiKey = null,
+            Func<Task<string?>>? accessTokenProvider = null,
+            Func<Task>? unauthorizedHandler = null,
             int opusComplexity = 7)
         {
             _serverUrl = serverUrl.TrimEnd('/');
-            _apiKey = apiKey;
             _useOpusEncoding = true; // Opus始终启用
+            _apiKey = apiKey?.Trim() ?? string.Empty;
+            _accessTokenProvider = accessTokenProvider;
+            _unauthorizedHandler = unauthorizedHandler;
 
-            Debug.WriteLine($"[LingualinkApiService] Constructor called - ServerUrl: '{_serverUrl}', ApiKey: '{_apiKey}', UseOpus: true (always enabled)");
+            Debug.WriteLine($"[LingualinkApiService] Constructor called - ServerUrl: '{_serverUrl}', HasApiKey: {!string.IsNullOrWhiteSpace(_apiKey)}, HasTokenProvider: {_accessTokenProvider != null}, UseOpus: true (always enabled)");
 
             _httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
-
-            // 设置认证头
-            if (!string.IsNullOrEmpty(_apiKey))
-            {
-                _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("X-API-Key", _apiKey);
-                Debug.WriteLine($"[LingualinkApiService] Added X-API-Key header: '{_apiKey}'");
-            }
-            else
-            {
-                Debug.WriteLine($"[LingualinkApiService] No API key provided, skipping header");
-            }
 
             // 初始化音频编码器 - Opus始终启用，固定16kbps比特率
             try
@@ -159,7 +156,11 @@ namespace lingualink_client.Services
                 Debug.WriteLine($"[LingualinkApiService] Request JSON: {jsonContent}");
 
                 var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
-                var response = await _httpClient.PostAsync(requestUrl, content, cancellationToken);
+                using var request = new HttpRequestMessage(HttpMethod.Post, requestUrl)
+                {
+                    Content = content
+                };
+                var response = await SendAsync(request, cancellationToken);
                 var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
 
                 // [详细日志] 记录响应状态和完整JSON内容
@@ -296,7 +297,11 @@ namespace lingualink_client.Services
                 Debug.WriteLine($"[LingualinkApiService] Text Request JSON: {jsonContent}");
 
                 var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
-                var response = await _httpClient.PostAsync(requestUrl, content, cancellationToken);
+                using var request = new HttpRequestMessage(HttpMethod.Post, requestUrl)
+                {
+                    Content = content
+                };
+                var response = await SendAsync(request, cancellationToken);
                 var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
 
                 // [详细日志] 记录响应状态和完整JSON内容
@@ -389,7 +394,8 @@ namespace lingualink_client.Services
 
             try
             {
-                var response = await _httpClient.GetAsync(requestUrl, cancellationToken);
+                using var request = new HttpRequestMessage(HttpMethod.Get, requestUrl);
+                var response = await SendAsync(request, cancellationToken);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -417,7 +423,8 @@ namespace lingualink_client.Services
             try
             {
                 var requestUrl = new Uri(_serverUrl.TrimEnd('/') + "/capabilities");
-                var response = await _httpClient.GetAsync(requestUrl, cancellationToken);
+                using var request = new HttpRequestMessage(HttpMethod.Get, requestUrl);
+                var response = await SendAsync(request, cancellationToken);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -442,7 +449,8 @@ namespace lingualink_client.Services
             try
             {
                 var requestUrl = new Uri(_serverUrl.TrimEnd('/') + "/languages");
-                var response = await _httpClient.GetAsync(requestUrl, cancellationToken);
+                using var request = new HttpRequestMessage(HttpMethod.Get, requestUrl);
+                var response = await SendAsync(request, cancellationToken);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -464,7 +472,69 @@ namespace lingualink_client.Services
             }
         }
 
-        private Task<ApiResult> HandleErrorResponse(HttpResponseMessage response, string responseContent)
+        private async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            await AttachAuthorizationHeaderAsync(request);
+            var response = await _httpClient.SendAsync(request, cancellationToken);
+
+            if (response.StatusCode != System.Net.HttpStatusCode.Unauthorized)
+            {
+                Interlocked.Exchange(ref _unauthorizedHandled, 0);
+            }
+
+            return response;
+        }
+
+        private async Task AttachAuthorizationHeaderAsync(HttpRequestMessage request)
+        {
+            if (!string.IsNullOrWhiteSpace(_apiKey))
+            {
+                request.Headers.TryAddWithoutValidation("x-api-key", _apiKey);
+                return;
+            }
+
+            if (_accessTokenProvider == null)
+            {
+                return;
+            }
+
+            try
+            {
+                var token = await _accessTokenProvider();
+                if (!string.IsNullOrWhiteSpace(token))
+                {
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[LingualinkApiService] Failed to resolve access token: {ex.Message}");
+            }
+        }
+
+        private async Task HandleUnauthorizedResponseAsync()
+        {
+            if (_unauthorizedHandler == null)
+            {
+                return;
+            }
+
+            if (Interlocked.CompareExchange(ref _unauthorizedHandled, 1, 0) != 0)
+            {
+                return;
+            }
+
+            try
+            {
+                await _unauthorizedHandler();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[LingualinkApiService] Unauthorized handler failed: {ex.Message}");
+            }
+        }
+
+        private async Task<ApiResult> HandleErrorResponse(HttpResponseMessage response, string responseContent)
         {
             // [详细日志] 记录错误响应的详细信息
             Debug.WriteLine($"[LingualinkApiService] Error Response Details:");
@@ -482,11 +552,11 @@ namespace lingualink_client.Services
                 if (errorResponse != null && !string.IsNullOrEmpty(errorResponse.Error))
                 {
                     Debug.WriteLine($"  - Parsed Error: {errorResponse.Error}");
-                    return Task.FromResult(new ApiResult
+                    return new ApiResult
                     {
                         IsSuccess = false,
                         ErrorMessage = $"Server error ({(int)response.StatusCode}): {errorResponse.Error}"
-                    });
+                    };
                 }
             }
             catch (Exception ex)
@@ -495,10 +565,15 @@ namespace lingualink_client.Services
                 Debug.WriteLine($"  - JSON Parse Error: {ex.Message}");
             }
 
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                await HandleUnauthorizedResponseAsync();
+            }
+
             // 处理特殊HTTP状态码
             var errorMessage = response.StatusCode switch
             {
-                System.Net.HttpStatusCode.Unauthorized => "Authentication failed. Please check your API key.",
+                System.Net.HttpStatusCode.Unauthorized => "Authentication failed. Please sign in again.",
                 System.Net.HttpStatusCode.Forbidden => "Access forbidden. Insufficient permissions.",
                 System.Net.HttpStatusCode.NotFound => "API endpoint not found. Please check the server URL.",
                 System.Net.HttpStatusCode.RequestEntityTooLarge => "Request too large. Please reduce audio file size or text length.",
@@ -506,11 +581,11 @@ namespace lingualink_client.Services
                 _ => $"Server error ({(int)response.StatusCode}): {responseContent}"
             };
 
-            return Task.FromResult(new ApiResult
+            return new ApiResult
             {
                 IsSuccess = false,
                 ErrorMessage = errorMessage
-            });
+            };
         }
 
         protected virtual void Dispose(bool disposing)

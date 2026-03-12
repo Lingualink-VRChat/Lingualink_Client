@@ -11,6 +11,11 @@ namespace lingualink_client.Services.Interfaces
     public interface IAuthService : IDisposable
     {
         /// <summary>
+        /// Auth Server 根地址（用于 Checkout 等 Web 页面）
+        /// </summary>
+        string AuthServerUrl { get; }
+
+        /// <summary>
         /// 当前登录状态
         /// </summary>
         bool IsLoggedIn { get; }
@@ -21,7 +26,7 @@ namespace lingualink_client.Services.Interfaces
         UserProfile? CurrentUser { get; }
 
         /// <summary>
-        /// 获取当前有效的 Access Token（自动刷新）
+        /// 获取当前有效的 Access Token
         /// </summary>
         Task<string?> GetAccessTokenAsync();
 
@@ -36,9 +41,54 @@ namespace lingualink_client.Services.Interfaces
         Task LogoutAsync();
 
         /// <summary>
+        /// 当业务接口返回 401 时，清理本地会话并触发未登录状态
+        /// </summary>
+        Task HandleUnauthorizedAsync();
+
+        /// <summary>
         /// 刷新用户信息
         /// </summary>
         Task<UserProfile?> RefreshUserProfileAsync();
+
+        /// <summary>
+        /// 更新用户资料（casdoor_name / display_name / avatar_url）
+        /// </summary>
+        Task<ApiOperationResult> UpdateUserProfileAsync(string? displayName, string? avatarUrl, string? casdoorName = null);
+
+        /// <summary>
+        /// 发送邮箱绑定验证码
+        /// </summary>
+        Task<ApiOperationResult> SendBindEmailCodeAsync(string email);
+
+        /// <summary>
+        /// 使用验证码和密码确认绑定邮箱
+        /// </summary>
+        Task<ApiOperationResult> BindEmailAsync(string email, string code, string password);
+
+        /// <summary>
+        /// 绑定第三方账号
+        /// </summary>
+        Task<ApiOperationResult> BindProviderAsync(string provider, string providerUserId);
+
+        /// <summary>
+        /// 通过 Casdoor OAuth 绑定社交账号（QQ / 微信）
+        /// </summary>
+        Task<ApiOperationResult> BindSocialProviderAsync(string provider);
+
+        /// <summary>
+        /// 获取可购买套餐列表
+        /// </summary>
+        Task<IReadOnlyList<SubscriptionPlanInfo>> GetSubscriptionPlansAsync();
+
+        /// <summary>
+        /// 创建订阅支付订单
+        /// </summary>
+        Task<CreateSubscriptionOrderResult> CreateSubscriptionOrderAsync(string planId, string paymentMethod, int durationMonths = 1);
+
+        /// <summary>
+        /// 查询订单状态
+        /// </summary>
+        Task<SubscriptionOrderInfo?> GetSubscriptionOrderStatusAsync(string outTradeNo);
 
         /// <summary>
         /// 尝试从存储恢复会话
@@ -50,28 +100,5 @@ namespace lingualink_client.Services.Interfaces
         /// </summary>
         event EventHandler<bool>? LoginStateChanged;
 
-        #region API Key 管理
-
-        /// <summary>
-        /// 获取用户的 API Key 列表
-        /// </summary>
-        Task<List<ApiKeyInfo>> GetApiKeysAsync();
-
-        /// <summary>
-        /// 创建新的 API Key
-        /// </summary>
-        /// <param name="name">API Key 名称</param>
-        Task<CreateApiKeyResult> CreateApiKeyAsync(string name);
-
-        /// <summary>
-        /// 删除（吊销）API Key
-        /// </summary>
-        /// <param name="keyId">API Key ID</param>
-        Task<bool> DeleteApiKeyAsync(string keyId);
-
-        #endregion
     }
 }
-
-
-

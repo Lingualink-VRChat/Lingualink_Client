@@ -1,17 +1,22 @@
 using System;
-using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
+using System.Net.Mail;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using lingualink_client.Models;
 using lingualink_client.Models.Auth;
 using lingualink_client.Services;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using lingualink_client.Services.Interfaces;
-// 使用现代化MessageBox替换系统默认的MessageBox
+using lingualink_client.Views;
+using QRCoder;
 using MessageBox = lingualink_client.Services.MessageBox;
 
 namespace lingualink_client.ViewModels
@@ -23,18 +28,20 @@ namespace lingualink_client.ViewModels
         private AppSettings _currentSettings;
         private bool _isLoadingSettings;
         private readonly DispatcherTimer _autoSaveTimer;
+        private readonly DispatcherTimer _emailCodeTimer;
         private bool _hasPendingChanges;
+        private CancellationTokenSource? _orderPollingCts;
+        private CancellationTokenSource? _profileSyncCts;
+        private bool _isRestoringPendingOrder;
+        private bool _isRecoveringUserProfile;
 
         // 语言相关的标签
-        public string AccountSettingsLabel => LanguageManager.GetString("AccountSettings");
         public string AuthenticationModeLabel => LanguageManager.GetString("AuthenticationMode");
         public string OfficialServiceLabel => LanguageManager.GetString("OfficialService");
         public string CustomServiceLabel => LanguageManager.GetString("CustomService");
         public string OfficialServiceHint => LanguageManager.GetString("OfficialServiceHint");
         public string CustomServiceHint => LanguageManager.GetString("CustomServiceHint");
         public string UserLoginLabel => LanguageManager.GetString("UserLogin");
-        public string UsernameLabel => LanguageManager.GetString("Username");
-        public string PasswordLabel => LanguageManager.GetString("Password");
         public string LoginLabel => LanguageManager.GetString("Login");
         public string LogoutLabel => LanguageManager.GetString("Logout");
         public string LoginStatusLabel => LanguageManager.GetString("LoginStatus");
@@ -45,38 +52,39 @@ namespace lingualink_client.ViewModels
         public string ApiKeyLabel => LanguageManager.GetString("ApiKey");
         public string SaveLabel => LanguageManager.GetString("Save");
         public string RevertLabel => LanguageManager.GetString("Revert");
-
-        // 新增的标签
         public string OfficialServiceLoginLabel => LanguageManager.GetString("OfficialServiceLogin");
         public string OfficialServiceSubtitleLabel => LanguageManager.GetString("OfficialServiceSubtitle");
         public string AdvancedOptionsLabel => LanguageManager.GetString("AdvancedOptions");
         public string UseCustomServerLabel => LanguageManager.GetString("UseCustomServer");
         public string UseCustomServerHint => LanguageManager.GetString("UseCustomServerHint");
-        public string GetStartedLabel => LanguageManager.GetString("GetStarted");
-        public string CreateAccountLabel => LanguageManager.GetString("CreateAccount");
-        public string ForgotPasswordLabel => LanguageManager.GetString("ForgotPassword");
         public string ConnectionTestLabel => LanguageManager.GetString("ConnectionTest");
+        public string SendEmailCodeButtonText => EmailCodeCountdownSeconds > 0
+            ? string.Format(LanguageManager.GetString("BindEmailSendCodeCountdown"), EmailCodeCountdownSeconds)
+            : LanguageManager.GetString("BindEmailSendCode");
 
-        // 新增：测试连接状态
         [ObservableProperty]
-        private bool _isTestingConnection = false;
+        private bool _isTestingConnection;
 
         // 认证模式属性 - 简化为只有一个开关
-        [ObservableProperty] private bool _useCustomServer = false;
-        
-        // 官方服务登录相关属性
-        [ObservableProperty] private string _username = string.Empty;
-        [ObservableProperty] private string _userPassword = string.Empty;
-        [ObservableProperty] private bool _isLoggedIn = false;
-        [ObservableProperty] private string _loggedInUsername = string.Empty;
-        
-        // 自定义服务器设置
-        [ObservableProperty] private string _serverUrl = string.Empty;
-        [ObservableProperty] private string _apiKey = string.Empty;
-
-        // 新增：登录状态相关属性
         [ObservableProperty]
-        private bool _isLoggingIn = false;
+        private bool _useCustomServer;
+
+        // 官方服务登录相关属性
+        [ObservableProperty]
+        private bool _isLoggedIn;
+
+        [ObservableProperty]
+        private string _loggedInUsername = string.Empty;
+
+        // 自定义服务器设置
+        [ObservableProperty]
+        private string _serverUrl = string.Empty;
+
+        [ObservableProperty]
+        private string _apiKey = string.Empty;
+
+        [ObservableProperty]
+        private bool _isLoggingIn;
 
         [ObservableProperty]
         private UserProfile? _userProfile;
@@ -85,45 +93,354 @@ namespace lingualink_client.ViewModels
         private string _subscriptionStatus = string.Empty;
 
         [ObservableProperty]
-        private string _quotaDisplay = string.Empty;
-
-        // API Key 管理相关属性
-        [ObservableProperty]
-        private ObservableCollection<ApiKeyInfo> _apiKeys = new();
+        private string _currentPlanDisplay = string.Empty;
 
         [ObservableProperty]
-        private bool _isLoadingApiKeys = false;
+        private string _subscriptionRemainingDisplay = string.Empty;
 
         [ObservableProperty]
-        private string _newApiKeyName = string.Empty;
+        private string _expiryReminder = string.Empty;
 
         [ObservableProperty]
-        private bool _isCreatingApiKey = false;
+        private bool _hasActiveSubscription;
 
         [ObservableProperty]
-        private string? _newlyCreatedApiKey = null;
+        private bool _hasPaidSubscriptionPlan;
 
         [ObservableProperty]
-        private bool _showNewApiKeyDialog = false;
+        private bool _isUpdatingUserProfile;
 
-        // 当 InfoBar 关闭时清空已创建的 Key
-        partial void OnShowNewApiKeyDialogChanged(bool value)
+        [ObservableProperty]
+        private bool _isEditingDisplayName;
+
+        [ObservableProperty]
+        private bool _isEditingEmail;
+
+        [ObservableProperty]
+        private bool _isEditingProvider;
+
+        [ObservableProperty]
+        private string _editDisplayName = string.Empty;
+
+        [ObservableProperty]
+        private string _bindEmailInput = string.Empty;
+
+        [ObservableProperty]
+        private string _bindEmailCodeInput = string.Empty;
+
+        [ObservableProperty]
+        private string _bindEmailPasswordInput = string.Empty;
+
+        [ObservableProperty]
+        private string _bindEmailConfirmPasswordInput = string.Empty;
+
+        [ObservableProperty]
+        private bool _isEmailCodeSent;
+
+        [ObservableProperty]
+        private bool _isSendingEmailCode;
+
+        [ObservableProperty]
+        private int _emailCodeCountdownSeconds;
+
+        [ObservableProperty]
+        private IReadOnlyList<string> _providerOptions = UserBindProviderCatalog.AllowedProviders;
+
+        [ObservableProperty]
+        private string _selectedProvider = UserBindProviderCatalog.AllowedProviders[0];
+
+        [ObservableProperty]
+        private string _providerUserIdInput = string.Empty;
+
+        [ObservableProperty]
+        private bool _isLoadingPlans;
+
+        [ObservableProperty]
+        private bool _isCreatingOrder;
+
+        [ObservableProperty]
+        private bool _isPollingOrder;
+
+        [ObservableProperty]
+        private IReadOnlyList<SubscriptionPlanInfo> _availablePlans = Array.Empty<SubscriptionPlanInfo>();
+
+        [ObservableProperty]
+        private SubscriptionPlanInfo? _selectedPlan;
+
+        [ObservableProperty]
+        private IReadOnlyList<PaymentMethodOption> _paymentMethodOptions = new[]
         {
-            if (!value)
+            new PaymentMethodOption("wechat", "微信支付"),
+            new PaymentMethodOption("alipay", "支付宝（预留）")
+        };
+
+        [ObservableProperty]
+        private string _selectedPaymentMethod = "wechat";
+
+        [ObservableProperty]
+        private IReadOnlyList<int> _durationMonthOptions = new[] { 1, 3, 6, 12 };
+
+        [ObservableProperty]
+        private int _orderDurationMonths = 1;
+
+        [ObservableProperty]
+        private string _latestOrderOutTradeNo = string.Empty;
+
+        [ObservableProperty]
+        private string _latestOrderStatus = string.Empty;
+
+        [ObservableProperty]
+        private string _latestOrderAmountDisplay = string.Empty;
+
+        [ObservableProperty]
+        private string _latestOrderExpireAtDisplay = string.Empty;
+
+        [ObservableProperty]
+        private string _latestOrderMessage = string.Empty;
+
+        [ObservableProperty]
+        private string _latestOrderProvider = string.Empty;
+
+        [ObservableProperty]
+        private string _latestOrderIntegrationStatus = string.Empty;
+
+        [ObservableProperty]
+        private string _latestOrderCodeUrl = string.Empty;
+
+        [ObservableProperty]
+        private BitmapImage? _latestOrderQrImage;
+
+        public bool HasPlans => AvailablePlans.Count > 0;
+        public bool HasUserProfile => UserProfile != null;
+        public bool HasLatestOrder => !string.IsNullOrWhiteSpace(LatestOrderOutTradeNo);
+        public bool HasLatestOrderMessage => !string.IsNullOrWhiteSpace(LatestOrderMessage);
+        public bool HasLatestOrderExpireAt => !string.IsNullOrWhiteSpace(LatestOrderExpireAtDisplay);
+        public bool HasLatestOrderProvider => !string.IsNullOrWhiteSpace(LatestOrderProvider);
+        public bool HasLatestOrderIntegrationStatus => !string.IsNullOrWhiteSpace(LatestOrderIntegrationStatus);
+        public bool HasLatestOrderCodeUrl => !string.IsNullOrWhiteSpace(LatestOrderCodeUrl);
+        public bool HasLatestOrderQrImage => LatestOrderQrImage != null;
+        public bool HasPendingOrder => HasLatestOrder && string.Equals(LatestOrderStatus, "pending", StringComparison.OrdinalIgnoreCase);
+        public string VipActionButtonText => HasPaidSubscriptionPlan ? "续费 / 升级" : "开通 VIP";
+        public string AccountIdDisplay => string.IsNullOrWhiteSpace(UserProfile?.Id) ? "-" : UserProfile!.Id;
+        public string UsernameDisplay => string.IsNullOrWhiteSpace(UserProfile?.CasdoorName) ? "-" : UserProfile!.CasdoorName!;
+        public string DisplayNameDisplay => string.IsNullOrWhiteSpace(UserProfile?.DisplayName) ? "-" : UserProfile!.DisplayName;
+        public string EmailDisplay => string.IsNullOrWhiteSpace(UserProfile?.Email) ? "未绑定" : UserProfile!.Email!;
+        public string UserStatusDisplay => MapUserStatus(UserProfile?.Status);
+        public bool IsWechatBound => UserProfile?.SocialBindings?.Wechat?.Bound == true;
+        public bool IsQqBound => UserProfile?.SocialBindings?.Qq?.Bound == true;
+        public string WechatBindingStatusDisplay => BuildSocialBindingStatusDisplay(UserProfile?.SocialBindings?.Wechat, "微信");
+        public string QqBindingStatusDisplay => BuildSocialBindingStatusDisplay(UserProfile?.SocialBindings?.Qq, "QQ");
+        public string ProviderBindingSummary => $"微信：{WechatBindingStatusDisplay}；QQ：{QqBindingStatusDisplay}";
+
+
+        private static string BuildSocialBindingStatusDisplay(SocialBindingInfo? binding, string providerDisplay)
+        {
+            if (binding?.Bound != true)
             {
-                NewlyCreatedApiKey = null;
+                return "未绑定";
             }
-        }
 
-        // 属性变更监听（主要用于调试）
-        partial void OnApiKeyChanged(string value)
-        {
-            System.Diagnostics.Debug.WriteLine($"[AccountPageViewModel] ApiKey property changed to: '{value}'");
+            var masked = binding.AccountMasked?.Trim();
+            if (string.IsNullOrWhiteSpace(masked))
+            {
+                return "已绑定";
+            }
+
+            return $"已绑定（{masked}）";
         }
 
         partial void OnServerUrlChanged(string value)
         {
-            System.Diagnostics.Debug.WriteLine($"[AccountPageViewModel] ServerUrl property changed to: '{value}'");
+            Debug.WriteLine($"[AccountPageViewModel] ServerUrl property changed to: '{value}'");
+        }
+
+        partial void OnApiKeyChanged(string value)
+        {
+            Debug.WriteLine($"[AccountPageViewModel] ApiKey property changed. HasValue: {!string.IsNullOrWhiteSpace(value)}");
+        }
+
+        partial void OnUserProfileChanged(UserProfile? value)
+        {
+            OnPropertyChanged(nameof(HasUserProfile));
+            OnPropertyChanged(nameof(AccountIdDisplay));
+            OnPropertyChanged(nameof(UsernameDisplay));
+            OnPropertyChanged(nameof(DisplayNameDisplay));
+            OnPropertyChanged(nameof(EmailDisplay));
+            OnPropertyChanged(nameof(UserStatusDisplay));
+            OnPropertyChanged(nameof(IsWechatBound));
+            OnPropertyChanged(nameof(IsQqBound));
+            OnPropertyChanged(nameof(WechatBindingStatusDisplay));
+            OnPropertyChanged(nameof(QqBindingStatusDisplay));
+            OnPropertyChanged(nameof(ProviderBindingSummary));
+            SyncProfileEditorWithUser(value);
+            CopyAccountIdCommand.NotifyCanExecuteChanged();
+            BeginEditDisplayNameCommand.NotifyCanExecuteChanged();
+            BeginEditEmailCommand.NotifyCanExecuteChanged();
+            BeginEditProviderCommand.NotifyCanExecuteChanged();
+            BindQqProviderCommand.NotifyCanExecuteChanged();
+            BindWechatProviderCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnEditDisplayNameChanged(string value)
+        {
+            UpdateUserProfileCommand.NotifyCanExecuteChanged();
+            SaveDisplayNameCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnBindEmailInputChanged(string value)
+        {
+            SendEmailCodeCommand.NotifyCanExecuteChanged();
+            SaveEmailCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnBindEmailCodeInputChanged(string value)
+        {
+            SaveEmailCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnBindEmailPasswordInputChanged(string value)
+        {
+            SaveEmailCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnBindEmailConfirmPasswordInputChanged(string value)
+        {
+            SaveEmailCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnIsEmailCodeSentChanged(bool value)
+        {
+            OnPropertyChanged(nameof(SendEmailCodeButtonText));
+            SendEmailCodeCommand.NotifyCanExecuteChanged();
+            SaveEmailCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnIsSendingEmailCodeChanged(bool value)
+        {
+            OnPropertyChanged(nameof(SendEmailCodeButtonText));
+            SendEmailCodeCommand.NotifyCanExecuteChanged();
+            SaveEmailCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnEmailCodeCountdownSecondsChanged(int value)
+        {
+            OnPropertyChanged(nameof(SendEmailCodeButtonText));
+            SendEmailCodeCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnSelectedProviderChanged(string value)
+        {
+            BindProviderCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnProviderUserIdInputChanged(string value)
+        {
+            BindProviderCommand.NotifyCanExecuteChanged();
+            SaveProviderCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnAvailablePlansChanged(IReadOnlyList<SubscriptionPlanInfo> value)
+        {
+            OnPropertyChanged(nameof(HasPlans));
+            CreateSubscriptionOrderCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnSelectedPlanChanged(SubscriptionPlanInfo? value)
+        {
+            CreateSubscriptionOrderCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnOrderDurationMonthsChanged(int value)
+        {
+            CreateSubscriptionOrderCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnSelectedPaymentMethodChanged(string value)
+        {
+            CreateSubscriptionOrderCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnLatestOrderOutTradeNoChanged(string value)
+        {
+            OnPropertyChanged(nameof(HasLatestOrder));
+            OnPropertyChanged(nameof(HasPendingOrder));
+            QueryOrderStatusCommand.NotifyCanExecuteChanged();
+            CreateSubscriptionOrderCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnLatestOrderStatusChanged(string value)
+        {
+            OnPropertyChanged(nameof(HasPendingOrder));
+            CreateSubscriptionOrderCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnLatestOrderMessageChanged(string value)
+        {
+            OnPropertyChanged(nameof(HasLatestOrderMessage));
+        }
+
+        partial void OnLatestOrderExpireAtDisplayChanged(string value)
+        {
+            OnPropertyChanged(nameof(HasLatestOrderExpireAt));
+        }
+
+        partial void OnLatestOrderProviderChanged(string value)
+        {
+            OnPropertyChanged(nameof(HasLatestOrderProvider));
+        }
+
+        partial void OnLatestOrderIntegrationStatusChanged(string value)
+        {
+            OnPropertyChanged(nameof(HasLatestOrderIntegrationStatus));
+        }
+
+        partial void OnLatestOrderCodeUrlChanged(string value)
+        {
+            OnPropertyChanged(nameof(HasLatestOrderCodeUrl));
+            LatestOrderQrImage = BuildQrCodeImage(value);
+        }
+
+        partial void OnLatestOrderQrImageChanged(BitmapImage? value)
+        {
+            OnPropertyChanged(nameof(HasLatestOrderQrImage));
+        }
+
+        partial void OnIsLoadingPlansChanged(bool value)
+        {
+            LoadSubscriptionPlansCommand.NotifyCanExecuteChanged();
+            CreateSubscriptionOrderCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnIsCreatingOrderChanged(bool value)
+        {
+            CreateSubscriptionOrderCommand.NotifyCanExecuteChanged();
+            QueryOrderStatusCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnIsPollingOrderChanged(bool value)
+        {
+            StopOrderPollingCommand.NotifyCanExecuteChanged();
+            CreateSubscriptionOrderCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnIsUpdatingUserProfileChanged(bool value)
+        {
+            UpdateUserProfileCommand.NotifyCanExecuteChanged();
+            SendEmailCodeCommand.NotifyCanExecuteChanged();
+            BindProviderCommand.NotifyCanExecuteChanged();
+            BindQqProviderCommand.NotifyCanExecuteChanged();
+            BindWechatProviderCommand.NotifyCanExecuteChanged();
+            BeginEditDisplayNameCommand.NotifyCanExecuteChanged();
+            BeginEditEmailCommand.NotifyCanExecuteChanged();
+            BeginEditProviderCommand.NotifyCanExecuteChanged();
+            SaveDisplayNameCommand.NotifyCanExecuteChanged();
+            SaveEmailCommand.NotifyCanExecuteChanged();
+            SaveProviderCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnHasPaidSubscriptionPlanChanged(bool value)
+        {
+            OnPropertyChanged(nameof(VipActionButtonText));
         }
 
         public AccountPageViewModel(ISettingsManager? settingsManager = null, IAuthService? authService = null)
@@ -133,8 +450,7 @@ namespace lingualink_client.ViewModels
                                    ? resolved
                                    : new SettingsManager());
             _currentSettings = _settingsManager.LoadSettings();
-            
-            // 尝试获取 AuthService
+
             if (authService != null)
             {
                 _authService = authService;
@@ -143,43 +459,47 @@ namespace lingualink_client.ViewModels
             {
                 _authService = resolvedAuth;
             }
-            
+
             LoadSettingsFromModel(_currentSettings);
-            
-            // 订阅语言变化事件（统一刷新所有本地化绑定）
+
             LanguageManager.LanguageChanged += OnLanguageChanged;
 
-            // 初始化自动保存计时器（防抖）
             _autoSaveTimer = new DispatcherTimer
             {
                 Interval = TimeSpan.FromSeconds(1)
             };
             _autoSaveTimer.Tick += AutoSaveTimerOnTick;
 
-            // 监听属性变更，用于触发自动保存
+            _emailCodeTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(1)
+            };
+            _emailCodeTimer.Tick += EmailCodeTimerOnTick;
+
             PropertyChanged += OnAccountPropertyChanged;
 
-            // 订阅登录状态变化
             if (_authService != null)
             {
                 _authService.LoginStateChanged += OnAuthServiceLoginStateChanged;
-                // 初始化登录状态
                 UpdateLoginState();
             }
         }
 
+        private void EmailCodeTimerOnTick(object? sender, EventArgs e)
+        {
+            if (EmailCodeCountdownSeconds <= 1)
+            {
+                EmailCodeCountdownSeconds = 0;
+                _emailCodeTimer.Stop();
+                return;
+            }
+
+            EmailCodeCountdownSeconds--;
+        }
+
         private void OnAuthServiceLoginStateChanged(object? sender, bool isLoggedIn)
         {
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                UpdateLoginState();
-                
-                // 登录成功后自动加载 API Keys
-                if (isLoggedIn)
-                {
-                    _ = LoadApiKeysAsync();
-                }
-            });
+            Application.Current.Dispatcher.Invoke(UpdateLoginState);
         }
 
         private void UpdateLoginState()
@@ -187,6 +507,13 @@ namespace lingualink_client.ViewModels
             if (_authService == null)
             {
                 IsLoggedIn = false;
+                IsEditingDisplayName = false;
+                IsEditingEmail = false;
+                ResetBindEmailState();
+                IsEditingProvider = false;
+                ClearPlans();
+                StopOrderPollingInternal();
+                ResetOrderState();
                 return;
             }
 
@@ -195,39 +522,678 @@ namespace lingualink_client.ViewModels
 
             if (UserProfile != null)
             {
-                LoggedInUsername = !string.IsNullOrEmpty(UserProfile.DisplayName)
-                    ? UserProfile.DisplayName
-                    : UserProfile.CasdoorName ?? "用户";
+                LoggedInUsername = !string.IsNullOrWhiteSpace(UserProfile.CasdoorName)
+                    ? UserProfile.CasdoorName
+                    : UserProfile.Email ?? UserProfile.Id ?? "用户";
 
-                // 更新订阅状态显示
-                if (UserProfile.Subscription != null)
-                {
-                    SubscriptionStatus = UserProfile.Subscription.PlanName;
-                    QuotaDisplay = $"{UserProfile.Subscription.QuotaRemaining:N0} / {UserProfile.Subscription.QuotaTotal:N0}";
-                }
-                else
-                {
-                    SubscriptionStatus = "Free";
-                    QuotaDisplay = string.Empty;
-                }
+                UpdateSubscriptionPresentation(UserProfile.Subscription);
             }
             else
             {
+                IsEditingDisplayName = false;
+                IsEditingEmail = false;
+                ResetBindEmailState();
+                IsEditingProvider = false;
                 LoggedInUsername = string.Empty;
-                SubscriptionStatus = string.Empty;
-                QuotaDisplay = string.Empty;
+                ResetSubscriptionPresentation();
+                ClearPlans();
+                StopOrderPollingInternal();
+                ResetOrderState();
+
+                if (IsLoggedIn)
+                {
+                    _ = EnsureUserProfileLoadedAsync();
+                }
             }
 
-            // 通知 UI 更新命令状态
             LoginCommand.NotifyCanExecuteChanged();
             LogoutCommand.NotifyCanExecuteChanged();
+            OpenSubscriptionDialogCommand.NotifyCanExecuteChanged();
             RefreshUserProfileCommand.NotifyCanExecuteChanged();
-            CreateApiKeyCommand.NotifyCanExecuteChanged();
+            UpdateUserProfileCommand.NotifyCanExecuteChanged();
+            SendEmailCodeCommand.NotifyCanExecuteChanged();
+            BindProviderCommand.NotifyCanExecuteChanged();
+            BindQqProviderCommand.NotifyCanExecuteChanged();
+            BindWechatProviderCommand.NotifyCanExecuteChanged();
+            CopyAccountIdCommand.NotifyCanExecuteChanged();
+            BeginEditDisplayNameCommand.NotifyCanExecuteChanged();
+            BeginEditEmailCommand.NotifyCanExecuteChanged();
+            BeginEditProviderCommand.NotifyCanExecuteChanged();
+            SaveDisplayNameCommand.NotifyCanExecuteChanged();
+            SaveEmailCommand.NotifyCanExecuteChanged();
+            SaveProviderCommand.NotifyCanExecuteChanged();
+            LoadSubscriptionPlansCommand.NotifyCanExecuteChanged();
+            CreateSubscriptionOrderCommand.NotifyCanExecuteChanged();
+            QueryOrderStatusCommand.NotifyCanExecuteChanged();
+            StopOrderPollingCommand.NotifyCanExecuteChanged();
+        }
+
+        private async Task EnsureUserProfileLoadedAsync()
+        {
+            if (_authService == null || !IsLoggedIn || UserProfile != null)
+            {
+                return;
+            }
+
+            await TrySyncUserProfileAsync(
+                maxAttempts: 2,
+                retryDelay: TimeSpan.FromSeconds(2),
+                allowWhenLoggedOut: false);
+        }
+
+        public async Task EnsureProfileFreshOnPageEnterAsync()
+        {
+            if (_authService == null || UserProfile != null)
+            {
+                return;
+            }
+
+            await TrySyncUserProfileAsync(
+                maxAttempts: 4,
+                retryDelay: TimeSpan.FromSeconds(2),
+                allowWhenLoggedOut: true);
+        }
+
+        public void CancelPendingProfileSync()
+        {
+            try
+            {
+                _profileSyncCts?.Cancel();
+                _profileSyncCts?.Dispose();
+            }
+            catch
+            {
+            }
+            finally
+            {
+                _profileSyncCts = null;
+            }
+        }
+
+        private async Task TrySyncUserProfileAsync(int maxAttempts, TimeSpan retryDelay, bool allowWhenLoggedOut)
+        {
+            if (_authService == null || UserProfile != null || _isRecoveringUserProfile || maxAttempts <= 0)
+            {
+                return;
+            }
+
+            CancelPendingProfileSync();
+            var cts = new CancellationTokenSource();
+            _profileSyncCts = cts;
+            var token = cts.Token;
+
+            _isRecoveringUserProfile = true;
+            try
+            {
+                for (var attempt = 0; attempt < maxAttempts; attempt++)
+                {
+                    token.ThrowIfCancellationRequested();
+
+                    if (!IsLoggedIn)
+                    {
+                        if (!allowWhenLoggedOut)
+                        {
+                            return;
+                        }
+
+                        // 兜底：页面进入时主动从本地恢复会话，避免只依赖应用启动阶段的恢复任务。
+                        await _authService.TryRestoreSessionAsync();
+                        UpdateLoginState();
+                    }
+
+                    await _authService.RefreshUserProfileAsync();
+                    UpdateLoginState();
+
+                    if (UserProfile != null)
+                    {
+                        return;
+                    }
+
+                    if (attempt < maxAttempts - 1)
+                    {
+                        await Task.Delay(retryDelay, token);
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[AccountPageViewModel] TrySyncUserProfileAsync exception: {ex.Message}");
+            }
+            finally
+            {
+                if (ReferenceEquals(_profileSyncCts, cts))
+                {
+                    CancelPendingProfileSync();
+                }
+
+                _isRecoveringUserProfile = false;
+            }
+        }
+
+        private void UpdateSubscriptionPresentation(SubscriptionInfo? subscription)
+        {
+            if (subscription == null)
+            {
+                ResetSubscriptionPresentation();
+                return;
+            }
+
+            HasActiveSubscription = subscription.IsPaidActiveNow;
+            HasPaidSubscriptionPlan = subscription.IsPaidPlan;
+            CurrentPlanDisplay = subscription.DisplayPlanName;
+            SubscriptionStatus = BuildSubscriptionStatusText(subscription);
+            SubscriptionRemainingDisplay = BuildSubscriptionRemainingText(subscription);
+            ExpiryReminder = BuildExpiryReminderText(subscription);
+        }
+
+        private void ResetSubscriptionPresentation()
+        {
+            HasActiveSubscription = false;
+            HasPaidSubscriptionPlan = false;
+            SubscriptionStatus = "未开通";
+            CurrentPlanDisplay = "Free";
+            SubscriptionRemainingDisplay = "免费套餐（无限期）";
+            ExpiryReminder = "当前账号尚未检测到有效订阅。";
+        }
+
+        private static string BuildSubscriptionStatusText(SubscriptionInfo subscription)
+        {
+            if (!subscription.IsPaidPlan)
+            {
+                return "免费套餐";
+            }
+
+            if (subscription.IsPaidActiveNow)
+            {
+                return "订阅有效";
+            }
+
+            var now = DateTime.UtcNow;
+            if (subscription.StartDate.HasValue && subscription.StartDate.Value.ToUniversalTime() > now)
+            {
+                return "未生效";
+            }
+
+            if (subscription.EffectiveEndDate.HasValue && subscription.EffectiveEndDate.Value.ToUniversalTime() < now)
+            {
+                return "已过期";
+            }
+
+            return string.IsNullOrWhiteSpace(subscription.Status)
+                ? "未开通"
+                : subscription.Status;
+        }
+
+        private static string BuildExpiryReminderText(SubscriptionInfo subscription)
+        {
+            if (!subscription.IsPaidPlan)
+            {
+                return "当前为免费套餐，开通 VIP 后可使用更多能力。";
+            }
+
+            if (subscription.AutoRenew && subscription.IsPaidActiveNow)
+            {
+                return "当前订阅将自动续费。";
+            }
+
+            var endDate = subscription.EffectiveEndDate;
+            if (!endDate.HasValue)
+            {
+                return subscription.IsPaidActiveNow
+                    ? "订阅有效期信息暂不可用。"
+                    : "当前账号尚未检测到有效订阅。";
+            }
+
+            var daysRemaining = (endDate.Value.ToLocalTime().Date - DateTime.Now.Date).Days;
+            if (daysRemaining < 0)
+            {
+                return "订阅已到期，请续费后继续使用。";
+            }
+
+            if (!subscription.IsPaidActiveNow)
+            {
+                return "订阅未生效，请检查订阅状态。";
+            }
+
+            if (daysRemaining == 0)
+            {
+                return "订阅将于今天到期，请及时续费。";
+            }
+
+            if (daysRemaining <= 7)
+            {
+                return $"订阅将在 {daysRemaining} 天后到期，请及时续费。";
+            }
+
+            return string.Empty;
+        }
+
+        private static string BuildSubscriptionRemainingText(SubscriptionInfo subscription)
+        {
+            if (!subscription.IsPaidPlan)
+            {
+                return "免费套餐（无限期）";
+            }
+
+            var endDate = subscription.EffectiveEndDate;
+            if (!endDate.HasValue)
+            {
+                return subscription.IsPaidActiveNow ? "有效期未知" : "未生效";
+            }
+
+            var now = DateTime.UtcNow;
+            var endUtc = endDate.Value.ToUniversalTime();
+            var remaining = endUtc - now;
+            if (remaining <= TimeSpan.Zero)
+            {
+                return "已到期";
+            }
+
+            if (remaining.TotalDays >= 1)
+            {
+                return $"剩余 {Math.Floor(remaining.TotalDays)} 天";
+            }
+
+            if (remaining.TotalHours >= 1)
+            {
+                return $"剩余 {Math.Floor(remaining.TotalHours)} 小时";
+            }
+
+            return $"剩余 {Math.Max(1, Math.Floor(remaining.TotalMinutes))} 分钟";
+        }
+
+        private static string FormatDate(DateTime value)
+        {
+            return value.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
+        }
+
+        private static string MapUserStatus(string? status)
+        {
+            if (string.IsNullOrWhiteSpace(status))
+            {
+                return "未知";
+            }
+
+            return status.Trim().ToLowerInvariant() switch
+            {
+                "active" => "正常",
+                "inactive" => "未激活",
+                "disabled" => "已禁用",
+                _ => status
+            };
+        }
+
+        private static bool TryValidateCasdoorNameInput(string? value, out string? errorMessage)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                errorMessage = "用户名不能为空";
+                return false;
+            }
+
+            if (value.Length > 100)
+            {
+                errorMessage = "用户名长度不能超过 100";
+                return false;
+            }
+
+            foreach (var c in value)
+            {
+                if (char.IsWhiteSpace(c))
+                {
+                    errorMessage = "用户名不能包含空白字符";
+                    return false;
+                }
+
+                if (c == '/')
+                {
+                    errorMessage = "用户名不能包含 /";
+                    return false;
+                }
+            }
+
+            errorMessage = null;
+            return true;
+        }
+
+        private void SyncProfileEditorWithUser(UserProfile? profile)
+        {
+            if (profile == null)
+            {
+                EditDisplayName = string.Empty;
+                return;
+            }
+
+            EditDisplayName = profile.CasdoorName ?? string.Empty;
+        }
+
+        private void ResetBindEmailState()
+        {
+            _emailCodeTimer.Stop();
+            BindEmailInput = string.Empty;
+            BindEmailCodeInput = string.Empty;
+            BindEmailPasswordInput = string.Empty;
+            BindEmailConfirmPasswordInput = string.Empty;
+            IsEmailCodeSent = false;
+            IsSendingEmailCode = false;
+            EmailCodeCountdownSeconds = 0;
+        }
+
+        private static bool TryValidateEmailInput(string? email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                return false;
+            }
+
+            try
+            {
+                var parsed = new MailAddress(email.Trim());
+                return string.Equals(parsed.Address, email.Trim(), StringComparison.OrdinalIgnoreCase);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private bool HasValidBindEmailPassword()
+        {
+            var password = BindEmailPasswordInput ?? string.Empty;
+            if (password.Length < 8 || password.Length > 128)
+            {
+                return false;
+            }
+
+            return string.Equals(password, BindEmailConfirmPasswordInput ?? string.Empty, StringComparison.Ordinal);
+        }
+
+        private void ClearPlans()
+        {
+            AvailablePlans = Array.Empty<SubscriptionPlanInfo>();
+            SelectedPlan = null;
+        }
+
+        private void ResetOrderState()
+        {
+            LatestOrderOutTradeNo = string.Empty;
+            LatestOrderStatus = string.Empty;
+            LatestOrderAmountDisplay = string.Empty;
+            LatestOrderExpireAtDisplay = string.Empty;
+            LatestOrderProvider = string.Empty;
+            LatestOrderIntegrationStatus = string.Empty;
+            LatestOrderCodeUrl = string.Empty;
+            LatestOrderQrImage = null;
+            LatestOrderMessage = string.Empty;
+        }
+
+        private void UpdateOrderPresentation(SubscriptionOrderInfo order, PaymentInstructionInfo? payment = null)
+        {
+            LatestOrderOutTradeNo = order.OutTradeNo ?? string.Empty;
+            LatestOrderStatus = string.IsNullOrWhiteSpace(order.Status) ? "unknown" : order.Status;
+            LatestOrderAmountDisplay = order.AmountDisplay;
+            LatestOrderExpireAtDisplay = order.ExpireAt.HasValue ? FormatDate(order.ExpireAt.Value) : string.Empty;
+
+            if (payment != null)
+            {
+                LatestOrderProvider = payment.Provider ?? string.Empty;
+                LatestOrderIntegrationStatus = payment.IntegrationStatus ?? string.Empty;
+                LatestOrderCodeUrl = payment.CodeUrl?.Trim() ?? string.Empty;
+
+                if (!order.ExpireAt.HasValue && payment.OrderExpireAt.HasValue)
+                {
+                    LatestOrderExpireAtDisplay = FormatDate(payment.OrderExpireAt.Value);
+                }
+
+                if (!string.IsNullOrWhiteSpace(payment.Message))
+                {
+                    LatestOrderMessage = payment.Message;
+                }
+            }
+        }
+
+        private static BitmapImage? BuildQrCodeImage(string? codeUrl)
+        {
+            if (string.IsNullOrWhiteSpace(codeUrl))
+            {
+                return null;
+            }
+
+            try
+            {
+                using var generator = new QRCodeGenerator();
+                using var qrData = generator.CreateQrCode(codeUrl, QRCodeGenerator.ECCLevel.Q);
+                var qrCode = new PngByteQRCode(qrData);
+                var pngBytes = qrCode.GetGraphic(20);
+
+                using var memoryStream = new MemoryStream(pngBytes);
+                var image = new BitmapImage();
+                image.BeginInit();
+                image.CacheOption = BitmapCacheOption.OnLoad;
+                image.StreamSource = memoryStream;
+                image.EndInit();
+                image.Freeze();
+                return image;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private void PersistPendingOrderOutTradeNo(string outTradeNo)
+        {
+            var normalized = outTradeNo?.Trim() ?? string.Empty;
+            var current = _currentSettings.PendingSubscriptionOrderOutTradeNo?.Trim() ?? string.Empty;
+
+            if (string.Equals(normalized, current, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            if (_settingsManager.TryUpdateAndSave(
+                    "AccountPagePendingOrder",
+                    settings =>
+                    {
+                        settings.PendingSubscriptionOrderOutTradeNo = normalized;
+                        return true;
+                    },
+                    out var updated)
+                && updated != null)
+            {
+                _currentSettings = updated;
+            }
+        }
+
+        private void ClearPendingOrderOutTradeNo()
+        {
+            PersistPendingOrderOutTradeNo(string.Empty);
+        }
+
+        private static bool IsTerminalOrderStatus(string status)
+        {
+            if (string.IsNullOrWhiteSpace(status))
+            {
+                return false;
+            }
+
+            return string.Equals(status, "paid", StringComparison.OrdinalIgnoreCase)
+                   || string.Equals(status, "failed", StringComparison.OrdinalIgnoreCase)
+                   || string.Equals(status, "canceled", StringComparison.OrdinalIgnoreCase)
+                   || string.Equals(status, "cancelled", StringComparison.OrdinalIgnoreCase)
+                   || string.Equals(status, "expired", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private async Task ApplyTerminalOrderStateAsync(SubscriptionOrderInfo order, bool refreshSubscriptionIfPaid)
+        {
+            if (string.IsNullOrWhiteSpace(order.Status))
+            {
+                return;
+            }
+
+            var normalized = order.Status.Trim().ToLowerInvariant();
+            switch (normalized)
+            {
+                case "paid":
+                    LatestOrderMessage = "支付成功，正在刷新订阅状态。";
+                    if (refreshSubscriptionIfPaid)
+                    {
+                        await RefreshUserProfileAsync();
+                    }
+                    break;
+                case "failed":
+                    LatestOrderMessage = "订单支付失败，请重新下单。";
+                    break;
+                case "expired":
+                    LatestOrderMessage = "订单已过期，请重新下单。";
+                    break;
+                case "cancelled":
+                case "canceled":
+                    LatestOrderMessage = "订单已取消，请重新下单。";
+                    break;
+            }
+        }
+
+        private void StopOrderPollingInternal()
+        {
+            try
+            {
+                _orderPollingCts?.Cancel();
+                _orderPollingCts?.Dispose();
+            }
+            catch
+            {
+            }
+            finally
+            {
+                _orderPollingCts = null;
+                IsPollingOrder = false;
+            }
+        }
+
+        private async Task StartOrderPollingAsync(string outTradeNo)
+        {
+            StopOrderPollingInternal();
+
+            var cts = new CancellationTokenSource();
+            _orderPollingCts = cts;
+            var token = cts.Token;
+            IsPollingOrder = true;
+
+            try
+            {
+                for (var i = 0; i < 60; i++)
+                {
+                    token.ThrowIfCancellationRequested();
+
+                    var order = await QueryOrderStatusInternalAsync(outTradeNo, showErrorMessage: false);
+                    if (order != null && IsTerminalOrderStatus(order.Status))
+                    {
+                        await ApplyTerminalOrderStateAsync(order, refreshSubscriptionIfPaid: true);
+                        return;
+                    }
+
+                    await Task.Delay(TimeSpan.FromSeconds(3), token);
+                }
+
+                LatestOrderMessage = "订单轮询超时，请稍后手动刷新订单状态。";
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            finally
+            {
+                if (ReferenceEquals(_orderPollingCts, cts))
+                {
+                    StopOrderPollingInternal();
+                }
+            }
+        }
+
+        private async Task RestorePendingOrderAsync()
+        {
+            if (_authService == null || !IsLoggedIn || _isRestoringPendingOrder)
+            {
+                return;
+            }
+
+            var outTradeNo = _currentSettings.PendingSubscriptionOrderOutTradeNo?.Trim() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(outTradeNo))
+            {
+                return;
+            }
+
+            _isRestoringPendingOrder = true;
+            try
+            {
+                LatestOrderOutTradeNo = outTradeNo;
+                LatestOrderMessage = $"检测到未完成订单 {outTradeNo}，正在恢复状态。";
+
+                var order = await QueryOrderStatusInternalAsync(outTradeNo, showErrorMessage: false);
+                if (order == null)
+                {
+                    LatestOrderMessage = $"已恢复订单号 {outTradeNo}，请点击“查询订单”继续检查状态。";
+                    return;
+                }
+
+                if (string.Equals(order.Status, "pending", StringComparison.OrdinalIgnoreCase))
+                {
+                    _ = StartOrderPollingAsync(outTradeNo);
+                    return;
+                }
+
+                if (IsTerminalOrderStatus(order.Status))
+                {
+                    await ApplyTerminalOrderStateAsync(order, refreshSubscriptionIfPaid: true);
+                }
+            }
+            finally
+            {
+                _isRestoringPendingOrder = false;
+            }
+        }
+
+        private async Task<SubscriptionOrderInfo?> QueryOrderStatusInternalAsync(string outTradeNo, bool showErrorMessage)
+        {
+            if (_authService == null || !IsLoggedIn || string.IsNullOrWhiteSpace(outTradeNo))
+            {
+                return null;
+            }
+
+            var order = await _authService.GetSubscriptionOrderStatusAsync(outTradeNo);
+            if (order == null)
+            {
+                if (showErrorMessage)
+                {
+                    MessageBox.Show(
+                        "查询订单状态失败，请稍后重试。",
+                        LanguageManager.GetString("ErrorTitle"),
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                }
+
+                return null;
+            }
+
+            UpdateOrderPresentation(order);
+
+            if (string.Equals(order.Status, "pending", StringComparison.OrdinalIgnoreCase))
+            {
+                PersistPendingOrderOutTradeNo(order.OutTradeNo);
+            }
+            else if (IsTerminalOrderStatus(order.Status))
+            {
+                ClearPendingOrderOutTradeNo();
+            }
+
+            return order;
         }
 
         private void OnLanguageChanged()
         {
-            // 空字符串表示刷新该 ViewModel 的所有绑定属性，适合本地化场景
             OnPropertyChanged(string.Empty);
         }
 
@@ -237,29 +1203,23 @@ namespace lingualink_client.ViewModels
             try
             {
                 _currentSettings = settings;
-
-                // 从设置中恢复是否使用自定义服务器
                 UseCustomServer = settings.UseCustomServer;
 
                 if (UseCustomServer)
                 {
-                    // 优先使用单独存储的自定义服务器配置，否则回退到当前全局配置
                     ServerUrl = string.IsNullOrWhiteSpace(settings.CustomServerUrl)
                         ? settings.ServerUrl
                         : settings.CustomServerUrl;
-
-                    ApiKey = string.IsNullOrEmpty(settings.CustomApiKey)
+                    ApiKey = string.IsNullOrWhiteSpace(settings.CustomApiKey)
                         ? settings.ApiKey
                         : settings.CustomApiKey;
                 }
                 else
                 {
-                    // 使用官方服务配置；如果未显式设置则使用默认官方地址
                     ServerUrl = string.IsNullOrWhiteSpace(settings.OfficialServerUrl)
                         ? "https://api.lingualink.aiatechco.com/api/v1/"
                         : settings.OfficialServerUrl;
-
-                    ApiKey = settings.OfficialApiKey;
+                    ApiKey = string.Empty;
                 }
             }
             finally
@@ -300,7 +1260,6 @@ namespace lingualink_client.ViewModels
             }
 
             _hasPendingChanges = false;
-
             SaveInternal(showConfirmation: false, changeSource: "AccountPageAutoSave");
         }
 
@@ -318,27 +1277,22 @@ namespace lingualink_client.ViewModels
                 return;
             }
 
-            // 在切换模式时，不立刻写盘，只在保存时持久化。
             if (value)
             {
-                // 切换到自定义服务器：先记录当前官方配置，再恢复自定义配置
                 _currentSettings.OfficialServerUrl = ServerUrl;
-                _currentSettings.OfficialApiKey = ApiKey;
 
                 var customUrl = string.IsNullOrWhiteSpace(_currentSettings.CustomServerUrl)
                     ? _currentSettings.ServerUrl
                     : _currentSettings.CustomServerUrl;
-
-                var customKey = string.IsNullOrEmpty(_currentSettings.CustomApiKey)
+                var customApiKey = string.IsNullOrWhiteSpace(_currentSettings.CustomApiKey)
                     ? _currentSettings.ApiKey
                     : _currentSettings.CustomApiKey;
 
                 ServerUrl = customUrl;
-                ApiKey = customKey;
+                ApiKey = customApiKey;
             }
             else
             {
-                // 切换到官方服务：先记录当前自定义配置，再恢复官方配置
                 _currentSettings.CustomServerUrl = ServerUrl;
                 _currentSettings.CustomApiKey = ApiKey;
 
@@ -348,66 +1302,47 @@ namespace lingualink_client.ViewModels
                 }
 
                 ServerUrl = _currentSettings.OfficialServerUrl;
-                ApiKey = _currentSettings.OfficialApiKey;
+                ApiKey = string.Empty;
             }
         }
 
         private bool UpdateSettingsFromView(AppSettings updatedSettings)
         {
-            System.Diagnostics.Debug.WriteLine($"[AccountPageViewModel] ValidateAndBuildSettings() called");
-            System.Diagnostics.Debug.WriteLine($"[AccountPageViewModel] Loaded latest settings base - ApiKey: '{updatedSettings.ApiKey}', ServerUrl: '{updatedSettings.ServerUrl}'");
+            Debug.WriteLine("[AccountPageViewModel] ValidateAndBuildSettings() called");
+            Debug.WriteLine($"[AccountPageViewModel] Loaded latest settings base - ServerUrl: '{updatedSettings.ServerUrl}'");
 
-            // 只有在使用自定义服务器时才需要验证URL和API密钥
-            if (UseCustomServer)
+            if (UseCustomServer && (string.IsNullOrWhiteSpace(ServerUrl) || !Uri.TryCreate(ServerUrl, UriKind.Absolute, out _)))
             {
-                if (string.IsNullOrWhiteSpace(ServerUrl) || !Uri.TryCreate(ServerUrl, UriKind.Absolute, out _))
-                {
-                    MessageBox.Show(LanguageManager.GetString("ValidationServerUrlInvalid"),
-                                   LanguageManager.GetString("ValidationErrorTitle"),
-                                   MessageBoxButton.OK, MessageBoxImage.Error);
-                    return false;
-                }
-
-                if (string.IsNullOrWhiteSpace(ApiKey))
-                {
-                    MessageBox.Show(LanguageManager.GetString("ValidationApiKeyRequired"),
-                                   LanguageManager.GetString("ValidationErrorTitle"),
-                                   MessageBoxButton.OK, MessageBoxImage.Error);
-                    return false;
-                }
+                MessageBox.Show(LanguageManager.GetString("ValidationServerUrlInvalid"),
+                               LanguageManager.GetString("ValidationErrorTitle"),
+                               MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
             }
 
-            // 持久化当前认证模式选择
-            updatedSettings.UseCustomServer = this.UseCustomServer;
+            updatedSettings.UseCustomServer = UseCustomServer;
 
-            // 只有在使用自定义服务器时才更新URL和API密钥
             if (UseCustomServer)
             {
-                System.Diagnostics.Debug.WriteLine($"[AccountPageViewModel] Using custom server - updating settings");
-                System.Diagnostics.Debug.WriteLine($"[AccountPageViewModel] ViewModel values - ServerUrl: '{this.ServerUrl}', ApiKey: '{this.ApiKey}'");
+                Debug.WriteLine("[AccountPageViewModel] Using custom server - updating settings");
+                Debug.WriteLine($"[AccountPageViewModel] ViewModel values - ServerUrl: '{ServerUrl}'");
 
-                // 保存自定义服务器配置
-                updatedSettings.CustomServerUrl = this.ServerUrl;
-                updatedSettings.CustomApiKey = this.ApiKey;
-
-                // 将全局 ServerUrl/ApiKey 也指向当前自定义配置
-                updatedSettings.ServerUrl = this.ServerUrl;
-                updatedSettings.ApiKey = this.ApiKey;
-
-                System.Diagnostics.Debug.WriteLine($"[AccountPageViewModel] Updated settings - ServerUrl: '{updatedSettings.ServerUrl}', ApiKey: '{updatedSettings.ApiKey}'");
+                updatedSettings.CustomServerUrl = ServerUrl;
+                updatedSettings.CustomApiKey = ApiKey?.Trim() ?? string.Empty;
+                updatedSettings.ServerUrl = ServerUrl;
+                updatedSettings.ApiKey = updatedSettings.CustomApiKey;
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine($"[AccountPageViewModel] Using official service - clearing custom settings");
+                Debug.WriteLine("[AccountPageViewModel] Using official service");
 
-                // 使用官方服务时，仅更新官方服务相关配置，保留已有官方 APIKey
                 updatedSettings.OfficialServerUrl = string.IsNullOrWhiteSpace(updatedSettings.OfficialServerUrl)
                     ? "https://api.lingualink.aiatechco.com/api/v1/"
                     : updatedSettings.OfficialServerUrl;
 
-                // 将全局 ServerUrl/ApiKey 指向官方服务配置
                 updatedSettings.ServerUrl = updatedSettings.OfficialServerUrl;
-                updatedSettings.ApiKey = updatedSettings.OfficialApiKey;
+                updatedSettings.ApiKey = string.IsNullOrWhiteSpace(updatedSettings.CustomApiKey)
+                    ? updatedSettings.ApiKey
+                    : updatedSettings.CustomApiKey;
             }
 
             return true;
@@ -415,7 +1350,7 @@ namespace lingualink_client.ViewModels
 
         private void SaveInternal(bool showConfirmation, string changeSource)
         {
-            System.Diagnostics.Debug.WriteLine($"[AccountPageViewModel] SaveInternal() called - Source: {changeSource}, Current ApiKey: '{ApiKey}', UseCustomServer: {UseCustomServer}");
+            Debug.WriteLine($"[AccountPageViewModel] SaveInternal() called - Source: {changeSource}, UseCustomServer: {UseCustomServer}");
 
             if (!_settingsManager.TryUpdateAndSave(changeSource, UpdateSettingsFromView, out var updatedSettings) || updatedSettings == null)
             {
@@ -423,14 +1358,14 @@ namespace lingualink_client.ViewModels
             }
 
             _currentSettings = updatedSettings;
-
             _hasPendingChanges = false;
+
             if (_autoSaveTimer.IsEnabled)
             {
                 _autoSaveTimer.Stop();
             }
 
-            System.Diagnostics.Debug.WriteLine($"[AccountPageViewModel] Settings saved, raising SettingsChanged event");
+            Debug.WriteLine("[AccountPageViewModel] Settings saved, raising SettingsChanged event");
 
             if (showConfirmation)
             {
@@ -470,6 +1405,11 @@ namespace lingualink_client.ViewModels
 
                 if (!result.Success)
                 {
+                    if (result.IsCancelled)
+                    {
+                        return;
+                    }
+
                     MessageBox.Show(
                         result.ErrorMessage ?? "登录失败",
                         LanguageManager.GetString("ErrorTitle"),
@@ -499,7 +1439,9 @@ namespace lingualink_client.ViewModels
         private async Task LogoutAsync()
         {
             if (_authService == null)
+            {
                 return;
+            }
 
             var result = MessageBox.Show(
                 "确定要退出登录吗？",
@@ -511,8 +1453,9 @@ namespace lingualink_client.ViewModels
             {
                 try
                 {
+                    StopOrderPollingInternal();
+                    ClearPendingOrderOutTradeNo();
                     await _authService.LogoutAsync();
-                    ApiKeys.Clear();
                 }
                 catch (Exception ex)
                 {
@@ -523,11 +1466,90 @@ namespace lingualink_client.ViewModels
 
         private bool CanLogout() => IsLoggedIn && _authService != null;
 
+        [RelayCommand(CanExecute = nameof(CanOpenSubscriptionDialog))]
+        private async Task OpenSubscriptionDialogAsync()
+        {
+            if (!IsLoggedIn || _authService == null)
+            {
+                MessageBox.Show(
+                    "请先登录后再开通或续费 VIP。",
+                    LanguageManager.GetString("InfoTitle"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
+
+            var accessToken = await _authService.GetAccessTokenAsync();
+            if (string.IsNullOrWhiteSpace(accessToken))
+            {
+                MessageBox.Show(
+                    "登录状态已失效，请重新登录后再订阅。",
+                    LanguageManager.GetString("WarningTitle"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            var checkoutWindow = new CheckoutWindow(accessToken, ResolveCheckoutAuthHost(_authService.AuthServerUrl))
+            {
+                Owner = Application.Current.MainWindow
+            };
+
+            var paymentCompleted = false;
+            var paidOutTradeNo = string.Empty;
+            checkoutWindow.PaymentCompleted += outTradeNo =>
+            {
+                paymentCompleted = true;
+                paidOutTradeNo = outTradeNo ?? string.Empty;
+            };
+
+            checkoutWindow.ShowDialog();
+
+            // 无论是否捕获到 postMessage，都刷新一次资料；
+            // 部分 Web 环境只触发 window.close，不会直达 WebMessageReceived。
+            await RefreshUserProfileAsync();
+            if (!paymentCompleted)
+            {
+                await Task.Delay(1200);
+                await RefreshUserProfileAsync();
+            }
+
+            if (paymentCompleted)
+            {
+                var message = string.IsNullOrWhiteSpace(paidOutTradeNo)
+                    ? "订阅成功，订阅状态已刷新。"
+                    : $"订阅成功！订单号：{paidOutTradeNo}";
+
+                MessageBox.Show(
+                    message,
+                    LanguageManager.GetString("SuccessTitle"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+        }
+
+        private bool CanOpenSubscriptionDialog()
+        {
+            return IsLoggedIn && _authService != null;
+        }
+
+        private static string ResolveCheckoutAuthHost(string? authServerUrl)
+        {
+            if (string.IsNullOrWhiteSpace(authServerUrl))
+            {
+                return "http://localhost:9080";
+            }
+
+            return authServerUrl.Trim().TrimEnd('/');
+        }
+
         [RelayCommand(CanExecute = nameof(CanRefreshUserProfile))]
         private async Task RefreshUserProfileAsync()
         {
             if (_authService == null)
+            {
                 return;
+            }
 
             try
             {
@@ -542,150 +1564,725 @@ namespace lingualink_client.ViewModels
 
         private bool CanRefreshUserProfile() => IsLoggedIn && _authService != null;
 
-        #endregion
-
-        #region API Key 管理
-
-        [RelayCommand]
-        private async Task LoadApiKeysAsync()
+        [RelayCommand(CanExecute = nameof(CanCopyAccountId))]
+        private void CopyAccountId()
         {
-            if (_authService == null || !IsLoggedIn)
+            if (string.IsNullOrWhiteSpace(UserProfile?.Id))
+            {
                 return;
-
-            IsLoadingApiKeys = true;
-
-            try
-            {
-                var keys = await _authService.GetApiKeysAsync();
-                ApiKeys.Clear();
-                foreach (var key in keys)
-                {
-                    ApiKeys.Add(key);
-                }
             }
-            catch (Exception ex)
+
+            if (ClipboardHelper.TrySetText(UserProfile.Id))
             {
-                Debug.WriteLine($"[AccountPageViewModel] Load API keys exception: {ex.Message}");
+                MessageBox.Show(
+                    "账号 ID 已复制。",
+                    LanguageManager.GetString("SuccessTitle"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
             }
-            finally
+            else
             {
-                IsLoadingApiKeys = false;
+                MessageBox.Show(
+                    "复制失败，请稍后重试。",
+                    LanguageManager.GetString("ErrorTitle"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
             }
         }
 
-        [RelayCommand(CanExecute = nameof(CanCreateApiKey))]
-        private async Task CreateApiKeyAsync()
+        private bool CanCopyAccountId()
+        {
+            return IsLoggedIn && !string.IsNullOrWhiteSpace(UserProfile?.Id);
+        }
+
+        [RelayCommand(CanExecute = nameof(CanBeginEditDisplayName))]
+        private void BeginEditDisplayName()
+        {
+            EditDisplayName = UserProfile?.CasdoorName ?? string.Empty;
+            IsEditingDisplayName = true;
+        }
+
+        private bool CanBeginEditDisplayName() => IsLoggedIn && !IsUpdatingUserProfile;
+
+        [RelayCommand]
+        private void CancelEditDisplayName()
+        {
+            IsEditingDisplayName = false;
+            EditDisplayName = UserProfile?.CasdoorName ?? string.Empty;
+        }
+
+        [RelayCommand(CanExecute = nameof(CanSaveDisplayName))]
+        private async Task SaveDisplayNameAsync()
         {
             if (_authService == null || !IsLoggedIn)
-                return;
-
-            if (string.IsNullOrWhiteSpace(NewApiKeyName))
             {
-                MessageBox.Show("请输入 API Key 名称", "提示", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            IsCreatingApiKey = true;
-            CreateApiKeyCommand.NotifyCanExecuteChanged();
+            var trimmedUsername = string.IsNullOrWhiteSpace(EditDisplayName) ? string.Empty : EditDisplayName.Trim();
+            if (!TryValidateCasdoorNameInput(trimmedUsername, out var validationError))
+            {
+                MessageBox.Show(validationError ?? "用户名格式不正确", LanguageManager.GetString("ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
+            IsUpdatingUserProfile = true;
             try
             {
-                var result = await _authService.CreateApiKeyAsync(NewApiKeyName.Trim());
-
-                if (result.Success && result.KeyInfo != null)
+                var result = await _authService.UpdateUserProfileAsync(displayName: null, avatarUrl: null, casdoorName: trimmedUsername);
+                if (!result.Success)
                 {
-                    // 添加到列表
-                    ApiKeys.Insert(0, result.KeyInfo);
-                    
-                    // 显示完整的 API Key（仅此一次）
-                    NewlyCreatedApiKey = result.FullKey;
-                    ShowNewApiKeyDialog = true;
-                    
-                    // 清空输入框
-                    NewApiKeyName = string.Empty;
+                    MessageBox.Show(result.ErrorMessage ?? "修改用户名失败", LanguageManager.GetString("ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
                 }
-                else
+
+                IsEditingDisplayName = false;
+                await RefreshUserProfileAsync();
+            }
+            finally
+            {
+                IsUpdatingUserProfile = false;
+            }
+        }
+
+        private bool CanSaveDisplayName()
+        {
+            if (!IsLoggedIn || _authService == null || IsUpdatingUserProfile || string.IsNullOrWhiteSpace(EditDisplayName))
+            {
+                return false;
+            }
+
+            return TryValidateCasdoorNameInput(EditDisplayName.Trim(), out _);
+        }
+
+        [RelayCommand(CanExecute = nameof(CanBeginEditEmail))]
+        private void BeginEditEmail()
+        {
+            BindEmailInput = UserProfile?.Email ?? string.Empty;
+            BindEmailCodeInput = string.Empty;
+            BindEmailPasswordInput = string.Empty;
+            BindEmailConfirmPasswordInput = string.Empty;
+            IsEmailCodeSent = false;
+            EmailCodeCountdownSeconds = 0;
+            _emailCodeTimer.Stop();
+            IsEditingEmail = true;
+        }
+
+        private bool CanBeginEditEmail() => IsLoggedIn && !IsUpdatingUserProfile;
+
+        [RelayCommand]
+        private void CancelEditEmail()
+        {
+            IsEditingEmail = false;
+            ResetBindEmailState();
+        }
+
+        [RelayCommand(CanExecute = nameof(CanSendEmailCode))]
+        private async Task SendEmailCodeAsync()
+        {
+            if (_authService == null || !IsLoggedIn)
+            {
+                return;
+            }
+
+            if (!TryValidateEmailInput(BindEmailInput))
+            {
+                MessageBox.Show(
+                    LanguageManager.GetString("BindEmailInvalidFormat"),
+                    LanguageManager.GetString("EmailBindingErrorTitle"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            IsSendingEmailCode = true;
+            try
+            {
+                var result = await _authService.SendBindEmailCodeAsync(BindEmailInput);
+                if (!result.Success)
                 {
                     MessageBox.Show(
-                        result.ErrorMessage ?? "创建 API Key 失败",
-                        "错误",
+                        result.ErrorMessage ?? LanguageManager.GetString("BindEmailCodeSendFailed"),
+                        LanguageManager.GetString("EmailBindingErrorTitle"),
                         MessageBoxButton.OK,
                         MessageBoxImage.Error);
+                    return;
                 }
+
+                IsEmailCodeSent = true;
+                EmailCodeCountdownSeconds = 60;
+                _emailCodeTimer.Stop();
+                _emailCodeTimer.Start();
+
+                MessageBox.Show(
+                    result.Message ?? LanguageManager.GetString("BindEmailCodeSent"),
+                    LanguageManager.GetString("EmailBindingSuccessTitle"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+            finally
+            {
+                IsSendingEmailCode = false;
+            }
+        }
+
+        private bool CanSendEmailCode()
+        {
+            return IsLoggedIn
+                   && _authService != null
+                   && !IsUpdatingUserProfile
+                   && !IsSendingEmailCode
+                   && EmailCodeCountdownSeconds == 0
+                   && TryValidateEmailInput(BindEmailInput);
+        }
+
+        [RelayCommand(CanExecute = nameof(CanSaveEmail))]
+        private async Task SaveEmailAsync()
+        {
+            if (_authService == null || !IsLoggedIn)
+            {
+                return;
+            }
+
+            if (!TryValidateEmailInput(BindEmailInput))
+            {
+                MessageBox.Show(
+                    LanguageManager.GetString("BindEmailInvalidFormat"),
+                    LanguageManager.GetString("EmailBindingErrorTitle"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!IsEmailCodeSent || string.IsNullOrWhiteSpace(BindEmailCodeInput))
+            {
+                MessageBox.Show(
+                    LanguageManager.GetString("BindEmailCodeInvalid"),
+                    LanguageManager.GetString("EmailBindingErrorTitle"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            if ((BindEmailPasswordInput ?? string.Empty).Length < 8)
+            {
+                MessageBox.Show(
+                    LanguageManager.GetString("BindEmailPasswordTooShort"),
+                    LanguageManager.GetString("EmailBindingErrorTitle"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            if ((BindEmailPasswordInput ?? string.Empty).Length > 128)
+            {
+                MessageBox.Show(
+                    LanguageManager.GetString("BindEmailPasswordTooLong"),
+                    LanguageManager.GetString("EmailBindingErrorTitle"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!string.Equals(BindEmailPasswordInput, BindEmailConfirmPasswordInput, StringComparison.Ordinal))
+            {
+                MessageBox.Show(
+                    LanguageManager.GetString("BindEmailPasswordMismatch"),
+                    LanguageManager.GetString("EmailBindingErrorTitle"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            IsUpdatingUserProfile = true;
+            try
+            {
+                var result = await _authService.BindEmailAsync(
+                    BindEmailInput,
+                    BindEmailCodeInput,
+                    BindEmailPasswordInput ?? string.Empty);
+                if (!result.Success)
+                {
+                    MessageBox.Show(
+                        result.ErrorMessage ?? LanguageManager.GetString("BindEmailFailedLater"),
+                        LanguageManager.GetString("EmailBindingErrorTitle"),
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                    return;
+                }
+
+                IsEditingEmail = false;
+                ResetBindEmailState();
+                await RefreshUserProfileAsync();
+
+                MessageBox.Show(
+                    result.Message ?? LanguageManager.GetString("BindEmailSuccess"),
+                    LanguageManager.GetString("EmailBindingSuccessTitle"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+            finally
+            {
+                IsUpdatingUserProfile = false;
+            }
+        }
+
+        private bool CanSaveEmail()
+        {
+            return IsLoggedIn
+                   && _authService != null
+                   && !IsUpdatingUserProfile
+                   && IsEmailCodeSent
+                   && TryValidateEmailInput(BindEmailInput)
+                   && !string.IsNullOrWhiteSpace(BindEmailCodeInput)
+                   && HasValidBindEmailPassword();
+        }
+
+        [RelayCommand(CanExecute = nameof(CanBeginEditProvider))]
+        private void BeginEditProvider()
+        {
+            IsEditingProvider = true;
+        }
+
+        private bool CanBeginEditProvider() => IsLoggedIn && !IsUpdatingUserProfile;
+
+        [RelayCommand]
+        private void CancelEditProvider()
+        {
+            IsEditingProvider = false;
+            ProviderUserIdInput = string.Empty;
+        }
+
+        [RelayCommand(CanExecute = nameof(CanSaveProvider))]
+        private async Task SaveProviderAsync()
+        {
+            if (_authService == null || !IsLoggedIn)
+            {
+                return;
+            }
+
+            IsUpdatingUserProfile = true;
+            try
+            {
+                var provider = SelectedProvider?.Trim() ?? string.Empty;
+                var result = await _authService.BindProviderAsync(provider, ProviderUserIdInput);
+                if (!result.Success)
+                {
+                    MessageBox.Show(
+                        result.ErrorMessage ?? LanguageManager.GetString("BindFailedLater"),
+                        LanguageManager.GetString("ProviderBindingErrorTitle"),
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                    return;
+                }
+
+                IsEditingProvider = false;
+                ProviderUserIdInput = string.Empty;
+                await RefreshUserProfileAsync();
+            }
+            finally
+            {
+                IsUpdatingUserProfile = false;
+            }
+        }
+
+        private bool CanSaveProvider()
+        {
+            return IsLoggedIn
+                   && _authService != null
+                   && !IsUpdatingUserProfile
+                   && UserBindProviderCatalog.IsAllowed(SelectedProvider)
+                   && !string.IsNullOrWhiteSpace(ProviderUserIdInput);
+        }
+
+        [RelayCommand(CanExecute = nameof(CanUpdateUserProfile))]
+        private async Task UpdateUserProfileAsync()
+        {
+            if (_authService == null || !IsLoggedIn)
+            {
+                return;
+            }
+
+            var trimmedUsername = string.IsNullOrWhiteSpace(EditDisplayName) ? null : EditDisplayName.Trim();
+            if (trimmedUsername != null && !TryValidateCasdoorNameInput(trimmedUsername, out var validationError))
+            {
+                MessageBox.Show(
+                    validationError ?? "用户名格式不正确",
+                    LanguageManager.GetString("ErrorTitle"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            IsUpdatingUserProfile = true;
+
+            try
+            {
+                var result = await _authService.UpdateUserProfileAsync(displayName: null, avatarUrl: null, casdoorName: trimmedUsername);
+                if (!result.Success)
+                {
+                    MessageBox.Show(
+                        result.ErrorMessage ?? "资料更新失败",
+                        LanguageManager.GetString("ErrorTitle"),
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                    return;
+                }
+
+                UpdateLoginState();
+                MessageBox.Show(
+                    result.Message ?? "资料更新成功",
+                    LanguageManager.GetString("SuccessTitle"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[AccountPageViewModel] Create API key exception: {ex.Message}");
+                Debug.WriteLine($"[AccountPageViewModel] Update profile exception: {ex.Message}");
                 MessageBox.Show(
-                    $"创建 API Key 失败: {ex.Message}",
-                    "错误",
+                    $"资料更新失败: {ex.Message}",
+                    LanguageManager.GetString("ErrorTitle"),
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
             }
             finally
             {
-                IsCreatingApiKey = false;
-                CreateApiKeyCommand.NotifyCanExecuteChanged();
+                IsUpdatingUserProfile = false;
             }
         }
 
-        private bool CanCreateApiKey() => IsLoggedIn && !IsCreatingApiKey && _authService != null;
-
-        [RelayCommand]
-        private async Task DeleteApiKeyAsync(ApiKeyInfo? keyInfo)
+        private bool CanUpdateUserProfile()
         {
-            if (_authService == null || keyInfo == null)
-                return;
+            var hasUsername = !string.IsNullOrWhiteSpace(EditDisplayName);
+            if (hasUsername && !TryValidateCasdoorNameInput(EditDisplayName.Trim(), out _))
+            {
+                return false;
+            }
 
-            var result = MessageBox.Show(
-                $"确定要删除 API Key \"{keyInfo.Name}\" 吗？\n此操作不可撤销。",
-                "确认删除",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
+            return IsLoggedIn
+                   && _authService != null
+                   && !IsUpdatingUserProfile
+                   && hasUsername;
+        }
 
-            if (result != MessageBoxResult.Yes)
+        [RelayCommand(CanExecute = nameof(CanBindProvider))]
+        private async Task BindProviderAsync()
+        {
+            if (_authService == null || !IsLoggedIn)
+            {
                 return;
+            }
+
+            IsUpdatingUserProfile = true;
 
             try
             {
-                var success = await _authService.DeleteApiKeyAsync(keyInfo.Id);
-                if (success)
+                var provider = SelectedProvider?.Trim() ?? string.Empty;
+                var result = await _authService.BindProviderAsync(provider, ProviderUserIdInput);
+                if (!result.Success)
                 {
-                    ApiKeys.Remove(keyInfo);
+                    MessageBox.Show(
+                        result.ErrorMessage ?? "绑定第三方账号失败",
+                        LanguageManager.GetString("ErrorTitle"),
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                    return;
                 }
-                else
+
+                ProviderUserIdInput = string.Empty;
+                UpdateLoginState();
+                MessageBox.Show(
+                    result.Message ?? "第三方账号绑定成功",
+                    LanguageManager.GetString("SuccessTitle"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[AccountPageViewModel] Bind provider exception: {ex.Message}");
+                MessageBox.Show(
+                    $"绑定第三方账号失败: {ex.Message}",
+                    LanguageManager.GetString("ErrorTitle"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsUpdatingUserProfile = false;
+            }
+        }
+
+        [RelayCommand(CanExecute = nameof(CanBindQqProvider))]
+        private Task BindQqProviderAsync()
+        {
+            return BindSocialProviderInternalAsync("qq", "QQ");
+        }
+
+        private bool CanBindQqProvider()
+        {
+            return IsLoggedIn && _authService != null && !IsUpdatingUserProfile && !IsQqBound;
+        }
+
+        [RelayCommand(CanExecute = nameof(CanBindWechatProvider))]
+        private Task BindWechatProviderAsync()
+        {
+            return BindSocialProviderInternalAsync("wechat", "微信");
+        }
+
+        private bool CanBindWechatProvider()
+        {
+            return IsLoggedIn && _authService != null && !IsUpdatingUserProfile && !IsWechatBound;
+        }
+
+        private async Task BindSocialProviderInternalAsync(string provider, string providerDisplayName)
+        {
+            if (_authService == null || !IsLoggedIn)
+            {
+                return;
+            }
+
+            var isAlreadyBound = string.Equals(provider, "wechat", StringComparison.OrdinalIgnoreCase)
+                ? IsWechatBound
+                : IsQqBound;
+
+            if (isAlreadyBound)
+            {
+                MessageBox.Show(
+                    $"{providerDisplayName} 已绑定，无需重复绑定。",
+                    LanguageManager.GetString("ProviderBindingSuccessTitle"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
+
+            IsUpdatingUserProfile = true;
+            try
+            {
+                var result = await _authService.BindSocialProviderAsync(provider);
+                if (!result.Success)
                 {
-                    MessageBox.Show("删除 API Key 失败", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show(
+                        result.ErrorMessage ?? LanguageManager.GetString("BindFailedLater"),
+                        LanguageManager.GetString("ProviderBindingErrorTitle"),
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                    return;
+                }
+
+                await RefreshUserProfileAsync();
+                MessageBox.Show(
+                    result.Message ?? $"{providerDisplayName} 绑定成功",
+                    LanguageManager.GetString("ProviderBindingSuccessTitle"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[AccountPageViewModel] Bind {providerDisplayName} exception: {ex.Message}");
+                MessageBox.Show(
+                    LanguageManager.GetString("BindFailedLater"),
+                    LanguageManager.GetString("ProviderBindingErrorTitle"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsUpdatingUserProfile = false;
+            }
+        }
+
+        private bool CanBindProvider()
+        {
+            return IsLoggedIn
+                   && _authService != null
+                   && !IsUpdatingUserProfile
+                   && UserBindProviderCatalog.IsAllowed(SelectedProvider)
+                   && !string.IsNullOrWhiteSpace(ProviderUserIdInput);
+        }
+
+        [RelayCommand(CanExecute = nameof(CanLoadSubscriptionPlans))]
+        private async Task LoadSubscriptionPlansAsync()
+        {
+            if (_authService == null || !IsLoggedIn)
+            {
+                return;
+            }
+
+            IsLoadingPlans = true;
+
+            try
+            {
+                var plans = await _authService.GetSubscriptionPlansAsync();
+                AvailablePlans = plans;
+
+                if (plans.Count == 0)
+                {
+                    SelectedPlan = null;
+                    LatestOrderMessage = "当前暂无可购买套餐。";
+                    return;
+                }
+
+                if (SelectedPlan == null || string.IsNullOrWhiteSpace(SelectedPlan.Id))
+                {
+                    SelectedPlan = plans[0];
+                }
+
+                LatestOrderMessage = $"已加载 {plans.Count} 个可购买套餐。";
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[AccountPageViewModel] Load plans exception: {ex.Message}");
+                LatestOrderMessage = $"加载套餐失败: {ex.Message}";
+            }
+            finally
+            {
+                IsLoadingPlans = false;
+            }
+        }
+
+        private bool CanLoadSubscriptionPlans()
+        {
+            return IsLoggedIn && !IsLoadingPlans && _authService != null;
+        }
+
+        [RelayCommand(CanExecute = nameof(CanCreateSubscriptionOrder))]
+        private async Task CreateSubscriptionOrderAsync()
+        {
+            if (_authService == null || !IsLoggedIn)
+            {
+                return;
+            }
+
+            if (HasPendingOrder)
+            {
+                MessageBox.Show(
+                    "当前有待支付订单，请完成支付或等待订单结束后再下单。",
+                    LanguageManager.GetString("ErrorTitle"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            if (SelectedPlan == null || string.IsNullOrWhiteSpace(SelectedPlan.Id))
+            {
+                MessageBox.Show(
+                    "请先选择套餐。",
+                    LanguageManager.GetString("ErrorTitle"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            IsCreatingOrder = true;
+            StopOrderPollingInternal();
+
+            try
+            {
+                var result = await _authService.CreateSubscriptionOrderAsync(
+                    SelectedPlan.Id,
+                    SelectedPaymentMethod,
+                    OrderDurationMonths);
+
+                if (!result.Success || result.Order == null)
+                {
+                    var errorMessage = result.ErrorMessage ?? "创建订单失败";
+                    LatestOrderMessage = errorMessage;
+                    MessageBox.Show(
+                        errorMessage,
+                        LanguageManager.GetString("ErrorTitle"),
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                    return;
+                }
+
+                UpdateOrderPresentation(result.Order, result.Payment);
+                PersistPendingOrderOutTradeNo(result.Order.OutTradeNo);
+
+                if (result.Payment != null)
+                {
+                    if (!string.IsNullOrWhiteSpace(result.Payment.Message))
+                    {
+                        LatestOrderMessage = result.Payment.Message;
+                    }
+
+                    if (string.Equals(result.Payment.IntegrationStatus, "native_qr_ready", StringComparison.OrdinalIgnoreCase)
+                        && string.IsNullOrWhiteSpace(result.Payment.CodeUrl))
+                    {
+                        LatestOrderMessage = "支付通道已就绪，但未返回二维码链接，请重新下单。";
+                    }
+                }
+
+                if (string.Equals(result.Order.Status, "pending", StringComparison.OrdinalIgnoreCase))
+                {
+                    _ = StartOrderPollingAsync(result.Order.OutTradeNo);
+                }
+                else if (IsTerminalOrderStatus(result.Order.Status))
+                {
+                    ClearPendingOrderOutTradeNo();
+                    await ApplyTerminalOrderStateAsync(result.Order, refreshSubscriptionIfPaid: true);
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[AccountPageViewModel] Delete API key exception: {ex.Message}");
+                Debug.WriteLine($"[AccountPageViewModel] Create order exception: {ex.Message}");
+                LatestOrderMessage = $"创建订单失败: {ex.Message}";
                 MessageBox.Show(
-                    $"删除 API Key 失败: {ex.Message}",
-                    "错误",
+                    LatestOrderMessage,
+                    LanguageManager.GetString("ErrorTitle"),
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
             }
-        }
-
-        [RelayCommand]
-        private void CopyApiKeyToClipboard(string? key)
-        {
-            if (string.IsNullOrEmpty(key))
-                return;
-
-            if (ClipboardHelper.TrySetText(key))
+            finally
             {
-                MessageBox.Show("API Key 已复制到剪贴板", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                IsCreatingOrder = false;
             }
         }
 
-        [RelayCommand]
-        private void CloseNewApiKeyDialog()
+        private bool CanCreateSubscriptionOrder()
         {
-            ShowNewApiKeyDialog = false;
-            NewlyCreatedApiKey = null;
+            return IsLoggedIn
+                   && !IsCreatingOrder
+                   && !IsLoadingPlans
+                   && _authService != null
+                   && SelectedPlan != null
+                   && !string.IsNullOrWhiteSpace(SelectedPlan.Id)
+                   && OrderDurationMonths > 0
+                   && !HasPendingOrder
+                   && !IsPollingOrder;
+        }
+
+        [RelayCommand(CanExecute = nameof(CanQueryOrderStatus))]
+        private async Task QueryOrderStatusAsync()
+        {
+            if (string.IsNullOrWhiteSpace(LatestOrderOutTradeNo))
+            {
+                return;
+            }
+
+            var order = await QueryOrderStatusInternalAsync(LatestOrderOutTradeNo, showErrorMessage: true);
+            if (order != null && IsTerminalOrderStatus(order.Status))
+            {
+                await ApplyTerminalOrderStateAsync(order, refreshSubscriptionIfPaid: true);
+            }
+        }
+
+        private bool CanQueryOrderStatus()
+        {
+            return IsLoggedIn
+                   && _authService != null
+                   && !string.IsNullOrWhiteSpace(LatestOrderOutTradeNo)
+                   && !IsCreatingOrder;
+        }
+
+        [RelayCommand(CanExecute = nameof(CanStopOrderPolling))]
+        private void StopOrderPolling()
+        {
+            StopOrderPollingInternal();
+        }
+
+        private bool CanStopOrderPolling()
+        {
+            return IsPollingOrder;
         }
 
         #endregion
@@ -696,15 +2293,14 @@ namespace lingualink_client.ViewModels
         private async Task TestConnectionAsync()
         {
             IsTestingConnection = true;
-            OnPropertyChanged(nameof(ConnectionTestLabel)); // 通知UI更新
+            OnPropertyChanged(nameof(ConnectionTestLabel));
 
             ILingualinkApiService? testApiService = null;
-            bool success = false;
+            bool success;
             string errorMessage = "An unknown error occurred.";
 
             try
             {
-                // 使用工厂创建临时的API服务实例进行测试
                 testApiService = LingualinkApiServiceFactory.CreateTestApiService(ServerUrl, ApiKey);
                 success = await testApiService.ValidateConnectionAsync();
             }
@@ -715,10 +2311,9 @@ namespace lingualink_client.ViewModels
             }
             finally
             {
-                // 确保释放资源
                 testApiService?.Dispose();
                 IsTestingConnection = false;
-                OnPropertyChanged(nameof(ConnectionTestLabel)); // 恢复按钮文本
+                OnPropertyChanged(nameof(ConnectionTestLabel));
             }
 
             if (success)

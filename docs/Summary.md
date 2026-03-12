@@ -118,7 +118,7 @@
 5.  ViewModel 将当前页面管理的设置更新到这个 `AppSettings` 对象中。
 6.  `SettingsService.SaveSettings()` 将更新后的对象序列化为 JSON 并保存到磁盘。
 7.  `SettingsChangedNotifier.RaiseSettingsChanged()` 被调用，这是一个全局静态事件。
-8.  `IndexWindowViewModel` 和 `MainControlViewModel` 等关心设置变化的组件会监听到此事件，并重新加载配置以应用更改（例如，重新创建 `AudioTranslationOrchestrator` 以应用新的 API 密钥或 OSC 地址）。
+8.  `IndexWindowViewModel` 和 `MainControlViewModel` 等关心设置变化的组件会监听到此事件，并重新加载配置以应用更改（例如，重新创建 `AudioTranslationOrchestrator` 以应用新的服务地址或 OSC 地址）。
 
 ## 5. 重要类及其职责
 
@@ -134,7 +134,7 @@
 |            | `ServiceContainer.cs` / `ServiceInitializer.cs` | 实现简单的依赖注入和服务生命周期管理。                             |
 | **ViewModels**| `IndexWindowViewModel.cs`                    | 作为组件容器，管理所有主界面上的子 ViewModel。                     |
 |            | `MainControlViewModel.cs`                  | 控制核心工作流程（启停）、状态显示，并持有 `Orchestrator` 实例。 |
-|            | `AccountPageViewModel.cs`                  | 管理账户和自定义服务器（URL、API Key）的设置。                       |
+|            | `AccountPageViewModel.cs`                  | 管理账户登录态与自定义服务器 URL 设置。                               |
 |            | `ServicePageViewModel.cs`                  | 管理服务相关的详细参数（VAD、OSC、音频处理等）。                   |
 |            | `TargetLanguageManager.cs`                 | 封装目标语言选择的复杂UI逻辑，如动态更新可用语言列表。           |
 

@@ -72,10 +72,14 @@ namespace lingualink_client.Services
             ServiceContainer.Register<IUpdateService, VelopackUpdateService>(updateService);
 
             // 注册认证服务
-            // Auth Server 地址
-            var authServerUrl = "http://localhost:9080";
-            // 登录入口：Auth Server 的登录接口，会重定向到 Casdoor
-            // Auth Server 处理完 Casdoor 回调后，会重定向回客户端的 http://localhost:23456/callback
+            // 默认使用本地 Auth Server（可通过环境变量 LINGUALINK_AUTH_SERVER_URL 覆盖）
+            var authServerUrl = Environment.GetEnvironmentVariable("LINGUALINK_AUTH_SERVER_URL");
+            if (string.IsNullOrWhiteSpace(authServerUrl))
+            {
+                authServerUrl = "http://localhost:9080";
+            }
+            authServerUrl = authServerUrl.TrimEnd('/');
+            // 登录入口应走 Auth Server，由其签名 state 并重定向到 Casdoor
             var loginPageUrl = $"{authServerUrl}/api/v1/auth/casdoor/login";
             var authService = new AuthService(authServerUrl, loginPageUrl);
             ServiceContainer.Register<IAuthService, AuthService>(authService);
@@ -143,4 +147,3 @@ namespace lingualink_client.Services
         }
     }
 } 
-
