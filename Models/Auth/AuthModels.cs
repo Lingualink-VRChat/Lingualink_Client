@@ -42,8 +42,8 @@ namespace lingualink_client.Models.Auth
         [JsonPropertyName("display_name")]
         public string DisplayName { get; set; } = string.Empty;
 
-        [JsonPropertyName("casdoor_name")]
-        public string? CasdoorName { get; set; }
+        [JsonPropertyName("username")]
+        public string? Username { get; set; }
 
         [JsonPropertyName("email")]
         public string? Email { get; set; }
@@ -313,8 +313,8 @@ namespace lingualink_client.Models.Auth
 
     public class UpdateUserProfileRequest
     {
-        [JsonPropertyName("casdoor_name")]
-        public string? CasdoorName { get; set; }
+        [JsonPropertyName("username")]
+        public string? Username { get; set; }
 
         [JsonPropertyName("display_name")]
         public string? DisplayName { get; set; }

@@ -79,8 +79,8 @@ namespace lingualink_client.Services
                 authServerUrl = "http://localhost:9080";
             }
             authServerUrl = authServerUrl.TrimEnd('/');
-            // 登录入口应走 Auth Server，由其签名 state 并重定向到 Casdoor
-            var loginPageUrl = $"{authServerUrl}/api/v1/auth/casdoor/login";
+            // 登录入口应走 Auth Server 托管登录页。
+            var loginPageUrl = $"{authServerUrl}/auth";
             var authService = new AuthService(authServerUrl, loginPageUrl);
             ServiceContainer.Register<IAuthService, AuthService>(authService);
 

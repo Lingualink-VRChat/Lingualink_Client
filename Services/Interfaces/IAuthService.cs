@@ -51,9 +51,9 @@ namespace lingualink_client.Services.Interfaces
         Task<UserProfile?> RefreshUserProfileAsync();
 
         /// <summary>
-        /// 更新用户资料（casdoor_name / display_name / avatar_url）
+        /// 更新用户资料（username / display_name / avatar_url）
         /// </summary>
-        Task<ApiOperationResult> UpdateUserProfileAsync(string? displayName, string? avatarUrl, string? casdoorName = null);
+        Task<ApiOperationResult> UpdateUserProfileAsync(string? displayName, string? avatarUrl, string? username = null);
 
         /// <summary>
         /// 发送邮箱绑定验证码
@@ -71,7 +71,7 @@ namespace lingualink_client.Services.Interfaces
         Task<ApiOperationResult> BindProviderAsync(string provider, string providerUserId);
 
         /// <summary>
-        /// 通过 Casdoor OAuth 绑定社交账号（QQ / 微信）
+        /// 通过 OAuth 绑定社交账号（QQ / 微信）
         /// </summary>
         Task<ApiOperationResult> BindSocialProviderAsync(string provider);
 

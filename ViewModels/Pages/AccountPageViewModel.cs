@@ -222,7 +222,7 @@ namespace lingualink_client.ViewModels
         public bool HasPendingOrder => HasLatestOrder && string.Equals(LatestOrderStatus, "pending", StringComparison.OrdinalIgnoreCase);
         public string VipActionButtonText => HasPaidSubscriptionPlan ? "续费 / 升级" : "开通 VIP";
         public string AccountIdDisplay => string.IsNullOrWhiteSpace(UserProfile?.Id) ? "-" : UserProfile!.Id;
-        public string UsernameDisplay => string.IsNullOrWhiteSpace(UserProfile?.CasdoorName) ? "-" : UserProfile!.CasdoorName!;
+        public string UsernameDisplay => string.IsNullOrWhiteSpace(UserProfile?.Username) ? "-" : UserProfile!.Username!;
         public string DisplayNameDisplay => string.IsNullOrWhiteSpace(UserProfile?.DisplayName) ? "-" : UserProfile!.DisplayName;
         public string EmailDisplay => string.IsNullOrWhiteSpace(UserProfile?.Email) ? "未绑定" : UserProfile!.Email!;
         public string UserStatusDisplay => MapUserStatus(UserProfile?.Status);
@@ -522,8 +522,8 @@ namespace lingualink_client.ViewModels
 
             if (UserProfile != null)
             {
-                LoggedInUsername = !string.IsNullOrWhiteSpace(UserProfile.CasdoorName)
-                    ? UserProfile.CasdoorName
+                LoggedInUsername = !string.IsNullOrWhiteSpace(UserProfile.Username)
+                    ? UserProfile.Username
                     : UserProfile.Email ?? UserProfile.Id ?? "用户";
 
                 UpdateSubscriptionPresentation(UserProfile.Subscription);
@@ -826,7 +826,7 @@ namespace lingualink_client.ViewModels
             };
         }
 
-        private static bool TryValidateCasdoorNameInput(string? value, out string? errorMessage)
+        private static bool TryValidateUsernameInput(string? value, out string? errorMessage)
         {
             if (string.IsNullOrWhiteSpace(value))
             {
@@ -867,7 +867,7 @@ namespace lingualink_client.ViewModels
                 return;
             }
 
-            EditDisplayName = profile.CasdoorName ?? string.Empty;
+            EditDisplayName = profile.Username ?? string.Empty;
         }
 
         private void ResetBindEmailState()
@@ -1598,7 +1598,7 @@ namespace lingualink_client.ViewModels
         [RelayCommand(CanExecute = nameof(CanBeginEditDisplayName))]
         private void BeginEditDisplayName()
         {
-            EditDisplayName = UserProfile?.CasdoorName ?? string.Empty;
+            EditDisplayName = UserProfile?.Username ?? string.Empty;
             IsEditingDisplayName = true;
         }
 
@@ -1608,7 +1608,7 @@ namespace lingualink_client.ViewModels
         private void CancelEditDisplayName()
         {
             IsEditingDisplayName = false;
-            EditDisplayName = UserProfile?.CasdoorName ?? string.Empty;
+            EditDisplayName = UserProfile?.Username ?? string.Empty;
         }
 
         [RelayCommand(CanExecute = nameof(CanSaveDisplayName))]
@@ -1620,7 +1620,7 @@ namespace lingualink_client.ViewModels
             }
 
             var trimmedUsername = string.IsNullOrWhiteSpace(EditDisplayName) ? string.Empty : EditDisplayName.Trim();
-            if (!TryValidateCasdoorNameInput(trimmedUsername, out var validationError))
+            if (!TryValidateUsernameInput(trimmedUsername, out var validationError))
             {
                 MessageBox.Show(validationError ?? "用户名格式不正确", LanguageManager.GetString("ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
@@ -1629,7 +1629,7 @@ namespace lingualink_client.ViewModels
             IsUpdatingUserProfile = true;
             try
             {
-                var result = await _authService.UpdateUserProfileAsync(displayName: null, avatarUrl: null, casdoorName: trimmedUsername);
+                var result = await _authService.UpdateUserProfileAsync(displayName: null, avatarUrl: null, username: trimmedUsername);
                 if (!result.Success)
                 {
                     MessageBox.Show(result.ErrorMessage ?? "修改用户名失败", LanguageManager.GetString("ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
@@ -1652,7 +1652,7 @@ namespace lingualink_client.ViewModels
                 return false;
             }
 
-            return TryValidateCasdoorNameInput(EditDisplayName.Trim(), out _);
+            return TryValidateUsernameInput(EditDisplayName.Trim(), out _);
         }
 
         [RelayCommand(CanExecute = nameof(CanBeginEditEmail))]
@@ -1904,7 +1904,7 @@ namespace lingualink_client.ViewModels
             }
 
             var trimmedUsername = string.IsNullOrWhiteSpace(EditDisplayName) ? null : EditDisplayName.Trim();
-            if (trimmedUsername != null && !TryValidateCasdoorNameInput(trimmedUsername, out var validationError))
+            if (trimmedUsername != null && !TryValidateUsernameInput(trimmedUsername, out var validationError))
             {
                 MessageBox.Show(
                     validationError ?? "用户名格式不正确",
@@ -1918,7 +1918,7 @@ namespace lingualink_client.ViewModels
 
             try
             {
-                var result = await _authService.UpdateUserProfileAsync(displayName: null, avatarUrl: null, casdoorName: trimmedUsername);
+                var result = await _authService.UpdateUserProfileAsync(displayName: null, avatarUrl: null, username: trimmedUsername);
                 if (!result.Success)
                 {
                     MessageBox.Show(
@@ -1954,7 +1954,7 @@ namespace lingualink_client.ViewModels
         private bool CanUpdateUserProfile()
         {
             var hasUsername = !string.IsNullOrWhiteSpace(EditDisplayName);
-            if (hasUsername && !TryValidateCasdoorNameInput(EditDisplayName.Trim(), out _))
+            if (hasUsername && !TryValidateUsernameInput(EditDisplayName.Trim(), out _))
             {
                 return false;
             }

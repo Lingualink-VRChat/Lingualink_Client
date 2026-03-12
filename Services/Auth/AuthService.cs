@@ -31,8 +31,8 @@ namespace lingualink_client.Services.Auth
         private bool _disposed = false;
 
         private const string ClientCallbackUrl = "http://localhost:23456/callback";
-        private const string CasdoorLoginEndpoint = "/api/v1/auth/casdoor/login";
-        private const string CasdoorBindLoginEndpoint = "/api/v1/auth/casdoor/bind/login";
+        private const string OAuthLoginEndpoint = "/api/v1/auth/oauth/login";
+        private const string OAuthBindLoginEndpoint = "/api/v1/auth/oauth/bind/login";
         private static readonly TimeSpan TokenRefreshSkew = TimeSpan.FromSeconds(45);
         private static readonly JsonSerializerOptions JsonOptions = new()
         {
@@ -54,7 +54,7 @@ namespace lingualink_client.Services.Auth
         {
             _authServerUrl = authServerUrl.TrimEnd('/');
             // 测试用登录页面地址
-            _loginPageUrl = loginPageUrl ?? $"{_authServerUrl}/api/v1/auth/casdoor/login";
+            _loginPageUrl = loginPageUrl ?? $"{_authServerUrl}/auth";
 
             _httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
             _tokenStorage = new SecureTokenStorage();
@@ -115,8 +115,8 @@ namespace lingualink_client.Services.Auth
             {
                 Debug.WriteLine("[AuthService] Starting login flow...");
 
-                var (resolvedLoginUrl, loginUrlError) = await ResolveCasdoorLoginUrlAsync(
-                    endpointPath: CasdoorLoginEndpoint,
+                var (resolvedLoginUrl, loginUrlError) = await ResolveOAuthLoginUrlAsync(
+                    endpointPath: OAuthLoginEndpoint,
                     provider: null,
                     requireAuthorization: false);
 
@@ -124,7 +124,7 @@ namespace lingualink_client.Services.Auth
                 if (string.IsNullOrWhiteSpace(loginUrl))
                 {
                     Debug.WriteLine($"[AuthService] Resolve login_url failed, fallback to redirect URL. reason={loginUrlError}");
-                    // fallback：直接打开 AuthServer 登录入口，由其 302 到 Casdoor
+                    // fallback：直接打开 AuthServer 托管登录入口
                     loginUrl = BuildRedirectLoginUrl();
                 }
 
@@ -238,7 +238,7 @@ namespace lingualink_client.Services.Auth
             return $"{_loginPageUrl}{separator}client_callback={Uri.EscapeDataString(callback)}&_ts={Uri.EscapeDataString(ts)}";
         }
 
-        private string BuildCasdoorLoginApiUrl(string endpointPath, string? provider)
+        private string BuildOAuthLoginApiUrl(string endpointPath, string? provider)
         {
             var callback = ClientCallbackUrl.Trim().Trim('"');
             var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
@@ -262,12 +262,12 @@ namespace lingualink_client.Services.Auth
             return $"{_authServerUrl}{endpoint}?{string.Join("&", queryParts)}";
         }
 
-        private async Task<(string? LoginUrl, string? ErrorMessage)> ResolveCasdoorLoginUrlAsync(
+        private async Task<(string? LoginUrl, string? ErrorMessage)> ResolveOAuthLoginUrlAsync(
             string endpointPath,
             string? provider,
             bool requireAuthorization)
         {
-            var requestUrl = BuildCasdoorLoginApiUrl(endpointPath, provider);
+            var requestUrl = BuildOAuthLoginApiUrl(endpointPath, provider);
             try
             {
                 HttpResponseMessage? response = requireAuthorization
@@ -281,7 +281,7 @@ namespace lingualink_client.Services.Auth
 
                 if (response == null)
                 {
-                    return (null, string.Equals(endpointPath, CasdoorBindLoginEndpoint, StringComparison.OrdinalIgnoreCase)
+                    return (null, string.Equals(endpointPath, OAuthBindLoginEndpoint, StringComparison.OrdinalIgnoreCase)
                         ? LanguageManager.GetString("BindRequireLogin")
                         : "登录状态已失效，请重新登录");
                 }
@@ -300,7 +300,7 @@ namespace lingualink_client.Services.Auth
                         return (result.Data.LoginUrl, null);
                     }
 
-                    var errorMessage = string.Equals(endpointPath, CasdoorBindLoginEndpoint, StringComparison.OrdinalIgnoreCase)
+                    var errorMessage = string.Equals(endpointPath, OAuthBindLoginEndpoint, StringComparison.OrdinalIgnoreCase)
                         ? ResolveBindLoginUrlErrorMessage(
                             response.StatusCode,
                             result?.Code,
@@ -320,7 +320,7 @@ namespace lingualink_client.Services.Auth
             catch (Exception ex)
             {
                 Debug.WriteLine($"[AuthService] Resolve login_url exception: {ex.Message}, Endpoint={endpointPath}, Provider={provider}");
-                return (null, string.Equals(endpointPath, CasdoorBindLoginEndpoint, StringComparison.OrdinalIgnoreCase)
+                return (null, string.Equals(endpointPath, OAuthBindLoginEndpoint, StringComparison.OrdinalIgnoreCase)
                     ? LanguageManager.GetString("BindStartFailedRetry")
                     : ex.Message);
             }
@@ -587,24 +587,24 @@ namespace lingualink_client.Services.Auth
         }
 
         /// <summary>
-        /// 更新用户资料（casdoor_name/display_name/avatar_url）
+        /// 更新用户资料（username/display_name/avatar_url）
         /// </summary>
-        public async Task<ApiOperationResult> UpdateUserProfileAsync(string? displayName, string? avatarUrl, string? casdoorName = null)
+        public async Task<ApiOperationResult> UpdateUserProfileAsync(string? displayName, string? avatarUrl, string? username = null)
         {
-            var trimmedCasdoorName = string.IsNullOrWhiteSpace(casdoorName) ? null : casdoorName.Trim();
+            var trimmedUsername = string.IsNullOrWhiteSpace(username) ? null : username.Trim();
             var trimmedDisplayName = string.IsNullOrWhiteSpace(displayName) ? null : displayName.Trim();
             var trimmedAvatarUrl = string.IsNullOrWhiteSpace(avatarUrl) ? null : avatarUrl.Trim();
 
-            if (trimmedCasdoorName != null && !TryValidateCasdoorName(trimmedCasdoorName, out var casdoorNameError))
+            if (trimmedUsername != null && !TryValidateUsername(trimmedUsername, out var usernameError))
             {
                 return new ApiOperationResult
                 {
                     Success = false,
-                    ErrorMessage = casdoorNameError ?? "用户名不合法"
+                    ErrorMessage = usernameError ?? "用户名不合法"
                 };
             }
 
-            if (trimmedCasdoorName == null && trimmedDisplayName == null && trimmedAvatarUrl == null)
+            if (trimmedUsername == null && trimmedDisplayName == null && trimmedAvatarUrl == null)
             {
                 return new ApiOperationResult
                 {
@@ -615,7 +615,7 @@ namespace lingualink_client.Services.Auth
 
             var payload = new UpdateUserProfileRequest
             {
-                CasdoorName = trimmedCasdoorName,
+                Username = trimmedUsername,
                 DisplayName = trimmedDisplayName,
                 AvatarUrl = trimmedAvatarUrl
             };
@@ -623,7 +623,7 @@ namespace lingualink_client.Services.Auth
             return await ExecuteUserMutationAsync<UserProfile>(HttpMethod.Put, "/api/v1/user/profile", payload, "资料更新失败");
         }
 
-        private static bool TryValidateCasdoorName(string value, out string? errorMessage)
+        private static bool TryValidateUsername(string value, out string? errorMessage)
         {
             if (string.IsNullOrWhiteSpace(value))
             {
@@ -916,7 +916,7 @@ namespace lingualink_client.Services.Auth
         }
 
         /// <summary>
-        /// 通过 Casdoor OAuth 绑定 QQ / 微信
+        /// 通过 OAuth 绑定 QQ / 微信
         /// </summary>
         public async Task<ApiOperationResult> BindSocialProviderAsync(string provider)
         {
@@ -930,8 +930,8 @@ namespace lingualink_client.Services.Auth
                 };
             }
 
-            var (loginUrl, loginUrlError) = await ResolveCasdoorLoginUrlAsync(
-                endpointPath: CasdoorBindLoginEndpoint,
+            var (loginUrl, loginUrlError) = await ResolveOAuthLoginUrlAsync(
+                endpointPath: OAuthBindLoginEndpoint,
                 provider: normalizedProvider,
                 requireAuthorization: true);
 
@@ -944,8 +944,7 @@ namespace lingualink_client.Services.Auth
                 };
             }
 
-            var bindLoginUrl = EnsureProviderHintInBindLoginUrl(loginUrl, normalizedProvider);
-            var callbackResult = await ShowLoginWindowAsync(bindLoginUrl);
+            var callbackResult = await ShowLoginWindowAsync(loginUrl);
             if (callbackResult == null)
             {
                 return new ApiOperationResult
@@ -1004,48 +1003,6 @@ namespace lingualink_client.Services.Auth
             return normalized is "qq" or "wechat" ? normalized : string.Empty;
         }
 
-        private static string EnsureProviderHintInBindLoginUrl(string loginUrl, string normalizedProvider)
-        {
-            if (string.IsNullOrWhiteSpace(loginUrl))
-            {
-                return loginUrl;
-            }
-
-            var providerHint = normalizedProvider switch
-            {
-                "qq" => "provider_qq",
-                "wechat" => "provider_wechat",
-                _ => string.Empty
-            };
-
-            if (string.IsNullOrWhiteSpace(providerHint))
-            {
-                return loginUrl;
-            }
-
-            try
-            {
-                var uriBuilder = new UriBuilder(loginUrl);
-                var query = System.Web.HttpUtility.ParseQueryString(uriBuilder.Query);
-                if (!string.IsNullOrWhiteSpace(query["provider_hint"]))
-                {
-                    return loginUrl;
-                }
-
-                query["provider_hint"] = providerHint;
-                uriBuilder.Query = query.ToString();
-
-                var updated = uriBuilder.Uri.ToString();
-                Debug.WriteLine($"[AuthService] Added provider_hint to bind login URL: provider={normalizedProvider}");
-                return updated;
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[AuthService] Failed to append provider_hint, using original login URL: {ex.Message}");
-                return loginUrl;
-            }
-        }
-
         private static string ResolveBindLoginUrlErrorMessage(
             System.Net.HttpStatusCode statusCode,
             int? code,
@@ -1089,11 +1046,6 @@ namespace lingualink_client.Services.Auth
 
             if ((int)statusCode >= 500 || code == 50001)
             {
-                if (ContainsAny(detail, "casdoor client is not configured", "casdoor not configured"))
-                {
-                    return LanguageManager.GetString("BindAuthUnavailable");
-                }
-
                 return LanguageManager.GetString("BindStartFailedRetry");
             }
 
@@ -1145,18 +1097,10 @@ namespace lingualink_client.Services.Auth
                 return LanguageManager.GetString("BindFailedRetry");
             }
 
-            if (ContainsAny(detail, "casdoor not configured", "casdoor client is not configured"))
-            {
-                return LanguageManager.GetString("BindAuthUnavailable");
-            }
-
             if (ContainsAny(
                 detail,
-                "get target user from casdoor",
-                "get provider user from casdoor token",
                 "read provider user id",
                 "apply provider binding",
-                "bind provider in casdoor",
                 "sync local user",
                 "bind_failed"))
             {
@@ -1211,11 +1155,6 @@ namespace lingualink_client.Services.Auth
 
             if ((int)statusCode >= 500 || code == 50001)
             {
-                if (ContainsAny(detail, "casdoor not configured"))
-                {
-                    return LanguageManager.GetString("BindAuthUnavailable");
-                }
-
                 return LanguageManager.GetString("BindFailedLater");
             }
 

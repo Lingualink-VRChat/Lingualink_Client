@@ -56,7 +56,7 @@ namespace lingualink_client.Views
         {
             try
             {
-                // 初始化 WebView2（使用固定 userDataFolder 复用 Casdoor 会话）
+                // 初始化 WebView2（使用固定 userDataFolder 复用认证会话）
                 var environment = await GetSharedEnvironmentAsync();
                 await LoginWebView.EnsureCoreWebView2Async(environment);
             }
