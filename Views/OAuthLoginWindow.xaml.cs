@@ -138,6 +138,7 @@ namespace lingualink_client.Views
                 LoginWebView.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
                 LoginWebView.CoreWebView2.Settings.IsZoomControlEnabled = false;
                 LoginWebView.CoreWebView2.WebMessageReceived += LoginWebView_WebMessageReceived;
+                LoginWebView.CoreWebView2.NewWindowRequested += LoginWebView_NewWindowRequested;
 
                 // 回调桥页可能先 window.close() 再跳转 callback。这里拦截关闭请求并把消息转发给宿主，避免误判“登录已取消”。
                 const string bridgeRelayScript = @"
@@ -246,6 +247,25 @@ namespace lingualink_client.Views
                     ShowError($"页面加载失败: {GetErrorMessage(errorStatus)}");
                 }
             }
+        }
+
+        private void LoginWebView_NewWindowRequested(object? sender, CoreWebView2NewWindowRequestedEventArgs e)
+        {
+            var targetUri = e.Uri;
+            Debug.WriteLine($"[OAuthLoginWindow] Intercepted popup request: {targetUri}");
+
+            if (string.IsNullOrWhiteSpace(targetUri) || LoginWebView.CoreWebView2 == null)
+            {
+                return;
+            }
+
+            e.Handled = true;
+            Dispatcher.Invoke(() =>
+            {
+                LoadingOverlay.Visibility = Visibility.Visible;
+                ErrorOverlay.Visibility = Visibility.Collapsed;
+                LoginWebView.CoreWebView2.Navigate(targetUri);
+            });
         }
 
         private void ProcessCallback(string callbackUrl)
@@ -575,6 +595,7 @@ namespace lingualink_client.Views
             if (LoginWebView?.CoreWebView2 != null)
             {
                 LoginWebView.CoreWebView2.WebMessageReceived -= LoginWebView_WebMessageReceived;
+                LoginWebView.CoreWebView2.NewWindowRequested -= LoginWebView_NewWindowRequested;
             }
 
             base.OnClosed(e);
