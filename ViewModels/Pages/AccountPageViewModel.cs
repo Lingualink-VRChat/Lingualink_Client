@@ -221,16 +221,15 @@ namespace lingualink_client.ViewModels
         public bool HasLatestOrderQrImage => LatestOrderQrImage != null;
         public bool HasPendingOrder => HasLatestOrder && string.Equals(LatestOrderStatus, "pending", StringComparison.OrdinalIgnoreCase);
         public string VipActionButtonText => HasPaidSubscriptionPlan ? "续费 / 升级" : "开通 VIP";
-        public string AccountIdDisplay => string.IsNullOrWhiteSpace(UserProfile?.Id) ? "-" : UserProfile!.Id;
         public string UsernameDisplay => string.IsNullOrWhiteSpace(UserProfile?.Username) ? "-" : UserProfile!.Username!;
         public string DisplayNameDisplay => string.IsNullOrWhiteSpace(UserProfile?.DisplayName) ? "-" : UserProfile!.DisplayName;
         public string EmailDisplay => string.IsNullOrWhiteSpace(UserProfile?.Email) ? "未绑定" : UserProfile!.Email!;
+        public string EmailActionButtonText => string.IsNullOrWhiteSpace(UserProfile?.Email) ? "绑定" : "换绑";
         public string UserStatusDisplay => MapUserStatus(UserProfile?.Status);
         public bool IsWechatBound => UserProfile?.SocialBindings?.Wechat?.Bound == true;
         public bool IsQqBound => UserProfile?.SocialBindings?.Qq?.Bound == true;
         public string WechatBindingStatusDisplay => BuildSocialBindingStatusDisplay(UserProfile?.SocialBindings?.Wechat, "微信");
         public string QqBindingStatusDisplay => BuildSocialBindingStatusDisplay(UserProfile?.SocialBindings?.Qq, "QQ");
-        public string ProviderBindingSummary => $"微信：{WechatBindingStatusDisplay}；QQ：{QqBindingStatusDisplay}";
 
 
         private static string BuildSocialBindingStatusDisplay(SocialBindingInfo? binding, string providerDisplay)
@@ -262,18 +261,16 @@ namespace lingualink_client.ViewModels
         partial void OnUserProfileChanged(UserProfile? value)
         {
             OnPropertyChanged(nameof(HasUserProfile));
-            OnPropertyChanged(nameof(AccountIdDisplay));
             OnPropertyChanged(nameof(UsernameDisplay));
             OnPropertyChanged(nameof(DisplayNameDisplay));
             OnPropertyChanged(nameof(EmailDisplay));
+            OnPropertyChanged(nameof(EmailActionButtonText));
             OnPropertyChanged(nameof(UserStatusDisplay));
             OnPropertyChanged(nameof(IsWechatBound));
             OnPropertyChanged(nameof(IsQqBound));
             OnPropertyChanged(nameof(WechatBindingStatusDisplay));
             OnPropertyChanged(nameof(QqBindingStatusDisplay));
-            OnPropertyChanged(nameof(ProviderBindingSummary));
             SyncProfileEditorWithUser(value);
-            CopyAccountIdCommand.NotifyCanExecuteChanged();
             BeginEditDisplayNameCommand.NotifyCanExecuteChanged();
             BeginEditEmailCommand.NotifyCanExecuteChanged();
             BeginEditProviderCommand.NotifyCanExecuteChanged();
@@ -522,7 +519,9 @@ namespace lingualink_client.ViewModels
 
             if (UserProfile != null)
             {
-                LoggedInUsername = !string.IsNullOrWhiteSpace(UserProfile.Username)
+                LoggedInUsername = !string.IsNullOrWhiteSpace(UserProfile.DisplayName)
+                    ? UserProfile.DisplayName
+                    : !string.IsNullOrWhiteSpace(UserProfile.Username)
                     ? UserProfile.Username
                     : UserProfile.Email ?? UserProfile.Id ?? "用户";
 
@@ -555,7 +554,6 @@ namespace lingualink_client.ViewModels
             BindProviderCommand.NotifyCanExecuteChanged();
             BindQqProviderCommand.NotifyCanExecuteChanged();
             BindWechatProviderCommand.NotifyCanExecuteChanged();
-            CopyAccountIdCommand.NotifyCanExecuteChanged();
             BeginEditDisplayNameCommand.NotifyCanExecuteChanged();
             BeginEditEmailCommand.NotifyCanExecuteChanged();
             BeginEditProviderCommand.NotifyCanExecuteChanged();
@@ -842,12 +840,6 @@ namespace lingualink_client.ViewModels
 
             foreach (var c in value)
             {
-                if (char.IsWhiteSpace(c))
-                {
-                    errorMessage = "用户名不能包含空白字符";
-                    return false;
-                }
-
                 if (c == '/')
                 {
                     errorMessage = "用户名不能包含 /";
@@ -1563,37 +1555,6 @@ namespace lingualink_client.ViewModels
         }
 
         private bool CanRefreshUserProfile() => IsLoggedIn && _authService != null;
-
-        [RelayCommand(CanExecute = nameof(CanCopyAccountId))]
-        private void CopyAccountId()
-        {
-            if (string.IsNullOrWhiteSpace(UserProfile?.Id))
-            {
-                return;
-            }
-
-            if (ClipboardHelper.TrySetText(UserProfile.Id))
-            {
-                MessageBox.Show(
-                    "账号 ID 已复制。",
-                    LanguageManager.GetString("SuccessTitle"),
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
-            }
-            else
-            {
-                MessageBox.Show(
-                    "复制失败，请稍后重试。",
-                    LanguageManager.GetString("ErrorTitle"),
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-            }
-        }
-
-        private bool CanCopyAccountId()
-        {
-            return IsLoggedIn && !string.IsNullOrWhiteSpace(UserProfile?.Id);
-        }
 
         [RelayCommand(CanExecute = nameof(CanBeginEditDisplayName))]
         private void BeginEditDisplayName()

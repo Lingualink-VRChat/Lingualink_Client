@@ -191,23 +191,6 @@
                                         Padding="10"
                                         Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                                         CornerRadius="6">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="100" />
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="Auto" />
-                                            </Grid.ColumnDefinitions>
-                                            <ui:TextBlock VerticalAlignment="Center" FontWeight="Medium" Text="账号 ID" />
-                                            <ui:TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding AccountIdDisplay}" />
-                                            <ui:Button Grid.Column="2" Width="72" Height="32" Appearance="Secondary" Command="{Binding CopyAccountIdCommand}" Content="复制" />
-                                        </Grid>
-                                    </Border>
-
-                                    <Border
-                                        Margin="0,8,0,0"
-                                        Padding="10"
-                                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                                        CornerRadius="6">
                                         <StackPanel>
                                             <Grid Visibility="{Binding IsEditingDisplayName, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=invert}">
                                                 <Grid.ColumnDefinitions>
@@ -223,7 +206,7 @@
                                                 <ui:TextBox
                                                     Height="36"
                                                     VerticalContentAlignment="Center"
-                                                    PlaceholderText="请输入用户名（不能含空格和/）"
+                                                    PlaceholderText="请输入用户名（不能包含 /）"
                                                     Text="{Binding EditDisplayName, UpdateSourceTrigger=PropertyChanged}" />
                                                 <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                                                     <ui:Button Width="72" Height="32" Appearance="Primary" Command="{Binding SaveDisplayNameCommand}" Content="保存" />
@@ -264,7 +247,7 @@
                                                 </Grid.ColumnDefinitions>
                                                 <ui:TextBlock VerticalAlignment="Center" FontWeight="Medium" Text="邮箱" />
                                                 <ui:TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding EmailDisplay}" />
-                                                <ui:Button Grid.Column="2" Width="72" Height="32" Appearance="Secondary" Command="{Binding BeginEditEmailCommand}" Content="换绑" />
+                                                <ui:Button Grid.Column="2" Width="72" Height="32" Appearance="Secondary" Command="{Binding BeginEditEmailCommand}" Content="{Binding EmailActionButtonText}" />
                                             </Grid>
                                             <StackPanel Visibility="{Binding IsEditingEmail, Converter={StaticResource BooleanToVisibilityConverter}}">
                                                 <ui:TextBox
@@ -321,14 +304,6 @@
                                         CornerRadius="6">
                                         <StackPanel>
                                             <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="100" />
-                                                    <ColumnDefinition Width="*" />
-                                                </Grid.ColumnDefinitions>
-                                                <ui:TextBlock VerticalAlignment="Center" FontWeight="Medium" Text="授权绑定" />
-                                                <ui:TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding ProviderBindingSummary}" />
-                                            </Grid>
-                                            <Grid Margin="0,8,0,0">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="60" />
                                                     <ColumnDefinition Width="*" />

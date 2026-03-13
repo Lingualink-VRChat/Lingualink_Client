@@ -17,7 +17,7 @@ namespace lingualink_client.Views
     public partial class OAuthLoginWindow : Window
     {
         private const double LoginWindowHeight = 700;
-        private const double RegisterWindowHeight = 780;
+        private const double RegisterWindowHeight = 810;
 
         private static readonly string AuthWebViewUserDataFolder = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
