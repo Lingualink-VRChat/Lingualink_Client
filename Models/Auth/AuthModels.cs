@@ -39,9 +39,6 @@ namespace lingualink_client.Models.Auth
         [JsonPropertyName("id")]
         public string Id { get; set; } = string.Empty;
 
-        [JsonPropertyName("display_name")]
-        public string DisplayName { get; set; } = string.Empty;
-
         [JsonPropertyName("username")]
         public string? Username { get; set; }
 
@@ -306,7 +303,7 @@ namespace lingualink_client.Models.Auth
         public DateTime? ExpiresAt { get; set; }
         public string? TokenType { get; set; }
         public string? UserId { get; set; }
-        public string? DisplayName { get; set; }
+        public string? Username { get; set; }
         public string? AvatarUrl { get; set; }
         public string? Email { get; set; }
     }
@@ -315,9 +312,6 @@ namespace lingualink_client.Models.Auth
     {
         [JsonPropertyName("username")]
         public string? Username { get; set; }
-
-        [JsonPropertyName("display_name")]
-        public string? DisplayName { get; set; }
 
         [JsonPropertyName("avatar_url")]
         public string? AvatarUrl { get; set; }

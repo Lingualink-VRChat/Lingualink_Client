@@ -276,7 +276,7 @@ namespace lingualink_client.Views
                 var expiresIn = TryParseInt(query["expires_in"]);
                 var expiresAt = TryParseExpiresAt(query["expires_at"]);
                 var userId = query["user_id"];
-                var displayName = query["display_name"];
+                var username = query["username"];
                 var avatarUrl = query["avatar_url"];
                 var email = query["email"];
 
@@ -334,7 +334,7 @@ namespace lingualink_client.Views
                         TokenType = string.IsNullOrWhiteSpace(tokenType) ? "Bearer" : tokenType,
                         State = state ?? string.Empty,
                         UserId = userId,
-                        DisplayName = displayName,
+                        Username = username,
                         AvatarUrl = avatarUrl,
                         Email = email
                     });
@@ -400,7 +400,7 @@ namespace lingualink_client.Views
                         ExpiresAt = TryParseExpiresAt(GetJsonString(root, "expires_at")),
                         TokenType = GetJsonString(root, "token_type"),
                         UserId = GetJsonString(root, "user_id"),
-                        DisplayName = GetJsonString(root, "display_name"),
+                        Username = GetJsonString(root, "username"),
                         AvatarUrl = GetJsonString(root, "avatar_url"),
                         Email = GetJsonString(root, "email")
                     });

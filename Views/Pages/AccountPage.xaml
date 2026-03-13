@@ -192,7 +192,7 @@
                                         Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                                         CornerRadius="6">
                                         <StackPanel>
-                                            <Grid Visibility="{Binding IsEditingDisplayName, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=invert}">
+                                            <Grid Visibility="{Binding IsEditingUsername, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=invert}">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="100" />
                                                     <ColumnDefinition Width="*" />
@@ -200,17 +200,17 @@
                                                 </Grid.ColumnDefinitions>
                                                 <ui:TextBlock VerticalAlignment="Center" FontWeight="Medium" Text="用户名" />
                                                 <ui:TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding UsernameDisplay}" />
-                                                <ui:Button Grid.Column="2" Width="72" Height="32" Appearance="Secondary" Command="{Binding BeginEditDisplayNameCommand}" Content="修改" />
+                                                <ui:Button Grid.Column="2" Width="72" Height="32" Appearance="Secondary" Command="{Binding BeginEditUsernameCommand}" Content="修改" />
                                             </Grid>
-                                            <StackPanel Visibility="{Binding IsEditingDisplayName, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                            <StackPanel Visibility="{Binding IsEditingUsername, Converter={StaticResource BooleanToVisibilityConverter}}">
                                                 <ui:TextBox
                                                     Height="36"
                                                     VerticalContentAlignment="Center"
                                                     PlaceholderText="请输入用户名（不能包含 /）"
-                                                    Text="{Binding EditDisplayName, UpdateSourceTrigger=PropertyChanged}" />
+                                                    Text="{Binding EditUsername, UpdateSourceTrigger=PropertyChanged}" />
                                                 <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                                                    <ui:Button Width="72" Height="32" Appearance="Primary" Command="{Binding SaveDisplayNameCommand}" Content="保存" />
-                                                    <ui:Button Width="72" Height="32" Margin="8,0,0,0" Appearance="Secondary" Command="{Binding CancelEditDisplayNameCommand}" Content="取消" />
+                                                    <ui:Button Width="72" Height="32" Appearance="Primary" Command="{Binding SaveUsernameCommand}" Content="保存" />
+                                                    <ui:Button Width="72" Height="32" Margin="8,0,0,0" Appearance="Secondary" Command="{Binding CancelEditUsernameCommand}" Content="取消" />
                                                 </StackPanel>
                                             </StackPanel>
                                         </StackPanel>

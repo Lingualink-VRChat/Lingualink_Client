@@ -98,7 +98,7 @@ namespace lingualink_client.Services.Auth
             if (_currentUser != null)
             {
                 LoginStateChanged?.Invoke(this, true);
-                Debug.WriteLine($"[AuthService] Session restored for user: {_currentUser.DisplayName}");
+                Debug.WriteLine($"[AuthService] Session restored for user: {DescribeUser(_currentUser)}");
             }
             else
             {
@@ -173,7 +173,7 @@ namespace lingualink_client.Services.Auth
                         callbackResult.RefreshToken = exchangeResult.RefreshToken;
                         callbackResult.ExpiresAt ??= exchangeResult.ExpiresAt;
                         callbackResult.UserId ??= exchangeResult.User?.Id;
-                        callbackResult.DisplayName ??= exchangeResult.User?.DisplayName;
+                        callbackResult.Username ??= exchangeResult.User?.Username;
                         callbackResult.AvatarUrl ??= exchangeResult.User?.AvatarUrl;
                         callbackResult.Email ??= exchangeResult.User?.Email;
                     }
@@ -205,7 +205,7 @@ namespace lingualink_client.Services.Auth
                     _currentUser = profileFromApi;
                 }
 
-                Debug.WriteLine($"[AuthService] User profile fetched: {_currentUser?.DisplayName}");
+                Debug.WriteLine($"[AuthService] User profile fetched: {DescribeUser(_currentUser)}");
 
                 LoginStateChanged?.Invoke(this, true);
 
@@ -361,20 +361,20 @@ namespace lingualink_client.Services.Auth
         private static UserProfile? BuildUserProfileFromCallback(OAuthCallbackResult callbackResult)
         {
             if (string.IsNullOrWhiteSpace(callbackResult.UserId) &&
-                string.IsNullOrWhiteSpace(callbackResult.DisplayName) &&
+                string.IsNullOrWhiteSpace(callbackResult.Username) &&
                 string.IsNullOrWhiteSpace(callbackResult.Email))
             {
                 return null;
             }
 
-            var displayName = !string.IsNullOrWhiteSpace(callbackResult.DisplayName)
-                ? callbackResult.DisplayName
+            var username = !string.IsNullOrWhiteSpace(callbackResult.Username)
+                ? callbackResult.Username
                 : callbackResult.Email ?? callbackResult.UserId ?? "用户";
 
             return new UserProfile
             {
                 Id = callbackResult.UserId ?? string.Empty,
-                DisplayName = displayName,
+                Username = username,
                 Email = callbackResult.Email,
                 AvatarUrl = callbackResult.AvatarUrl,
                 Status = "active"
@@ -502,7 +502,7 @@ namespace lingualink_client.Services.Auth
                         profile.Subscription = subscription;
                     }
 
-                    Debug.WriteLine($"[AuthService] User profile fetched: {profile.DisplayName}");
+                    Debug.WriteLine($"[AuthService] User profile fetched: {DescribeUser(profile)}");
                     return profile;
                 }
 
@@ -587,12 +587,11 @@ namespace lingualink_client.Services.Auth
         }
 
         /// <summary>
-        /// 更新用户资料（username/display_name/avatar_url）
+        /// 更新用户资料（username/avatar_url）
         /// </summary>
-        public async Task<ApiOperationResult> UpdateUserProfileAsync(string? displayName, string? avatarUrl, string? username = null)
+        public async Task<ApiOperationResult> UpdateUserProfileAsync(string? username, string? avatarUrl)
         {
             var trimmedUsername = string.IsNullOrWhiteSpace(username) ? null : username.Trim();
-            var trimmedDisplayName = string.IsNullOrWhiteSpace(displayName) ? null : displayName.Trim();
             var trimmedAvatarUrl = string.IsNullOrWhiteSpace(avatarUrl) ? null : avatarUrl.Trim();
 
             if (trimmedUsername != null && !TryValidateUsername(trimmedUsername, out var usernameError))
@@ -604,7 +603,7 @@ namespace lingualink_client.Services.Auth
                 };
             }
 
-            if (trimmedUsername == null && trimmedDisplayName == null && trimmedAvatarUrl == null)
+            if (trimmedUsername == null && trimmedAvatarUrl == null)
             {
                 return new ApiOperationResult
                 {
@@ -616,7 +615,6 @@ namespace lingualink_client.Services.Auth
             var payload = new UpdateUserProfileRequest
             {
                 Username = trimmedUsername,
-                DisplayName = trimmedDisplayName,
                 AvatarUrl = trimmedAvatarUrl
             };
 
@@ -639,12 +637,6 @@ namespace lingualink_client.Services.Auth
 
             foreach (var c in value)
             {
-                if (char.IsWhiteSpace(c))
-                {
-                    errorMessage = "用户名不能包含空白字符";
-                    return false;
-                }
-
                 if (c == '/')
                 {
                     errorMessage = "用户名不能包含 /";
@@ -654,6 +646,16 @@ namespace lingualink_client.Services.Auth
 
             errorMessage = null;
             return true;
+        }
+
+        private static string DescribeUser(UserProfile? user)
+        {
+            if (user == null)
+            {
+                return string.Empty;
+            }
+
+            return user.Username ?? user.Email ?? user.Id;
         }
 
         /// <summary>

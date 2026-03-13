@@ -51,9 +51,9 @@ namespace lingualink_client.Services.Interfaces
         Task<UserProfile?> RefreshUserProfileAsync();
 
         /// <summary>
-        /// 更新用户资料（username / display_name / avatar_url）
+        /// 更新用户资料（username / avatar_url）
         /// </summary>
-        Task<ApiOperationResult> UpdateUserProfileAsync(string? displayName, string? avatarUrl, string? username = null);
+        Task<ApiOperationResult> UpdateUserProfileAsync(string? username, string? avatarUrl);
 
         /// <summary>
         /// 发送邮箱绑定验证码

@@ -111,7 +111,7 @@ namespace lingualink_client.ViewModels
         private bool _isUpdatingUserProfile;
 
         [ObservableProperty]
-        private bool _isEditingDisplayName;
+        private bool _isEditingUsername;
 
         [ObservableProperty]
         private bool _isEditingEmail;
@@ -120,7 +120,7 @@ namespace lingualink_client.ViewModels
         private bool _isEditingProvider;
 
         [ObservableProperty]
-        private string _editDisplayName = string.Empty;
+        private string _editUsername = string.Empty;
 
         [ObservableProperty]
         private string _bindEmailInput = string.Empty;
@@ -222,7 +222,6 @@ namespace lingualink_client.ViewModels
         public bool HasPendingOrder => HasLatestOrder && string.Equals(LatestOrderStatus, "pending", StringComparison.OrdinalIgnoreCase);
         public string VipActionButtonText => HasPaidSubscriptionPlan ? "续费 / 升级" : "开通 VIP";
         public string UsernameDisplay => string.IsNullOrWhiteSpace(UserProfile?.Username) ? "-" : UserProfile!.Username!;
-        public string DisplayNameDisplay => string.IsNullOrWhiteSpace(UserProfile?.DisplayName) ? "-" : UserProfile!.DisplayName;
         public string EmailDisplay => string.IsNullOrWhiteSpace(UserProfile?.Email) ? "未绑定" : UserProfile!.Email!;
         public string EmailActionButtonText => string.IsNullOrWhiteSpace(UserProfile?.Email) ? "绑定" : "换绑";
         public string UserStatusDisplay => MapUserStatus(UserProfile?.Status);
@@ -262,7 +261,6 @@ namespace lingualink_client.ViewModels
         {
             OnPropertyChanged(nameof(HasUserProfile));
             OnPropertyChanged(nameof(UsernameDisplay));
-            OnPropertyChanged(nameof(DisplayNameDisplay));
             OnPropertyChanged(nameof(EmailDisplay));
             OnPropertyChanged(nameof(EmailActionButtonText));
             OnPropertyChanged(nameof(UserStatusDisplay));
@@ -271,17 +269,17 @@ namespace lingualink_client.ViewModels
             OnPropertyChanged(nameof(WechatBindingStatusDisplay));
             OnPropertyChanged(nameof(QqBindingStatusDisplay));
             SyncProfileEditorWithUser(value);
-            BeginEditDisplayNameCommand.NotifyCanExecuteChanged();
+            BeginEditUsernameCommand.NotifyCanExecuteChanged();
             BeginEditEmailCommand.NotifyCanExecuteChanged();
             BeginEditProviderCommand.NotifyCanExecuteChanged();
             BindQqProviderCommand.NotifyCanExecuteChanged();
             BindWechatProviderCommand.NotifyCanExecuteChanged();
         }
 
-        partial void OnEditDisplayNameChanged(string value)
+        partial void OnEditUsernameChanged(string value)
         {
             UpdateUserProfileCommand.NotifyCanExecuteChanged();
-            SaveDisplayNameCommand.NotifyCanExecuteChanged();
+            SaveUsernameCommand.NotifyCanExecuteChanged();
         }
 
         partial void OnBindEmailInputChanged(string value)
@@ -427,10 +425,10 @@ namespace lingualink_client.ViewModels
             BindProviderCommand.NotifyCanExecuteChanged();
             BindQqProviderCommand.NotifyCanExecuteChanged();
             BindWechatProviderCommand.NotifyCanExecuteChanged();
-            BeginEditDisplayNameCommand.NotifyCanExecuteChanged();
+            BeginEditUsernameCommand.NotifyCanExecuteChanged();
             BeginEditEmailCommand.NotifyCanExecuteChanged();
             BeginEditProviderCommand.NotifyCanExecuteChanged();
-            SaveDisplayNameCommand.NotifyCanExecuteChanged();
+            SaveUsernameCommand.NotifyCanExecuteChanged();
             SaveEmailCommand.NotifyCanExecuteChanged();
             SaveProviderCommand.NotifyCanExecuteChanged();
         }
@@ -504,7 +502,7 @@ namespace lingualink_client.ViewModels
             if (_authService == null)
             {
                 IsLoggedIn = false;
-                IsEditingDisplayName = false;
+                IsEditingUsername = false;
                 IsEditingEmail = false;
                 ResetBindEmailState();
                 IsEditingProvider = false;
@@ -519,9 +517,7 @@ namespace lingualink_client.ViewModels
 
             if (UserProfile != null)
             {
-                LoggedInUsername = !string.IsNullOrWhiteSpace(UserProfile.DisplayName)
-                    ? UserProfile.DisplayName
-                    : !string.IsNullOrWhiteSpace(UserProfile.Username)
+                LoggedInUsername = !string.IsNullOrWhiteSpace(UserProfile.Username)
                     ? UserProfile.Username
                     : UserProfile.Email ?? UserProfile.Id ?? "用户";
 
@@ -529,7 +525,7 @@ namespace lingualink_client.ViewModels
             }
             else
             {
-                IsEditingDisplayName = false;
+                IsEditingUsername = false;
                 IsEditingEmail = false;
                 ResetBindEmailState();
                 IsEditingProvider = false;
@@ -554,10 +550,10 @@ namespace lingualink_client.ViewModels
             BindProviderCommand.NotifyCanExecuteChanged();
             BindQqProviderCommand.NotifyCanExecuteChanged();
             BindWechatProviderCommand.NotifyCanExecuteChanged();
-            BeginEditDisplayNameCommand.NotifyCanExecuteChanged();
+            BeginEditUsernameCommand.NotifyCanExecuteChanged();
             BeginEditEmailCommand.NotifyCanExecuteChanged();
             BeginEditProviderCommand.NotifyCanExecuteChanged();
-            SaveDisplayNameCommand.NotifyCanExecuteChanged();
+            SaveUsernameCommand.NotifyCanExecuteChanged();
             SaveEmailCommand.NotifyCanExecuteChanged();
             SaveProviderCommand.NotifyCanExecuteChanged();
             LoadSubscriptionPlansCommand.NotifyCanExecuteChanged();
@@ -855,11 +851,11 @@ namespace lingualink_client.ViewModels
         {
             if (profile == null)
             {
-                EditDisplayName = string.Empty;
+                EditUsername = string.Empty;
                 return;
             }
 
-            EditDisplayName = profile.Username ?? string.Empty;
+            EditUsername = profile.Username ?? string.Empty;
         }
 
         private void ResetBindEmailState()
@@ -1556,31 +1552,31 @@ namespace lingualink_client.ViewModels
 
         private bool CanRefreshUserProfile() => IsLoggedIn && _authService != null;
 
-        [RelayCommand(CanExecute = nameof(CanBeginEditDisplayName))]
-        private void BeginEditDisplayName()
+        [RelayCommand(CanExecute = nameof(CanBeginEditUsername))]
+        private void BeginEditUsername()
         {
-            EditDisplayName = UserProfile?.Username ?? string.Empty;
-            IsEditingDisplayName = true;
+            EditUsername = UserProfile?.Username ?? string.Empty;
+            IsEditingUsername = true;
         }
 
-        private bool CanBeginEditDisplayName() => IsLoggedIn && !IsUpdatingUserProfile;
+        private bool CanBeginEditUsername() => IsLoggedIn && !IsUpdatingUserProfile;
 
         [RelayCommand]
-        private void CancelEditDisplayName()
+        private void CancelEditUsername()
         {
-            IsEditingDisplayName = false;
-            EditDisplayName = UserProfile?.Username ?? string.Empty;
+            IsEditingUsername = false;
+            EditUsername = UserProfile?.Username ?? string.Empty;
         }
 
-        [RelayCommand(CanExecute = nameof(CanSaveDisplayName))]
-        private async Task SaveDisplayNameAsync()
+        [RelayCommand(CanExecute = nameof(CanSaveUsername))]
+        private async Task SaveUsernameAsync()
         {
             if (_authService == null || !IsLoggedIn)
             {
                 return;
             }
 
-            var trimmedUsername = string.IsNullOrWhiteSpace(EditDisplayName) ? string.Empty : EditDisplayName.Trim();
+            var trimmedUsername = string.IsNullOrWhiteSpace(EditUsername) ? string.Empty : EditUsername.Trim();
             if (!TryValidateUsernameInput(trimmedUsername, out var validationError))
             {
                 MessageBox.Show(validationError ?? "用户名格式不正确", LanguageManager.GetString("ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -1590,14 +1586,14 @@ namespace lingualink_client.ViewModels
             IsUpdatingUserProfile = true;
             try
             {
-                var result = await _authService.UpdateUserProfileAsync(displayName: null, avatarUrl: null, username: trimmedUsername);
+                var result = await _authService.UpdateUserProfileAsync(trimmedUsername, null);
                 if (!result.Success)
                 {
                     MessageBox.Show(result.ErrorMessage ?? "修改用户名失败", LanguageManager.GetString("ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
 
-                IsEditingDisplayName = false;
+                IsEditingUsername = false;
                 await RefreshUserProfileAsync();
             }
             finally
@@ -1606,14 +1602,14 @@ namespace lingualink_client.ViewModels
             }
         }
 
-        private bool CanSaveDisplayName()
+        private bool CanSaveUsername()
         {
-            if (!IsLoggedIn || _authService == null || IsUpdatingUserProfile || string.IsNullOrWhiteSpace(EditDisplayName))
+            if (!IsLoggedIn || _authService == null || IsUpdatingUserProfile || string.IsNullOrWhiteSpace(EditUsername))
             {
                 return false;
             }
 
-            return TryValidateUsernameInput(EditDisplayName.Trim(), out _);
+            return TryValidateUsernameInput(EditUsername.Trim(), out _);
         }
 
         [RelayCommand(CanExecute = nameof(CanBeginEditEmail))]
@@ -1864,7 +1860,7 @@ namespace lingualink_client.ViewModels
                 return;
             }
 
-            var trimmedUsername = string.IsNullOrWhiteSpace(EditDisplayName) ? null : EditDisplayName.Trim();
+            var trimmedUsername = string.IsNullOrWhiteSpace(EditUsername) ? null : EditUsername.Trim();
             if (trimmedUsername != null && !TryValidateUsernameInput(trimmedUsername, out var validationError))
             {
                 MessageBox.Show(
@@ -1879,7 +1875,7 @@ namespace lingualink_client.ViewModels
 
             try
             {
-                var result = await _authService.UpdateUserProfileAsync(displayName: null, avatarUrl: null, username: trimmedUsername);
+                var result = await _authService.UpdateUserProfileAsync(trimmedUsername, null);
                 if (!result.Success)
                 {
                     MessageBox.Show(
@@ -1914,8 +1910,8 @@ namespace lingualink_client.ViewModels
 
         private bool CanUpdateUserProfile()
         {
-            var hasUsername = !string.IsNullOrWhiteSpace(EditDisplayName);
-            if (hasUsername && !TryValidateUsernameInput(EditDisplayName.Trim(), out _))
+            var hasUsername = !string.IsNullOrWhiteSpace(EditUsername);
+            if (hasUsername && !TryValidateUsernameInput(EditUsername.Trim(), out _))
             {
                 return false;
             }
