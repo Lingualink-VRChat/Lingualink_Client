@@ -48,7 +48,7 @@ namespace lingualink_client.Services.Auth
         /// <summary>
         /// 创建认证服务实例
         /// </summary>
-        /// <param name="authServerUrl">Auth Server API 地址，如 http://localhost:9080</param>
+        /// <param name="authServerUrl">Auth Server API 地址，如 https://auth.lingualink.aiatechco.com</param>
         /// <param name="loginPageUrl">登录页面地址（可选，用于测试）</param>
         public AuthService(string authServerUrl, string? loginPageUrl = null)
         {

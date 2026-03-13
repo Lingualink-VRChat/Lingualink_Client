@@ -317,7 +317,7 @@ webview.NavigationCompleted += (_, args) =>
 | 环境 | AUTH_HOST |
 |------|-----------|
 | 开发 | `http://localhost:9080` |
-| 生产 | `https://auth.lingualink.com`（API 直接服务 `/checkout` 静态文件） |
+| 生产 | `https://auth.lingualink.aiatechco.com`（API 直接服务 `/checkout` 静态文件） |
 
 生产环境中 Go API 在 release mode 下自动托管 `/checkout` 路由（见 `router.go`），
 无需额外部署前端服务器。

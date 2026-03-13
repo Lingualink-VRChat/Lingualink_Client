@@ -1537,7 +1537,7 @@ namespace lingualink_client.ViewModels
         {
             if (string.IsNullOrWhiteSpace(authServerUrl))
             {
-                return "http://localhost:9080";
+                return "https://auth.lingualink.aiatechco.com";
             }
 
             return authServerUrl.Trim().TrimEnd('/');

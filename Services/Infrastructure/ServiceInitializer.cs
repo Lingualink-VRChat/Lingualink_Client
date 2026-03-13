@@ -72,11 +72,11 @@ namespace lingualink_client.Services
             ServiceContainer.Register<IUpdateService, VelopackUpdateService>(updateService);
 
             // 注册认证服务
-            // 默认使用本地 Auth Server（可通过环境变量 LINGUALINK_AUTH_SERVER_URL 覆盖）
+            // 默认使用生产 Auth Server；本地联调可通过环境变量 LINGUALINK_AUTH_SERVER_URL 覆盖。
             var authServerUrl = Environment.GetEnvironmentVariable("LINGUALINK_AUTH_SERVER_URL");
             if (string.IsNullOrWhiteSpace(authServerUrl))
             {
-                authServerUrl = "http://localhost:9080";
+                authServerUrl = "https://auth.lingualink.aiatechco.com";
             }
             authServerUrl = authServerUrl.TrimEnd('/');
             // 登录入口应走 Auth Server 托管登录页。

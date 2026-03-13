@@ -20,13 +20,13 @@ namespace lingualink_client.Views
         /// </summary>
         public event Action<string>? PaymentCompleted;
 
-        public CheckoutWindow(string accessToken, string authHost = "http://localhost:9080")
+        public CheckoutWindow(string accessToken, string authHost = "https://auth.lingualink.aiatechco.com")
         {
             InitializeComponent();
 
             _accessToken = accessToken ?? string.Empty;
             _authHost = string.IsNullOrWhiteSpace(authHost)
-                ? "http://localhost:9080"
+                ? "https://auth.lingualink.aiatechco.com"
                 : authHost.Trim().TrimEnd('/');
 
             Loaded += OnLoaded;
