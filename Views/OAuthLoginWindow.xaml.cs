@@ -254,17 +254,35 @@ namespace lingualink_client.Views
             var targetUri = e.Uri;
             Debug.WriteLine($"[OAuthLoginWindow] Intercepted popup request: {targetUri}");
 
-            if (string.IsNullOrWhiteSpace(targetUri) || LoginWebView.CoreWebView2 == null)
+            if (string.IsNullOrWhiteSpace(targetUri))
             {
                 return;
             }
 
             e.Handled = true;
+
             Dispatcher.Invoke(() =>
             {
-                LoadingOverlay.Visibility = Visibility.Visible;
-                ErrorOverlay.Visibility = Visibility.Collapsed;
-                LoginWebView.CoreWebView2.Navigate(targetUri);
+                var popupWindow = new OAuthLoginWindow(targetUri, _callbackUri.ToString())
+                {
+                    Owner = this,
+                    Title = "微信登录 - LinguaLink",
+                    Width = 420,
+                    Height = 620,
+                    MinWidth = 360,
+                    MinHeight = 500,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                };
+
+                popupWindow.LoginCompleted += (_, result) =>
+                {
+                    if (result != null)
+                    {
+                        CompleteLogin(result);
+                    }
+                };
+
+                popupWindow.ShowDialog();
             });
         }
 
