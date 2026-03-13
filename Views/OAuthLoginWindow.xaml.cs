@@ -16,6 +16,9 @@ namespace lingualink_client.Views
     /// </summary>
     public partial class OAuthLoginWindow : Window
     {
+        private const double LoginWindowHeight = 700;
+        private const double RegisterWindowHeight = 780;
+
         private static readonly string AuthWebViewUserDataFolder = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "LinguaLink",
@@ -416,6 +419,12 @@ namespace lingualink_client.Views
                     return;
                 }
 
+                if (string.Equals(messageType, "lingualink_auth_mode_changed", StringComparison.OrdinalIgnoreCase))
+                {
+                    ApplyHostedAuthLayout(root);
+                    return;
+                }
+
                 if (string.Equals(messageType, "lingualink_provider_bind_success", StringComparison.OrdinalIgnoreCase))
                 {
                     Debug.WriteLine("[OAuthLoginWindow] Received provider bind success payload from bridge postMessage");
@@ -459,6 +468,22 @@ namespace lingualink_client.Views
             }
         }
 
+        private void ApplyHostedAuthLayout(JsonElement root)
+        {
+            var mode = GetJsonString(root, "mode")?.Trim().ToLowerInvariant();
+            var requestedHeight = TryParseDouble(GetJsonString(root, "window_height"));
+            var targetHeight = mode == "register" ? RegisterWindowHeight : LoginWindowHeight;
+            if (requestedHeight.HasValue && requestedHeight.Value >= MinHeight)
+            {
+                targetHeight = requestedHeight.Value;
+            }
+
+            Dispatcher.Invoke(() =>
+            {
+                Height = targetHeight;
+            });
+        }
+
         private static string? GetJsonString(JsonElement root, string propertyName)
         {
             if (!root.TryGetProperty(propertyName, out var value))
@@ -491,6 +516,11 @@ namespace lingualink_client.Views
         private static int? TryParseInt(string? value)
         {
             return int.TryParse(value, out var parsed) ? parsed : null;
+        }
+
+        private static double? TryParseDouble(string? value)
+        {
+            return double.TryParse(value, out var parsed) ? parsed : null;
         }
 
         private static DateTime? TryParseExpiresAt(string? value)
