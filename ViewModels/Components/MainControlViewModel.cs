@@ -33,6 +33,9 @@ namespace lingualink_client.ViewModels.Components
         [ObservableProperty]
         private bool _isMicrophoneComboBoxEnabled = true;
 
+        [ObservableProperty]
+        private string _serverModeText = string.Empty;
+
         // 本地化标签
         public string WorkHintLabel => LanguageManager.GetString("WorkHint");
 
@@ -90,6 +93,7 @@ namespace lingualink_client.ViewModels.Components
             
             // 更新其他本地化标签
             OnPropertyChanged(nameof(WorkHintLabel));
+            UpdateServerModeText();
         }
 
         private void OnGlobalSettingsChanged(Services.Events.SettingsChangedEvent e)
@@ -131,6 +135,7 @@ namespace lingualink_client.ViewModels.Components
 
             _appSettings = _settingsService.LoadSettings();
             System.Diagnostics.Debug.WriteLine($"[MainControlViewModel] Loaded settings - ServerUrl: '{_appSettings.ServerUrl}'");
+            UpdateServerModeText();
 
             // 释放旧的协调器
             if (_orchestrator != null)
@@ -277,6 +282,14 @@ namespace lingualink_client.ViewModels.Components
         public void ResumeListeningFromTextInput()
         {
             _orchestrator?.Resume();
+        }
+
+        private void UpdateServerModeText()
+        {
+            if (_appSettings == null) return;
+            ServerModeText = _appSettings.UseCustomServer
+                ? $"⚙ {LanguageManager.GetString("ServerModeCustom")}"
+                : $"☁ {LanguageManager.GetString("ServerModeOfficial")}";
         }
 
         /// <summary>

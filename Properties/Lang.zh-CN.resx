@@ -1077,6 +1077,13 @@
   <data name="UpdateVersionUnknown" xml:space="preserve">
     <value>未知</value>
   </data>
+  <!-- Server Mode Indicator -->
+  <data name="ServerModeOfficial" xml:space="preserve">
+    <value>官方服务器</value>
+  </data>
+  <data name="ServerModeCustom" xml:space="preserve">
+    <value>自定义服务器</value>
+  </data>
 </root>
 
 

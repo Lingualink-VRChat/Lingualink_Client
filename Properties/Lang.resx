@@ -1078,6 +1078,13 @@
   <data name="UpdateVersionUnknown" xml:space="preserve">
     <value>Unknown</value>
   </data>
+  <!-- Server Mode Indicator -->
+  <data name="ServerModeOfficial" xml:space="preserve">
+    <value>Official Server</value>
+  </data>
+  <data name="ServerModeCustom" xml:space="preserve">
+    <value>Custom Server</value>
+  </data>
 </root>
 
 

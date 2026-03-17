@@ -1,4 +1,4 @@
-﻿<Page
+<Page
     x:Class="lingualink_client.Views.IndexPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -233,6 +233,12 @@
                             Content="{Binding WorkButtonContent}"
                             Appearance="Primary"
                             Icon="{ui:SymbolIcon Mic24}" />
+
+                        <TextBlock
+                            Margin="0,8,0,0"
+                            FontSize="12"
+                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                            Text="{Binding ServerModeText}" />
                             
                         <TextBlock
                             Margin="0,12,0,0"

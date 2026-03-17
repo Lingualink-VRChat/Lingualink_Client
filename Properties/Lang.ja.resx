@@ -1027,6 +1027,13 @@
   <data name="UpdateVersionUnknown" xml:space="preserve">
     <value>不明</value>
   </data>
+  <!-- Server Mode Indicator -->
+  <data name="ServerModeOfficial" xml:space="preserve">
+    <value>公式サーバー</value>
+  </data>
+  <data name="ServerModeCustom" xml:space="preserve">
+    <value>カスタムサーバー</value>
+  </data>
 </root>
 
 
