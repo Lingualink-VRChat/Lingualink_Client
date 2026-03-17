@@ -688,8 +688,8 @@ namespace lingualink_client.ViewModels
             HasActiveSubscription = false;
             HasPaidSubscriptionPlan = false;
             SubscriptionStatus = "未开通";
-            CurrentPlanDisplay = "Free";
-            SubscriptionRemainingDisplay = "免费套餐（无限期）";
+            CurrentPlanDisplay = "未订阅";
+            SubscriptionRemainingDisplay = "未订阅";
             ExpiryReminder = "当前账号尚未检测到有效订阅。";
         }
 
@@ -697,7 +697,7 @@ namespace lingualink_client.ViewModels
         {
             if (!subscription.IsPaidPlan)
             {
-                return "免费套餐";
+                return "未订阅";
             }
 
             if (subscription.IsPaidActiveNow)
@@ -725,7 +725,7 @@ namespace lingualink_client.ViewModels
         {
             if (!subscription.IsPaidPlan)
             {
-                return "当前为免费套餐，开通 VIP 后可使用更多能力。";
+                return "当前未订阅，开通订阅后可使用官方翻译功能。";
             }
 
             if (subscription.AutoRenew && subscription.IsPaidActiveNow)
@@ -769,7 +769,7 @@ namespace lingualink_client.ViewModels
         {
             if (!subscription.IsPaidPlan)
             {
-                return "免费套餐（无限期）";
+                return "未订阅";
             }
 
             var endDate = subscription.EffectiveEndDate;

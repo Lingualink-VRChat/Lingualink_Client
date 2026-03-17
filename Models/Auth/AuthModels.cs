@@ -124,7 +124,7 @@ namespace lingualink_client.Models.Auth
         [JsonIgnore]
         public string DisplayPlanName => !string.IsNullOrWhiteSpace(Plan?.Name)
             ? Plan!.Name
-            : (LegacyPlanName ?? "Free");
+            : (LegacyPlanName ?? "未订阅");
 
         [JsonIgnore]
         public DateTime? EffectiveEndDate => EndDate ?? LegacyExpiresAt;
@@ -250,7 +250,8 @@ namespace lingualink_client.Models.Auth
             return normalized.Contains("free")
                    || normalized.Contains("trial")
                    || normalized.Contains("免费")
-                   || normalized.Contains("试用");
+                   || normalized.Contains("试用")
+                   || normalized.Contains("未订阅");
         }
     }
 
