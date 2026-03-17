@@ -54,7 +54,7 @@ namespace lingualink_client.Models
         public bool UseCustomServer { get; set; } = true;
         public string CustomServerUrl { get; set; } = "https://api2.lingualink.aiatechco.com/api/v1/";
         public string CustomApiKey { get; set; } = string.Empty;
-        public string OfficialServerUrl { get; set; } = "https://api.lingualink.aiatechco.com/api/v1/";
+        public string OfficialServerUrl { get; set; } = "http://localhost:8080/api/v1/";
         public string OfficialApiKey { get; set; } = string.Empty;
         public string PendingSubscriptionOrderOutTradeNo { get; set; } = string.Empty;
 

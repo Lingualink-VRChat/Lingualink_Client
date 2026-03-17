@@ -1286,7 +1286,7 @@ namespace lingualink_client.ViewModels
 
                 if (string.IsNullOrWhiteSpace(_currentSettings.OfficialServerUrl))
                 {
-                    _currentSettings.OfficialServerUrl = "https://api.lingualink.aiatechco.com/api/v1/";
+                    _currentSettings.OfficialServerUrl = "http://localhost:8080/api/v1/";
                 }
 
                 ServerUrl = _currentSettings.OfficialServerUrl;
