@@ -21,7 +21,9 @@ namespace lingualink_client.ViewModels
 
         public string MessageTemplateSettings => LanguageManager.GetString("MessageTemplateSettings");
         public string UseCustomTemplate => LanguageManager.GetString("UseCustomTemplate");
+        public string UseCustomTemplateHint => LanguageManager.GetString("MessageTemplateHint");
         public string CustomTemplateTextLabel => LanguageManager.GetString("CustomTemplateText");
+        public string CustomTemplatePlaceholder => LanguageManager.GetString("MessageTemplatePlaceholder");
         public string AvailablePlaceholders => LanguageManager.GetString("AvailablePlaceholders");
         public string PreviewTemplate => LanguageManager.GetString("PreviewTemplate");
         public string ResetToDefaults => LanguageManager.GetString("ResetToDefaults");

@@ -1085,8 +1085,353 @@
   <data name="ServerModeCustom" xml:space="preserve">
     <value>Custom Server</value>
   </data>
+  <data name="AccountCurrentPlanPrefix" xml:space="preserve">
+    <value>Current plan: </value>
+  </data>
+  <data name="AccountRefreshProfileTooltip" xml:space="preserve">
+    <value>Refresh user profile</value>
+  </data>
+  <data name="AccountSubscriptionOverview" xml:space="preserve">
+    <value>Subscription Overview</value>
+  </data>
+  <data name="AccountSubscriptionCurrentStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="AccountSubscriptionCurrentPlan" xml:space="preserve">
+    <value>Plan</value>
+  </data>
+  <data name="AccountSubscriptionRemaining" xml:space="preserve">
+    <value>Remaining</value>
+  </data>
+  <data name="AccountPersonalInfo" xml:space="preserve">
+    <value>Personal Information</value>
+  </data>
+  <data name="AccountEdit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="AccountUsernamePlaceholder" xml:space="preserve">
+    <value>Enter a username (cannot contain /)</value>
+  </data>
+  <data name="AccountCancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="AccountStatusLabel" xml:space="preserve">
+    <value>Account Status</value>
+  </data>
+  <data name="AccountSecurity" xml:space="preserve">
+    <value>Account Security</value>
+  </data>
+  <data name="AccountEmail" xml:space="preserve">
+    <value>Email</value>
+  </data>
+  <data name="AccountEmailPlaceholder" xml:space="preserve">
+    <value>Enter your email address</value>
+  </data>
+  <data name="AccountEmailCodeLockHint" xml:space="preserve">
+    <value>After sending the code, the email field will be locked temporarily.</value>
+  </data>
+  <data name="AccountEmailCodePlaceholder" xml:space="preserve">
+    <value>Enter verification code</value>
+  </data>
+  <data name="AccountPasswordPlaceholder" xml:space="preserve">
+    <value>Enter password (at least 8 characters)</value>
+  </data>
+  <data name="AccountConfirmPasswordPlaceholder" xml:space="preserve">
+    <value>Enter password again</value>
+  </data>
+  <data name="AccountBindEmail" xml:space="preserve">
+    <value>Bind Email</value>
+  </data>
+  <data name="AccountProviderBindings" xml:space="preserve">
+    <value>Social Bindings</value>
+  </data>
+  <data name="AccountWechat" xml:space="preserve">
+    <value>WeChat</value>
+  </data>
+  <data name="AccountQq" xml:space="preserve">
+    <value>QQ</value>
+  </data>
+  <data name="AccountBindQq" xml:space="preserve">
+    <value>Bind QQ</value>
+  </data>
+  <data name="AccountBindQqTooltip" xml:space="preserve">
+    <value>Available when QQ is not bound</value>
+  </data>
+  <data name="AccountBindWechat" xml:space="preserve">
+    <value>Bind WeChat</value>
+  </data>
+  <data name="AccountBindWechatTooltip" xml:space="preserve">
+    <value>Available when WeChat is not bound</value>
+  </data>
+  <data name="AccountServerUrlPlaceholder" xml:space="preserve">
+    <value>https://api2.lingualink.aiatechco.com/api/v1/</value>
+  </data>
+  <data name="AccountApiKeyPlaceholder" xml:space="preserve">
+    <value>Optional</value>
+  </data>
+  <data name="AccountConnectionTestHint" xml:space="preserve">
+    <value>Click to test server connectivity</value>
+  </data>
+  <data name="AccountPaymentMethodWechat" xml:space="preserve">
+    <value>WeChat Pay</value>
+  </data>
+  <data name="AccountPaymentMethodAlipayReserved" xml:space="preserve">
+    <value>Alipay (Reserved)</value>
+  </data>
+  <data name="AccountVipActionRenewUpgrade" xml:space="preserve">
+    <value>Renew / Upgrade</value>
+  </data>
+  <data name="AccountVipActionOpen" xml:space="preserve">
+    <value>Activate VIP</value>
+  </data>
+  <data name="AccountUnbound" xml:space="preserve">
+    <value>Not Bound</value>
+  </data>
+  <data name="AccountBind" xml:space="preserve">
+    <value>Bind</value>
+  </data>
+  <data name="AccountRebind" xml:space="preserve">
+    <value>Rebind</value>
+  </data>
+  <data name="AccountBound" xml:space="preserve">
+    <value>Bound</value>
+  </data>
+  <data name="AccountBoundMaskedFormat" xml:space="preserve">
+    <value>Bound ({0})</value>
+  </data>
+  <data name="AccountSubscriptionStatusNotOpened" xml:space="preserve">
+    <value>Not Activated</value>
+  </data>
+  <data name="AccountPlanUnsubscribed" xml:space="preserve">
+    <value>Unsubscribed</value>
+  </data>
+  <data name="AccountSubscriptionStatusActive" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="AccountSubscriptionStatusPending" xml:space="preserve">
+    <value>Pending</value>
+  </data>
+  <data name="AccountSubscriptionStatusExpired" xml:space="preserve">
+    <value>Expired</value>
+  </data>
+  <data name="AccountSubscriptionPromptNoSubscription" xml:space="preserve">
+    <value>No active subscription detected. Subscribe to use the official translation service.</value>
+  </data>
+  <data name="AccountSubscriptionPromptAutoRenew" xml:space="preserve">
+    <value>Your subscription will renew automatically.</value>
+  </data>
+  <data name="AccountSubscriptionPromptUnavailable" xml:space="preserve">
+    <value>Subscription expiry information is temporarily unavailable.</value>
+  </data>
+  <data name="AccountSubscriptionPromptNoActiveSubscription" xml:space="preserve">
+    <value>No active subscription detected for this account.</value>
+  </data>
+  <data name="AccountSubscriptionPromptExpired" xml:space="preserve">
+    <value>Your subscription has expired. Renew to continue using the service.</value>
+  </data>
+  <data name="AccountSubscriptionPromptPending" xml:space="preserve">
+    <value>Your subscription is not active yet. Please check the subscription status.</value>
+  </data>
+  <data name="AccountSubscriptionPromptExpireToday" xml:space="preserve">
+    <value>Your subscription expires today. Please renew in time.</value>
+  </data>
+  <data name="AccountSubscriptionPromptExpireInDaysFormat" xml:space="preserve">
+    <value>Your subscription expires in {0} day(s). Please renew in time.</value>
+  </data>
+  <data name="AccountRemainingUnknown" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
+  <data name="AccountRemainingPending" xml:space="preserve">
+    <value>Pending</value>
+  </data>
+  <data name="AccountRemainingExpired" xml:space="preserve">
+    <value>Expired</value>
+  </data>
+  <data name="AccountRemainingDaysFormat" xml:space="preserve">
+    <value>{0} day(s) remaining</value>
+  </data>
+  <data name="AccountRemainingHoursFormat" xml:space="preserve">
+    <value>{0} hour(s) remaining</value>
+  </data>
+  <data name="AccountRemainingMinutesFormat" xml:space="preserve">
+    <value>{0} minute(s) remaining</value>
+  </data>
+  <data name="AccountStatusUnknown" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
+  <data name="AccountStatusNormal" xml:space="preserve">
+    <value>Normal</value>
+  </data>
+  <data name="AccountStatusInactive" xml:space="preserve">
+    <value>Inactive</value>
+  </data>
+  <data name="AccountStatusDisabled" xml:space="preserve">
+    <value>Disabled</value>
+  </data>
+  <data name="MessageTemplateHint" xml:space="preserve">
+    <value>Enable this to customize the output format sent to VRChat.</value>
+  </data>
+  <data name="MessageTemplatePlaceholder" xml:space="preserve">
+    <value>Enter your template here...</value>
+  </data>
+  <data name="IndexUpdateAvailable" xml:space="preserve">
+    <value>New version available!</value>
+  </data>
+  <data name="AccountDefaultUserName" xml:space="preserve">
+    <value>User</value>
+  </data>
+  <data name="AccountUsernameRequired" xml:space="preserve">
+    <value>Username cannot be empty.</value>
+  </data>
+  <data name="AccountUsernameTooLong" xml:space="preserve">
+    <value>Username must be 100 characters or fewer.</value>
+  </data>
+  <data name="AccountUsernameSlashInvalid" xml:space="preserve">
+    <value>Username cannot contain /.</value>
+  </data>
+  <data name="AccountUsernameInvalid" xml:space="preserve">
+    <value>Invalid username format.</value>
+  </data>
+  <data name="AccountAuthServiceUnavailable" xml:space="preserve">
+    <value>Authentication service is not initialized.</value>
+  </data>
+  <data name="AccountLoginFailed" xml:space="preserve">
+    <value>Login failed.</value>
+  </data>
+  <data name="AccountLoginFailedFormat" xml:space="preserve">
+    <value>Login failed: {0}</value>
+  </data>
+  <data name="AccountLogoutConfirmMessage" xml:space="preserve">
+    <value>Are you sure you want to log out?</value>
+  </data>
+  <data name="AccountLogoutConfirmTitle" xml:space="preserve">
+    <value>Confirm Logout</value>
+  </data>
+  <data name="AccountVipRequireLogin" xml:space="preserve">
+    <value>Please log in before activating or renewing VIP.</value>
+  </data>
+  <data name="AccountSubscriptionReloginRequired" xml:space="preserve">
+    <value>Your login session has expired. Please log in again before subscribing.</value>
+  </data>
+  <data name="AccountSubscribeSuccess" xml:space="preserve">
+    <value>Subscription succeeded. Subscription status has been refreshed.</value>
+  </data>
+  <data name="AccountSubscribeSuccessWithOrderFormat" xml:space="preserve">
+    <value>Subscription succeeded! Order No.: {0}</value>
+  </data>
+  <data name="AccountUpdateUsernameFailed" xml:space="preserve">
+    <value>Failed to update username.</value>
+  </data>
+  <data name="AccountUpdateProfileFailed" xml:space="preserve">
+    <value>Failed to update profile.</value>
+  </data>
+  <data name="AccountUpdateProfileSuccess" xml:space="preserve">
+    <value>Profile updated successfully.</value>
+  </data>
+  <data name="AccountUpdateProfileFailedFormat" xml:space="preserve">
+    <value>Failed to update profile: {0}</value>
+  </data>
+  <data name="AccountBindProviderFailed" xml:space="preserve">
+    <value>Failed to bind third-party account.</value>
+  </data>
+  <data name="AccountBindProviderSuccess" xml:space="preserve">
+    <value>Third-party account bound successfully.</value>
+  </data>
+  <data name="AccountBindProviderFailedFormat" xml:space="preserve">
+    <value>Failed to bind third-party account: {0}</value>
+  </data>
+  <data name="AccountProviderAlreadyBoundFormat" xml:space="preserve">
+    <value>{0} is already bound. No need to bind again.</value>
+  </data>
+  <data name="AccountProviderBindSuccessFormat" xml:space="preserve">
+    <value>{0} bound successfully.</value>
+  </data>
+  <data name="AccountPlansEmpty" xml:space="preserve">
+    <value>No purchasable plans are currently available.</value>
+  </data>
+  <data name="AccountPlansLoadedFormat" xml:space="preserve">
+    <value>Loaded {0} purchasable plan(s).</value>
+  </data>
+  <data name="AccountPlansLoadFailedFormat" xml:space="preserve">
+    <value>Failed to load plans: {0}</value>
+  </data>
+  <data name="AccountPendingOrderExists" xml:space="preserve">
+    <value>There is a pending order. Please complete payment or wait until it finishes before creating another.</value>
+  </data>
+  <data name="AccountSelectPlanFirst" xml:space="preserve">
+    <value>Please select a plan first.</value>
+  </data>
+  <data name="AccountCreateOrderFailed" xml:space="preserve">
+    <value>Failed to create order.</value>
+  </data>
+  <data name="AccountCreateOrderFailedFormat" xml:space="preserve">
+    <value>Failed to create order: {0}</value>
+  </data>
+  <data name="AccountPaymentQrMissing" xml:space="preserve">
+    <value>The payment channel is ready, but no QR code URL was returned. Please create the order again.</value>
+  </data>
+  <data name="AccountOrderPaidRefreshing" xml:space="preserve">
+    <value>Payment successful. Refreshing subscription status.</value>
+  </data>
+  <data name="AccountOrderFailed" xml:space="preserve">
+    <value>Order payment failed. Please create a new order.</value>
+  </data>
+  <data name="AccountOrderExpired" xml:space="preserve">
+    <value>The order has expired. Please create a new order.</value>
+  </data>
+  <data name="AccountOrderCancelled" xml:space="preserve">
+    <value>The order was cancelled. Please create a new order.</value>
+  </data>
+  <data name="AccountOrderPollingTimeout" xml:space="preserve">
+    <value>Order polling timed out. Please refresh the order status manually later.</value>
+  </data>
+  <data name="AccountOrderRestoreDetectedFormat" xml:space="preserve">
+    <value>Detected pending order {0}. Restoring status.</value>
+  </data>
+  <data name="AccountOrderRestoreRecoveredFormat" xml:space="preserve">
+    <value>Recovered order {0}. Click "Query Order" to continue checking status.</value>
+  </data>
+  <data name="AccountOrderQueryFailed" xml:space="preserve">
+    <value>Failed to query the order status. Please try again later.</value>
+  </data>
+  <data name="AccountConnectionUnknownError" xml:space="preserve">
+    <value>An unknown error occurred.</value>
+  </data>
+  <data name="AccountConnectionSuccess" xml:space="preserve">
+    <value>Connection successful!</value>
+  </data>
+  <data name="AccountConnectionFailedFormat" xml:space="preserve">
+    <value>Connection failed: {0}</value>
+  </data>
+  <data name="UpdateDialogTitle" xml:space="preserve">
+    <value>Update Available</value>
+  </data>
+  <data name="UpdateDialogSummaryFormat" xml:space="preserve">
+    <value>New version detected: {0}
+
+Versions to be applied:
+{1}
+
+Release notes:
+{2}
+
+Update now?</value>
+  </data>
+  <data name="UpdateDownloadingTitle" xml:space="preserve">
+    <value>Downloading Update</value>
+  </data>
+  <data name="UpdateDownloadingMessage" xml:space="preserve">
+    <value>Downloading the update in the background. Please wait...</value>
+  </data>
+  <data name="UpdateDownloadReadyMessage" xml:space="preserve">
+    <value>The update has been downloaded. The app will restart to finish installation.</value>
+  </data>
+  <data name="UpdateApplyErrorFormat" xml:space="preserve">
+    <value>An error occurred while scheduling the update install: {0}</value>
+  </data>
+  <data name="UpdateProcessErrorFormat" xml:space="preserve">
+    <value>An error occurred during the update process: {0}</value>
+  </data>
 </root>
-
-
 
 

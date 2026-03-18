@@ -42,6 +42,7 @@ namespace lingualink_client.ViewModels
         public string OfficialServiceHint => LanguageManager.GetString("OfficialServiceHint");
         public string CustomServiceHint => LanguageManager.GetString("CustomServiceHint");
         public string UserLoginLabel => LanguageManager.GetString("UserLogin");
+        public string UsernameLabel => LanguageManager.GetString("Username");
         public string LoginLabel => LanguageManager.GetString("Login");
         public string LogoutLabel => LanguageManager.GetString("Logout");
         public string LoginStatusLabel => LanguageManager.GetString("LoginStatus");
@@ -58,6 +59,36 @@ namespace lingualink_client.ViewModels
         public string UseCustomServerLabel => LanguageManager.GetString("UseCustomServer");
         public string UseCustomServerHint => LanguageManager.GetString("UseCustomServerHint");
         public string ConnectionTestLabel => LanguageManager.GetString("ConnectionTest");
+        public string RefreshLabel => LanguageManager.GetString("Refresh");
+        public string CurrentPlanPrefixLabel => LanguageManager.GetString("AccountCurrentPlanPrefix");
+        public string RefreshProfileTooltipLabel => LanguageManager.GetString("AccountRefreshProfileTooltip");
+        public string SubscriptionOverviewLabel => LanguageManager.GetString("AccountSubscriptionOverview");
+        public string SubscriptionCurrentStatusLabel => LanguageManager.GetString("AccountSubscriptionCurrentStatus");
+        public string SubscriptionCurrentPlanLabel => LanguageManager.GetString("AccountSubscriptionCurrentPlan");
+        public string SubscriptionRemainingLabel => LanguageManager.GetString("AccountSubscriptionRemaining");
+        public string PersonalInfoLabel => LanguageManager.GetString("AccountPersonalInfo");
+        public string EditLabel => LanguageManager.GetString("AccountEdit");
+        public string UsernamePlaceholderLabel => LanguageManager.GetString("AccountUsernamePlaceholder");
+        public string CancelLabel => LanguageManager.GetString("AccountCancel");
+        public string AccountStatusLabel => LanguageManager.GetString("AccountStatusLabel");
+        public string AccountSecurityLabel => LanguageManager.GetString("AccountSecurity");
+        public string EmailLabel => LanguageManager.GetString("AccountEmail");
+        public string EmailPlaceholderLabel => LanguageManager.GetString("AccountEmailPlaceholder");
+        public string EmailCodeLockHintLabel => LanguageManager.GetString("AccountEmailCodeLockHint");
+        public string EmailCodePlaceholderLabel => LanguageManager.GetString("AccountEmailCodePlaceholder");
+        public string PasswordPlaceholderLabel => LanguageManager.GetString("AccountPasswordPlaceholder");
+        public string ConfirmPasswordPlaceholderLabel => LanguageManager.GetString("AccountConfirmPasswordPlaceholder");
+        public string BindEmailLabel => LanguageManager.GetString("AccountBindEmail");
+        public string ProviderBindingsLabel => LanguageManager.GetString("AccountProviderBindings");
+        public string WechatLabel => LanguageManager.GetString("AccountWechat");
+        public string QqLabel => LanguageManager.GetString("AccountQq");
+        public string BindQqLabel => LanguageManager.GetString("AccountBindQq");
+        public string BindQqTooltipLabel => LanguageManager.GetString("AccountBindQqTooltip");
+        public string BindWechatLabel => LanguageManager.GetString("AccountBindWechat");
+        public string BindWechatTooltipLabel => LanguageManager.GetString("AccountBindWechatTooltip");
+        public string ServerUrlPlaceholderLabel => LanguageManager.GetString("AccountServerUrlPlaceholder");
+        public string ApiKeyPlaceholderLabel => LanguageManager.GetString("AccountApiKeyPlaceholder");
+        public string ConnectionTestHintLabel => LanguageManager.GetString("AccountConnectionTestHint");
         public string SendEmailCodeButtonText => EmailCodeCountdownSeconds > 0
             ? string.Format(LanguageManager.GetString("BindEmailSendCodeCountdown"), EmailCodeCountdownSeconds)
             : LanguageManager.GetString("BindEmailSendCode");
@@ -168,11 +199,7 @@ namespace lingualink_client.ViewModels
         private SubscriptionPlanInfo? _selectedPlan;
 
         [ObservableProperty]
-        private IReadOnlyList<PaymentMethodOption> _paymentMethodOptions = new[]
-        {
-            new PaymentMethodOption("wechat", "微信支付"),
-            new PaymentMethodOption("alipay", "支付宝（预留）")
-        };
+        private IReadOnlyList<PaymentMethodOption> _paymentMethodOptions = Array.Empty<PaymentMethodOption>();
 
         [ObservableProperty]
         private string _selectedPaymentMethod = "wechat";
@@ -220,31 +247,37 @@ namespace lingualink_client.ViewModels
         public bool HasLatestOrderCodeUrl => !string.IsNullOrWhiteSpace(LatestOrderCodeUrl);
         public bool HasLatestOrderQrImage => LatestOrderQrImage != null;
         public bool HasPendingOrder => HasLatestOrder && string.Equals(LatestOrderStatus, "pending", StringComparison.OrdinalIgnoreCase);
-        public string VipActionButtonText => HasPaidSubscriptionPlan ? "续费 / 升级" : "开通 VIP";
+        public string VipActionButtonText => HasPaidSubscriptionPlan
+            ? LanguageManager.GetString("AccountVipActionRenewUpgrade")
+            : LanguageManager.GetString("AccountVipActionOpen");
         public string UsernameDisplay => string.IsNullOrWhiteSpace(UserProfile?.Username) ? "-" : UserProfile!.Username!;
-        public string EmailDisplay => string.IsNullOrWhiteSpace(UserProfile?.Email) ? "未绑定" : UserProfile!.Email!;
-        public string EmailActionButtonText => string.IsNullOrWhiteSpace(UserProfile?.Email) ? "绑定" : "换绑";
+        public string EmailDisplay => string.IsNullOrWhiteSpace(UserProfile?.Email)
+            ? LanguageManager.GetString("AccountUnbound")
+            : UserProfile!.Email!;
+        public string EmailActionButtonText => string.IsNullOrWhiteSpace(UserProfile?.Email)
+            ? LanguageManager.GetString("AccountBind")
+            : LanguageManager.GetString("AccountRebind");
         public string UserStatusDisplay => MapUserStatus(UserProfile?.Status);
         public bool IsWechatBound => UserProfile?.SocialBindings?.Wechat?.Bound == true;
         public bool IsQqBound => UserProfile?.SocialBindings?.Qq?.Bound == true;
-        public string WechatBindingStatusDisplay => BuildSocialBindingStatusDisplay(UserProfile?.SocialBindings?.Wechat, "微信");
-        public string QqBindingStatusDisplay => BuildSocialBindingStatusDisplay(UserProfile?.SocialBindings?.Qq, "QQ");
+        public string WechatBindingStatusDisplay => BuildSocialBindingStatusDisplay(UserProfile?.SocialBindings?.Wechat);
+        public string QqBindingStatusDisplay => BuildSocialBindingStatusDisplay(UserProfile?.SocialBindings?.Qq);
 
 
-        private static string BuildSocialBindingStatusDisplay(SocialBindingInfo? binding, string providerDisplay)
+        private static string BuildSocialBindingStatusDisplay(SocialBindingInfo? binding)
         {
             if (binding?.Bound != true)
             {
-                return "未绑定";
+                return LanguageManager.GetString("AccountUnbound");
             }
 
             var masked = binding.AccountMasked?.Trim();
             if (string.IsNullOrWhiteSpace(masked))
             {
-                return "已绑定";
+                return LanguageManager.GetString("AccountBound");
             }
 
-            return $"已绑定（{masked}）";
+            return string.Format(LanguageManager.GetString("AccountBoundMaskedFormat"), masked);
         }
 
         partial void OnServerUrlChanged(string value)
@@ -445,6 +478,7 @@ namespace lingualink_client.ViewModels
                                    ? resolved
                                    : new SettingsManager());
             _currentSettings = _settingsManager.LoadSettings();
+            RefreshLocalizedOptions();
 
             if (authService != null)
             {
@@ -519,7 +553,7 @@ namespace lingualink_client.ViewModels
             {
                 LoggedInUsername = !string.IsNullOrWhiteSpace(UserProfile.Username)
                     ? UserProfile.Username
-                    : UserProfile.Email ?? UserProfile.Id ?? "用户";
+                    : UserProfile.Email ?? UserProfile.Id ?? LanguageManager.GetString("AccountDefaultUserName");
 
                 UpdateSubscriptionPresentation(UserProfile.Subscription);
             }
@@ -687,37 +721,37 @@ namespace lingualink_client.ViewModels
         {
             HasActiveSubscription = false;
             HasPaidSubscriptionPlan = false;
-            SubscriptionStatus = "未开通";
-            CurrentPlanDisplay = "未订阅";
-            SubscriptionRemainingDisplay = "未订阅";
-            ExpiryReminder = "当前账号尚未检测到有效订阅。";
+            SubscriptionStatus = LanguageManager.GetString("AccountSubscriptionStatusNotOpened");
+            CurrentPlanDisplay = LanguageManager.GetString("AccountPlanUnsubscribed");
+            SubscriptionRemainingDisplay = LanguageManager.GetString("AccountPlanUnsubscribed");
+            ExpiryReminder = LanguageManager.GetString("AccountSubscriptionPromptNoActiveSubscription");
         }
 
         private static string BuildSubscriptionStatusText(SubscriptionInfo subscription)
         {
             if (!subscription.IsPaidPlan)
             {
-                return "未订阅";
+                return LanguageManager.GetString("AccountPlanUnsubscribed");
             }
 
             if (subscription.IsPaidActiveNow)
             {
-                return "订阅有效";
+                return LanguageManager.GetString("AccountSubscriptionStatusActive");
             }
 
             var now = DateTime.UtcNow;
             if (subscription.StartDate.HasValue && subscription.StartDate.Value.ToUniversalTime() > now)
             {
-                return "未生效";
+                return LanguageManager.GetString("AccountSubscriptionStatusPending");
             }
 
             if (subscription.EffectiveEndDate.HasValue && subscription.EffectiveEndDate.Value.ToUniversalTime() < now)
             {
-                return "已过期";
+                return LanguageManager.GetString("AccountSubscriptionStatusExpired");
             }
 
             return string.IsNullOrWhiteSpace(subscription.Status)
-                ? "未开通"
+                ? LanguageManager.GetString("AccountSubscriptionStatusNotOpened")
                 : subscription.Status;
         }
 
@@ -725,41 +759,41 @@ namespace lingualink_client.ViewModels
         {
             if (!subscription.IsPaidPlan)
             {
-                return "当前未订阅，开通订阅后可使用官方翻译功能。";
+                return LanguageManager.GetString("AccountSubscriptionPromptNoSubscription");
             }
 
             if (subscription.AutoRenew && subscription.IsPaidActiveNow)
             {
-                return "当前订阅将自动续费。";
+                return LanguageManager.GetString("AccountSubscriptionPromptAutoRenew");
             }
 
             var endDate = subscription.EffectiveEndDate;
             if (!endDate.HasValue)
             {
                 return subscription.IsPaidActiveNow
-                    ? "订阅有效期信息暂不可用。"
-                    : "当前账号尚未检测到有效订阅。";
+                    ? LanguageManager.GetString("AccountSubscriptionPromptUnavailable")
+                    : LanguageManager.GetString("AccountSubscriptionPromptNoActiveSubscription");
             }
 
             var daysRemaining = (endDate.Value.ToLocalTime().Date - DateTime.Now.Date).Days;
             if (daysRemaining < 0)
             {
-                return "订阅已到期，请续费后继续使用。";
+                return LanguageManager.GetString("AccountSubscriptionPromptExpired");
             }
 
             if (!subscription.IsPaidActiveNow)
             {
-                return "订阅未生效，请检查订阅状态。";
+                return LanguageManager.GetString("AccountSubscriptionPromptPending");
             }
 
             if (daysRemaining == 0)
             {
-                return "订阅将于今天到期，请及时续费。";
+                return LanguageManager.GetString("AccountSubscriptionPromptExpireToday");
             }
 
             if (daysRemaining <= 7)
             {
-                return $"订阅将在 {daysRemaining} 天后到期，请及时续费。";
+                return string.Format(LanguageManager.GetString("AccountSubscriptionPromptExpireInDaysFormat"), daysRemaining);
             }
 
             return string.Empty;
@@ -769,13 +803,15 @@ namespace lingualink_client.ViewModels
         {
             if (!subscription.IsPaidPlan)
             {
-                return "未订阅";
+                return LanguageManager.GetString("AccountPlanUnsubscribed");
             }
 
             var endDate = subscription.EffectiveEndDate;
             if (!endDate.HasValue)
             {
-                return subscription.IsPaidActiveNow ? "有效期未知" : "未生效";
+                return subscription.IsPaidActiveNow
+                    ? LanguageManager.GetString("AccountRemainingUnknown")
+                    : LanguageManager.GetString("AccountRemainingPending");
             }
 
             var now = DateTime.UtcNow;
@@ -783,20 +819,20 @@ namespace lingualink_client.ViewModels
             var remaining = endUtc - now;
             if (remaining <= TimeSpan.Zero)
             {
-                return "已到期";
+                return LanguageManager.GetString("AccountRemainingExpired");
             }
 
             if (remaining.TotalDays >= 1)
             {
-                return $"剩余 {Math.Floor(remaining.TotalDays)} 天";
+                return string.Format(LanguageManager.GetString("AccountRemainingDaysFormat"), Math.Floor(remaining.TotalDays));
             }
 
             if (remaining.TotalHours >= 1)
             {
-                return $"剩余 {Math.Floor(remaining.TotalHours)} 小时";
+                return string.Format(LanguageManager.GetString("AccountRemainingHoursFormat"), Math.Floor(remaining.TotalHours));
             }
 
-            return $"剩余 {Math.Max(1, Math.Floor(remaining.TotalMinutes))} 分钟";
+            return string.Format(LanguageManager.GetString("AccountRemainingMinutesFormat"), Math.Max(1, Math.Floor(remaining.TotalMinutes)));
         }
 
         private static string FormatDate(DateTime value)
@@ -808,14 +844,14 @@ namespace lingualink_client.ViewModels
         {
             if (string.IsNullOrWhiteSpace(status))
             {
-                return "未知";
+                return LanguageManager.GetString("AccountStatusUnknown");
             }
 
             return status.Trim().ToLowerInvariant() switch
             {
-                "active" => "正常",
-                "inactive" => "未激活",
-                "disabled" => "已禁用",
+                "active" => LanguageManager.GetString("AccountStatusNormal"),
+                "inactive" => LanguageManager.GetString("AccountStatusInactive"),
+                "disabled" => LanguageManager.GetString("AccountStatusDisabled"),
                 _ => status
             };
         }
@@ -824,13 +860,13 @@ namespace lingualink_client.ViewModels
         {
             if (string.IsNullOrWhiteSpace(value))
             {
-                errorMessage = "用户名不能为空";
+                errorMessage = LanguageManager.GetString("AccountUsernameRequired");
                 return false;
             }
 
             if (value.Length > 100)
             {
-                errorMessage = "用户名长度不能超过 100";
+                errorMessage = LanguageManager.GetString("AccountUsernameTooLong");
                 return false;
             }
 
@@ -838,7 +874,7 @@ namespace lingualink_client.ViewModels
             {
                 if (c == '/')
                 {
-                    errorMessage = "用户名不能包含 /";
+                    errorMessage = LanguageManager.GetString("AccountUsernameSlashInvalid");
                     return false;
                 }
             }
@@ -1026,21 +1062,21 @@ namespace lingualink_client.ViewModels
             switch (normalized)
             {
                 case "paid":
-                    LatestOrderMessage = "支付成功，正在刷新订阅状态。";
+                    LatestOrderMessage = LanguageManager.GetString("AccountOrderPaidRefreshing");
                     if (refreshSubscriptionIfPaid)
                     {
                         await RefreshUserProfileAsync();
                     }
                     break;
                 case "failed":
-                    LatestOrderMessage = "订单支付失败，请重新下单。";
+                    LatestOrderMessage = LanguageManager.GetString("AccountOrderFailed");
                     break;
                 case "expired":
-                    LatestOrderMessage = "订单已过期，请重新下单。";
+                    LatestOrderMessage = LanguageManager.GetString("AccountOrderExpired");
                     break;
                 case "cancelled":
                 case "canceled":
-                    LatestOrderMessage = "订单已取消，请重新下单。";
+                    LatestOrderMessage = LanguageManager.GetString("AccountOrderCancelled");
                     break;
             }
         }
@@ -1087,7 +1123,7 @@ namespace lingualink_client.ViewModels
                     await Task.Delay(TimeSpan.FromSeconds(3), token);
                 }
 
-                LatestOrderMessage = "订单轮询超时，请稍后手动刷新订单状态。";
+                LatestOrderMessage = LanguageManager.GetString("AccountOrderPollingTimeout");
             }
             catch (OperationCanceledException)
             {
@@ -1118,12 +1154,12 @@ namespace lingualink_client.ViewModels
             try
             {
                 LatestOrderOutTradeNo = outTradeNo;
-                LatestOrderMessage = $"检测到未完成订单 {outTradeNo}，正在恢复状态。";
+                LatestOrderMessage = string.Format(LanguageManager.GetString("AccountOrderRestoreDetectedFormat"), outTradeNo);
 
                 var order = await QueryOrderStatusInternalAsync(outTradeNo, showErrorMessage: false);
                 if (order == null)
                 {
-                    LatestOrderMessage = $"已恢复订单号 {outTradeNo}，请点击“查询订单”继续检查状态。";
+                    LatestOrderMessage = string.Format(LanguageManager.GetString("AccountOrderRestoreRecoveredFormat"), outTradeNo);
                     return;
                 }
 
@@ -1157,7 +1193,7 @@ namespace lingualink_client.ViewModels
                 if (showErrorMessage)
                 {
                     MessageBox.Show(
-                        "查询订单状态失败，请稍后重试。",
+                        LanguageManager.GetString("AccountOrderQueryFailed"),
                         LanguageManager.GetString("ErrorTitle"),
                         MessageBoxButton.OK,
                         MessageBoxImage.Error);
@@ -1182,7 +1218,17 @@ namespace lingualink_client.ViewModels
 
         private void OnLanguageChanged()
         {
+            RefreshLocalizedOptions();
             OnPropertyChanged(string.Empty);
+        }
+
+        private void RefreshLocalizedOptions()
+        {
+            PaymentMethodOptions = new[]
+            {
+                new PaymentMethodOption("wechat", LanguageManager.GetString("AccountPaymentMethodWechat")),
+                new PaymentMethodOption("alipay", LanguageManager.GetString("AccountPaymentMethodAlipayReserved"))
+            };
         }
 
         private void LoadSettingsFromModel(AppSettings settings)
@@ -1378,7 +1424,7 @@ namespace lingualink_client.ViewModels
         {
             if (_authService == null)
             {
-                MessageBox.Show("认证服务未初始化",
+                MessageBox.Show(LanguageManager.GetString("AccountAuthServiceUnavailable"),
                     LanguageManager.GetString("ErrorTitle"),
                     MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
@@ -1399,7 +1445,7 @@ namespace lingualink_client.ViewModels
                     }
 
                     MessageBox.Show(
-                        result.ErrorMessage ?? "登录失败",
+                        result.ErrorMessage ?? LanguageManager.GetString("AccountLoginFailed"),
                         LanguageManager.GetString("ErrorTitle"),
                         MessageBoxButton.OK,
                         MessageBoxImage.Error);
@@ -1409,7 +1455,7 @@ namespace lingualink_client.ViewModels
             {
                 Debug.WriteLine($"[AccountPageViewModel] Login exception: {ex.Message}");
                 MessageBox.Show(
-                    $"登录失败: {ex.Message}",
+                    string.Format(LanguageManager.GetString("AccountLoginFailedFormat"), ex.Message),
                     LanguageManager.GetString("ErrorTitle"),
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
@@ -1432,8 +1478,8 @@ namespace lingualink_client.ViewModels
             }
 
             var result = MessageBox.Show(
-                "确定要退出登录吗？",
-                "确认退出",
+                LanguageManager.GetString("AccountLogoutConfirmMessage"),
+                LanguageManager.GetString("AccountLogoutConfirmTitle"),
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question);
 
@@ -1460,7 +1506,7 @@ namespace lingualink_client.ViewModels
             if (!IsLoggedIn || _authService == null)
             {
                 MessageBox.Show(
-                    "请先登录后再开通或续费 VIP。",
+                    LanguageManager.GetString("AccountVipRequireLogin"),
                     LanguageManager.GetString("InfoTitle"),
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
@@ -1471,7 +1517,7 @@ namespace lingualink_client.ViewModels
             if (string.IsNullOrWhiteSpace(accessToken))
             {
                 MessageBox.Show(
-                    "登录状态已失效，请重新登录后再订阅。",
+                    LanguageManager.GetString("AccountSubscriptionReloginRequired"),
                     LanguageManager.GetString("WarningTitle"),
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
@@ -1505,8 +1551,8 @@ namespace lingualink_client.ViewModels
             if (paymentCompleted)
             {
                 var message = string.IsNullOrWhiteSpace(paidOutTradeNo)
-                    ? "订阅成功，订阅状态已刷新。"
-                    : $"订阅成功！订单号：{paidOutTradeNo}";
+                    ? LanguageManager.GetString("AccountSubscribeSuccess")
+                    : string.Format(LanguageManager.GetString("AccountSubscribeSuccessWithOrderFormat"), paidOutTradeNo);
 
                 MessageBox.Show(
                     message,
@@ -1579,7 +1625,7 @@ namespace lingualink_client.ViewModels
             var trimmedUsername = string.IsNullOrWhiteSpace(EditUsername) ? string.Empty : EditUsername.Trim();
             if (!TryValidateUsernameInput(trimmedUsername, out var validationError))
             {
-                MessageBox.Show(validationError ?? "用户名格式不正确", LanguageManager.GetString("ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(validationError ?? LanguageManager.GetString("AccountUsernameInvalid"), LanguageManager.GetString("ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -1589,7 +1635,7 @@ namespace lingualink_client.ViewModels
                 var result = await _authService.UpdateUserProfileAsync(trimmedUsername, null);
                 if (!result.Success)
                 {
-                    MessageBox.Show(result.ErrorMessage ?? "修改用户名失败", LanguageManager.GetString("ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show(result.ErrorMessage ?? LanguageManager.GetString("AccountUpdateUsernameFailed"), LanguageManager.GetString("ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
 
@@ -1864,7 +1910,7 @@ namespace lingualink_client.ViewModels
             if (trimmedUsername != null && !TryValidateUsernameInput(trimmedUsername, out var validationError))
             {
                 MessageBox.Show(
-                    validationError ?? "用户名格式不正确",
+                    validationError ?? LanguageManager.GetString("AccountUsernameInvalid"),
                     LanguageManager.GetString("ErrorTitle"),
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
@@ -1879,7 +1925,7 @@ namespace lingualink_client.ViewModels
                 if (!result.Success)
                 {
                     MessageBox.Show(
-                        result.ErrorMessage ?? "资料更新失败",
+                        result.ErrorMessage ?? LanguageManager.GetString("AccountUpdateProfileFailed"),
                         LanguageManager.GetString("ErrorTitle"),
                         MessageBoxButton.OK,
                         MessageBoxImage.Error);
@@ -1888,7 +1934,7 @@ namespace lingualink_client.ViewModels
 
                 UpdateLoginState();
                 MessageBox.Show(
-                    result.Message ?? "资料更新成功",
+                    result.Message ?? LanguageManager.GetString("AccountUpdateProfileSuccess"),
                     LanguageManager.GetString("SuccessTitle"),
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
@@ -1897,7 +1943,7 @@ namespace lingualink_client.ViewModels
             {
                 Debug.WriteLine($"[AccountPageViewModel] Update profile exception: {ex.Message}");
                 MessageBox.Show(
-                    $"资料更新失败: {ex.Message}",
+                    string.Format(LanguageManager.GetString("AccountUpdateProfileFailedFormat"), ex.Message),
                     LanguageManager.GetString("ErrorTitle"),
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
@@ -1939,7 +1985,7 @@ namespace lingualink_client.ViewModels
                 if (!result.Success)
                 {
                     MessageBox.Show(
-                        result.ErrorMessage ?? "绑定第三方账号失败",
+                        result.ErrorMessage ?? LanguageManager.GetString("AccountBindProviderFailed"),
                         LanguageManager.GetString("ErrorTitle"),
                         MessageBoxButton.OK,
                         MessageBoxImage.Error);
@@ -1949,7 +1995,7 @@ namespace lingualink_client.ViewModels
                 ProviderUserIdInput = string.Empty;
                 UpdateLoginState();
                 MessageBox.Show(
-                    result.Message ?? "第三方账号绑定成功",
+                    result.Message ?? LanguageManager.GetString("AccountBindProviderSuccess"),
                     LanguageManager.GetString("SuccessTitle"),
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
@@ -1958,7 +2004,7 @@ namespace lingualink_client.ViewModels
             {
                 Debug.WriteLine($"[AccountPageViewModel] Bind provider exception: {ex.Message}");
                 MessageBox.Show(
-                    $"绑定第三方账号失败: {ex.Message}",
+                    string.Format(LanguageManager.GetString("AccountBindProviderFailedFormat"), ex.Message),
                     LanguageManager.GetString("ErrorTitle"),
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
@@ -1972,7 +2018,7 @@ namespace lingualink_client.ViewModels
         [RelayCommand(CanExecute = nameof(CanBindQqProvider))]
         private Task BindQqProviderAsync()
         {
-            return BindSocialProviderInternalAsync("qq", "QQ");
+            return BindSocialProviderInternalAsync("qq", LanguageManager.GetString("AccountQq"));
         }
 
         private bool CanBindQqProvider()
@@ -1983,7 +2029,7 @@ namespace lingualink_client.ViewModels
         [RelayCommand(CanExecute = nameof(CanBindWechatProvider))]
         private Task BindWechatProviderAsync()
         {
-            return BindSocialProviderInternalAsync("wechat", "微信");
+            return BindSocialProviderInternalAsync("wechat", LanguageManager.GetString("AccountWechat"));
         }
 
         private bool CanBindWechatProvider()
@@ -2005,7 +2051,7 @@ namespace lingualink_client.ViewModels
             if (isAlreadyBound)
             {
                 MessageBox.Show(
-                    $"{providerDisplayName} 已绑定，无需重复绑定。",
+                    string.Format(LanguageManager.GetString("AccountProviderAlreadyBoundFormat"), providerDisplayName),
                     LanguageManager.GetString("ProviderBindingSuccessTitle"),
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
@@ -2028,7 +2074,7 @@ namespace lingualink_client.ViewModels
 
                 await RefreshUserProfileAsync();
                 MessageBox.Show(
-                    result.Message ?? $"{providerDisplayName} 绑定成功",
+                    result.Message ?? string.Format(LanguageManager.GetString("AccountProviderBindSuccessFormat"), providerDisplayName),
                     LanguageManager.GetString("ProviderBindingSuccessTitle"),
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
@@ -2075,7 +2121,7 @@ namespace lingualink_client.ViewModels
                 if (plans.Count == 0)
                 {
                     SelectedPlan = null;
-                    LatestOrderMessage = "当前暂无可购买套餐。";
+                    LatestOrderMessage = LanguageManager.GetString("AccountPlansEmpty");
                     return;
                 }
 
@@ -2084,12 +2130,12 @@ namespace lingualink_client.ViewModels
                     SelectedPlan = plans[0];
                 }
 
-                LatestOrderMessage = $"已加载 {plans.Count} 个可购买套餐。";
+                LatestOrderMessage = string.Format(LanguageManager.GetString("AccountPlansLoadedFormat"), plans.Count);
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"[AccountPageViewModel] Load plans exception: {ex.Message}");
-                LatestOrderMessage = $"加载套餐失败: {ex.Message}";
+                LatestOrderMessage = string.Format(LanguageManager.GetString("AccountPlansLoadFailedFormat"), ex.Message);
             }
             finally
             {
@@ -2113,7 +2159,7 @@ namespace lingualink_client.ViewModels
             if (HasPendingOrder)
             {
                 MessageBox.Show(
-                    "当前有待支付订单，请完成支付或等待订单结束后再下单。",
+                    LanguageManager.GetString("AccountPendingOrderExists"),
                     LanguageManager.GetString("ErrorTitle"),
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
@@ -2123,7 +2169,7 @@ namespace lingualink_client.ViewModels
             if (SelectedPlan == null || string.IsNullOrWhiteSpace(SelectedPlan.Id))
             {
                 MessageBox.Show(
-                    "请先选择套餐。",
+                    LanguageManager.GetString("AccountSelectPlanFirst"),
                     LanguageManager.GetString("ErrorTitle"),
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
@@ -2142,7 +2188,7 @@ namespace lingualink_client.ViewModels
 
                 if (!result.Success || result.Order == null)
                 {
-                    var errorMessage = result.ErrorMessage ?? "创建订单失败";
+                    var errorMessage = result.ErrorMessage ?? LanguageManager.GetString("AccountCreateOrderFailed");
                     LatestOrderMessage = errorMessage;
                     MessageBox.Show(
                         errorMessage,
@@ -2165,7 +2211,7 @@ namespace lingualink_client.ViewModels
                     if (string.Equals(result.Payment.IntegrationStatus, "native_qr_ready", StringComparison.OrdinalIgnoreCase)
                         && string.IsNullOrWhiteSpace(result.Payment.CodeUrl))
                     {
-                        LatestOrderMessage = "支付通道已就绪，但未返回二维码链接，请重新下单。";
+                        LatestOrderMessage = LanguageManager.GetString("AccountPaymentQrMissing");
                     }
                 }
 
@@ -2182,7 +2228,7 @@ namespace lingualink_client.ViewModels
             catch (Exception ex)
             {
                 Debug.WriteLine($"[AccountPageViewModel] Create order exception: {ex.Message}");
-                LatestOrderMessage = $"创建订单失败: {ex.Message}";
+                LatestOrderMessage = string.Format(LanguageManager.GetString("AccountCreateOrderFailedFormat"), ex.Message);
                 MessageBox.Show(
                     LatestOrderMessage,
                     LanguageManager.GetString("ErrorTitle"),
@@ -2254,7 +2300,7 @@ namespace lingualink_client.ViewModels
 
             ILingualinkApiService? testApiService = null;
             bool success;
-            string errorMessage = "An unknown error occurred.";
+            string errorMessage = LanguageManager.GetString("AccountConnectionUnknownError");
 
             try
             {
@@ -2275,11 +2321,11 @@ namespace lingualink_client.ViewModels
 
             if (success)
             {
-                MessageBox.Show("Connection successful!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(LanguageManager.GetString("AccountConnectionSuccess"), LanguageManager.GetString("SuccessTitle"), MessageBoxButton.OK, MessageBoxImage.Information);
             }
             else
             {
-                MessageBox.Show($"Connection failed: {errorMessage}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(string.Format(LanguageManager.GetString("AccountConnectionFailedFormat"), errorMessage), LanguageManager.GetString("ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
