@@ -1251,7 +1251,7 @@ namespace lingualink_client.ViewModels
                 else
                 {
                     ServerUrl = string.IsNullOrWhiteSpace(settings.OfficialServerUrl)
-                        ? "https://api.lingualink.aiatechco.com/api/v1/"
+                        ? AppSettings.OfficialProductionServerUrl
                         : settings.OfficialServerUrl;
                     ApiKey = string.Empty;
                 }
@@ -1332,7 +1332,7 @@ namespace lingualink_client.ViewModels
 
                 if (string.IsNullOrWhiteSpace(_currentSettings.OfficialServerUrl))
                 {
-                    _currentSettings.OfficialServerUrl = "http://localhost:8080/api/v1/";
+                    _currentSettings.OfficialServerUrl = AppSettings.OfficialProductionServerUrl;
                 }
 
                 ServerUrl = _currentSettings.OfficialServerUrl;
@@ -1370,7 +1370,7 @@ namespace lingualink_client.ViewModels
                 Debug.WriteLine("[AccountPageViewModel] Using official service");
 
                 updatedSettings.OfficialServerUrl = string.IsNullOrWhiteSpace(updatedSettings.OfficialServerUrl)
-                    ? "https://api.lingualink.aiatechco.com/api/v1/"
+                    ? AppSettings.OfficialProductionServerUrl
                     : updatedSettings.OfficialServerUrl;
 
                 updatedSettings.ServerUrl = updatedSettings.OfficialServerUrl;
