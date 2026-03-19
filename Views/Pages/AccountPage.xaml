@@ -103,8 +103,8 @@
                                         FontSize="13"
                                         Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                         Visibility="{Binding CurrentPlanDisplay, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                        <Run Text="{Binding CurrentPlanPrefixLabel}" />
-                                        <Run Text="{Binding CurrentPlanDisplay}" />
+                                        <Run Text="{Binding CurrentPlanPrefixLabel, Mode=OneWay}" />
+                                        <Run Text="{Binding CurrentPlanDisplay, Mode=OneWay}" />
                                     </ui:TextBlock>
                                 </StackPanel>
 
