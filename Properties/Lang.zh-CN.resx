@@ -765,6 +765,18 @@
   <data name="Logout" xml:space="preserve">
     <value>退出登录</value>
   </data>
+  <data name="Yes" xml:space="preserve">
+    <value>是</value>
+  </data>
+  <data name="No" xml:space="preserve">
+    <value>否</value>
+  </data>
+  <data name="OK" xml:space="preserve">
+    <value>确定</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>取消</value>
+  </data>
   <data name="LoginStatus" xml:space="preserve">
     <value>登录状态</value>
   </data>

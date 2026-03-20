@@ -766,6 +766,18 @@
   <data name="Logout" xml:space="preserve">
     <value>Logout</value>
   </data>
+  <data name="Yes" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="No" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="OK" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
   <data name="LoginStatus" xml:space="preserve">
     <value>Login Status</value>
   </data>
@@ -1433,5 +1445,4 @@ Update now?</value>
     <value>An error occurred during the update process: {0}</value>
   </data>
 </root>
-
 

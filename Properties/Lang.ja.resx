@@ -715,6 +715,18 @@
   <data name="Logout" xml:space="preserve">
     <value>ログアウト</value>
   </data>
+  <data name="Yes" xml:space="preserve">
+    <value>はい</value>
+  </data>
+  <data name="No" xml:space="preserve">
+    <value>いいえ</value>
+  </data>
+  <data name="OK" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>キャンセル</value>
+  </data>
   <data name="LoginStatus" xml:space="preserve">
     <value>ログイン状態</value>
   </data>
