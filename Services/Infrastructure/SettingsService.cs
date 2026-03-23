@@ -109,17 +109,21 @@ namespace lingualink_client.Services
             var officialUrl = NormalizeUrl(settings.OfficialServerUrl);
             var currentUrl = NormalizeUrl(settings.ServerUrl);
             var customUrl = NormalizeUrl(settings.CustomServerUrl);
-            var hasCustomApiKey = !string.IsNullOrWhiteSpace(settings.CustomApiKey) || !string.IsNullOrWhiteSpace(settings.ApiKey);
 
-            if (settings.UseCustomServer
-                && !hasCustomApiKey
-                && !string.IsNullOrWhiteSpace(officialUrl)
+            // Old desktop builds could persist the official production endpoint inside the
+            // "custom server" branch, which disables OAuth-backed Bearer auth for translation
+            // requests. When that happens, always migrate back to the official mode
+            // automatically so users don't need to delete local settings manually.
+            if (!string.IsNullOrWhiteSpace(officialUrl)
                 && (string.Equals(currentUrl, officialUrl, StringComparison.OrdinalIgnoreCase)
                     || string.Equals(customUrl, officialUrl, StringComparison.OrdinalIgnoreCase)))
             {
                 settings.UseCustomServer = false;
                 settings.ServerUrl = settings.OfficialServerUrl;
                 settings.CustomServerUrl = settings.OfficialServerUrl;
+                settings.ApiKey = string.Empty;
+                settings.CustomApiKey = string.Empty;
+                settings.OfficialApiKey = string.Empty;
                 changed = true;
             }
 
