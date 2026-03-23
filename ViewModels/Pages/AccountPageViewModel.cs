@@ -1338,6 +1338,24 @@ namespace lingualink_client.ViewModels
                 ServerUrl = _currentSettings.OfficialServerUrl;
                 ApiKey = string.Empty;
             }
+
+            // 账号页没有显式“保存服务器设置”按钮，切换开关后应立即应用，
+            // 否则主界面和实际请求实例会在自动保存触发前继续显示旧状态。
+            if (_autoSaveTimer.IsEnabled)
+            {
+                _autoSaveTimer.Stop();
+            }
+
+            _hasPendingChanges = true;
+
+            if (!value || (!string.IsNullOrWhiteSpace(ServerUrl) && Uri.TryCreate(ServerUrl, UriKind.Absolute, out _)))
+            {
+                SaveInternal(showConfirmation: false, changeSource: "AccountPageServerModeToggle");
+            }
+            else
+            {
+                _autoSaveTimer.Start();
+            }
         }
 
         private bool UpdateSettingsFromView(AppSettings updatedSettings)

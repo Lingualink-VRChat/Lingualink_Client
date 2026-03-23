@@ -103,7 +103,7 @@ namespace lingualink_client.ViewModels.Components
             Application.Current.Dispatcher.Invoke(() =>
             {
                 bool wasWorking = _orchestrator?.IsWorking ?? false;
-                LoadSettingsAndInitializeServices(true);
+                LoadSettingsAndInitializeServices(e.Settings, true);
 
                 // 只有在不工作且没有显示特定状态时才更新状态
                 if (!wasWorking && !(_orchestrator?.IsWorking ?? false) &&
@@ -126,14 +126,14 @@ namespace lingualink_client.ViewModels.Components
             });
         }
 
-        private void LoadSettingsAndInitializeServices(bool reattachEvents = false)
+        private void LoadSettingsAndInitializeServices(AppSettings? latestSettings = null, bool reattachEvents = false)
         {
             System.Diagnostics.Debug.WriteLine($"[MainControlViewModel] LoadSettingsAndInitializeServices() called");
 
             bool wasWorking = _orchestrator?.IsWorking ?? false;
             int? previouslySelectedMicDeviceNumber = wasWorking ? _microphoneManager.SelectedMicrophone?.WaveInDeviceIndex : null;
 
-            _appSettings = _settingsService.LoadSettings();
+            _appSettings = latestSettings ?? _settingsService.LoadSettings();
             System.Diagnostics.Debug.WriteLine($"[MainControlViewModel] Loaded settings - ServerUrl: '{_appSettings.ServerUrl}'");
             UpdateServerModeText();
 
