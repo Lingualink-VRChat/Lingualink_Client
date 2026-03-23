@@ -1,0 +1,3 @@
+[submodule "external/Lingualink_AuthServer"]
+	path = external/Lingualink_AuthServer
+	url = https://github.com/Lingualink-VRChat/Lingualink_AuthServer.git

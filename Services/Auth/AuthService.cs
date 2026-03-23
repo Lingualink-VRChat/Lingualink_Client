@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
-using System.Web;
 using System.Windows;
 using lingualink_client.Models.Auth;
 using lingualink_client.Services.Interfaces;
@@ -24,35 +24,42 @@ namespace lingualink_client.Services.Auth
         private readonly SecureTokenStorage _tokenStorage;
         private readonly string _authServerUrl;
         private readonly string _loginPageUrl;
+        private readonly SemaphoreSlim _tokenRefreshLock = new(1, 1);
 
         private TokenResponse? _currentToken;
         private UserProfile? _currentUser;
         private bool _disposed = false;
 
-        // 回调监听端口
-        private const int CallbackPort = 23456;
-        private const string CallbackPath = "/callback";
+        private const string ClientCallbackUrl = "http://localhost:23456/callback";
+        private const string OAuthLoginEndpoint = "/api/v1/auth/oauth/login";
+        private const string OAuthBindLoginEndpoint = "/api/v1/auth/oauth/bind/login";
+        private static readonly TimeSpan TokenRefreshSkew = TimeSpan.FromSeconds(45);
+        private static readonly JsonSerializerOptions JsonOptions = new()
+        {
+            PropertyNameCaseInsensitive = true
+        };
 
         public bool IsLoggedIn => _currentToken != null && !IsTokenExpired();
         public UserProfile? CurrentUser => _currentUser;
+        public string AuthServerUrl => _authServerUrl;
 
         public event EventHandler<bool>? LoginStateChanged;
 
         /// <summary>
         /// 创建认证服务实例
         /// </summary>
-        /// <param name="authServerUrl">Auth Server API 地址，如 http://localhost:8080</param>
+        /// <param name="authServerUrl">Auth Server API 地址，如 https://auth.lingualink.aiatechco.com</param>
         /// <param name="loginPageUrl">登录页面地址（可选，用于测试）</param>
         public AuthService(string authServerUrl, string? loginPageUrl = null)
         {
             _authServerUrl = authServerUrl.TrimEnd('/');
             // 测试用登录页面地址
-            _loginPageUrl = loginPageUrl ?? $"{_authServerUrl}/login";
+            _loginPageUrl = loginPageUrl ?? $"{_authServerUrl}/auth";
 
             _httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
             _tokenStorage = new SecureTokenStorage();
 
-            Debug.WriteLine($"[AuthService] Initialized with AuthServerUrl: {_authServerUrl}, LoginPageUrl: {_loginPageUrl}");
+            Debug.WriteLine($"[AuthService] Initialized with AuthServerUrl: {_authServerUrl}, LoginPageUrl: {_loginPageUrl}, ClientCallbackUrl: {ClientCallbackUrl}");
         }
 
         /// <summary>
@@ -69,37 +76,33 @@ namespace lingualink_client.Services.Auth
                 return;
             }
 
-            if (!IsTokenExpired())
+            if (IsTokenExpired())
             {
-                // Token 有效，获取用户信息
-                Debug.WriteLine("[AuthService] Token is valid, fetching user profile...");
-                _currentUser = await FetchUserProfileAsync();
-                if (_currentUser != null)
+                var refreshed = await TryRefreshTokenAsync();
+                if (!refreshed)
                 {
-                    LoginStateChanged?.Invoke(this, true);
-                    Debug.WriteLine($"[AuthService] Session restored for user: {_currentUser.DisplayName}");
+                    Debug.WriteLine("[AuthService] Stored token expired and refresh failed, clearing local session");
+                    ClearLocalSession();
+                    return;
                 }
+            }
+
+            if (IsLoggedIn)
+            {
+                // 令牌有效时先广播登录态，避免 UI 必须等待用户资料请求结束后才进入已登录流程。
+                LoginStateChanged?.Invoke(this, true);
+            }
+
+            Debug.WriteLine("[AuthService] Token is valid, fetching user profile...");
+            _currentUser = await FetchUserProfileAsync();
+            if (_currentUser != null)
+            {
+                LoginStateChanged?.Invoke(this, true);
+                Debug.WriteLine($"[AuthService] Session restored for user: {DescribeUser(_currentUser)}");
             }
             else
             {
-                // Token 过期，尝试刷新
-                Debug.WriteLine("[AuthService] Token expired, attempting refresh...");
-                var refreshed = await TryRefreshTokenAsync();
-                if (refreshed)
-                {
-                    _currentUser = await FetchUserProfileAsync();
-                    if (_currentUser != null)
-                    {
-                        LoginStateChanged?.Invoke(this, true);
-                        Debug.WriteLine($"[AuthService] Session restored after token refresh for user: {_currentUser.DisplayName}");
-                    }
-                }
-                else
-                {
-                    Debug.WriteLine("[AuthService] Token refresh failed, clearing stored token");
-                    _tokenStorage.ClearToken();
-                    _currentToken = null;
-                }
+                Debug.WriteLine("[AuthService] Profile fetch failed during restore, will keep token and retry later");
             }
         }
 
@@ -112,101 +115,97 @@ namespace lingualink_client.Services.Auth
             {
                 Debug.WriteLine("[AuthService] Starting login flow...");
 
-                // 1. 生成 state 用于 CSRF 防护
-                var state = GenerateRandomString(32);
-                Debug.WriteLine($"[AuthService] Generated state: {state}");
+                var (resolvedLoginUrl, loginUrlError) = await ResolveOAuthLoginUrlAsync(
+                    endpointPath: OAuthLoginEndpoint,
+                    provider: null,
+                    requireAuthorization: false);
 
-                // 2. 构建登录 URL（不再需要 PKCE，因为 Auth Server 直接返回 token）
-                var loginUrl = BuildLoginUrl(string.Empty, state);
+                var loginUrl = resolvedLoginUrl;
+                if (string.IsNullOrWhiteSpace(loginUrl))
+                {
+                    Debug.WriteLine($"[AuthService] Resolve login_url failed, fallback to redirect URL. reason={loginUrlError}");
+                    // fallback：直接打开 AuthServer 托管登录入口
+                    loginUrl = BuildRedirectLoginUrl();
+                }
+
                 Debug.WriteLine($"[AuthService] Login URL: {loginUrl}");
 
-                // 3. 打开 WebView 登录窗口
-                var callbackResult = await ShowLoginWindowAsync(loginUrl, state);
-                
-                // 检查是否取消或出错
+                var callbackResult = await ShowLoginWindowAsync(loginUrl);
                 if (callbackResult == null)
                 {
-                    Debug.WriteLine("[AuthService] Login cancelled - no callback result");
-                    return new LoginResult { Success = false, ErrorMessage = "登录已取消" };
+                    Debug.WriteLine("[AuthService] Login cancelled by user");
+                    return new LoginResult { Success = false, IsCancelled = true };
                 }
 
-                if (callbackResult.HasError)
+                if (!string.IsNullOrWhiteSpace(callbackResult.Error) ||
+                    string.Equals(callbackResult.MessageType, "lingualink_auth_error", StringComparison.OrdinalIgnoreCase))
                 {
-                    Debug.WriteLine($"[AuthService] Login failed with error: {callbackResult.Error} - {callbackResult.ErrorDescription}");
-                    return new LoginResult { Success = false, ErrorMessage = callbackResult.ErrorDescription ?? callbackResult.Error };
-                }
+                    var errorMessage = string.IsNullOrWhiteSpace(callbackResult.ErrorDescription)
+                        ? "登录失败"
+                        : callbackResult.ErrorDescription;
 
-                // 4. 处理回调结果
-                TokenResponse? tokenResult = null;
-
-                // 情况1：Auth Server 直接返回 access_token（推荐）
-                if (callbackResult.HasToken)
-                {
-                    Debug.WriteLine("[AuthService] Received access_token directly from callback");
-                    
-                    // 计算过期时间
-                    DateTime expiresAt;
-                    if (!string.IsNullOrEmpty(callbackResult.ExpiresAt))
+                    Debug.WriteLine($"[AuthService] Login failed in callback: {errorMessage}");
+                    return new LoginResult
                     {
-                        // 尝试解析 ISO 8601 格式的时间
-                        if (DateTime.TryParse(callbackResult.ExpiresAt, out var parsedExpiresAt))
-                        {
-                            expiresAt = parsedExpiresAt.ToUniversalTime();
-                        }
-                        else
-                        {
-                            expiresAt = DateTime.UtcNow.AddSeconds(callbackResult.ExpiresIn > 0 ? callbackResult.ExpiresIn : 86400);
-                        }
-                    }
-                    else
-                    {
-                        expiresAt = DateTime.UtcNow.AddSeconds(callbackResult.ExpiresIn > 0 ? callbackResult.ExpiresIn : 86400);
-                    }
-
-                    tokenResult = new TokenResponse
-                    {
-                        AccessToken = callbackResult.AccessToken!,
-                        RefreshToken = callbackResult.RefreshToken ?? string.Empty,
-                        ExpiresIn = callbackResult.ExpiresIn > 0 ? callbackResult.ExpiresIn : 86400,
-                        ExpiresAt = expiresAt
+                        Success = false,
+                        ErrorMessage = errorMessage
                     };
+                }
 
-                    // 从回调中构建用户信息
-                    if (!string.IsNullOrEmpty(callbackResult.UserId))
+                if (!string.IsNullOrWhiteSpace(callbackResult.BindStatus))
+                {
+                    Debug.WriteLine($"[AuthService] Unexpected bind callback in login flow: status={callbackResult.BindStatus}, provider={callbackResult.BindProvider}");
+                    return new LoginResult
                     {
-                        _currentUser = new UserProfile
-                        {
-                            Id = callbackResult.UserId,
-                            DisplayName = callbackResult.DisplayName ?? callbackResult.UserId,
-                            Email = callbackResult.Email,
-                            AvatarUrl = callbackResult.AvatarUrl
-                        };
+                        Success = false,
+                        ErrorMessage = "登录流程异常：收到了账号绑定回调"
+                    };
+                }
+
+                if (string.IsNullOrWhiteSpace(callbackResult.AccessToken) &&
+                    !string.IsNullOrWhiteSpace(callbackResult.AuthCode))
+                {
+                    Debug.WriteLine("[AuthService] Callback contains auth_code, exchanging for token...");
+                    var exchangeResult = await ExchangeAuthCodeAsync(callbackResult.AuthCode);
+                    if (exchangeResult != null && !string.IsNullOrWhiteSpace(exchangeResult.AccessToken))
+                    {
+                        callbackResult.AccessToken = exchangeResult.AccessToken;
+                        callbackResult.RefreshToken = exchangeResult.RefreshToken;
+                        callbackResult.ExpiresAt ??= exchangeResult.ExpiresAt;
+                        callbackResult.UserId ??= exchangeResult.User?.Id;
+                        callbackResult.Username ??= exchangeResult.User?.Username;
+                        callbackResult.AvatarUrl ??= exchangeResult.User?.AvatarUrl;
+                        callbackResult.Email ??= exchangeResult.User?.Email;
                     }
                 }
-                // 情况2：返回 authorization code（需要再换 token）
-                else if (!string.IsNullOrEmpty(callbackResult.Code))
+
+                if (string.IsNullOrWhiteSpace(callbackResult.AccessToken))
                 {
-                    Debug.WriteLine("[AuthService] Received authorization code, exchanging for token...");
-                    tokenResult = await ExchangeCodeForTokenAsync(callbackResult.Code, string.Empty);
+                    Debug.WriteLine("[AuthService] Callback payload missing access token");
+                    return new LoginResult { Success = false, ErrorMessage = "登录回调缺少令牌信息" };
                 }
 
-                if (tokenResult == null || string.IsNullOrEmpty(tokenResult.AccessToken))
+                Debug.WriteLine("[AuthService] Received access token from callback");
+                var tokenResult = BuildTokenResponseFromCallback(callbackResult);
+                if (tokenResult == null)
                 {
-                    Debug.WriteLine("[AuthService] Failed to obtain token");
+                    Debug.WriteLine("[AuthService] Token exchange failed");
                     return new LoginResult { Success = false, ErrorMessage = "Token 获取失败" };
                 }
 
-                // 5. 保存 Token
                 _currentToken = tokenResult;
                 await _tokenStorage.SaveTokenAsync(tokenResult);
                 Debug.WriteLine("[AuthService] Token saved");
 
-                // 6. 获取/更新用户信息（如果回调中没有提供完整信息）
-                if (_currentUser == null)
+                _currentUser = BuildUserProfileFromCallback(callbackResult);
+
+                var profileFromApi = await FetchUserProfileAsync();
+                if (profileFromApi != null)
                 {
-                    _currentUser = await FetchUserProfileAsync();
+                    _currentUser = profileFromApi;
                 }
-                Debug.WriteLine($"[AuthService] User: {_currentUser?.DisplayName}");
+
+                Debug.WriteLine($"[AuthService] User profile fetched: {DescribeUser(_currentUser)}");
 
                 LoginStateChanged?.Invoke(this, true);
 
@@ -228,30 +227,170 @@ namespace lingualink_client.Services.Auth
         }
 
         /// <summary>
-        /// 构建登录 URL
+        /// 构建登录跳转地址（fallback）
         /// </summary>
-        private string BuildLoginUrl(string _, string state)
+        private string BuildRedirectLoginUrl()
         {
-            var clientCallback = $"http://localhost:{CallbackPort}{CallbackPath}";
+            var callback = ClientCallbackUrl.Trim().Trim('"');
+            var separator = _loginPageUrl.Contains('?') ? "&" : "?";
+            var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
 
-            var queryParams = HttpUtility.ParseQueryString(string.Empty);
-            // client_callback: 告诉 Auth Server 登录成功后重定向到客户端的地址
-            queryParams["client_callback"] = clientCallback;
-            queryParams["state"] = state;
+            return $"{_loginPageUrl}{separator}client_callback={Uri.EscapeDataString(callback)}&_ts={Uri.EscapeDataString(ts)}";
+        }
 
-            return $"{_loginPageUrl}?{queryParams}";
+        private string BuildOAuthLoginApiUrl(string endpointPath, string? provider)
+        {
+            var callback = ClientCallbackUrl.Trim().Trim('"');
+            var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString();
+
+            var queryParts = new List<string>
+            {
+                $"client_callback={Uri.EscapeDataString(callback)}",
+                "redirect=0",
+                $"_ts={Uri.EscapeDataString(ts)}"
+            };
+
+            if (!string.IsNullOrWhiteSpace(provider))
+            {
+                queryParts.Add($"provider={Uri.EscapeDataString(provider.Trim())}");
+            }
+
+            var endpoint = endpointPath.StartsWith("/", StringComparison.Ordinal)
+                ? endpointPath
+                : "/" + endpointPath;
+
+            return $"{_authServerUrl}{endpoint}?{string.Join("&", queryParts)}";
+        }
+
+        private async Task<(string? LoginUrl, string? ErrorMessage)> ResolveOAuthLoginUrlAsync(
+            string endpointPath,
+            string? provider,
+            bool requireAuthorization)
+        {
+            var requestUrl = BuildOAuthLoginApiUrl(endpointPath, provider);
+            try
+            {
+                HttpResponseMessage? response = requireAuthorization
+                    ? await SendAuthorizedWithRefreshRetryAsync(token =>
+                    {
+                        var request = new HttpRequestMessage(HttpMethod.Get, requestUrl);
+                        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                        return request;
+                    })
+                    : await _httpClient.GetAsync(requestUrl);
+
+                if (response == null)
+                {
+                    return (null, string.Equals(endpointPath, OAuthBindLoginEndpoint, StringComparison.OrdinalIgnoreCase)
+                        ? LanguageManager.GetString("BindRequireLogin")
+                        : "登录状态已失效，请重新登录");
+                }
+
+                using (response)
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    var result = string.IsNullOrWhiteSpace(responseContent)
+                        ? null
+                        : JsonSerializer.Deserialize<LoginUrlResponse>(responseContent, JsonOptions);
+
+                    if (response.IsSuccessStatusCode
+                        && result?.Code == 0
+                        && !string.IsNullOrWhiteSpace(result.Data?.LoginUrl))
+                    {
+                        return (result.Data.LoginUrl, null);
+                    }
+
+                    var errorMessage = string.Equals(endpointPath, OAuthBindLoginEndpoint, StringComparison.OrdinalIgnoreCase)
+                        ? ResolveBindLoginUrlErrorMessage(
+                            response.StatusCode,
+                            result?.Code,
+                            result?.Error,
+                            result?.Message,
+                            responseContent)
+                        : ResolveApiErrorMessage(
+                            responseContent,
+                            "获取登录地址失败",
+                            result?.Error,
+                            result?.Message);
+
+                    Debug.WriteLine($"[AuthService] Resolve login_url failed: HTTP={(int)response.StatusCode}, Message={errorMessage}, Endpoint={endpointPath}, Provider={provider}");
+                    return (null, errorMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[AuthService] Resolve login_url exception: {ex.Message}, Endpoint={endpointPath}, Provider={provider}");
+                return (null, string.Equals(endpointPath, OAuthBindLoginEndpoint, StringComparison.OrdinalIgnoreCase)
+                    ? LanguageManager.GetString("BindStartFailedRetry")
+                    : ex.Message);
+            }
+        }
+
+        private static TokenResponse? BuildTokenResponseFromCallback(OAuthCallbackResult callbackResult)
+        {
+            if (string.IsNullOrWhiteSpace(callbackResult.AccessToken))
+            {
+                return null;
+            }
+
+            DateTime? expiresAt = callbackResult.ExpiresAt;
+            if (!expiresAt.HasValue && callbackResult.ExpiresIn.HasValue)
+            {
+                expiresAt = DateTime.UtcNow.AddSeconds(Math.Max(0, callbackResult.ExpiresIn.Value - 60));
+            }
+
+            if (!expiresAt.HasValue)
+            {
+                Debug.WriteLine("[AuthService] Callback missing expiry info, using a short-lived default");
+                expiresAt = DateTime.UtcNow.AddMinutes(55);
+            }
+
+            var expiresIn = callbackResult.ExpiresIn ??
+                            Math.Max(0, (int)(expiresAt.Value - DateTime.UtcNow).TotalSeconds);
+
+            return new TokenResponse
+            {
+                AccessToken = callbackResult.AccessToken,
+                RefreshToken = callbackResult.RefreshToken ?? string.Empty,
+                ExpiresIn = expiresIn,
+                TokenType = string.IsNullOrWhiteSpace(callbackResult.TokenType) ? "Bearer" : callbackResult.TokenType,
+                ExpiresAt = expiresAt.Value
+            };
+        }
+
+        private static UserProfile? BuildUserProfileFromCallback(OAuthCallbackResult callbackResult)
+        {
+            if (string.IsNullOrWhiteSpace(callbackResult.UserId) &&
+                string.IsNullOrWhiteSpace(callbackResult.Username) &&
+                string.IsNullOrWhiteSpace(callbackResult.Email))
+            {
+                return null;
+            }
+
+            var username = !string.IsNullOrWhiteSpace(callbackResult.Username)
+                ? callbackResult.Username
+                : callbackResult.Email ?? callbackResult.UserId ?? "用户";
+
+            return new UserProfile
+            {
+                Id = callbackResult.UserId ?? string.Empty,
+                Username = username,
+                Email = callbackResult.Email,
+                AvatarUrl = callbackResult.AvatarUrl,
+                Status = "active"
+            };
         }
 
         /// <summary>
         /// 显示 WebView 登录窗口
         /// </summary>
-        private async Task<OAuthCallbackResult?> ShowLoginWindowAsync(string loginUrl, string expectedState)
+        private async Task<OAuthCallbackResult?> ShowLoginWindowAsync(string loginUrl)
         {
             var tcs = new TaskCompletionSource<OAuthCallbackResult?>();
 
             await Application.Current.Dispatcher.InvokeAsync(() =>
             {
-                var loginWindow = new OAuthLoginWindow(loginUrl, expectedState, CallbackPort, CallbackPath);
+                var loginWindow = new OAuthLoginWindow(loginUrl, ClientCallbackUrl);
                 loginWindow.Owner = Application.Current.MainWindow;
                 loginWindow.LoginCompleted += (sender, result) =>
                 {
@@ -268,139 +407,67 @@ namespace lingualink_client.Services.Auth
             return await tcs.Task;
         }
 
-        /// <summary>
-        /// 用 code 换取 token
-        /// </summary>
-        private async Task<TokenResponse?> ExchangeCodeForTokenAsync(string code, string codeVerifier)
+        private async Task<ExchangeAuthCodeData?> ExchangeAuthCodeAsync(string? authCode)
         {
+            var code = authCode?.Trim() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(code))
+            {
+                return null;
+            }
+
             try
             {
-                var requestUrl = $"{_authServerUrl}/api/v1/auth/casdoor/callback";
-                var redirectUri = $"http://localhost:{CallbackPort}{CallbackPath}";
-
-                var payload = new
+                var payload = JsonSerializer.Serialize(new { code });
+                using var request = new HttpRequestMessage(HttpMethod.Post, $"{_authServerUrl}/api/v1/auth/exchange")
                 {
-                    code = code,
-                    code_verifier = codeVerifier,
-                    redirect_uri = redirectUri
+                    Content = new StringContent(payload, Encoding.UTF8, "application/json")
                 };
 
-                var content = new StringContent(
-                    JsonSerializer.Serialize(payload),
-                    Encoding.UTF8,
-                    "application/json");
-
-                Debug.WriteLine($"[AuthService] Exchanging code for token at: {requestUrl}");
-                var response = await _httpClient.PostAsync(requestUrl, content);
+                var response = await _httpClient.SendAsync(request);
                 var responseContent = await response.Content.ReadAsStringAsync();
+                var result = JsonSerializer.Deserialize<ExchangeAuthCodeResponse>(responseContent, JsonOptions);
 
-                Debug.WriteLine($"[AuthService] Token exchange response: {response.StatusCode}");
-
-                if (response.IsSuccessStatusCode)
+                if (response.IsSuccessStatusCode && result?.Code == 0 && result.Data != null)
                 {
-                    var result = JsonSerializer.Deserialize<AuthCallbackResponse>(responseContent, new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    });
+                    return result.Data;
+                }
 
-                    if (result?.Code == 0 && result.Data != null)
-                    {
-                        return new TokenResponse
-                        {
-                            AccessToken = result.Data.AccessToken,
-                            RefreshToken = result.Data.RefreshToken,
-                            ExpiresIn = result.Data.ExpiresIn,
-                            TokenType = result.Data.TokenType,
-                            ExpiresAt = DateTime.UtcNow.AddSeconds(result.Data.ExpiresIn - 60) // 提前60秒过期
-                        };
-                    }
-                    else
-                    {
-                        Debug.WriteLine($"[AuthService] Token exchange failed: {result?.Message}");
-                    }
-                }
-                else
-                {
-                    Debug.WriteLine($"[AuthService] Token exchange HTTP error: {responseContent}");
-                }
+                var message = ResolveApiErrorMessage(responseContent, "auth_code 兑换失败", result?.Error, result?.Message);
+                Debug.WriteLine($"[AuthService] Failed to exchange auth_code: HTTP={(int)response.StatusCode}, Message={message}");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[AuthService] Token exchange exception: {ex.Message}");
+                Debug.WriteLine($"[AuthService] Exchange auth_code exception: {ex.Message}");
             }
 
             return null;
         }
 
         /// <summary>
-        /// 获取有效的 Access Token（自动刷新）
+        /// 获取有效的 Access Token
         /// </summary>
         public async Task<string?> GetAccessTokenAsync()
         {
             if (_currentToken == null)
+            {
                 return null;
+            }
 
             if (IsTokenExpired())
             {
-                var refreshed = await TryRefreshTokenAsync();
-                if (!refreshed)
-                    return null;
-            }
-
-            return _currentToken.AccessToken;
-        }
-
-        /// <summary>
-        /// 刷新 Token
-        /// </summary>
-        private async Task<bool> TryRefreshTokenAsync()
-        {
-            if (string.IsNullOrEmpty(_currentToken?.RefreshToken))
-                return false;
-
-            try
-            {
-                var requestUrl = $"{_authServerUrl}/api/v1/auth/refresh";
-                var payload = new { refresh_token = _currentToken.RefreshToken };
-
-                var content = new StringContent(
-                    JsonSerializer.Serialize(payload),
-                    Encoding.UTF8,
-                    "application/json");
-
-                Debug.WriteLine("[AuthService] Refreshing token...");
-                var response = await _httpClient.PostAsync(requestUrl, content);
-
-                if (response.IsSuccessStatusCode)
+                if (!await TryRefreshTokenAsync())
                 {
-                    var json = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<RefreshTokenResponse>(json, new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    });
-
-                    if (result?.Code == 0 && result.Data != null)
-                    {
-                        _currentToken.AccessToken = result.Data.AccessToken;
-                        _currentToken.ExpiresAt = DateTime.UtcNow.AddSeconds(result.Data.ExpiresIn - 60);
-
-                        if (!string.IsNullOrEmpty(result.Data.RefreshToken))
-                        {
-                            _currentToken.RefreshToken = result.Data.RefreshToken;
-                        }
-
-                        await _tokenStorage.SaveTokenAsync(_currentToken);
-                        Debug.WriteLine("[AuthService] Token refreshed successfully");
-                        return true;
-                    }
+                    await HandleUnauthorizedAsync();
+                    return null;
                 }
             }
-            catch (Exception ex)
+            else if (IsTokenExpiringSoon())
             {
-                Debug.WriteLine($"[AuthService] Token refresh failed: {ex.Message}");
+                // 临近过期时后台静默刷新，失败时先继续用当前 token，避免阻塞业务请求。
+                _ = TryRefreshTokenAsync();
             }
 
-            return false;
+            return _currentToken?.AccessToken;
         }
 
         /// <summary>
@@ -408,31 +475,41 @@ namespace lingualink_client.Services.Auth
         /// </summary>
         private async Task<UserProfile?> FetchUserProfileAsync()
         {
-            var token = await GetAccessTokenAsync();
-            if (string.IsNullOrEmpty(token))
-                return null;
-
             try
             {
-                var request = new HttpRequestMessage(HttpMethod.Get, $"{_authServerUrl}/api/v1/user/profile");
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
                 Debug.WriteLine("[AuthService] Fetching user profile...");
-                var response = await _httpClient.SendAsync(request);
-
-                if (response.IsSuccessStatusCode)
+                var response = await SendAuthorizedWithRefreshRetryAsync(token =>
                 {
-                    var json = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<UserProfileResponse>(json, new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    });
+                    var request = new HttpRequestMessage(HttpMethod.Get, $"{_authServerUrl}/api/v1/user/profile");
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    return request;
+                });
 
-                    if (result?.Code == 0)
+                if (response == null)
+                {
+                    return null;
+                }
+
+                var json = await response.Content.ReadAsStringAsync();
+                var result = JsonSerializer.Deserialize<UserProfileResponse>(json, JsonOptions);
+
+                if (response.IsSuccessStatusCode && result?.Code == 0 && result.Data != null)
+                {
+                    var profile = result.Data;
+                    var subscription = await FetchSubscriptionAsync();
+                    if (subscription != null)
                     {
-                        Debug.WriteLine($"[AuthService] User profile fetched: {result.Data?.DisplayName}");
-                        return result.Data;
+                        profile.Subscription = subscription;
                     }
+
+                    Debug.WriteLine($"[AuthService] User profile fetched: {DescribeUser(profile)}");
+                    return profile;
+                }
+
+                if (!string.IsNullOrWhiteSpace(json))
+                {
+                    var message = ResolveApiErrorMessage(json, "获取用户信息失败", result?.Error, result?.Message);
+                    Debug.WriteLine($"[AuthService] Failed to fetch profile: HTTP={(int)response.StatusCode}, Message={message}");
                 }
             }
             catch (Exception ex)
@@ -443,6 +520,63 @@ namespace lingualink_client.Services.Auth
             return null;
         }
 
+        private async Task<SubscriptionInfo?> FetchSubscriptionAsync()
+        {
+            try
+            {
+                var response = await SendAuthorizedWithRefreshRetryAsync(token =>
+                {
+                    var request = new HttpRequestMessage(HttpMethod.Get, $"{_authServerUrl}/api/v1/user/subscription");
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    return request;
+                });
+
+                if (response == null)
+                {
+                    return null;
+                }
+
+                var json = await response.Content.ReadAsStringAsync();
+                var result = JsonSerializer.Deserialize<UserSubscriptionResponse>(json, JsonOptions);
+
+                if (response.IsSuccessStatusCode && result?.Code == 0 && result.Data != null)
+                {
+                    return MapSubscriptionInfo(result.Data);
+                }
+
+                if (!string.IsNullOrWhiteSpace(json))
+                {
+                    var message = ResolveApiErrorMessage(json, "获取订阅信息失败", result?.Error, result?.Message);
+                    Debug.WriteLine($"[AuthService] Failed to fetch subscription: HTTP={(int)response.StatusCode}, Message={message}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[AuthService] Failed to fetch subscription: {ex.Message}");
+            }
+
+            return null;
+        }
+
+        private static SubscriptionInfo MapSubscriptionInfo(UserSubscriptionSummary summary)
+        {
+            var status = summary.Subscription?.Status;
+            if (string.IsNullOrWhiteSpace(status))
+            {
+                status = summary.IsActive ? "active" : "inactive";
+            }
+
+            return new SubscriptionInfo
+            {
+                Status = status,
+                StartDate = summary.Subscription?.StartDate,
+                EndDate = summary.Subscription?.EndDate,
+                AutoRenew = summary.Subscription?.AutoRenew ?? false,
+                Plan = summary.Plan,
+                LegacyPlanName = summary.Plan?.Name
+            };
+        }
+
         /// <summary>
         /// 刷新用户信息
         /// </summary>
@@ -450,6 +584,1146 @@ namespace lingualink_client.Services.Auth
         {
             _currentUser = await FetchUserProfileAsync();
             return _currentUser;
+        }
+
+        /// <summary>
+        /// 更新用户资料（username/avatar_url）
+        /// </summary>
+        public async Task<ApiOperationResult> UpdateUserProfileAsync(string? username, string? avatarUrl)
+        {
+            var trimmedUsername = string.IsNullOrWhiteSpace(username) ? null : username.Trim();
+            var trimmedAvatarUrl = string.IsNullOrWhiteSpace(avatarUrl) ? null : avatarUrl.Trim();
+
+            if (trimmedUsername != null && !TryValidateUsername(trimmedUsername, out var usernameError))
+            {
+                return new ApiOperationResult
+                {
+                    Success = false,
+                    ErrorMessage = usernameError ?? "用户名不合法"
+                };
+            }
+
+            if (trimmedUsername == null && trimmedAvatarUrl == null)
+            {
+                return new ApiOperationResult
+                {
+                    Success = false,
+                    ErrorMessage = "至少填写一个字段"
+                };
+            }
+
+            var payload = new UpdateUserProfileRequest
+            {
+                Username = trimmedUsername,
+                AvatarUrl = trimmedAvatarUrl
+            };
+
+            return await ExecuteUserMutationAsync<UserProfile>(HttpMethod.Put, "/api/v1/user/profile", payload, "资料更新失败");
+        }
+
+        private static bool TryValidateUsername(string value, out string? errorMessage)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                errorMessage = "用户名不能为空";
+                return false;
+            }
+
+            if (value.Length > 100)
+            {
+                errorMessage = "用户名长度不能超过 100";
+                return false;
+            }
+
+            foreach (var c in value)
+            {
+                if (c == '/')
+                {
+                    errorMessage = "用户名不能包含 /";
+                    return false;
+                }
+            }
+
+            errorMessage = null;
+            return true;
+        }
+
+        private static string DescribeUser(UserProfile? user)
+        {
+            if (user == null)
+            {
+                return string.Empty;
+            }
+
+            return user.Username ?? user.Email ?? user.Id;
+        }
+
+        /// <summary>
+        /// 发送邮箱绑定验证码
+        /// </summary>
+        public async Task<ApiOperationResult> SendBindEmailCodeAsync(string email)
+        {
+            var trimmedEmail = string.IsNullOrWhiteSpace(email) ? string.Empty : email.Trim();
+            if (string.IsNullOrWhiteSpace(trimmedEmail))
+            {
+                return new ApiOperationResult
+                {
+                    Success = false,
+                    ErrorMessage = LanguageManager.GetString("BindEmailInvalidFormat")
+                };
+            }
+
+            try
+            {
+                var payloadJson = JsonSerializer.Serialize(new SendBindEmailCodeRequest
+                {
+                    Email = trimmedEmail
+                });
+
+                var response = await SendAuthorizedWithRefreshRetryAsync(token =>
+                {
+                    var request = new HttpRequestMessage(HttpMethod.Post, $"{_authServerUrl}/api/v1/user/bind-email/send-code");
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    request.Content = new StringContent(payloadJson, Encoding.UTF8, "application/json");
+                    return request;
+                });
+
+                if (response == null)
+                {
+                    return new ApiOperationResult
+                    {
+                        Success = false,
+                        ErrorMessage = LanguageManager.GetString("BindRequireLogin")
+                    };
+                }
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var envelope = string.IsNullOrWhiteSpace(responseContent)
+                    ? null
+                    : JsonSerializer.Deserialize<ApiEnvelope<SendBindEmailCodeResult>>(responseContent, JsonOptions);
+
+                if (response.IsSuccessStatusCode && envelope?.Code == 0)
+                {
+                    return new ApiOperationResult
+                    {
+                        Success = true,
+                        Message = LanguageManager.GetString("BindEmailCodeSent")
+                    };
+                }
+
+                return new ApiOperationResult
+                {
+                    Success = false,
+                    ErrorMessage = ResolveSendBindEmailCodeErrorMessage(
+                        response.StatusCode,
+                        envelope?.Code,
+                        envelope?.Error,
+                        envelope?.Message,
+                        responseContent)
+                };
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[AuthService] Send bind email code failed: {ex.Message}");
+                return new ApiOperationResult
+                {
+                    Success = false,
+                    ErrorMessage = LanguageManager.GetString("BindEmailCodeSendFailed")
+                };
+            }
+        }
+
+        /// <summary>
+        /// 绑定邮箱
+        /// </summary>
+        public async Task<ApiOperationResult> BindEmailAsync(string email, string code, string password)
+        {
+            var trimmedEmail = string.IsNullOrWhiteSpace(email) ? string.Empty : email.Trim();
+            var trimmedCode = string.IsNullOrWhiteSpace(code) ? string.Empty : code.Trim();
+
+            if (string.IsNullOrWhiteSpace(trimmedEmail))
+            {
+                return new ApiOperationResult
+                {
+                    Success = false,
+                    ErrorMessage = LanguageManager.GetString("BindEmailInvalidFormat")
+                };
+            }
+
+            if (string.IsNullOrWhiteSpace(trimmedCode))
+            {
+                return new ApiOperationResult
+                {
+                    Success = false,
+                    ErrorMessage = LanguageManager.GetString("BindEmailCodeInvalid")
+                };
+            }
+
+            try
+            {
+                var payloadJson = JsonSerializer.Serialize(new BindEmailRequest
+                {
+                    Email = trimmedEmail,
+                    Code = trimmedCode,
+                    Password = password ?? string.Empty
+                });
+
+                var response = await SendAuthorizedWithRefreshRetryAsync(token =>
+                {
+                    var request = new HttpRequestMessage(HttpMethod.Post, $"{_authServerUrl}/api/v1/user/bind-email");
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    request.Content = new StringContent(payloadJson, Encoding.UTF8, "application/json");
+                    return request;
+                });
+
+                if (response == null)
+                {
+                    return new ApiOperationResult
+                    {
+                        Success = false,
+                        ErrorMessage = LanguageManager.GetString("BindRequireLogin")
+                    };
+                }
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var envelope = string.IsNullOrWhiteSpace(responseContent)
+                    ? null
+                    : JsonSerializer.Deserialize<ApiEnvelope<UserProfile>>(responseContent, JsonOptions);
+
+                if (response.IsSuccessStatusCode && envelope?.Code == 0)
+                {
+                    _currentUser = envelope.Data ?? await RefreshUserProfileAsync();
+                    if (_currentUser != null)
+                    {
+                        LoginStateChanged?.Invoke(this, true);
+                    }
+
+                    return new ApiOperationResult
+                    {
+                        Success = true,
+                        Message = LanguageManager.GetString("BindEmailSuccess")
+                    };
+                }
+
+                return new ApiOperationResult
+                {
+                    Success = false,
+                    ErrorMessage = ResolveBindEmailErrorMessage(
+                        response.StatusCode,
+                        envelope?.Code,
+                        envelope?.Error,
+                        envelope?.Message,
+                        responseContent)
+                };
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[AuthService] Bind email failed: {ex.Message}");
+                return new ApiOperationResult
+                {
+                    Success = false,
+                    ErrorMessage = LanguageManager.GetString("BindEmailFailedLater")
+                };
+            }
+        }
+
+        /// <summary>
+        /// 绑定第三方账号
+        /// </summary>
+        public async Task<ApiOperationResult> BindProviderAsync(string provider, string providerUserId)
+        {
+            var trimmedProvider = string.IsNullOrWhiteSpace(provider) ? string.Empty : provider.Trim().ToLowerInvariant();
+            var trimmedProviderUserId = string.IsNullOrWhiteSpace(providerUserId) ? string.Empty : providerUserId.Trim();
+
+            if (!UserBindProviderCatalog.IsAllowed(trimmedProvider))
+            {
+                return new ApiOperationResult
+                {
+                    Success = false,
+                    ErrorMessage = LanguageManager.GetString("BindUnsupportedType")
+                };
+            }
+
+            if (string.IsNullOrWhiteSpace(trimmedProviderUserId))
+            {
+                return new ApiOperationResult
+                {
+                    Success = false,
+                    ErrorMessage = LanguageManager.GetString("BindMissingProviderAccountId")
+                };
+            }
+
+            try
+            {
+                var payloadJson = JsonSerializer.Serialize(new BindProviderRequest
+                {
+                    Provider = trimmedProvider,
+                    ProviderUserId = trimmedProviderUserId
+                });
+
+                var response = await SendAuthorizedWithRefreshRetryAsync(token =>
+                {
+                    var request = new HttpRequestMessage(HttpMethod.Post, $"{_authServerUrl}/api/v1/user/bind-provider");
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    request.Content = new StringContent(payloadJson, Encoding.UTF8, "application/json");
+                    return request;
+                });
+
+                if (response == null)
+                {
+                    return new ApiOperationResult
+                    {
+                        Success = false,
+                        ErrorMessage = LanguageManager.GetString("BindRequireLogin")
+                    };
+                }
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var envelope = string.IsNullOrWhiteSpace(responseContent)
+                    ? null
+                    : JsonSerializer.Deserialize<ApiEnvelope<ProviderBindingResult>>(responseContent, JsonOptions);
+
+                if (response.IsSuccessStatusCode && envelope?.Code == 0)
+                {
+                    await RefreshUserProfileAsync();
+
+                    return new ApiOperationResult
+                    {
+                        Success = true,
+                        Message = envelope.Message
+                    };
+                }
+
+                return new ApiOperationResult
+                {
+                    Success = false,
+                    ErrorMessage = ResolveProviderBindingErrorMessage(
+                        response.StatusCode,
+                        envelope?.Code,
+                        trimmedProvider,
+                        envelope?.Error,
+                        envelope?.Message,
+                        responseContent)
+                };
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[AuthService] Manual provider bind failed: provider={trimmedProvider}, message={ex.Message}");
+                return new ApiOperationResult
+                {
+                    Success = false,
+                    ErrorMessage = LanguageManager.GetString("BindFailedLater")
+                };
+            }
+        }
+
+        /// <summary>
+        /// 通过 OAuth 绑定 QQ / 微信
+        /// </summary>
+        public async Task<ApiOperationResult> BindSocialProviderAsync(string provider)
+        {
+            var normalizedProvider = NormalizeSocialProvider(provider);
+            if (string.IsNullOrWhiteSpace(normalizedProvider))
+            {
+                return new ApiOperationResult
+                {
+                    Success = false,
+                    ErrorMessage = LanguageManager.GetString("BindUnsupportedType")
+                };
+            }
+
+            var (loginUrl, loginUrlError) = await ResolveOAuthLoginUrlAsync(
+                endpointPath: OAuthBindLoginEndpoint,
+                provider: normalizedProvider,
+                requireAuthorization: true);
+
+            if (string.IsNullOrWhiteSpace(loginUrl))
+            {
+                return new ApiOperationResult
+                {
+                    Success = false,
+                    ErrorMessage = loginUrlError ?? LanguageManager.GetString("BindStartFailedRetry")
+                };
+            }
+
+            var callbackResult = await ShowLoginWindowAsync(loginUrl);
+            if (callbackResult == null)
+            {
+                return new ApiOperationResult
+                {
+                    Success = false,
+                    ErrorMessage = LanguageManager.GetString("BindCancelled")
+                };
+            }
+
+            var bindStatus = callbackResult.BindStatus?.Trim();
+            var isBindSuccess = string.Equals(bindStatus, "success", StringComparison.OrdinalIgnoreCase)
+                                || string.Equals(callbackResult.MessageType, "lingualink_provider_bind_success", StringComparison.OrdinalIgnoreCase);
+
+            var isBindFailed = string.Equals(bindStatus, "failed", StringComparison.OrdinalIgnoreCase)
+                               || string.Equals(callbackResult.MessageType, "lingualink_provider_bind_error", StringComparison.OrdinalIgnoreCase);
+
+            if (isBindFailed || !string.IsNullOrWhiteSpace(callbackResult.Error))
+            {
+                return new ApiOperationResult
+                {
+                    Success = false,
+                    ErrorMessage = ResolveSocialBindingCallbackError(normalizedProvider, callbackResult)
+                };
+            }
+
+            if (!isBindSuccess)
+            {
+                return new ApiOperationResult
+                {
+                    Success = false,
+                    ErrorMessage = LanguageManager.GetString("BindInvalidCallbackResult")
+                };
+            }
+
+            await RefreshUserProfileAsync();
+
+            var providerDisplay = string.Equals(normalizedProvider, "qq", StringComparison.OrdinalIgnoreCase)
+                ? "QQ"
+                : "微信";
+
+            return new ApiOperationResult
+            {
+                Success = true,
+                Message = $"{providerDisplay} 绑定成功"
+            };
+        }
+
+        private static string NormalizeSocialProvider(string? provider)
+        {
+            if (string.IsNullOrWhiteSpace(provider))
+            {
+                return string.Empty;
+            }
+
+            var normalized = provider.Trim().ToLowerInvariant();
+            return normalized is "qq" or "wechat" ? normalized : string.Empty;
+        }
+
+        private static string ResolveBindLoginUrlErrorMessage(
+            System.Net.HttpStatusCode statusCode,
+            int? code,
+            string? error,
+            string? message,
+            string responseContent)
+        {
+            var detail = BuildNormalizedErrorDetail(error, message, responseContent);
+
+            if (statusCode == System.Net.HttpStatusCode.Unauthorized || code == 40101)
+            {
+                if (ContainsAny(detail, "missing user context", "unauthorized"))
+                {
+                    return LanguageManager.GetString("BindRequireLogin");
+                }
+            }
+
+            if (statusCode == System.Net.HttpStatusCode.BadRequest || code == 40001)
+            {
+                if (ContainsAny(detail, "provider must be one of", "invalid_bind_provider"))
+                {
+                    return LanguageManager.GetString("BindUnsupportedType");
+                }
+
+                if (ContainsAny(detail, "user_id is required", "invalid_bind_user_id"))
+                {
+                    return LanguageManager.GetString("BindMissingUserInfo");
+                }
+
+                if (ContainsAny(
+                    detail,
+                    "invalid callback url",
+                    "callback url must use http or https scheme",
+                    "callback url host is required",
+                    "callback url must use https for non-localhost",
+                    "callback url is not in allowlist"))
+                {
+                    return LanguageManager.GetString("BindInvalidCallbackUrl");
+                }
+            }
+
+            if ((int)statusCode >= 500 || code == 50001)
+            {
+                return LanguageManager.GetString("BindStartFailedRetry");
+            }
+
+            return LanguageManager.GetString("BindStartFailedRetry");
+        }
+
+        private static string ResolveSocialBindingCallbackError(string provider, OAuthCallbackResult callbackResult)
+        {
+            var detail = BuildNormalizedErrorDetail(
+                callbackResult.Error,
+                callbackResult.ErrorDescription,
+                callbackResult.MessageType,
+                callbackResult.BindStatus);
+
+            if (ContainsAny(detail, "provider_already_bound", "already bound to another user"))
+            {
+                return string.Equals(provider, "qq", StringComparison.OrdinalIgnoreCase)
+                    ? LanguageManager.GetString("BindQqAlreadyBoundOther")
+                    : LanguageManager.GetString("BindWechatAlreadyBoundOther");
+            }
+
+            if (ContainsAny(detail, "provider_account_empty", "provider account id is empty"))
+            {
+                return LanguageManager.GetString("BindMissingProviderAccount");
+            }
+
+            if (ContainsAny(detail, "provider must be one of", "invalid_bind_provider"))
+            {
+                return LanguageManager.GetString("BindUnsupportedType");
+            }
+
+            if (ContainsAny(detail, "bind user id is required", "user_id is required", "invalid_bind_user_id"))
+            {
+                return LanguageManager.GetString("BindMissingUserInfo");
+            }
+
+            if (ContainsAny(detail, "missing code/state"))
+            {
+                return LanguageManager.GetString("BindMissingCallbackParams");
+            }
+
+            if (ContainsAny(detail, "invalid_state"))
+            {
+                return LanguageManager.GetString("BindStateExpired");
+            }
+
+            if (ContainsAny(detail, "login_failed"))
+            {
+                return LanguageManager.GetString("BindFailedRetry");
+            }
+
+            if (ContainsAny(
+                detail,
+                "read provider user id",
+                "apply provider binding",
+                "sync local user",
+                "bind_failed"))
+            {
+                return LanguageManager.GetString("BindFailedLater");
+            }
+
+            return LanguageManager.GetString("BindFailedLater");
+        }
+
+        private static string ResolveProviderBindingErrorMessage(
+            System.Net.HttpStatusCode statusCode,
+            int? code,
+            string provider,
+            string? error,
+            string? message,
+            string responseContent)
+        {
+            var detail = BuildNormalizedErrorDetail(error, message, responseContent);
+
+            if (statusCode == System.Net.HttpStatusCode.Unauthorized || code == 40101)
+            {
+                return LanguageManager.GetString("BindRequireLogin");
+            }
+
+            if (statusCode == System.Net.HttpStatusCode.Conflict || code == 40901)
+            {
+                if (ContainsAny(detail, "provider_already_bound", "already bound"))
+                {
+                    return string.Equals(provider, "qq", StringComparison.OrdinalIgnoreCase)
+                        ? LanguageManager.GetString("BindQqAlreadyBoundOther")
+                        : LanguageManager.GetString("BindWechatAlreadyBoundOther");
+                }
+            }
+
+            if (statusCode == System.Net.HttpStatusCode.BadRequest || code == 40001)
+            {
+                if (ContainsAny(detail, "provider_user_id is required", "invalid provider bind id"))
+                {
+                    return LanguageManager.GetString("BindMissingProviderAccountId");
+                }
+
+                if (ContainsAny(detail, "unsupported provider", "provider="))
+                {
+                    return LanguageManager.GetString("BindUnsupportedType");
+                }
+
+                if (ContainsAny(detail, "invalid character", "cannot unmarshal", "json"))
+                {
+                    return LanguageManager.GetString("BindRequestInvalid");
+                }
+            }
+
+            if ((int)statusCode >= 500 || code == 50001)
+            {
+                return LanguageManager.GetString("BindFailedLater");
+            }
+
+            return LanguageManager.GetString("BindFailedLater");
+        }
+
+        private static string ResolveSendBindEmailCodeErrorMessage(
+            System.Net.HttpStatusCode statusCode,
+            int? code,
+            string? error,
+            string? message,
+            string responseContent)
+        {
+            var detail = BuildNormalizedErrorDetail(error, message, responseContent);
+
+            if (statusCode == System.Net.HttpStatusCode.Conflict || code == 40901)
+            {
+                if (ContainsAny(detail, "email is already bound to another user"))
+                {
+                    return LanguageManager.GetString("BindEmailAlreadyBoundOther");
+                }
+            }
+
+            if ((int)statusCode == 429 || code == 42901)
+            {
+                if (ContainsAny(detail, "verification code sent too recently"))
+                {
+                    return LanguageManager.GetString("BindEmailCodeTooFrequent");
+                }
+            }
+
+            if (statusCode == System.Net.HttpStatusCode.BadRequest || code == 40001)
+            {
+                if (ContainsAny(detail, "email format is invalid"))
+                {
+                    return LanguageManager.GetString("BindEmailInvalidFormat");
+                }
+            }
+
+            if ((int)statusCode >= 500 || code == 50001)
+            {
+                return LanguageManager.GetString("BindEmailCodeSendFailed");
+            }
+
+            return LanguageManager.GetString("BindEmailCodeSendFailed");
+        }
+
+        private static string ResolveBindEmailErrorMessage(
+            System.Net.HttpStatusCode statusCode,
+            int? code,
+            string? error,
+            string? message,
+            string responseContent)
+        {
+            var detail = BuildNormalizedErrorDetail(error, message, responseContent);
+
+            if (statusCode == System.Net.HttpStatusCode.Conflict || code == 40901)
+            {
+                if (ContainsAny(detail, "email is already bound to another user"))
+                {
+                    return LanguageManager.GetString("BindEmailAlreadyBoundOther");
+                }
+            }
+
+            if (statusCode == System.Net.HttpStatusCode.BadRequest || code == 40001)
+            {
+                if (ContainsAny(detail, "invalid verification code"))
+                {
+                    return LanguageManager.GetString("BindEmailCodeInvalid");
+                }
+
+                if (ContainsAny(detail, "password must be at least 8 characters"))
+                {
+                    return LanguageManager.GetString("BindEmailPasswordTooShort");
+                }
+
+                if (ContainsAny(detail, "password must not exceed 128 characters"))
+                {
+                    return LanguageManager.GetString("BindEmailPasswordTooLong");
+                }
+
+                if (ContainsAny(detail, "email format is invalid"))
+                {
+                    return LanguageManager.GetString("BindEmailInvalidFormat");
+                }
+            }
+
+            if ((int)statusCode >= 500 || code == 50001)
+            {
+                return LanguageManager.GetString("BindEmailFailedLater");
+            }
+
+            return LanguageManager.GetString("BindEmailFailedLater");
+        }
+
+        private static string BuildNormalizedErrorDetail(params string?[] values)
+        {
+            if (values == null || values.Length == 0)
+            {
+                return string.Empty;
+            }
+
+            return string.Join("\n", values)
+                .Trim()
+                .ToLowerInvariant();
+        }
+
+        private static bool ContainsAny(string source, params string[] patterns)
+        {
+            if (string.IsNullOrWhiteSpace(source) || patterns == null || patterns.Length == 0)
+            {
+                return false;
+            }
+
+            foreach (var pattern in patterns)
+            {
+                if (!string.IsNullOrWhiteSpace(pattern)
+                    && source.Contains(pattern.Trim().ToLowerInvariant(), StringComparison.Ordinal))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private async Task<ApiOperationResult> ExecuteUserMutationAsync<T>(HttpMethod method, string relativeUrl, object payload, string fallbackErrorMessage)
+        {
+            try
+            {
+                var payloadJson = JsonSerializer.Serialize(payload);
+                var response = await SendAuthorizedWithRefreshRetryAsync(token =>
+                {
+                    var request = new HttpRequestMessage(method, $"{_authServerUrl}{relativeUrl}");
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    request.Content = new StringContent(payloadJson, Encoding.UTF8, "application/json");
+                    return request;
+                });
+
+                if (response == null)
+                {
+                    return new ApiOperationResult
+                    {
+                        Success = false,
+                        ErrorMessage = "登录状态已失效，请重新登录"
+                    };
+                }
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                ApiEnvelope<T>? envelope = null;
+                if (!string.IsNullOrWhiteSpace(responseContent))
+                {
+                    envelope = JsonSerializer.Deserialize<ApiEnvelope<T>>(responseContent, JsonOptions);
+                }
+
+                if (response.IsSuccessStatusCode && envelope?.Code == 0)
+                {
+                    await RefreshUserProfileAsync();
+
+                    return new ApiOperationResult
+                    {
+                        Success = true,
+                        Message = envelope.Message
+                    };
+                }
+
+                return new ApiOperationResult
+                {
+                    Success = false,
+                    ErrorMessage = ResolveApiErrorMessage(
+                        responseContent,
+                        fallbackErrorMessage,
+                        envelope?.Error,
+                        envelope?.Message)
+                };
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[AuthService] User mutation request failed ({method} {relativeUrl}): {ex.Message}");
+                return new ApiOperationResult
+                {
+                    Success = false,
+                    ErrorMessage = ex.Message
+                };
+            }
+        }
+
+        /// <summary>
+        /// 获取可购买套餐列表
+        /// </summary>
+        public async Task<IReadOnlyList<SubscriptionPlanInfo>> GetSubscriptionPlansAsync()
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"{_authServerUrl}/api/v1/public/plans");
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    Debug.WriteLine($"[AuthService] Failed to load plans: {response.StatusCode}, {responseContent}");
+                    return Array.Empty<SubscriptionPlanInfo>();
+                }
+
+                var result = JsonSerializer.Deserialize<SubscriptionPlansResponse>(responseContent, JsonOptions);
+
+                if (result?.Code == 0 && result.Data != null)
+                {
+                    return FilterPurchasablePlans(result.Data);
+                }
+
+                Debug.WriteLine($"[AuthService] Plans response invalid: {responseContent}");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[AuthService] Failed to load plans: {ex.Message}");
+            }
+
+            return Array.Empty<SubscriptionPlanInfo>();
+        }
+
+        private static IReadOnlyList<SubscriptionPlanInfo> FilterPurchasablePlans(IReadOnlyList<SubscriptionPlanInfo> plans)
+        {
+            if (plans.Count == 0)
+            {
+                return Array.Empty<SubscriptionPlanInfo>();
+            }
+
+            var filtered = new List<SubscriptionPlanInfo>(plans.Count);
+            foreach (var plan in plans)
+            {
+                if (plan == null)
+                {
+                    continue;
+                }
+
+                if (plan.IsActive.HasValue && !plan.IsActive.Value)
+                {
+                    continue;
+                }
+
+                if (plan.IsFreePlan)
+                {
+                    continue;
+                }
+
+                if (string.IsNullOrWhiteSpace(plan.Id))
+                {
+                    continue;
+                }
+
+                filtered.Add(plan);
+            }
+
+            return filtered;
+        }
+
+        /// <summary>
+        /// 创建订阅订单
+        /// </summary>
+        public async Task<CreateSubscriptionOrderResult> CreateSubscriptionOrderAsync(string planId, string paymentMethod, int durationMonths = 1)
+        {
+            if (string.IsNullOrWhiteSpace(planId))
+            {
+                return new CreateSubscriptionOrderResult
+                {
+                    Success = false,
+                    ErrorMessage = "缺少套餐 ID"
+                };
+            }
+
+            if (durationMonths <= 0)
+            {
+                durationMonths = 1;
+            }
+
+            try
+            {
+                var payload = JsonSerializer.Serialize(new
+                {
+                    plan_id = planId,
+                    payment_method = paymentMethod,
+                    duration_months = durationMonths
+                });
+
+                var response = await SendAuthorizedWithRefreshRetryAsync(token =>
+                {
+                    var request = new HttpRequestMessage(HttpMethod.Post, $"{_authServerUrl}/api/v1/user/subscription/orders");
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
+                    return request;
+                });
+
+                if (response == null)
+                {
+                    return new CreateSubscriptionOrderResult
+                    {
+                        Success = false,
+                        ErrorMessage = "登录状态已失效，请重新登录"
+                    };
+                }
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = JsonSerializer.Deserialize<CreateSubscriptionOrderResponse>(responseContent, JsonOptions);
+
+                    if (result?.Code == 0 && result.Data?.Order != null)
+                    {
+                        return new CreateSubscriptionOrderResult
+                        {
+                            Success = true,
+                            Order = result.Data.Order,
+                            Payment = result.Data.Payment
+                        };
+                    }
+
+                    return new CreateSubscriptionOrderResult
+                    {
+                        Success = false,
+                        ErrorMessage = result?.Error ?? result?.Message ?? "下单失败"
+                    };
+                }
+
+                return new CreateSubscriptionOrderResult
+                {
+                    Success = false,
+                    ErrorMessage = ResolveApiErrorMessage(responseContent, "下单失败")
+                };
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[AuthService] Failed to create order: {ex.Message}");
+                return new CreateSubscriptionOrderResult
+                {
+                    Success = false,
+                    ErrorMessage = ex.Message
+                };
+            }
+        }
+
+        /// <summary>
+        /// 查询订单状态
+        /// </summary>
+        public async Task<SubscriptionOrderInfo?> GetSubscriptionOrderStatusAsync(string outTradeNo)
+        {
+            if (string.IsNullOrWhiteSpace(outTradeNo))
+            {
+                return null;
+            }
+
+            try
+            {
+                var encodedOutTradeNo = Uri.EscapeDataString(outTradeNo);
+                var response = await SendAuthorizedWithRefreshRetryAsync(token =>
+                {
+                    var request = new HttpRequestMessage(HttpMethod.Get, $"{_authServerUrl}/api/v1/user/subscription/orders/{encodedOutTradeNo}");
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    return request;
+                });
+
+                if (response == null)
+                {
+                    return null;
+                }
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = JsonSerializer.Deserialize<SubscriptionOrderStatusResponse>(responseContent, JsonOptions);
+
+                    if (result?.Code == 0)
+                    {
+                        return result.Data;
+                    }
+
+                    Debug.WriteLine($"[AuthService] Query order status failed: {responseContent}");
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[AuthService] Failed to query order status: {ex.Message}");
+            }
+
+            return null;
+        }
+
+        private async Task<bool> TryRefreshTokenAsync()
+        {
+            if (_currentToken == null || string.IsNullOrWhiteSpace(_currentToken.RefreshToken))
+            {
+                return false;
+            }
+
+            await _tokenRefreshLock.WaitAsync();
+            try
+            {
+                var currentToken = _currentToken;
+                if (currentToken == null || string.IsNullOrWhiteSpace(currentToken.RefreshToken))
+                {
+                    return false;
+                }
+
+                if (_currentToken != null && !IsTokenExpiringSoon())
+                {
+                    return true;
+                }
+
+                var payload = JsonSerializer.Serialize(new
+                {
+                    refresh_token = currentToken.RefreshToken
+                });
+
+                var request = new HttpRequestMessage(HttpMethod.Post, $"{_authServerUrl}/api/v1/auth/refresh")
+                {
+                    Content = new StringContent(payload, Encoding.UTF8, "application/json")
+                };
+
+                var response = await _httpClient.SendAsync(request);
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var result = JsonSerializer.Deserialize<RefreshTokenResponse>(responseContent, JsonOptions);
+
+                if (response.IsSuccessStatusCode
+                    && result?.Code == 0
+                    && result.Data != null
+                    && !string.IsNullOrWhiteSpace(result.Data.AccessToken))
+                {
+                    var nowUtc = DateTime.UtcNow;
+                    DateTime expiresAtUtc;
+                    if (result.Data.ExpiresAt.HasValue)
+                    {
+                        expiresAtUtc = DateTime.SpecifyKind(result.Data.ExpiresAt.Value, DateTimeKind.Utc).ToUniversalTime();
+                    }
+                    else if (result.Data.ExpiresIn > 0)
+                    {
+                        expiresAtUtc = nowUtc.AddSeconds(result.Data.ExpiresIn);
+                    }
+                    else
+                    {
+                        expiresAtUtc = nowUtc.AddHours(1);
+                    }
+
+                    if (expiresAtUtc <= nowUtc.AddSeconds(5))
+                    {
+                        expiresAtUtc = nowUtc.AddHours(1);
+                    }
+
+                    var expiresIn = Math.Max(1, (int)Math.Round((expiresAtUtc - nowUtc).TotalSeconds));
+                    var refreshToken = string.IsNullOrWhiteSpace(result.Data.RefreshToken)
+                        ? currentToken.RefreshToken
+                        : result.Data.RefreshToken;
+
+                    _currentToken = new TokenResponse
+                    {
+                        AccessToken = result.Data.AccessToken,
+                        RefreshToken = refreshToken ?? string.Empty,
+                        TokenType = currentToken.TokenType,
+                        ExpiresIn = expiresIn,
+                        ExpiresAt = expiresAtUtc
+                    };
+
+                    await _tokenStorage.SaveTokenAsync(_currentToken);
+                    return true;
+                }
+
+                Debug.WriteLine($"[AuthService] Refresh token failed: HTTP={(int)response.StatusCode}, Payload={responseContent}");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[AuthService] Refresh token exception: {ex.Message}");
+                return false;
+            }
+            finally
+            {
+                _tokenRefreshLock.Release();
+            }
+        }
+
+        private async Task<HttpResponseMessage?> SendAuthorizedWithRefreshRetryAsync(Func<string, HttpRequestMessage> requestFactory)
+        {
+            var token = await GetAccessTokenAsync();
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                return null;
+            }
+
+            var response = await _httpClient.SendAsync(requestFactory(token));
+            if (response.StatusCode != System.Net.HttpStatusCode.Unauthorized)
+            {
+                return response;
+            }
+
+            response.Dispose();
+
+            var refreshed = await TryRefreshTokenAsync();
+            if (!refreshed)
+            {
+                await HandleUnauthorizedAsync();
+                return null;
+            }
+
+            token = await GetAccessTokenAsync();
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                return null;
+            }
+
+            response = await _httpClient.SendAsync(requestFactory(token));
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                response.Dispose();
+                await HandleUnauthorizedAsync();
+                return null;
+            }
+
+            return response;
+        }
+
+        private static string ResolveApiErrorMessage(string responseContent, string fallbackMessage, string? error = null, string? message = null)
+        {
+            if (!string.IsNullOrWhiteSpace(error))
+            {
+                return error;
+            }
+
+            if (!string.IsNullOrWhiteSpace(message))
+            {
+                return message;
+            }
+
+            if (string.IsNullOrWhiteSpace(responseContent))
+            {
+                return fallbackMessage;
+            }
+
+            try
+            {
+                using var doc = JsonDocument.Parse(responseContent);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("error", out var errorProperty))
+                {
+                    var parsedError = errorProperty.GetString();
+                    if (!string.IsNullOrWhiteSpace(parsedError))
+                    {
+                        return parsedError;
+                    }
+                }
+
+                if (root.TryGetProperty("message", out var messageProperty))
+                {
+                    var parsedMessage = messageProperty.GetString();
+                    if (!string.IsNullOrWhiteSpace(parsedMessage))
+                    {
+                        return parsedMessage;
+                    }
+                }
+            }
+            catch
+            {
+            }
+
+            return fallbackMessage;
         }
 
         /// <summary>
@@ -476,12 +1750,42 @@ namespace lingualink_client.Services.Auth
                 }
             }
 
+            ClearLocalSession();
+
+            try
+            {
+                await OAuthLoginWindow.ClearAuthSessionDataAsync();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[AuthService] Failed to clear OAuth WebView session data: {ex.Message}");
+            }
+
+            Debug.WriteLine("[AuthService] Logged out");
+        }
+
+        /// <summary>
+        /// 业务接口返回 401 时，仅清理本地会话并触发重新登录
+        /// </summary>
+        public Task HandleUnauthorizedAsync()
+        {
+            Debug.WriteLine("[AuthService] Unauthorized response received, clearing local session");
+            ClearLocalSession();
+            return Task.CompletedTask;
+        }
+
+        private void ClearLocalSession()
+        {
+            var hadSession = _currentToken != null || _currentUser != null;
+
             _currentToken = null;
             _currentUser = null;
             _tokenStorage.ClearToken();
 
-            LoginStateChanged?.Invoke(this, false);
-            Debug.WriteLine("[AuthService] Logged out");
+            if (hadSession)
+            {
+                LoginStateChanged?.Invoke(this, false);
+            }
         }
 
         private bool IsTokenExpired()
@@ -489,222 +1793,10 @@ namespace lingualink_client.Services.Auth
             return _currentToken == null || DateTime.UtcNow >= _currentToken.ExpiresAt;
         }
 
-        #region API Key 管理
-
-        /// <summary>
-        /// 获取用户的 API Key 列表
-        /// </summary>
-        public async Task<List<ApiKeyInfo>> GetApiKeysAsync()
+        private bool IsTokenExpiringSoon()
         {
-            var token = await GetAccessTokenAsync();
-            if (string.IsNullOrEmpty(token))
-            {
-                Debug.WriteLine("[AuthService] Cannot get API keys: not logged in");
-                return new List<ApiKeyInfo>();
-            }
-
-            try
-            {
-                var request = new HttpRequestMessage(HttpMethod.Get, $"{_authServerUrl}/api/v1/user/api-keys");
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                Debug.WriteLine("[AuthService] Fetching API keys...");
-                var response = await _httpClient.SendAsync(request);
-                var responseContent = await response.Content.ReadAsStringAsync();
-
-                Debug.WriteLine($"[AuthService] API keys response: {response.StatusCode}");
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var result = JsonSerializer.Deserialize<ApiKeyListResponse>(responseContent, new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    });
-
-                    if (result?.Code == 0 && result.Data != null)
-                    {
-                        Debug.WriteLine($"[AuthService] Retrieved {result.Data.Count} API keys");
-                        return result.Data;
-                    }
-                }
-
-                Debug.WriteLine($"[AuthService] Failed to get API keys: {responseContent}");
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[AuthService] Exception getting API keys: {ex.Message}");
-            }
-
-            return new List<ApiKeyInfo>();
+            return _currentToken == null || DateTime.UtcNow >= _currentToken.ExpiresAt - TokenRefreshSkew;
         }
-
-        /// <summary>
-        /// 创建新的 API Key
-        /// </summary>
-        public async Task<CreateApiKeyResult> CreateApiKeyAsync(string name)
-        {
-            var token = await GetAccessTokenAsync();
-            if (string.IsNullOrEmpty(token))
-            {
-                return new CreateApiKeyResult
-                {
-                    Success = false,
-                    ErrorMessage = "未登录"
-                };
-            }
-
-            try
-            {
-                var request = new HttpRequestMessage(HttpMethod.Post, $"{_authServerUrl}/api/v1/user/api-keys");
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                var payload = new { name = name };
-                request.Content = new StringContent(
-                    JsonSerializer.Serialize(payload),
-                    Encoding.UTF8,
-                    "application/json");
-
-                Debug.WriteLine($"[AuthService] Creating API key with name: {name}");
-                var response = await _httpClient.SendAsync(request);
-                var responseContent = await response.Content.ReadAsStringAsync();
-
-                Debug.WriteLine($"[AuthService] Create API key response: {response.StatusCode}");
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var result = JsonSerializer.Deserialize<CreateApiKeyResponse>(responseContent, new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    });
-
-                    if (result?.Code == 0 && result.Data != null)
-                    {
-                        Debug.WriteLine($"[AuthService] API key created: {result.Data.Prefix}...");
-                        return new CreateApiKeyResult
-                        {
-                            Success = true,
-                            FullKey = result.Data.Key,
-                            KeyInfo = new ApiKeyInfo
-                            {
-                                Id = result.Data.Id,
-                                Name = result.Data.Name,
-                                Prefix = result.Data.Prefix,
-                                Status = "active",
-                                CreatedAt = result.Data.CreatedAt
-                            }
-                        };
-                    }
-                    else
-                    {
-                        return new CreateApiKeyResult
-                        {
-                            Success = false,
-                            ErrorMessage = result?.Message ?? "创建失败"
-                        };
-                    }
-                }
-
-                Debug.WriteLine($"[AuthService] Failed to create API key: {responseContent}");
-                return new CreateApiKeyResult
-                {
-                    Success = false,
-                    ErrorMessage = $"请求失败: {response.StatusCode}"
-                };
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[AuthService] Exception creating API key: {ex.Message}");
-                return new CreateApiKeyResult
-                {
-                    Success = false,
-                    ErrorMessage = ex.Message
-                };
-            }
-        }
-
-        /// <summary>
-        /// 删除（吊销）API Key
-        /// </summary>
-        public async Task<bool> DeleteApiKeyAsync(string keyId)
-        {
-            var token = await GetAccessTokenAsync();
-            if (string.IsNullOrEmpty(token))
-            {
-                Debug.WriteLine("[AuthService] Cannot delete API key: not logged in");
-                return false;
-            }
-
-            try
-            {
-                var request = new HttpRequestMessage(HttpMethod.Delete, $"{_authServerUrl}/api/v1/user/api-keys/{keyId}");
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                Debug.WriteLine($"[AuthService] Deleting API key: {keyId}");
-                var response = await _httpClient.SendAsync(request);
-                var responseContent = await response.Content.ReadAsStringAsync();
-
-                Debug.WriteLine($"[AuthService] Delete API key response: {response.StatusCode}");
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var result = JsonSerializer.Deserialize<DeleteApiKeyResponse>(responseContent, new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    });
-
-                    if (result?.Code == 0)
-                    {
-                        Debug.WriteLine($"[AuthService] API key deleted: {keyId}");
-                        return true;
-                    }
-                }
-
-                Debug.WriteLine($"[AuthService] Failed to delete API key: {responseContent}");
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[AuthService] Exception deleting API key: {ex.Message}");
-            }
-
-            return false;
-        }
-
-        #endregion
-
-        #region PKCE Helpers
-
-        private static string GenerateCodeVerifier()
-        {
-            var bytes = new byte[32];
-            using var rng = RandomNumberGenerator.Create();
-            rng.GetBytes(bytes);
-            return Base64UrlEncode(bytes);
-        }
-
-        private static string GenerateCodeChallenge(string codeVerifier)
-        {
-            using var sha256 = SHA256.Create();
-            var bytes = sha256.ComputeHash(Encoding.ASCII.GetBytes(codeVerifier));
-            return Base64UrlEncode(bytes);
-        }
-
-        private static string GenerateRandomString(int length)
-        {
-            var bytes = new byte[length];
-            using var rng = RandomNumberGenerator.Create();
-            rng.GetBytes(bytes);
-            return Base64UrlEncode(bytes);
-        }
-
-        private static string Base64UrlEncode(byte[] bytes)
-        {
-            return Convert.ToBase64String(bytes)
-                .TrimEnd('=')
-                .Replace('+', '-')
-                .Replace('/', '_');
-        }
-
-        #endregion
 
         #region IDisposable
 
@@ -715,6 +1807,7 @@ namespace lingualink_client.Services.Auth
                 if (disposing)
                 {
                     _httpClient?.Dispose();
+                    _tokenRefreshLock.Dispose();
                 }
                 _disposed = true;
             }
@@ -729,6 +1822,3 @@ namespace lingualink_client.Services.Auth
         #endregion
     }
 }
-
-
-

@@ -40,6 +40,7 @@ namespace lingualink_client.ViewModels
         private bool isUpdateAvailable;
 
         public IRelayCommand ShowUpdateDialogCommand { get; }
+        public string UpdateAvailableLabel => LanguageManager.GetString("IndexUpdateAvailable");
 
         private UpdateSession? _activeUpdateSession;
 
@@ -62,6 +63,7 @@ namespace lingualink_client.ViewModels
             TranslationResult = new TranslationResultViewModel();
 
             _appSettings = _settingsManager.LoadSettings();
+            LanguageManager.LanguageChanged += OnLanguageChanged;
 
             // 启动异步初始化，但不等待
             _ = InitializeApplicationAsync();
@@ -134,17 +136,21 @@ namespace lingualink_client.ViewModels
                 return;
             }
 
-            var targetVersionLabel = session.TargetVersion?.ToString() ?? "(未知版本)";
+            var targetVersionLabel = session.TargetVersion?.ToString() ?? LanguageManager.GetString("UpdateVersionUnknown");
             var plannedVersions = string.Join(Environment.NewLine,
                 (session.DeltaReleases?.Select(asset => $"• {asset.Version}") ?? Enumerable.Empty<string>())
                     .Append($"• {targetVersionLabel}"));
 
             var releaseNotes = session.ReleaseNotesMarkdown;
-            var displayNotes = string.IsNullOrWhiteSpace(releaseNotes) ? "(未提供更新日志)" : releaseNotes;
+            var displayNotes = string.IsNullOrWhiteSpace(releaseNotes) ? LanguageManager.GetString("UpdateNotesUnavailable") : releaseNotes;
 
-            var message = $"发现新版本: {targetVersionLabel}\n\n即将应用的版本:\n{plannedVersions}\n\n更新日志:\n{displayNotes}\n\n是否立即更新？";
+            var message = string.Format(
+                LanguageManager.GetString("UpdateDialogSummaryFormat"),
+                targetVersionLabel,
+                plannedVersions,
+                displayNotes);
 
-            var result = MessageBox.Show(message, "更新提示", MessageBoxButton.YesNo, MessageBoxImage.Information);
+            var result = MessageBox.Show(message, LanguageManager.GetString("UpdateDialogTitle"), MessageBoxButton.YesNo, MessageBoxImage.Information);
             if (result == MessageBoxResult.Yes)
             {
                 StartUpdate();
@@ -161,10 +167,10 @@ namespace lingualink_client.ViewModels
 
             try
             {
-                MessageBox.Show("正在后台下载更新，请稍候...", "更新中");
+                MessageBox.Show(LanguageManager.GetString("UpdateDownloadingMessage"), LanguageManager.GetString("UpdateDownloadingTitle"));
                 await _updateService.DownloadAsync(session, null, CancellationToken.None);
 
-                MessageBox.Show("更新已下载，程序将重新启动完成安装。", "更新准备就绪", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(LanguageManager.GetString("UpdateDownloadReadyMessage"), LanguageManager.GetString("UpdateReadyTitle"), MessageBoxButton.OK, MessageBoxImage.Information);
 
                 IsUpdateAvailable = false;
                 _activeUpdateSession = null;
@@ -180,7 +186,7 @@ namespace lingualink_client.ViewModels
                         logger.AddMessage($"[Update] Apply failed: {applyEx.Message}");
                     }
 
-                    MessageBox.Show($"安排安装更新时发生错误: {applyEx.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show(string.Format(LanguageManager.GetString("UpdateApplyErrorFormat"), applyEx.Message), LanguageManager.GetString("UpdateErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
 
@@ -188,7 +194,7 @@ namespace lingualink_client.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"更新过程中发生错误: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(string.Format(LanguageManager.GetString("UpdateProcessErrorFormat"), ex.Message), LanguageManager.GetString("UpdateErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -227,10 +233,16 @@ namespace lingualink_client.ViewModels
             });
         }
 
+        private void OnLanguageChanged()
+        {
+            OnPropertyChanged(nameof(UpdateAvailableLabel));
+        }
+
         public void Dispose()
         {
             // 取消订阅事件聚合器事件
             _eventAggregator.Unsubscribe<SettingsChangedEvent>(OnGlobalSettingsChanged);
+            LanguageManager.LanguageChanged -= OnLanguageChanged;
 
             if (_activeUpdateSession is not null)
             {

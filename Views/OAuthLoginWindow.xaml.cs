@@ -1,5 +1,9 @@
 using System;
 using System.Diagnostics;
+using System.IO;
+using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Web;
 using System.Windows;
 using lingualink_client.Models.Auth;
@@ -12,11 +16,21 @@ namespace lingualink_client.Views
     /// </summary>
     public partial class OAuthLoginWindow : Window
     {
+        private const double LoginWindowHeight = 700;
+        private const double RegisterWindowHeight = 810;
+
+        private static readonly string AuthWebViewUserDataFolder = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "LinguaLink",
+            "AuthWebView2Cache");
+
+        private static readonly SemaphoreSlim EnvironmentLock = new(1, 1);
+        private static CoreWebView2Environment? SharedEnvironment;
+
         private readonly string _loginUrl;
-        private readonly string _expectedState;
-        private readonly int _callbackPort;
-        private readonly string _callbackPath;
+        private readonly Uri _callbackUri;
         private readonly string _callbackUrlPrefix;
+        private bool _loginCompleted;
 
         /// <summary>
         /// 登录完成事件
@@ -27,17 +41,13 @@ namespace lingualink_client.Views
         /// 创建 OAuth 登录窗口
         /// </summary>
         /// <param name="loginUrl">登录页面 URL</param>
-        /// <param name="expectedState">期望的 state 参数</param>
-        /// <param name="callbackPort">回调端口</param>
-        /// <param name="callbackPath">回调路径</param>
-        public OAuthLoginWindow(string loginUrl, string expectedState, int callbackPort, string callbackPath)
+        /// <param name="callbackUrl">客户端回调 URL</param>
+        public OAuthLoginWindow(string loginUrl, string callbackUrl)
         {
             InitializeComponent();
             _loginUrl = loginUrl;
-            _expectedState = expectedState;
-            _callbackPort = callbackPort;
-            _callbackPath = callbackPath;
-            _callbackUrlPrefix = $"http://localhost:{callbackPort}{callbackPath}";
+            _callbackUri = new Uri(callbackUrl);
+            _callbackUrlPrefix = callbackUrl;
 
             Debug.WriteLine($"[OAuthLoginWindow] Created with loginUrl: {loginUrl}");
             Debug.WriteLine($"[OAuthLoginWindow] Callback URL prefix: {_callbackUrlPrefix}");
@@ -49,8 +59,9 @@ namespace lingualink_client.Views
         {
             try
             {
-                // 初始化 WebView2
-                await LoginWebView.EnsureCoreWebView2Async();
+                // 初始化 WebView2（使用固定 userDataFolder 复用认证会话）
+                var environment = await GetSharedEnvironmentAsync();
+                await LoginWebView.EnsureCoreWebView2Async(environment);
             }
             catch (Exception ex)
             {
@@ -59,7 +70,67 @@ namespace lingualink_client.Views
             }
         }
 
-        private void LoginWebView_CoreWebView2InitializationCompleted(object? sender, CoreWebView2InitializationCompletedEventArgs e)
+        private static async Task<CoreWebView2Environment> GetSharedEnvironmentAsync()
+        {
+            await EnvironmentLock.WaitAsync();
+            try
+            {
+                if (SharedEnvironment != null)
+                {
+                    return SharedEnvironment;
+                }
+
+                Directory.CreateDirectory(AuthWebViewUserDataFolder);
+                SharedEnvironment = await CoreWebView2Environment.CreateAsync(
+                    userDataFolder: AuthWebViewUserDataFolder);
+
+                return SharedEnvironment;
+            }
+            finally
+            {
+                EnvironmentLock.Release();
+            }
+        }
+
+        public static async Task ClearAuthSessionDataAsync()
+        {
+            await EnvironmentLock.WaitAsync();
+            try
+            {
+                SharedEnvironment = null;
+            }
+            finally
+            {
+                EnvironmentLock.Release();
+            }
+
+            if (!Directory.Exists(AuthWebViewUserDataFolder))
+            {
+                return;
+            }
+
+            for (var attempt = 1; attempt <= 3; attempt++)
+            {
+                try
+                {
+                    Directory.Delete(AuthWebViewUserDataFolder, recursive: true);
+                    Debug.WriteLine("[OAuthLoginWindow] Cleared auth WebView2 session data");
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    if (attempt == 3)
+                    {
+                        Debug.WriteLine($"[OAuthLoginWindow] Failed to clear auth WebView2 session data: {ex.Message}");
+                        return;
+                    }
+
+                    await Task.Delay(250 * attempt);
+                }
+            }
+        }
+
+        private async void LoginWebView_CoreWebView2InitializationCompleted(object? sender, CoreWebView2InitializationCompletedEventArgs e)
         {
             if (e.IsSuccess)
             {
@@ -69,6 +140,44 @@ namespace lingualink_client.Views
                 LoginWebView.CoreWebView2.Settings.IsStatusBarEnabled = false;
                 LoginWebView.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
                 LoginWebView.CoreWebView2.Settings.IsZoomControlEnabled = false;
+                LoginWebView.CoreWebView2.WebMessageReceived += LoginWebView_WebMessageReceived;
+
+                // 回调桥页可能先 window.close() 再跳转 callback。这里拦截关闭请求并把消息转发给宿主，避免误判“登录已取消”。
+                const string bridgeRelayScript = @"
+(() => {
+  if (!window.chrome || !window.chrome.webview) {
+    return;
+  }
+
+  window.addEventListener('message', (event) => {
+    try {
+      window.chrome.webview.postMessage(event.data);
+    } catch (_) {
+    }
+  });
+
+  const originalClose = window.close;
+  window.close = function() {
+    try {
+      window.chrome.webview.postMessage({
+        type: 'lingualink_window_close_requested',
+        href: window.location.href
+      });
+    } catch (_) {
+    }
+
+    // 不立即关闭，等待客户端完成回调解析后再主动 Close()
+  };
+})();
+";
+                try
+                {
+                    await LoginWebView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(bridgeRelayScript);
+                }
+                catch (Exception scriptEx)
+                {
+                    Debug.WriteLine($"[OAuthLoginWindow] Failed to inject bridge relay script: {scriptEx.Message}");
+                }
 
                 // 导航到登录页面
                 Debug.WriteLine($"[OAuthLoginWindow] Navigating to: {_loginUrl}");
@@ -86,12 +195,37 @@ namespace lingualink_client.Views
             Debug.WriteLine($"[OAuthLoginWindow] Navigation starting: {e.Uri}");
 
             // 检查是否是回调 URL
-            if (e.Uri.StartsWith(_callbackUrlPrefix, StringComparison.OrdinalIgnoreCase))
+            if (IsCallbackUrl(e.Uri))
             {
                 Debug.WriteLine("[OAuthLoginWindow] Callback URL detected, processing...");
                 e.Cancel = true;
                 ProcessCallback(e.Uri);
             }
+        }
+
+        private bool IsCallbackUrl(string url)
+        {
+            if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
+            {
+                return false;
+            }
+
+            if (!string.Equals(uri.Scheme, _callbackUri.Scheme, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            if (!string.Equals(uri.Host, _callbackUri.Host, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            if (uri.Port != _callbackUri.Port)
+            {
+                return false;
+            }
+
+            return string.Equals(uri.AbsolutePath, _callbackUri.AbsolutePath, StringComparison.OrdinalIgnoreCase);
         }
 
         private void LoginWebView_NavigationCompleted(object? sender, CoreWebView2NavigationCompletedEventArgs e)
@@ -119,121 +253,301 @@ namespace lingualink_client.Views
 
         private void ProcessCallback(string callbackUrl)
         {
-            Debug.WriteLine($"[OAuthLoginWindow] Processing callback URL: {callbackUrl}");
-
             try
             {
                 var uri = new Uri(callbackUrl);
                 var query = HttpUtility.ParseQueryString(uri.Query);
+                if (query.Count == 0 && !string.IsNullOrWhiteSpace(uri.Fragment))
+                {
+                    query = HttpUtility.ParseQueryString(uri.Fragment.TrimStart('#'));
+                }
 
-                // 解析所有可能的参数
+                var code = query["code"];
+                var authCode = query["auth_code"];
+                var bindStatus = query["bind_status"];
+                var bindProvider = query["bind_provider"];
+                var state = query["state"];
+                var messageType = query["type"];
                 var error = query["error"];
                 var errorDescription = query["error_description"];
-                var state = query["state"];
-                var code = query["code"];
                 var accessToken = query["access_token"];
                 var refreshToken = query["refresh_token"];
-                var expiresAt = query["expires_at"];
+                var tokenType = query["token_type"];
+                var expiresIn = TryParseInt(query["expires_in"]);
+                var expiresAt = TryParseExpiresAt(query["expires_at"]);
                 var userId = query["user_id"];
-                var displayName = query["display_name"];
-                var email = query["email"];
+                var username = query["username"];
                 var avatarUrl = query["avatar_url"];
+                var email = query["email"];
 
-                Debug.WriteLine($"[OAuthLoginWindow] Callback params:");
-                Debug.WriteLine($"  - error: {error ?? "null"}");
-                Debug.WriteLine($"  - state: {state ?? "null"} (expected: {_expectedState})");
-                Debug.WriteLine($"  - code: {(string.IsNullOrEmpty(code) ? "null" : "***")}");
-                Debug.WriteLine($"  - access_token: {(string.IsNullOrEmpty(accessToken) ? "null" : "***")}");
-                Debug.WriteLine($"  - refresh_token: {(string.IsNullOrEmpty(refreshToken) ? "null" : "***")}");
-                Debug.WriteLine($"  - user_id: {userId ?? "null"}");
-                Debug.WriteLine($"  - display_name: {displayName ?? "null"}");
+                Debug.WriteLine($"[OAuthLoginWindow] Callback params - code: {(string.IsNullOrEmpty(code) ? "null" : "***")}, auth_code: {(string.IsNullOrEmpty(authCode) ? "null" : "***")}, access_token: {(string.IsNullOrEmpty(accessToken) ? "null" : "***")}, bind_status: {bindStatus}, bind_provider: {bindProvider}, state: {state}, error: {error}");
 
-                // 检查错误
-                if (!string.IsNullOrEmpty(error))
+                if (!string.IsNullOrWhiteSpace(bindStatus))
                 {
-                    Debug.WriteLine($"[OAuthLoginWindow] OAuth error: {error} - {errorDescription}");
-                    LoginCompleted?.Invoke(this, new OAuthCallbackResult
+                    if (string.Equals(bindStatus, "success", StringComparison.OrdinalIgnoreCase))
                     {
+                        Debug.WriteLine($"[OAuthLoginWindow] Provider bind successful: provider={bindProvider}");
+                        CompleteLogin(new OAuthCallbackResult
+                        {
+                            MessageType = messageType,
+                            BindStatus = bindStatus,
+                            BindProvider = bindProvider,
+                            State = state ?? string.Empty
+                        });
+                        return;
+                    }
+
+                    Debug.WriteLine($"[OAuthLoginWindow] Provider bind failed: provider={bindProvider}, error={error}, error_description={errorDescription}");
+                    CompleteLogin(new OAuthCallbackResult
+                    {
+                        MessageType = messageType,
+                        BindStatus = bindStatus,
+                        BindProvider = bindProvider,
+                        State = state ?? string.Empty,
                         Error = error,
                         ErrorDescription = errorDescription
                     });
-                    Close();
                     return;
                 }
 
-                // 验证 state（如果存在）
-                if (!string.IsNullOrEmpty(state) && state != _expectedState)
+                if (!string.IsNullOrEmpty(error))
                 {
-                    Debug.WriteLine($"[OAuthLoginWindow] State mismatch! Expected: {_expectedState}, Got: {state}");
-                    LoginCompleted?.Invoke(this, new OAuthCallbackResult
+                    Debug.WriteLine($"[OAuthLoginWindow] OAuth error: {error} - {errorDescription}");
+                    CompleteLogin(new OAuthCallbackResult
                     {
-                        Error = "state_mismatch",
-                        ErrorDescription = "State 参数不匹配"
+                        MessageType = messageType,
+                        State = state ?? string.Empty,
+                        Error = error,
+                        ErrorDescription = errorDescription
                     });
-                    Close();
-                    return;
                 }
-
-                // 情况1：Auth Server 直接返回 access_token（推荐）
-                if (!string.IsNullOrEmpty(accessToken))
+                else if (!string.IsNullOrEmpty(accessToken))
                 {
-                    Debug.WriteLine("[OAuthLoginWindow] Login successful with access_token!");
-                    
-                    // 解析 expires_in
-                    int expiresIn = 0;
-                    if (int.TryParse(query["expires_in"], out var parsedExpiresIn))
+                    Debug.WriteLine("[OAuthLoginWindow] Login successful, returning token payload");
+                    CompleteLogin(new OAuthCallbackResult
                     {
-                        expiresIn = parsedExpiresIn;
-                    }
-
-                    LoginCompleted?.Invoke(this, new OAuthCallbackResult
-                    {
+                        MessageType = messageType,
                         AccessToken = accessToken,
                         RefreshToken = refreshToken,
-                        ExpiresAt = expiresAt,
                         ExpiresIn = expiresIn,
+                        ExpiresAt = expiresAt,
+                        TokenType = string.IsNullOrWhiteSpace(tokenType) ? "Bearer" : tokenType,
+                        State = state ?? string.Empty,
                         UserId = userId,
-                        DisplayName = displayName,
-                        Email = email,
+                        Username = username,
                         AvatarUrl = avatarUrl,
-                        State = state
+                        Email = email
                     });
-                    Close();
-                    return;
                 }
-
-                // 情况2：返回 authorization code（需要再换 token）
-                if (!string.IsNullOrEmpty(code))
+                else if (!string.IsNullOrEmpty(authCode))
                 {
-                    Debug.WriteLine("[OAuthLoginWindow] Login successful with code!");
-                    LoginCompleted?.Invoke(this, new OAuthCallbackResult
+                    Debug.WriteLine("[OAuthLoginWindow] Auth code received");
+                    CompleteLogin(new OAuthCallbackResult
                     {
-                        Code = code,
-                        State = state
+                        MessageType = messageType,
+                        AuthCode = authCode,
+                        State = state ?? string.Empty
                     });
-                    Close();
-                    return;
                 }
-
-                // 没有有效数据
-                Debug.WriteLine("[OAuthLoginWindow] Invalid callback - no code or access_token");
-                LoginCompleted?.Invoke(this, new OAuthCallbackResult
+                else if (!string.IsNullOrEmpty(code))
                 {
-                    Error = "invalid_response",
-                    ErrorDescription = "回调中没有 code 或 access_token"
-                });
-                Close();
+                    Debug.WriteLine("[OAuthLoginWindow] Authorization code received");
+                    CompleteLogin(new OAuthCallbackResult
+                    {
+                        MessageType = messageType,
+                        Code = code,
+                        State = state ?? string.Empty
+                    });
+                }
+                else
+                {
+                    Debug.WriteLine("[OAuthLoginWindow] Invalid callback payload");
+                    CompleteLogin(null);
+                }
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"[OAuthLoginWindow] Error processing callback: {ex.Message}");
-                LoginCompleted?.Invoke(this, new OAuthCallbackResult
-                {
-                    Error = "parse_error",
-                    ErrorDescription = ex.Message
-                });
-                Close();
+                CompleteLogin(null);
             }
+        }
+
+        private void LoginWebView_WebMessageReceived(object? sender, CoreWebView2WebMessageReceivedEventArgs e)
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(e.WebMessageAsJson);
+                var root = doc.RootElement;
+                if (root.ValueKind != JsonValueKind.Object)
+                {
+                    return;
+                }
+
+                var messageType = GetJsonString(root, "type");
+                if (string.IsNullOrWhiteSpace(messageType))
+                {
+                    return;
+                }
+
+                if (string.Equals(messageType, "lingualink_auth_success", StringComparison.OrdinalIgnoreCase))
+                {
+                    Debug.WriteLine("[OAuthLoginWindow] Received auth success payload from bridge postMessage");
+                    CompleteLogin(new OAuthCallbackResult
+                    {
+                        MessageType = messageType,
+                        AccessToken = GetJsonString(root, "access_token"),
+                        RefreshToken = GetJsonString(root, "refresh_token"),
+                        ExpiresAt = TryParseExpiresAt(GetJsonString(root, "expires_at")),
+                        TokenType = GetJsonString(root, "token_type"),
+                        UserId = GetJsonString(root, "user_id"),
+                        Username = GetJsonString(root, "username"),
+                        AvatarUrl = GetJsonString(root, "avatar_url"),
+                        Email = GetJsonString(root, "email")
+                    });
+                    return;
+                }
+
+                if (string.Equals(messageType, "lingualink_auth_error", StringComparison.OrdinalIgnoreCase))
+                {
+                    Debug.WriteLine("[OAuthLoginWindow] Received auth error payload from bridge postMessage");
+                    CompleteLogin(new OAuthCallbackResult
+                    {
+                        MessageType = messageType,
+                        Error = GetJsonString(root, "error"),
+                        ErrorDescription = GetJsonString(root, "error_description")
+                    });
+                    return;
+                }
+
+                if (string.Equals(messageType, "lingualink_auth_mode_changed", StringComparison.OrdinalIgnoreCase))
+                {
+                    ApplyHostedAuthLayout(root);
+                    return;
+                }
+
+                if (string.Equals(messageType, "lingualink_provider_bind_success", StringComparison.OrdinalIgnoreCase))
+                {
+                    Debug.WriteLine("[OAuthLoginWindow] Received provider bind success payload from bridge postMessage");
+                    CompleteLogin(new OAuthCallbackResult
+                    {
+                        MessageType = messageType,
+                        BindStatus = "success",
+                        BindProvider = GetJsonString(root, "bind_provider")
+                    });
+                    return;
+                }
+
+                if (string.Equals(messageType, "lingualink_provider_bind_error", StringComparison.OrdinalIgnoreCase))
+                {
+                    Debug.WriteLine("[OAuthLoginWindow] Received provider bind error payload from bridge postMessage");
+                    CompleteLogin(new OAuthCallbackResult
+                    {
+                        MessageType = messageType,
+                        BindStatus = "failed",
+                        BindProvider = GetJsonString(root, "bind_provider"),
+                        Error = GetJsonString(root, "error"),
+                        ErrorDescription = GetJsonString(root, "error_description")
+                    });
+                    return;
+                }
+
+                if (string.Equals(messageType, "lingualink_window_close_requested", StringComparison.OrdinalIgnoreCase))
+                {
+                    var href = GetJsonString(root, "href");
+                    Debug.WriteLine($"[OAuthLoginWindow] Page requested window.close(), href={href}");
+
+                    if (!string.IsNullOrWhiteSpace(href) && IsCallbackUrl(href))
+                    {
+                        ProcessCallback(href);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[OAuthLoginWindow] Failed to parse WebMessageReceived payload: {ex.Message}");
+            }
+        }
+
+        private void ApplyHostedAuthLayout(JsonElement root)
+        {
+            var mode = GetJsonString(root, "mode")?.Trim().ToLowerInvariant();
+            var requestedHeight = TryParseDouble(GetJsonString(root, "window_height"));
+            var targetHeight = mode == "register" ? RegisterWindowHeight : LoginWindowHeight;
+            if (requestedHeight.HasValue && requestedHeight.Value >= MinHeight)
+            {
+                targetHeight = requestedHeight.Value;
+            }
+
+            Dispatcher.Invoke(() =>
+            {
+                Height = targetHeight;
+            });
+        }
+
+        private static string? GetJsonString(JsonElement root, string propertyName)
+        {
+            if (!root.TryGetProperty(propertyName, out var value))
+            {
+                return null;
+            }
+
+            return value.ValueKind switch
+            {
+                JsonValueKind.String => value.GetString(),
+                JsonValueKind.Number => value.GetRawText(),
+                JsonValueKind.True => "true",
+                JsonValueKind.False => "false",
+                _ => value.ToString()
+            };
+        }
+
+        private void CompleteLogin(OAuthCallbackResult? result)
+        {
+            if (_loginCompleted)
+            {
+                return;
+            }
+
+            _loginCompleted = true;
+            LoginCompleted?.Invoke(this, result);
+            Close();
+        }
+
+        private static int? TryParseInt(string? value)
+        {
+            return int.TryParse(value, out var parsed) ? parsed : null;
+        }
+
+        private static double? TryParseDouble(string? value)
+        {
+            return double.TryParse(value, out var parsed) ? parsed : null;
+        }
+
+        private static DateTime? TryParseExpiresAt(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return null;
+            }
+
+            if (long.TryParse(value, out var unixSeconds))
+            {
+                try
+                {
+                    return DateTimeOffset.FromUnixTimeSeconds(unixSeconds).UtcDateTime;
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+
+            if (DateTimeOffset.TryParse(value, out var parsed))
+            {
+                return parsed.UtcDateTime;
+            }
+
+            return null;
         }
 
         private void ShowError(string message)
@@ -246,8 +560,7 @@ namespace lingualink_client.Views
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
             Debug.WriteLine("[OAuthLoginWindow] Close button clicked");
-            LoginCompleted?.Invoke(this, null);
-            Close();
+            CompleteLogin(null);
         }
 
         private void RetryButton_Click(object sender, RoutedEventArgs e)
@@ -286,8 +599,15 @@ namespace lingualink_client.Views
                 _ => $"错误代码: {status}"
             };
         }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            if (LoginWebView?.CoreWebView2 != null)
+            {
+                LoginWebView.CoreWebView2.WebMessageReceived -= LoginWebView_WebMessageReceived;
+            }
+
+            base.OnClosed(e);
+        }
     }
 }
-
-
-

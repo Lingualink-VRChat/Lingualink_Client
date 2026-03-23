@@ -360,6 +360,108 @@
   <data name="InfoTitle" xml:space="preserve">
     <value>情報</value>
   </data>
+  <data name="ProviderBindingErrorTitle" xml:space="preserve">
+    <value>連携失敗</value>
+  </data>
+  <data name="ProviderBindingSuccessTitle" xml:space="preserve">
+    <value>アカウント連携</value>
+  </data>
+  <data name="BindRequireLogin" xml:space="preserve">
+    <value>先にログインしてください</value>
+  </data>
+  <data name="BindUnsupportedType" xml:space="preserve">
+    <value>サポートされていない連携タイプです</value>
+  </data>
+  <data name="BindMissingUserInfo" xml:space="preserve">
+    <value>ユーザー情報が不足しています。再度ログインしてください</value>
+  </data>
+  <data name="BindInvalidCallbackUrl" xml:space="preserve">
+    <value>コールバック URL が無効です</value>
+  </data>
+  <data name="BindAuthUnavailable" xml:space="preserve">
+    <value>認証サービスを現在利用できません</value>
+  </data>
+  <data name="BindStartFailedRetry" xml:space="preserve">
+    <value>連携の開始に失敗しました。しばらくしてから再試行してください</value>
+  </data>
+  <data name="BindCancelled" xml:space="preserve">
+    <value>連携はキャンセルされました</value>
+  </data>
+  <data name="BindMissingCallbackParams" xml:space="preserve">
+    <value>コールバック パラメータが不足しています</value>
+  </data>
+  <data name="BindStateExpired" xml:space="preserve">
+    <value>ログイン状態の有効期限が切れました。もう一度連携を開始してください</value>
+  </data>
+  <data name="BindWechatAlreadyBoundOther" xml:space="preserve">
+    <value>この WeChat アカウントは既に他のアカウントに連携されています</value>
+  </data>
+  <data name="BindQqAlreadyBoundOther" xml:space="preserve">
+    <value>この QQ アカウントは既に他のアカウントに連携されています</value>
+  </data>
+  <data name="BindMissingProviderAccount" xml:space="preserve">
+    <value>サードパーティ アカウント識別子を取得できませんでした。再度認可してください</value>
+  </data>
+  <data name="BindFailedRetry" xml:space="preserve">
+    <value>連携に失敗しました。もう一度お試しください</value>
+  </data>
+  <data name="BindFailedLater" xml:space="preserve">
+    <value>連携に失敗しました。しばらくしてから再試行してください</value>
+  </data>
+  <data name="BindMissingProviderAccountId" xml:space="preserve">
+    <value>サードパーティ アカウント識別子が不足しています</value>
+  </data>
+  <data name="BindRequestInvalid" xml:space="preserve">
+    <value>リクエスト パラメータが正しくありません</value>
+  </data>
+  <data name="BindInvalidCallbackResult" xml:space="preserve">
+    <value>有効な連携コールバック結果を受信できませんでした</value>
+  </data>
+  <data name="EmailBindingErrorTitle" xml:space="preserve">
+    <value>メール連携失敗</value>
+  </data>
+  <data name="EmailBindingSuccessTitle" xml:space="preserve">
+    <value>メール連携</value>
+  </data>
+  <data name="BindEmailSendCode" xml:space="preserve">
+    <value>認証コード送信</value>
+  </data>
+  <data name="BindEmailSendCodeCountdown" xml:space="preserve">
+    <value>{0} 秒</value>
+  </data>
+  <data name="BindEmailCodeSent" xml:space="preserve">
+    <value>認証コードを送信しました。メールをご確認ください</value>
+  </data>
+  <data name="BindEmailCodeSendFailed" xml:space="preserve">
+    <value>認証コードの送信に失敗しました。しばらくしてから再試行してください</value>
+  </data>
+  <data name="BindEmailAlreadyBoundOther" xml:space="preserve">
+    <value>このメールアドレスは既に他のアカウントに連携されています</value>
+  </data>
+  <data name="BindEmailCodeTooFrequent" xml:space="preserve">
+    <value>送信が多すぎます。しばらくしてから再試行してください</value>
+  </data>
+  <data name="BindEmailInvalidFormat" xml:space="preserve">
+    <value>メールアドレスの形式が正しくありません</value>
+  </data>
+  <data name="BindEmailCodeInvalid" xml:space="preserve">
+    <value>認証コードが正しくないか、有効期限が切れています</value>
+  </data>
+  <data name="BindEmailPasswordTooShort" xml:space="preserve">
+    <value>パスワードは 8 文字以上で入力してください</value>
+  </data>
+  <data name="BindEmailPasswordTooLong" xml:space="preserve">
+    <value>パスワードが長すぎます</value>
+  </data>
+  <data name="BindEmailPasswordMismatch" xml:space="preserve">
+    <value>パスワードが一致しません</value>
+  </data>
+  <data name="BindEmailFailedLater" xml:space="preserve">
+    <value>メール連携に失敗しました。しばらくしてから再試行してください</value>
+  </data>
+  <data name="BindEmailSuccess" xml:space="preserve">
+    <value>メール連携が完了しました</value>
+  </data>
   <data name="SettingsReverted" xml:space="preserve">
     <value>変更が元に戻され、最後に保存された状態から設定が再読み込みされました。</value>
   </data>
@@ -612,6 +714,18 @@
   </data>
   <data name="Logout" xml:space="preserve">
     <value>ログアウト</value>
+  </data>
+  <data name="Yes" xml:space="preserve">
+    <value>はい</value>
+  </data>
+  <data name="No" xml:space="preserve">
+    <value>いいえ</value>
+  </data>
+  <data name="OK" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>キャンセル</value>
   </data>
   <data name="LoginStatus" xml:space="preserve">
     <value>ログイン状態</value>
@@ -925,6 +1039,358 @@
   <data name="UpdateVersionUnknown" xml:space="preserve">
     <value>不明</value>
   </data>
+  <!-- Server Mode Indicator -->
+  <data name="ServerModeOfficial" xml:space="preserve">
+    <value>公式サーバー</value>
+  </data>
+  <data name="ServerModeCustom" xml:space="preserve">
+    <value>カスタムサーバー</value>
+  </data>
+  <data name="AccountCurrentPlanPrefix" xml:space="preserve">
+    <value>現在のプラン: </value>
+  </data>
+  <data name="AccountRefreshProfileTooltip" xml:space="preserve">
+    <value>ユーザープロフィールを更新</value>
+  </data>
+  <data name="AccountSubscriptionOverview" xml:space="preserve">
+    <value>サブスクリプション概要</value>
+  </data>
+  <data name="AccountSubscriptionCurrentStatus" xml:space="preserve">
+    <value>現在の状態</value>
+  </data>
+  <data name="AccountSubscriptionCurrentPlan" xml:space="preserve">
+    <value>現在のプラン</value>
+  </data>
+  <data name="AccountSubscriptionRemaining" xml:space="preserve">
+    <value>残り時間</value>
+  </data>
+  <data name="AccountPersonalInfo" xml:space="preserve">
+    <value>個人情報</value>
+  </data>
+  <data name="AccountEdit" xml:space="preserve">
+    <value>編集</value>
+  </data>
+  <data name="AccountUsernamePlaceholder" xml:space="preserve">
+    <value>ユーザー名を入力してください（/ は使用不可）</value>
+  </data>
+  <data name="AccountCancel" xml:space="preserve">
+    <value>キャンセル</value>
+  </data>
+  <data name="AccountStatusLabel" xml:space="preserve">
+    <value>アカウント状態</value>
+  </data>
+  <data name="AccountSecurity" xml:space="preserve">
+    <value>アカウントセキュリティ</value>
+  </data>
+  <data name="AccountEmail" xml:space="preserve">
+    <value>メールアドレス</value>
+  </data>
+  <data name="AccountEmailPlaceholder" xml:space="preserve">
+    <value>メールアドレスを入力してください</value>
+  </data>
+  <data name="AccountEmailCodeLockHint" xml:space="preserve">
+    <value>認証コード送信後、メールアドレス入力は一時的にロックされます。</value>
+  </data>
+  <data name="AccountEmailCodePlaceholder" xml:space="preserve">
+    <value>認証コードを入力してください</value>
+  </data>
+  <data name="AccountPasswordPlaceholder" xml:space="preserve">
+    <value>パスワードを入力してください（8文字以上）</value>
+  </data>
+  <data name="AccountConfirmPasswordPlaceholder" xml:space="preserve">
+    <value>もう一度パスワードを入力してください</value>
+  </data>
+  <data name="AccountBindEmail" xml:space="preserve">
+    <value>メールを連携</value>
+  </data>
+  <data name="AccountProviderBindings" xml:space="preserve">
+    <value>外部アカウント連携</value>
+  </data>
+  <data name="AccountWechat" xml:space="preserve">
+    <value>WeChat</value>
+  </data>
+  <data name="AccountQq" xml:space="preserve">
+    <value>QQ</value>
+  </data>
+  <data name="AccountBindQq" xml:space="preserve">
+    <value>QQ を連携</value>
+  </data>
+  <data name="AccountBindQqTooltip" xml:space="preserve">
+    <value>QQ が未連携の場合に使用できます</value>
+  </data>
+  <data name="AccountBindWechat" xml:space="preserve">
+    <value>WeChat を連携</value>
+  </data>
+  <data name="AccountBindWechatTooltip" xml:space="preserve">
+    <value>WeChat が未連携の場合に使用できます</value>
+  </data>
+  <data name="AccountServerUrlPlaceholder" xml:space="preserve">
+    <value>https://api2.lingualink.aiatechco.com/api/v1/</value>
+  </data>
+  <data name="AccountApiKeyPlaceholder" xml:space="preserve">
+    <value>任意</value>
+  </data>
+  <data name="AccountConnectionTestHint" xml:space="preserve">
+    <value>クリックしてサーバー接続をテスト</value>
+  </data>
+  <data name="AccountPaymentMethodWechat" xml:space="preserve">
+    <value>WeChat Pay</value>
+  </data>
+  <data name="AccountPaymentMethodAlipayReserved" xml:space="preserve">
+    <value>Alipay（予約）</value>
+  </data>
+  <data name="AccountVipActionRenewUpgrade" xml:space="preserve">
+    <value>更新 / アップグレード</value>
+  </data>
+  <data name="AccountVipActionOpen" xml:space="preserve">
+    <value>VIP を有効化</value>
+  </data>
+  <data name="AccountUnbound" xml:space="preserve">
+    <value>未連携</value>
+  </data>
+  <data name="AccountBind" xml:space="preserve">
+    <value>連携</value>
+  </data>
+  <data name="AccountRebind" xml:space="preserve">
+    <value>再連携</value>
+  </data>
+  <data name="AccountBound" xml:space="preserve">
+    <value>連携済み</value>
+  </data>
+  <data name="AccountBoundMaskedFormat" xml:space="preserve">
+    <value>連携済み（{0}）</value>
+  </data>
+  <data name="AccountSubscriptionStatusNotOpened" xml:space="preserve">
+    <value>未開通</value>
+  </data>
+  <data name="AccountPlanUnsubscribed" xml:space="preserve">
+    <value>未購読</value>
+  </data>
+  <data name="AccountSubscriptionStatusActive" xml:space="preserve">
+    <value>有効</value>
+  </data>
+  <data name="AccountSubscriptionStatusPending" xml:space="preserve">
+    <value>未開始</value>
+  </data>
+  <data name="AccountSubscriptionStatusExpired" xml:space="preserve">
+    <value>期限切れ</value>
+  </data>
+  <data name="AccountSubscriptionPromptNoSubscription" xml:space="preserve">
+    <value>現在サブスクリプションはありません。公式翻訳機能を利用するには契約してください。</value>
+  </data>
+  <data name="AccountSubscriptionPromptAutoRenew" xml:space="preserve">
+    <value>現在のサブスクリプションは自動更新されます。</value>
+  </data>
+  <data name="AccountSubscriptionPromptUnavailable" xml:space="preserve">
+    <value>有効期限情報は現在利用できません。</value>
+  </data>
+  <data name="AccountSubscriptionPromptNoActiveSubscription" xml:space="preserve">
+    <value>このアカウントに有効なサブスクリプションは見つかりません。</value>
+  </data>
+  <data name="AccountSubscriptionPromptExpired" xml:space="preserve">
+    <value>サブスクリプションの期限が切れました。継続利用には更新してください。</value>
+  </data>
+  <data name="AccountSubscriptionPromptPending" xml:space="preserve">
+    <value>サブスクリプションはまだ有効化されていません。状態を確認してください。</value>
+  </data>
+  <data name="AccountSubscriptionPromptExpireToday" xml:space="preserve">
+    <value>サブスクリプションは本日中に期限切れになります。お早めに更新してください。</value>
+  </data>
+  <data name="AccountSubscriptionPromptExpireInDaysFormat" xml:space="preserve">
+    <value>サブスクリプションはあと {0} 日で期限切れになります。お早めに更新してください。</value>
+  </data>
+  <data name="AccountRemainingUnknown" xml:space="preserve">
+    <value>不明</value>
+  </data>
+  <data name="AccountRemainingPending" xml:space="preserve">
+    <value>未開始</value>
+  </data>
+  <data name="AccountRemainingExpired" xml:space="preserve">
+    <value>期限切れ</value>
+  </data>
+  <data name="AccountRemainingDaysFormat" xml:space="preserve">
+    <value>残り {0} 日</value>
+  </data>
+  <data name="AccountRemainingHoursFormat" xml:space="preserve">
+    <value>残り {0} 時間</value>
+  </data>
+  <data name="AccountRemainingMinutesFormat" xml:space="preserve">
+    <value>残り {0} 分</value>
+  </data>
+  <data name="AccountStatusUnknown" xml:space="preserve">
+    <value>不明</value>
+  </data>
+  <data name="AccountStatusNormal" xml:space="preserve">
+    <value>正常</value>
+  </data>
+  <data name="AccountStatusInactive" xml:space="preserve">
+    <value>未アクティブ</value>
+  </data>
+  <data name="AccountStatusDisabled" xml:space="preserve">
+    <value>無効</value>
+  </data>
+  <data name="MessageTemplateHint" xml:space="preserve">
+    <value>有効にすると、VRChat に送信する出力形式をカスタマイズできます。</value>
+  </data>
+  <data name="MessageTemplatePlaceholder" xml:space="preserve">
+    <value>テンプレートを入力してください...</value>
+  </data>
+  <data name="IndexUpdateAvailable" xml:space="preserve">
+    <value>新しいバージョンがあります！</value>
+  </data>
+  <data name="AccountDefaultUserName" xml:space="preserve">
+    <value>ユーザー</value>
+  </data>
+  <data name="AccountUsernameRequired" xml:space="preserve">
+    <value>ユーザー名は必須です。</value>
+  </data>
+  <data name="AccountUsernameTooLong" xml:space="preserve">
+    <value>ユーザー名は100文字以内で入力してください。</value>
+  </data>
+  <data name="AccountUsernameSlashInvalid" xml:space="preserve">
+    <value>ユーザー名に / は使用できません。</value>
+  </data>
+  <data name="AccountUsernameInvalid" xml:space="preserve">
+    <value>ユーザー名の形式が正しくありません。</value>
+  </data>
+  <data name="AccountAuthServiceUnavailable" xml:space="preserve">
+    <value>認証サービスが初期化されていません。</value>
+  </data>
+  <data name="AccountLoginFailed" xml:space="preserve">
+    <value>ログインに失敗しました。</value>
+  </data>
+  <data name="AccountLoginFailedFormat" xml:space="preserve">
+    <value>ログインに失敗しました: {0}</value>
+  </data>
+  <data name="AccountLogoutConfirmMessage" xml:space="preserve">
+    <value>ログアウトしてもよろしいですか？</value>
+  </data>
+  <data name="AccountLogoutConfirmTitle" xml:space="preserve">
+    <value>ログアウト確認</value>
+  </data>
+  <data name="AccountVipRequireLogin" xml:space="preserve">
+    <value>VIP の開通または更新の前にログインしてください。</value>
+  </data>
+  <data name="AccountSubscriptionReloginRequired" xml:space="preserve">
+    <value>ログイン状態が失効しました。サブスクリプションの前に再度ログインしてください。</value>
+  </data>
+  <data name="AccountSubscribeSuccess" xml:space="preserve">
+    <value>サブスクリプションが完了し、状態を更新しました。</value>
+  </data>
+  <data name="AccountSubscribeSuccessWithOrderFormat" xml:space="preserve">
+    <value>サブスクリプション成功！注文番号: {0}</value>
+  </data>
+  <data name="AccountUpdateUsernameFailed" xml:space="preserve">
+    <value>ユーザー名の更新に失敗しました。</value>
+  </data>
+  <data name="AccountUpdateProfileFailed" xml:space="preserve">
+    <value>プロフィールの更新に失敗しました。</value>
+  </data>
+  <data name="AccountUpdateProfileSuccess" xml:space="preserve">
+    <value>プロフィールを更新しました。</value>
+  </data>
+  <data name="AccountUpdateProfileFailedFormat" xml:space="preserve">
+    <value>プロフィールの更新に失敗しました: {0}</value>
+  </data>
+  <data name="AccountBindProviderFailed" xml:space="preserve">
+    <value>外部アカウントの連携に失敗しました。</value>
+  </data>
+  <data name="AccountBindProviderSuccess" xml:space="preserve">
+    <value>外部アカウントの連携に成功しました。</value>
+  </data>
+  <data name="AccountBindProviderFailedFormat" xml:space="preserve">
+    <value>外部アカウントの連携に失敗しました: {0}</value>
+  </data>
+  <data name="AccountProviderAlreadyBoundFormat" xml:space="preserve">
+    <value>{0} はすでに連携済みです。再連携は不要です。</value>
+  </data>
+  <data name="AccountProviderBindSuccessFormat" xml:space="preserve">
+    <value>{0} の連携に成功しました。</value>
+  </data>
+  <data name="AccountPlansEmpty" xml:space="preserve">
+    <value>現在購入可能なプランはありません。</value>
+  </data>
+  <data name="AccountPlansLoadedFormat" xml:space="preserve">
+    <value>購入可能なプランを {0} 件読み込みました。</value>
+  </data>
+  <data name="AccountPlansLoadFailedFormat" xml:space="preserve">
+    <value>プランの読み込みに失敗しました: {0}</value>
+  </data>
+  <data name="AccountPendingOrderExists" xml:space="preserve">
+    <value>未払いの注文があります。支払いを完了するか、注文終了後に再度作成してください。</value>
+  </data>
+  <data name="AccountSelectPlanFirst" xml:space="preserve">
+    <value>先にプランを選択してください。</value>
+  </data>
+  <data name="AccountCreateOrderFailed" xml:space="preserve">
+    <value>注文の作成に失敗しました。</value>
+  </data>
+  <data name="AccountCreateOrderFailedFormat" xml:space="preserve">
+    <value>注文の作成に失敗しました: {0}</value>
+  </data>
+  <data name="AccountPaymentQrMissing" xml:space="preserve">
+    <value>決済チャネルの準備は完了しましたが、QR コード URL が返されませんでした。再度注文してください。</value>
+  </data>
+  <data name="AccountOrderPaidRefreshing" xml:space="preserve">
+    <value>支払いに成功しました。サブスクリプション状態を更新しています。</value>
+  </data>
+  <data name="AccountOrderFailed" xml:space="preserve">
+    <value>支払いに失敗しました。新しい注文を作成してください。</value>
+  </data>
+  <data name="AccountOrderExpired" xml:space="preserve">
+    <value>注文の有効期限が切れました。新しい注文を作成してください。</value>
+  </data>
+  <data name="AccountOrderCancelled" xml:space="preserve">
+    <value>注文はキャンセルされました。新しい注文を作成してください。</value>
+  </data>
+  <data name="AccountOrderPollingTimeout" xml:space="preserve">
+    <value>注文状態の監視がタイムアウトしました。後で手動で状態を更新してください。</value>
+  </data>
+  <data name="AccountOrderRestoreDetectedFormat" xml:space="preserve">
+    <value>未完了の注文 {0} を検出しました。状態を復元しています。</value>
+  </data>
+  <data name="AccountOrderRestoreRecoveredFormat" xml:space="preserve">
+    <value>注文番号 {0} を復元しました。「注文照会」を押して状態を確認してください。</value>
+  </data>
+  <data name="AccountOrderQueryFailed" xml:space="preserve">
+    <value>注文状態の取得に失敗しました。後でもう一度お試しください。</value>
+  </data>
+  <data name="AccountConnectionUnknownError" xml:space="preserve">
+    <value>不明なエラーが発生しました。</value>
+  </data>
+  <data name="AccountConnectionSuccess" xml:space="preserve">
+    <value>接続に成功しました！</value>
+  </data>
+  <data name="AccountConnectionFailedFormat" xml:space="preserve">
+    <value>接続に失敗しました: {0}</value>
+  </data>
+  <data name="UpdateDialogTitle" xml:space="preserve">
+    <value>更新のお知らせ</value>
+  </data>
+  <data name="UpdateDialogSummaryFormat" xml:space="preserve">
+    <value>新しいバージョンを検出しました: {0}
+
+適用予定のバージョン:
+{1}
+
+リリースノート:
+{2}
+
+今すぐ更新しますか？</value>
+  </data>
+  <data name="UpdateDownloadingTitle" xml:space="preserve">
+    <value>更新をダウンロード中</value>
+  </data>
+  <data name="UpdateDownloadingMessage" xml:space="preserve">
+    <value>バックグラウンドで更新をダウンロードしています。しばらくお待ちください...</value>
+  </data>
+  <data name="UpdateDownloadReadyMessage" xml:space="preserve">
+    <value>更新のダウンロードが完了しました。再起動してインストールを完了します。</value>
+  </data>
+  <data name="UpdateApplyErrorFormat" xml:space="preserve">
+    <value>更新インストールの予約中にエラーが発生しました: {0}</value>
+  </data>
+  <data name="UpdateProcessErrorFormat" xml:space="preserve">
+    <value>更新処理中にエラーが発生しました: {0}</value>
+  </data>
 </root>
-
-

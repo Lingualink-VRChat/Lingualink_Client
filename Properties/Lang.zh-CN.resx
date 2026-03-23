@@ -352,6 +352,108 @@
   <data name="InfoTitle" xml:space="preserve">
     <value>提示</value>
   </data>
+  <data name="ProviderBindingErrorTitle" xml:space="preserve">
+    <value>绑定失败</value>
+  </data>
+  <data name="ProviderBindingSuccessTitle" xml:space="preserve">
+    <value>账号绑定</value>
+  </data>
+  <data name="BindRequireLogin" xml:space="preserve">
+    <value>请先登录</value>
+  </data>
+  <data name="BindUnsupportedType" xml:space="preserve">
+    <value>不支持的绑定类型</value>
+  </data>
+  <data name="BindMissingUserInfo" xml:space="preserve">
+    <value>缺少用户信息，请重新登录</value>
+  </data>
+  <data name="BindInvalidCallbackUrl" xml:space="preserve">
+    <value>回调地址无效</value>
+  </data>
+  <data name="BindAuthUnavailable" xml:space="preserve">
+    <value>认证服务暂不可用</value>
+  </data>
+  <data name="BindStartFailedRetry" xml:space="preserve">
+    <value>发起绑定失败，请稍后重试</value>
+  </data>
+  <data name="BindCancelled" xml:space="preserve">
+    <value>绑定已取消</value>
+  </data>
+  <data name="BindMissingCallbackParams" xml:space="preserve">
+    <value>缺少回调参数</value>
+  </data>
+  <data name="BindStateExpired" xml:space="preserve">
+    <value>登录状态已失效，请重新发起绑定</value>
+  </data>
+  <data name="BindWechatAlreadyBoundOther" xml:space="preserve">
+    <value>该微信已绑定其他账号</value>
+  </data>
+  <data name="BindQqAlreadyBoundOther" xml:space="preserve">
+    <value>该 QQ 已绑定其他账号</value>
+  </data>
+  <data name="BindMissingProviderAccount" xml:space="preserve">
+    <value>未获取到第三方账号标识，请重新授权</value>
+  </data>
+  <data name="BindFailedRetry" xml:space="preserve">
+    <value>绑定失败，请重新尝试</value>
+  </data>
+  <data name="BindFailedLater" xml:space="preserve">
+    <value>绑定失败，请稍后重试</value>
+  </data>
+  <data name="BindMissingProviderAccountId" xml:space="preserve">
+    <value>缺少第三方账号标识</value>
+  </data>
+  <data name="BindRequestInvalid" xml:space="preserve">
+    <value>请求参数错误</value>
+  </data>
+  <data name="BindInvalidCallbackResult" xml:space="preserve">
+    <value>未收到有效的绑定结果回调</value>
+  </data>
+  <data name="EmailBindingErrorTitle" xml:space="preserve">
+    <value>邮箱绑定失败</value>
+  </data>
+  <data name="EmailBindingSuccessTitle" xml:space="preserve">
+    <value>邮箱绑定</value>
+  </data>
+  <data name="BindEmailSendCode" xml:space="preserve">
+    <value>发送验证码</value>
+  </data>
+  <data name="BindEmailSendCodeCountdown" xml:space="preserve">
+    <value>{0} 秒</value>
+  </data>
+  <data name="BindEmailCodeSent" xml:space="preserve">
+    <value>验证码已发送，请检查邮箱</value>
+  </data>
+  <data name="BindEmailCodeSendFailed" xml:space="preserve">
+    <value>验证码发送失败，请稍后重试</value>
+  </data>
+  <data name="BindEmailAlreadyBoundOther" xml:space="preserve">
+    <value>该邮箱已被其他账号绑定</value>
+  </data>
+  <data name="BindEmailCodeTooFrequent" xml:space="preserve">
+    <value>发送过于频繁，请稍后再试</value>
+  </data>
+  <data name="BindEmailInvalidFormat" xml:space="preserve">
+    <value>邮箱格式不正确</value>
+  </data>
+  <data name="BindEmailCodeInvalid" xml:space="preserve">
+    <value>验证码错误或已失效</value>
+  </data>
+  <data name="BindEmailPasswordTooShort" xml:space="preserve">
+    <value>密码至少 8 位</value>
+  </data>
+  <data name="BindEmailPasswordTooLong" xml:space="preserve">
+    <value>密码过长</value>
+  </data>
+  <data name="BindEmailPasswordMismatch" xml:space="preserve">
+    <value>两次输入的密码不一致</value>
+  </data>
+  <data name="BindEmailFailedLater" xml:space="preserve">
+    <value>绑定失败，请稍后重试</value>
+  </data>
+  <data name="BindEmailSuccess" xml:space="preserve">
+    <value>邮箱绑定成功</value>
+  </data>
   <data name="SettingsReverted" xml:space="preserve">
     <value>更改已撤销，设置已从上次保存的状态重新加载。</value>
   </data>
@@ -662,6 +764,18 @@
   </data>
   <data name="Logout" xml:space="preserve">
     <value>退出登录</value>
+  </data>
+  <data name="Yes" xml:space="preserve">
+    <value>是</value>
+  </data>
+  <data name="No" xml:space="preserve">
+    <value>否</value>
+  </data>
+  <data name="OK" xml:space="preserve">
+    <value>确定</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>取消</value>
   </data>
   <data name="LoginStatus" xml:space="preserve">
     <value>登录状态</value>
@@ -975,6 +1089,358 @@
   <data name="UpdateVersionUnknown" xml:space="preserve">
     <value>未知</value>
   </data>
+  <!-- Server Mode Indicator -->
+  <data name="ServerModeOfficial" xml:space="preserve">
+    <value>官方服务器</value>
+  </data>
+  <data name="ServerModeCustom" xml:space="preserve">
+    <value>自定义服务器</value>
+  </data>
+  <data name="AccountCurrentPlanPrefix" xml:space="preserve">
+    <value>当前套餐： </value>
+  </data>
+  <data name="AccountRefreshProfileTooltip" xml:space="preserve">
+    <value>刷新用户资料</value>
+  </data>
+  <data name="AccountSubscriptionOverview" xml:space="preserve">
+    <value>订阅状态概览</value>
+  </data>
+  <data name="AccountSubscriptionCurrentStatus" xml:space="preserve">
+    <value>当前状态</value>
+  </data>
+  <data name="AccountSubscriptionCurrentPlan" xml:space="preserve">
+    <value>当前套餐</value>
+  </data>
+  <data name="AccountSubscriptionRemaining" xml:space="preserve">
+    <value>剩余时长</value>
+  </data>
+  <data name="AccountPersonalInfo" xml:space="preserve">
+    <value>个人信息</value>
+  </data>
+  <data name="AccountEdit" xml:space="preserve">
+    <value>修改</value>
+  </data>
+  <data name="AccountUsernamePlaceholder" xml:space="preserve">
+    <value>请输入用户名（不能包含 /）</value>
+  </data>
+  <data name="AccountCancel" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="AccountStatusLabel" xml:space="preserve">
+    <value>账号状态</value>
+  </data>
+  <data name="AccountSecurity" xml:space="preserve">
+    <value>账号安全</value>
+  </data>
+  <data name="AccountEmail" xml:space="preserve">
+    <value>邮箱</value>
+  </data>
+  <data name="AccountEmailPlaceholder" xml:space="preserve">
+    <value>请输入邮箱</value>
+  </data>
+  <data name="AccountEmailCodeLockHint" xml:space="preserve">
+    <value>发送验证码后，邮箱输入会暂时锁定。</value>
+  </data>
+  <data name="AccountEmailCodePlaceholder" xml:space="preserve">
+    <value>请输入验证码</value>
+  </data>
+  <data name="AccountPasswordPlaceholder" xml:space="preserve">
+    <value>请输入密码（至少 8 位）</value>
+  </data>
+  <data name="AccountConfirmPasswordPlaceholder" xml:space="preserve">
+    <value>请再次输入密码</value>
+  </data>
+  <data name="AccountBindEmail" xml:space="preserve">
+    <value>绑定邮箱</value>
+  </data>
+  <data name="AccountProviderBindings" xml:space="preserve">
+    <value>第三方绑定</value>
+  </data>
+  <data name="AccountWechat" xml:space="preserve">
+    <value>微信</value>
+  </data>
+  <data name="AccountQq" xml:space="preserve">
+    <value>QQ</value>
+  </data>
+  <data name="AccountBindQq" xml:space="preserve">
+    <value>绑定 QQ</value>
+  </data>
+  <data name="AccountBindQqTooltip" xml:space="preserve">
+    <value>QQ 未绑定时可点击</value>
+  </data>
+  <data name="AccountBindWechat" xml:space="preserve">
+    <value>绑定微信</value>
+  </data>
+  <data name="AccountBindWechatTooltip" xml:space="preserve">
+    <value>微信未绑定时可点击</value>
+  </data>
+  <data name="AccountServerUrlPlaceholder" xml:space="preserve">
+    <value>https://api2.lingualink.aiatechco.com/api/v1/</value>
+  </data>
+  <data name="AccountApiKeyPlaceholder" xml:space="preserve">
+    <value>可选</value>
+  </data>
+  <data name="AccountConnectionTestHint" xml:space="preserve">
+    <value>点击测试服务器连接</value>
+  </data>
+  <data name="AccountPaymentMethodWechat" xml:space="preserve">
+    <value>微信支付</value>
+  </data>
+  <data name="AccountPaymentMethodAlipayReserved" xml:space="preserve">
+    <value>支付宝（预留）</value>
+  </data>
+  <data name="AccountVipActionRenewUpgrade" xml:space="preserve">
+    <value>续费 / 升级</value>
+  </data>
+  <data name="AccountVipActionOpen" xml:space="preserve">
+    <value>开通 VIP</value>
+  </data>
+  <data name="AccountUnbound" xml:space="preserve">
+    <value>未绑定</value>
+  </data>
+  <data name="AccountBind" xml:space="preserve">
+    <value>绑定</value>
+  </data>
+  <data name="AccountRebind" xml:space="preserve">
+    <value>换绑</value>
+  </data>
+  <data name="AccountBound" xml:space="preserve">
+    <value>已绑定</value>
+  </data>
+  <data name="AccountBoundMaskedFormat" xml:space="preserve">
+    <value>已绑定（{0}）</value>
+  </data>
+  <data name="AccountSubscriptionStatusNotOpened" xml:space="preserve">
+    <value>未开通</value>
+  </data>
+  <data name="AccountPlanUnsubscribed" xml:space="preserve">
+    <value>未订阅</value>
+  </data>
+  <data name="AccountSubscriptionStatusActive" xml:space="preserve">
+    <value>订阅有效</value>
+  </data>
+  <data name="AccountSubscriptionStatusPending" xml:space="preserve">
+    <value>未生效</value>
+  </data>
+  <data name="AccountSubscriptionStatusExpired" xml:space="preserve">
+    <value>已过期</value>
+  </data>
+  <data name="AccountSubscriptionPromptNoSubscription" xml:space="preserve">
+    <value>当前未订阅，开通订阅后可使用官方翻译功能。</value>
+  </data>
+  <data name="AccountSubscriptionPromptAutoRenew" xml:space="preserve">
+    <value>当前订阅将自动续费。</value>
+  </data>
+  <data name="AccountSubscriptionPromptUnavailable" xml:space="preserve">
+    <value>订阅有效期信息暂不可用。</value>
+  </data>
+  <data name="AccountSubscriptionPromptNoActiveSubscription" xml:space="preserve">
+    <value>当前账号尚未检测到有效订阅。</value>
+  </data>
+  <data name="AccountSubscriptionPromptExpired" xml:space="preserve">
+    <value>订阅已到期，请续费后继续使用。</value>
+  </data>
+  <data name="AccountSubscriptionPromptPending" xml:space="preserve">
+    <value>订阅未生效，请检查订阅状态。</value>
+  </data>
+  <data name="AccountSubscriptionPromptExpireToday" xml:space="preserve">
+    <value>订阅将于今天到期，请及时续费。</value>
+  </data>
+  <data name="AccountSubscriptionPromptExpireInDaysFormat" xml:space="preserve">
+    <value>订阅将在 {0} 天后到期，请及时续费。</value>
+  </data>
+  <data name="AccountRemainingUnknown" xml:space="preserve">
+    <value>有效期未知</value>
+  </data>
+  <data name="AccountRemainingPending" xml:space="preserve">
+    <value>未生效</value>
+  </data>
+  <data name="AccountRemainingExpired" xml:space="preserve">
+    <value>已到期</value>
+  </data>
+  <data name="AccountRemainingDaysFormat" xml:space="preserve">
+    <value>剩余 {0} 天</value>
+  </data>
+  <data name="AccountRemainingHoursFormat" xml:space="preserve">
+    <value>剩余 {0} 小时</value>
+  </data>
+  <data name="AccountRemainingMinutesFormat" xml:space="preserve">
+    <value>剩余 {0} 分钟</value>
+  </data>
+  <data name="AccountStatusUnknown" xml:space="preserve">
+    <value>未知</value>
+  </data>
+  <data name="AccountStatusNormal" xml:space="preserve">
+    <value>正常</value>
+  </data>
+  <data name="AccountStatusInactive" xml:space="preserve">
+    <value>未激活</value>
+  </data>
+  <data name="AccountStatusDisabled" xml:space="preserve">
+    <value>已禁用</value>
+  </data>
+  <data name="MessageTemplateHint" xml:space="preserve">
+    <value>开启后可自定义发送到 VRChat 的输出格式。</value>
+  </data>
+  <data name="MessageTemplatePlaceholder" xml:space="preserve">
+    <value>请输入模板内容...</value>
+  </data>
+  <data name="IndexUpdateAvailable" xml:space="preserve">
+    <value>发现新版本！</value>
+  </data>
+  <data name="AccountDefaultUserName" xml:space="preserve">
+    <value>用户</value>
+  </data>
+  <data name="AccountUsernameRequired" xml:space="preserve">
+    <value>用户名不能为空</value>
+  </data>
+  <data name="AccountUsernameTooLong" xml:space="preserve">
+    <value>用户名长度不能超过 100</value>
+  </data>
+  <data name="AccountUsernameSlashInvalid" xml:space="preserve">
+    <value>用户名不能包含 /</value>
+  </data>
+  <data name="AccountUsernameInvalid" xml:space="preserve">
+    <value>用户名格式不正确</value>
+  </data>
+  <data name="AccountAuthServiceUnavailable" xml:space="preserve">
+    <value>认证服务未初始化</value>
+  </data>
+  <data name="AccountLoginFailed" xml:space="preserve">
+    <value>登录失败</value>
+  </data>
+  <data name="AccountLoginFailedFormat" xml:space="preserve">
+    <value>登录失败: {0}</value>
+  </data>
+  <data name="AccountLogoutConfirmMessage" xml:space="preserve">
+    <value>确定要退出登录吗？</value>
+  </data>
+  <data name="AccountLogoutConfirmTitle" xml:space="preserve">
+    <value>确认退出</value>
+  </data>
+  <data name="AccountVipRequireLogin" xml:space="preserve">
+    <value>请先登录后再开通或续费 VIP。</value>
+  </data>
+  <data name="AccountSubscriptionReloginRequired" xml:space="preserve">
+    <value>登录状态已失效，请重新登录后再订阅。</value>
+  </data>
+  <data name="AccountSubscribeSuccess" xml:space="preserve">
+    <value>订阅成功，订阅状态已刷新。</value>
+  </data>
+  <data name="AccountSubscribeSuccessWithOrderFormat" xml:space="preserve">
+    <value>订阅成功！订单号：{0}</value>
+  </data>
+  <data name="AccountUpdateUsernameFailed" xml:space="preserve">
+    <value>修改用户名失败</value>
+  </data>
+  <data name="AccountUpdateProfileFailed" xml:space="preserve">
+    <value>资料更新失败</value>
+  </data>
+  <data name="AccountUpdateProfileSuccess" xml:space="preserve">
+    <value>资料更新成功</value>
+  </data>
+  <data name="AccountUpdateProfileFailedFormat" xml:space="preserve">
+    <value>资料更新失败: {0}</value>
+  </data>
+  <data name="AccountBindProviderFailed" xml:space="preserve">
+    <value>绑定第三方账号失败</value>
+  </data>
+  <data name="AccountBindProviderSuccess" xml:space="preserve">
+    <value>第三方账号绑定成功</value>
+  </data>
+  <data name="AccountBindProviderFailedFormat" xml:space="preserve">
+    <value>绑定第三方账号失败: {0}</value>
+  </data>
+  <data name="AccountProviderAlreadyBoundFormat" xml:space="preserve">
+    <value>{0} 已绑定，无需重复绑定。</value>
+  </data>
+  <data name="AccountProviderBindSuccessFormat" xml:space="preserve">
+    <value>{0} 绑定成功</value>
+  </data>
+  <data name="AccountPlansEmpty" xml:space="preserve">
+    <value>当前暂无可购买套餐。</value>
+  </data>
+  <data name="AccountPlansLoadedFormat" xml:space="preserve">
+    <value>已加载 {0} 个可购买套餐。</value>
+  </data>
+  <data name="AccountPlansLoadFailedFormat" xml:space="preserve">
+    <value>加载套餐失败: {0}</value>
+  </data>
+  <data name="AccountPendingOrderExists" xml:space="preserve">
+    <value>当前有待支付订单，请完成支付或等待订单结束后再下单。</value>
+  </data>
+  <data name="AccountSelectPlanFirst" xml:space="preserve">
+    <value>请先选择套餐。</value>
+  </data>
+  <data name="AccountCreateOrderFailed" xml:space="preserve">
+    <value>创建订单失败</value>
+  </data>
+  <data name="AccountCreateOrderFailedFormat" xml:space="preserve">
+    <value>创建订单失败: {0}</value>
+  </data>
+  <data name="AccountPaymentQrMissing" xml:space="preserve">
+    <value>支付通道已就绪，但未返回二维码链接，请重新下单。</value>
+  </data>
+  <data name="AccountOrderPaidRefreshing" xml:space="preserve">
+    <value>支付成功，正在刷新订阅状态。</value>
+  </data>
+  <data name="AccountOrderFailed" xml:space="preserve">
+    <value>订单支付失败，请重新下单。</value>
+  </data>
+  <data name="AccountOrderExpired" xml:space="preserve">
+    <value>订单已过期，请重新下单。</value>
+  </data>
+  <data name="AccountOrderCancelled" xml:space="preserve">
+    <value>订单已取消，请重新下单。</value>
+  </data>
+  <data name="AccountOrderPollingTimeout" xml:space="preserve">
+    <value>订单轮询超时，请稍后手动刷新订单状态。</value>
+  </data>
+  <data name="AccountOrderRestoreDetectedFormat" xml:space="preserve">
+    <value>检测到未完成订单 {0}，正在恢复状态。</value>
+  </data>
+  <data name="AccountOrderRestoreRecoveredFormat" xml:space="preserve">
+    <value>已恢复订单号 {0}，请点击“查询订单”继续检查状态。</value>
+  </data>
+  <data name="AccountOrderQueryFailed" xml:space="preserve">
+    <value>查询订单状态失败，请稍后重试。</value>
+  </data>
+  <data name="AccountConnectionUnknownError" xml:space="preserve">
+    <value>发生未知错误。</value>
+  </data>
+  <data name="AccountConnectionSuccess" xml:space="preserve">
+    <value>连接成功！</value>
+  </data>
+  <data name="AccountConnectionFailedFormat" xml:space="preserve">
+    <value>连接失败: {0}</value>
+  </data>
+  <data name="UpdateDialogTitle" xml:space="preserve">
+    <value>更新提示</value>
+  </data>
+  <data name="UpdateDialogSummaryFormat" xml:space="preserve">
+    <value>发现新版本: {0}
+
+即将应用的版本:
+{1}
+
+更新日志:
+{2}
+
+是否立即更新？</value>
+  </data>
+  <data name="UpdateDownloadingTitle" xml:space="preserve">
+    <value>更新中</value>
+  </data>
+  <data name="UpdateDownloadingMessage" xml:space="preserve">
+    <value>正在后台下载更新，请稍候...</value>
+  </data>
+  <data name="UpdateDownloadReadyMessage" xml:space="preserve">
+    <value>更新已下载，程序将重新启动完成安装。</value>
+  </data>
+  <data name="UpdateApplyErrorFormat" xml:space="preserve">
+    <value>安排安装更新时发生错误: {0}</value>
+  </data>
+  <data name="UpdateProcessErrorFormat" xml:space="preserve">
+    <value>更新过程中发生错误: {0}</value>
+  </data>
 </root>
-
-

@@ -27,7 +27,7 @@
                     <StackPanel>
                         <TextBlock Text="{Binding UseCustomTemplate}" FontWeight="Medium"/>
                         <TextBlock 
-                            Text="Enable to customize the output format sent to VRChat" 
+                            Text="{Binding UseCustomTemplateHint}" 
                             Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                             FontSize="11"/>
                     </StackPanel>
@@ -65,7 +65,7 @@
                             MinHeight="80"
                             VerticalScrollBarVisibility="Auto"
                             Margin="0,0,0,12"
-                            PlaceholderText="Enter your template here..."/>
+                            PlaceholderText="{Binding CustomTemplatePlaceholder}"/>
 
                         <TextBlock Text="{Binding AvailablePlaceholders}" FontWeight="Medium" Margin="0,0,0,4"/>
                         

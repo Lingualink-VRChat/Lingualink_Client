@@ -4,17 +4,18 @@ namespace lingualink_client.Models
 {
     public class AppSettings
     {
+        public const string OfficialProductionServerUrl = "https://api.lingualink.aiatechco.com/api/v1/";
+        public const string LegacyCustomServerUrl = "https://api2.lingualink.aiatechco.com/api/v1/";
+        public const string LegacyLocalOfficialServerUrl = "http://localhost:8080/api/v1/";
+
         public string GlobalLanguage { get; set; } = Services.LanguageManager.DetectSystemLanguage();
 
         public string TargetLanguages { get; set; } = "英文,日文"; // Default: English, Japanese
-        public string ServerUrl { get; set; } = "https://api2.lingualink.aiatechco.com/api/v1/";
+        public string ServerUrl { get; set; } = OfficialProductionServerUrl;
+        public string ApiKey { get; set; } = string.Empty;
 
         // Optional override for update feed (useful for debugging update service)
         public string UpdateFeedOverride { get; set; } = string.Empty;
-
-        // API Authentication Settings
-        public string ApiKey { get; set; } = "";
-        public bool AuthEnabled { get; } = true;
 
         // VAD Parameters (defaults from your AudioService)
         public double PostSpeechRecordingDurationSeconds { get; set; } = 0.6; // 追加录音时长，用于捕捉尾音
@@ -54,11 +55,12 @@ namespace lingualink_client.Models
         public string LastSelectedMicrophoneId { get; set; } = string.Empty;
 
         // Account / server selection
-        public bool UseCustomServer { get; set; } = true;
-        public string CustomServerUrl { get; set; } = "https://api2.lingualink.aiatechco.com/api/v1/";
+        public bool UseCustomServer { get; set; } = false;
+        public string CustomServerUrl { get; set; } = LegacyCustomServerUrl;
         public string CustomApiKey { get; set; } = string.Empty;
-        public string OfficialServerUrl { get; set; } = "https://api.lingualink.aiatechco.com/api/v1/";
+        public string OfficialServerUrl { get; set; } = OfficialProductionServerUrl;
         public string OfficialApiKey { get; set; } = string.Empty;
+        public string PendingSubscriptionOrderOutTradeNo { get; set; } = string.Empty;
 
         // Get the currently selected template
         public MessageTemplate GetSelectedTemplate()
@@ -74,4 +76,3 @@ namespace lingualink_client.Models
         }
     }
 }
-

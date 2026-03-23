@@ -1,8 +1,8 @@
+using System;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using lingualink_client.ViewModels;
-using lingualink_client.Services;
-using Wpf.Ui.Controls;
 
 namespace lingualink_client.Views
 {
@@ -15,18 +15,33 @@ namespace lingualink_client.Views
         {
             InitializeComponent();
             DataContext = new AccountPageViewModel();
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
         }
 
-        /// <summary>
-        /// Handle PasswordBox PasswordChanged event for ApiKey to ensure proper two-way binding
-        /// </summary>
-        private void ApiKeyPasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
+        private async void OnLoaded(object sender, RoutedEventArgs e)
         {
-            if (sender is Wpf.Ui.Controls.PasswordBox passwordBox && DataContext is AccountPageViewModel viewModel)
+            if (DataContext is not AccountPageViewModel viewModel)
             {
-                System.Diagnostics.Debug.WriteLine($"[AccountPage] ApiKey PasswordBox changed to: '{passwordBox.Password}'");
-                viewModel.ApiKey = passwordBox.Password;
+                return;
+            }
+
+            try
+            {
+                await viewModel.EnsureProfileFreshOnPageEnterAsync();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[AccountPage] EnsureProfileFreshOnPageEnterAsync failed: {ex.Message}");
+            }
+        }
+
+        private void OnUnloaded(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is AccountPageViewModel viewModel)
+            {
+                viewModel.CancelPendingProfileSync();
             }
         }
     }
-} 
+}

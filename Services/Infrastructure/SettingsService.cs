@@ -32,7 +32,12 @@ namespace lingualink_client.Services
 
                     if (settings != null)
                     {
-                        System.Diagnostics.Debug.WriteLine($"[SettingsService] Loaded settings - ApiKey: '{settings.ApiKey}', ServerUrl: '{settings.ServerUrl}'");
+                        bool normalized = NormalizeSettings(settings);
+                        System.Diagnostics.Debug.WriteLine($"[SettingsService] Loaded settings - ServerUrl: '{settings.ServerUrl}'");
+                        if (normalized)
+                        {
+                            SaveSettings(settings);
+                        }
                         return settings;
                     }
                     else
@@ -67,12 +72,75 @@ namespace lingualink_client.Services
             return settings;
         }
 
+        private static bool NormalizeSettings(AppSettings settings)
+        {
+            bool changed = false;
+
+            if (string.IsNullOrWhiteSpace(settings.OfficialServerUrl))
+            {
+                settings.OfficialServerUrl = AppSettings.OfficialProductionServerUrl;
+                changed = true;
+            }
+
+            bool isLegacyDefaultSelection =
+                settings.UseCustomServer
+                && string.Equals(settings.ServerUrl, AppSettings.LegacyCustomServerUrl, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(settings.CustomServerUrl, AppSettings.LegacyCustomServerUrl, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(settings.OfficialServerUrl, AppSettings.LegacyLocalOfficialServerUrl, StringComparison.OrdinalIgnoreCase)
+                && string.IsNullOrWhiteSpace(settings.ApiKey)
+                && string.IsNullOrWhiteSpace(settings.CustomApiKey)
+                && string.IsNullOrWhiteSpace(settings.OfficialApiKey);
+
+            if (isLegacyDefaultSelection)
+            {
+                settings.UseCustomServer = false;
+                settings.OfficialServerUrl = AppSettings.OfficialProductionServerUrl;
+                settings.ServerUrl = AppSettings.OfficialProductionServerUrl;
+                changed = true;
+            }
+
+            if (!settings.UseCustomServer
+                && string.Equals(settings.ServerUrl, AppSettings.LegacyLocalOfficialServerUrl, StringComparison.OrdinalIgnoreCase))
+            {
+                settings.ServerUrl = settings.OfficialServerUrl;
+                changed = true;
+            }
+
+            var officialUrl = NormalizeUrl(settings.OfficialServerUrl);
+            var currentUrl = NormalizeUrl(settings.ServerUrl);
+            var customUrl = NormalizeUrl(settings.CustomServerUrl);
+
+            // Old desktop builds could persist the official production endpoint inside the
+            // "custom server" branch, which disables OAuth-backed Bearer auth for translation
+            // requests. When that happens, always migrate back to the official mode
+            // automatically so users don't need to delete local settings manually.
+            if (!string.IsNullOrWhiteSpace(officialUrl)
+                && (string.Equals(currentUrl, officialUrl, StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(customUrl, officialUrl, StringComparison.OrdinalIgnoreCase)))
+            {
+                settings.UseCustomServer = false;
+                settings.ServerUrl = settings.OfficialServerUrl;
+                settings.CustomServerUrl = settings.OfficialServerUrl;
+                settings.ApiKey = string.Empty;
+                settings.CustomApiKey = string.Empty;
+                settings.OfficialApiKey = string.Empty;
+                changed = true;
+            }
+
+            return changed;
+        }
+
+        private static string NormalizeUrl(string? url)
+        {
+            return (url ?? string.Empty).Trim().TrimEnd('/');
+        }
+
         public void SaveSettings(AppSettings settings)
         {
             try
             {
                 System.Diagnostics.Debug.WriteLine($"[SettingsService] Saving settings to: {_settingsFilePath}");
-                System.Diagnostics.Debug.WriteLine($"[SettingsService] ApiKey: '{settings.ApiKey}', ServerUrl: '{settings.ServerUrl}'");
+                System.Diagnostics.Debug.WriteLine($"[SettingsService] ServerUrl: '{settings.ServerUrl}'");
 
                 string json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
                 File.WriteAllText(_settingsFilePath, json);

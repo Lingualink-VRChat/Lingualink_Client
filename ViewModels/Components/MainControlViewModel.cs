@@ -33,6 +33,9 @@ namespace lingualink_client.ViewModels.Components
         [ObservableProperty]
         private bool _isMicrophoneComboBoxEnabled = true;
 
+        [ObservableProperty]
+        private string _serverModeText = string.Empty;
+
         // 本地化标签
         public string WorkHintLabel => LanguageManager.GetString("WorkHint");
 
@@ -90,6 +93,7 @@ namespace lingualink_client.ViewModels.Components
             
             // 更新其他本地化标签
             OnPropertyChanged(nameof(WorkHintLabel));
+            UpdateServerModeText();
         }
 
         private void OnGlobalSettingsChanged(Services.Events.SettingsChangedEvent e)
@@ -99,7 +103,7 @@ namespace lingualink_client.ViewModels.Components
             Application.Current.Dispatcher.Invoke(() =>
             {
                 bool wasWorking = _orchestrator?.IsWorking ?? false;
-                LoadSettingsAndInitializeServices(true);
+                LoadSettingsAndInitializeServices(e.Settings, true);
 
                 // 只有在不工作且没有显示特定状态时才更新状态
                 if (!wasWorking && !(_orchestrator?.IsWorking ?? false) &&
@@ -122,15 +126,16 @@ namespace lingualink_client.ViewModels.Components
             });
         }
 
-        private void LoadSettingsAndInitializeServices(bool reattachEvents = false)
+        private void LoadSettingsAndInitializeServices(AppSettings? latestSettings = null, bool reattachEvents = false)
         {
             System.Diagnostics.Debug.WriteLine($"[MainControlViewModel] LoadSettingsAndInitializeServices() called");
 
             bool wasWorking = _orchestrator?.IsWorking ?? false;
             int? previouslySelectedMicDeviceNumber = wasWorking ? _microphoneManager.SelectedMicrophone?.WaveInDeviceIndex : null;
 
-            _appSettings = _settingsService.LoadSettings();
-            System.Diagnostics.Debug.WriteLine($"[MainControlViewModel] Loaded settings - ApiKey: '{_appSettings.ApiKey}', ServerUrl: '{_appSettings.ServerUrl}'");
+            _appSettings = latestSettings ?? _settingsService.LoadSettings();
+            System.Diagnostics.Debug.WriteLine($"[MainControlViewModel] Loaded settings - ServerUrl: '{_appSettings.ServerUrl}'");
+            UpdateServerModeText();
 
             // 释放旧的协调器
             if (_orchestrator != null)
@@ -277,6 +282,14 @@ namespace lingualink_client.ViewModels.Components
         public void ResumeListeningFromTextInput()
         {
             _orchestrator?.Resume();
+        }
+
+        private void UpdateServerModeText()
+        {
+            if (_appSettings == null) return;
+            ServerModeText = _appSettings.UseCustomServer
+                ? $"⚙ {LanguageManager.GetString("ServerModeCustom")}"
+                : $"☁ {LanguageManager.GetString("ServerModeOfficial")}";
         }
 
         /// <summary>
