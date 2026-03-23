@@ -24,26 +24,48 @@ namespace lingualink_client.Services
                 throw new ArgumentNullException(nameof(settings));
             }
 
-            var apiKey = ResolveCustomServerApiKey(settings);
-            var useCustomServerAuth = settings.UseCustomServer;
-            var (accessTokenProvider, unauthorizedHandler) = useCustomServerAuth
-                ? (null, null)
-                : ResolveAuthContext();
+            var useOfficialAuthFlow = ShouldUseOfficialAuthFlow(settings);
+            var apiKey = useOfficialAuthFlow ? string.Empty : ResolveCustomServerApiKey(settings);
+            var (accessTokenProvider, unauthorizedHandler) = useOfficialAuthFlow
+                ? ResolveAuthContext()
+                : (null, null);
 
             Debug.WriteLine($"[LingualinkApiServiceFactory] Creating API service with settings:");
             Debug.WriteLine($"[LingualinkApiServiceFactory]   ServerUrl: '{settings.ServerUrl}'");
             Debug.WriteLine($"[LingualinkApiServiceFactory]   UseCustomServer: {settings.UseCustomServer}");
-            Debug.WriteLine($"[LingualinkApiServiceFactory]   HasApiKey: {useCustomServerAuth && !string.IsNullOrWhiteSpace(apiKey)}");
+            Debug.WriteLine($"[LingualinkApiServiceFactory]   UseOfficialAuthFlow: {useOfficialAuthFlow}");
+            Debug.WriteLine($"[LingualinkApiServiceFactory]   HasApiKey: {!string.IsNullOrWhiteSpace(apiKey)}");
             Debug.WriteLine($"[LingualinkApiServiceFactory]   HasTokenProvider: {accessTokenProvider != null}");
             Debug.WriteLine($"[LingualinkApiServiceFactory]   OpusComplexity: {settings.OpusComplexity}");
 
             return new LingualinkApiService(
                 serverUrl: settings.ServerUrl,
-                apiKey: useCustomServerAuth ? apiKey : null,
+                apiKey: apiKey,
                 accessTokenProvider: accessTokenProvider,
                 unauthorizedHandler: unauthorizedHandler,
                 opusComplexity: settings.OpusComplexity
             );
+        }
+
+        private static bool ShouldUseOfficialAuthFlow(AppSettings settings)
+        {
+            if (!settings.UseCustomServer)
+            {
+                return true;
+            }
+
+            var serverUrl = NormalizeUrl(settings.ServerUrl);
+            var officialUrl = NormalizeUrl(string.IsNullOrWhiteSpace(settings.OfficialServerUrl)
+                ? AppSettings.OfficialProductionServerUrl
+                : settings.OfficialServerUrl);
+
+            return !string.IsNullOrWhiteSpace(serverUrl)
+                && string.Equals(serverUrl, officialUrl, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string NormalizeUrl(string? url)
+        {
+            return (url ?? string.Empty).Trim().TrimEnd('/');
         }
 
         /// <summary>

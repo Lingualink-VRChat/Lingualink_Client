@@ -106,7 +106,29 @@ namespace lingualink_client.Services
                 changed = true;
             }
 
+            var officialUrl = NormalizeUrl(settings.OfficialServerUrl);
+            var currentUrl = NormalizeUrl(settings.ServerUrl);
+            var customUrl = NormalizeUrl(settings.CustomServerUrl);
+            var hasCustomApiKey = !string.IsNullOrWhiteSpace(settings.CustomApiKey) || !string.IsNullOrWhiteSpace(settings.ApiKey);
+
+            if (settings.UseCustomServer
+                && !hasCustomApiKey
+                && !string.IsNullOrWhiteSpace(officialUrl)
+                && (string.Equals(currentUrl, officialUrl, StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(customUrl, officialUrl, StringComparison.OrdinalIgnoreCase)))
+            {
+                settings.UseCustomServer = false;
+                settings.ServerUrl = settings.OfficialServerUrl;
+                settings.CustomServerUrl = settings.OfficialServerUrl;
+                changed = true;
+            }
+
             return changed;
+        }
+
+        private static string NormalizeUrl(string? url)
+        {
+            return (url ?? string.Empty).Trim().TrimEnd('/');
         }
 
         public void SaveSettings(AppSettings settings)
