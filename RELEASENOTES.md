@@ -1,6 +1,37 @@
-﻿# Release Notes – 3.4.9
+# Release Notes – 3.5.0
 
 ## 简体中文 (zh-CN)
 
+- **feat:** 全新自建认证系统，替代原有 Casdoor 方案。支持邮箱注册/登录、微信扫码登录、QQ 登录，并可在客户端内直接进行账号管理。
+- **feat:** 新增应用内付费订阅页面（Checkout），支持微信支付和支付宝扫码支付，订阅后即可使用语音翻译服务。
+- **feat:** 官方服务器用户现在会自动使用内置认证流程登录，无需手动配置服务器地址和 API Key。
+- **improve:** 优化自定义服务器与官方服务器的切换逻辑：当自定义服务器地址与官方地址一致时，自动切换到官方模式；切换时各自配置独立保存，互不覆盖。
+- **improve:** 账号页面增加"当前正在使用官方/非官方服务器"提示文本，帮助用户确认当前连接状态。
+- **improve:** 登录和注册页面支持自动适应内容高度，不同分辨率下显示更自然。
+- **improve:** 完善中英日三语本地化翻译，覆盖认证流程、订阅状态、服务器配置等新增界面元素。
+- **fix:** 修复从旧版本升级时服务器 URL 配置未正确迁移的问题，现在会自动将旧格式配置迁移为新的默认值。
+- **fix:** 清理旧版遗留的 API Key 配置，避免升级后出现无效密钥导致连接失败。
+
 ## English (en)
 
+- **feat:** Introduced a new self-hosted authentication system, replacing the previous Casdoor integration. Supports email registration/login, WeChat QR code login, and QQ login, with in-app account management.
+- **feat:** Added an in-app checkout page for paid subscriptions, supporting WeChat Pay and Alipay QR code payments to unlock the voice translation service.
+- **feat:** Official server users now automatically use the built-in authentication flow—no need to manually configure server URLs or API keys.
+- **improve:** Improved the switching logic between custom and official servers: when the custom server URL matches the official one, the app automatically switches to official mode; each mode's configuration is saved independently to avoid overwriting.
+- **improve:** Added a status indicator on the account page showing whether you are connected to the official or a custom server.
+- **improve:** Login and registration pages now auto-adjust to content height for a better experience across different screen resolutions.
+- **improve:** Expanded localization coverage for Chinese, English, and Japanese across all new authentication, subscription, and server configuration UI elements.
+- **fix:** Fixed server URL configuration migration from older versions, ensuring legacy settings are properly converted to the new defaults on upgrade.
+- **fix:** Cleared legacy API key configurations to prevent invalid keys from causing connection failures after upgrading.
+
+## 日本語 (ja)
+
+- **feat:** 新しい自社認証システムを導入し、従来の Casdoor を置き換えました。メール登録・ログイン、WeChat QRコードログイン、QQ ログインに対応し、アプリ内でアカウント管理が可能です。
+- **feat:** アプリ内サブスクリプション購入ページ（Checkout）を追加。WeChat Pay・Alipay の QR コード決済に対応し、購入後すぐに音声翻訳サービスをご利用いただけます。
+- **feat:** 公式サーバー利用者は内蔵の認証フローで自動ログインされるため、サーバー URL や API キーの手動設定が不要になりました。
+- **improve:** カスタムサーバーと公式サーバーの切り替えロジックを改善。カスタム URL が公式 URL と一致する場合は自動的に公式モードに切り替わり、それぞれの設定は独立して保存されます。
+- **improve:** アカウントページに公式/非公式サーバーの接続状態表示を追加しました。
+- **improve:** ログイン・登録ページがコンテンツの高さに自動調整されるようになり、異なる解像度でもより自然に表示されます。
+- **improve:** 認証、サブスクリプション、サーバー設定など新しい UI 要素について、中国語・英語・日本語のローカライズを拡充しました。
+- **fix:** 旧バージョンからアップグレード時にサーバー URL 設定が正しく移行されない問題を修正しました。
+- **fix:** アップグレード後に無効なキーで接続エラーが発生しないよう、レガシー API キー設定をクリアしました。
