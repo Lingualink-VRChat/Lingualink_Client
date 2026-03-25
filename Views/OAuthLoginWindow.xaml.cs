@@ -139,13 +139,12 @@ namespace lingualink_client.Views
                 // 配置 WebView2
                 LoginWebView.CoreWebView2.Settings.IsStatusBarEnabled = false;
                 LoginWebView.CoreWebView2.Settings.IsZoomControlEnabled = false;
-#if RELEASE
-                LoginWebView.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
-                LoginWebView.CoreWebView2.Settings.AreDevToolsEnabled = false;
-#else
-                LoginWebView.CoreWebView2.Settings.AreDefaultContextMenusEnabled = true;
-                LoginWebView.CoreWebView2.Settings.AreDevToolsEnabled = true;
-#endif
+
+                // Dev 启动配置有 LINGUALINK_AUTH_SERVER_URL 环境变量，Prod 没有
+                var isDevMode = !string.IsNullOrEmpty(
+                    Environment.GetEnvironmentVariable("LINGUALINK_AUTH_SERVER_URL"));
+                LoginWebView.CoreWebView2.Settings.AreDefaultContextMenusEnabled = isDevMode;
+                LoginWebView.CoreWebView2.Settings.AreDevToolsEnabled = isDevMode;
                 LoginWebView.CoreWebView2.WebMessageReceived += LoginWebView_WebMessageReceived;
 
                 // 回调桥页可能先 window.close() 再跳转 callback。这里拦截关闭请求并把消息转发给宿主，避免误判“登录已取消”。
