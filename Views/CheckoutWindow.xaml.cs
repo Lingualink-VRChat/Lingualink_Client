@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 using System.Windows;
+using lingualink_client.Models;
 using lingualink_client.Services;
 using Microsoft.Web.WebView2.Core;
 using MessageBox = lingualink_client.Services.MessageBox;
@@ -26,7 +27,7 @@ namespace lingualink_client.Views
 
             _accessToken = accessToken ?? string.Empty;
             _authHost = string.IsNullOrWhiteSpace(authHost)
-                ? Models.AppSettings.GetEffectiveAuthServerUrl()
+                ? AppSettings.GetEffectiveAuthServerUrl()
                 : authHost.Trim().TrimEnd('/');
 
             Loaded += OnLoaded;
