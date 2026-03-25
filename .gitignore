@@ -62,4 +62,7 @@ guide.md
 scripts/release-settings.json
 artifacts/
 
+# Local dev launch profiles (environment-specific, never commit)
+Properties/launchSettings.json
+
 CSharpWpf/

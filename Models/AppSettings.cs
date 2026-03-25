@@ -5,13 +5,34 @@ namespace lingualink_client.Models
     public class AppSettings
     {
         public const string OfficialProductionServerUrl = "https://api.lingualink.aiatechco.com/api/v1/";
+        public const string DefaultAuthServerUrl = "https://auth.lingualink.aiatechco.com";
         public const string LegacyCustomServerUrl = "https://api2.lingualink.aiatechco.com/api/v1/";
         public const string LegacyLocalOfficialServerUrl = "http://localhost:8080/api/v1/";
+
+        /// <summary>
+        /// 获取有效的官方 Core 服务器 URL。
+        /// 优先使用环境变量 LINGUALINK_CORE_SERVER_URL，未设置则回退到生产默认值。
+        /// </summary>
+        public static string GetEffectiveOfficialServerUrl()
+        {
+            var envUrl = Environment.GetEnvironmentVariable("LINGUALINK_CORE_SERVER_URL");
+            return string.IsNullOrWhiteSpace(envUrl) ? OfficialProductionServerUrl : envUrl;
+        }
+
+        /// <summary>
+        /// 获取有效的 Auth 服务器 URL。
+        /// 优先使用环境变量 LINGUALINK_AUTH_SERVER_URL，未设置则回退到生产默认值。
+        /// </summary>
+        public static string GetEffectiveAuthServerUrl()
+        {
+            var envUrl = Environment.GetEnvironmentVariable("LINGUALINK_AUTH_SERVER_URL");
+            return string.IsNullOrWhiteSpace(envUrl) ? DefaultAuthServerUrl : envUrl.TrimEnd('/');
+        }
 
         public string GlobalLanguage { get; set; } = Services.LanguageManager.DetectSystemLanguage();
 
         public string TargetLanguages { get; set; } = "英文,日文"; // Default: English, Japanese
-        public string ServerUrl { get; set; } = OfficialProductionServerUrl;
+        public string ServerUrl { get; set; } = GetEffectiveOfficialServerUrl();
         public string ApiKey { get; set; } = string.Empty;
 
         // Optional override for update feed (useful for debugging update service)
@@ -58,7 +79,7 @@ namespace lingualink_client.Models
         public bool UseCustomServer { get; set; } = false;
         public string CustomServerUrl { get; set; } = LegacyCustomServerUrl;
         public string CustomApiKey { get; set; } = string.Empty;
-        public string OfficialServerUrl { get; set; } = OfficialProductionServerUrl;
+        public string OfficialServerUrl { get; set; } = GetEffectiveOfficialServerUrl();
         public string OfficialApiKey { get; set; } = string.Empty;
         public string PendingSubscriptionOrderOutTradeNo { get; set; } = string.Empty;
 

@@ -56,7 +56,7 @@ namespace lingualink_client.Services
 
             var serverUrl = NormalizeUrl(settings.ServerUrl);
             var officialUrl = NormalizeUrl(string.IsNullOrWhiteSpace(settings.OfficialServerUrl)
-                ? AppSettings.OfficialProductionServerUrl
+                ? AppSettings.GetEffectiveOfficialServerUrl()
                 : settings.OfficialServerUrl);
 
             return !string.IsNullOrWhiteSpace(serverUrl)

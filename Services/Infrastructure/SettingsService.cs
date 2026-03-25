@@ -78,7 +78,7 @@ namespace lingualink_client.Services
 
             if (string.IsNullOrWhiteSpace(settings.OfficialServerUrl))
             {
-                settings.OfficialServerUrl = AppSettings.OfficialProductionServerUrl;
+                settings.OfficialServerUrl = AppSettings.GetEffectiveOfficialServerUrl();
                 changed = true;
             }
 
@@ -94,8 +94,8 @@ namespace lingualink_client.Services
             if (isLegacyDefaultSelection)
             {
                 settings.UseCustomServer = false;
-                settings.OfficialServerUrl = AppSettings.OfficialProductionServerUrl;
-                settings.ServerUrl = AppSettings.OfficialProductionServerUrl;
+                settings.OfficialServerUrl = AppSettings.GetEffectiveOfficialServerUrl();
+                settings.ServerUrl = AppSettings.GetEffectiveOfficialServerUrl();
                 changed = true;
             }
 

@@ -1251,7 +1251,7 @@ namespace lingualink_client.ViewModels
                 else
                 {
                     ServerUrl = string.IsNullOrWhiteSpace(settings.OfficialServerUrl)
-                        ? AppSettings.OfficialProductionServerUrl
+                        ? AppSettings.GetEffectiveOfficialServerUrl()
                         : settings.OfficialServerUrl;
                     ApiKey = string.Empty;
                 }
@@ -1332,7 +1332,7 @@ namespace lingualink_client.ViewModels
 
                 if (string.IsNullOrWhiteSpace(_currentSettings.OfficialServerUrl))
                 {
-                    _currentSettings.OfficialServerUrl = AppSettings.OfficialProductionServerUrl;
+                    _currentSettings.OfficialServerUrl = AppSettings.GetEffectiveOfficialServerUrl();
                 }
 
                 ServerUrl = _currentSettings.OfficialServerUrl;
@@ -1388,7 +1388,7 @@ namespace lingualink_client.ViewModels
                 Debug.WriteLine("[AccountPageViewModel] Using official service");
 
                 updatedSettings.OfficialServerUrl = string.IsNullOrWhiteSpace(updatedSettings.OfficialServerUrl)
-                    ? AppSettings.OfficialProductionServerUrl
+                    ? AppSettings.GetEffectiveOfficialServerUrl()
                     : updatedSettings.OfficialServerUrl;
 
                 updatedSettings.ServerUrl = updatedSettings.OfficialServerUrl;
@@ -1589,7 +1589,7 @@ namespace lingualink_client.ViewModels
         {
             if (string.IsNullOrWhiteSpace(authServerUrl))
             {
-                return "https://auth.lingualink.aiatechco.com";
+                return AppSettings.GetEffectiveAuthServerUrl();
             }
 
             return authServerUrl.Trim().TrimEnd('/');
