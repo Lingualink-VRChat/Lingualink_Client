@@ -1241,12 +1241,8 @@ namespace lingualink_client.ViewModels
 
                 if (UseCustomServer)
                 {
-                    ServerUrl = string.IsNullOrWhiteSpace(settings.CustomServerUrl)
-                        ? settings.ServerUrl
-                        : settings.CustomServerUrl;
-                    ApiKey = string.IsNullOrWhiteSpace(settings.CustomApiKey)
-                        ? settings.ApiKey
-                        : settings.CustomApiKey;
+                    ServerUrl = settings.CustomServerUrl;
+                    ApiKey = settings.CustomApiKey;
                 }
                 else
                 {
@@ -1314,16 +1310,8 @@ namespace lingualink_client.ViewModels
             if (value)
             {
                 _currentSettings.OfficialServerUrl = ServerUrl;
-
-                var customUrl = string.IsNullOrWhiteSpace(_currentSettings.CustomServerUrl)
-                    ? _currentSettings.ServerUrl
-                    : _currentSettings.CustomServerUrl;
-                var customApiKey = string.IsNullOrWhiteSpace(_currentSettings.CustomApiKey)
-                    ? _currentSettings.ApiKey
-                    : _currentSettings.CustomApiKey;
-
-                ServerUrl = customUrl;
-                ApiKey = customApiKey;
+                ServerUrl = _currentSettings.CustomServerUrl;
+                ApiKey = _currentSettings.CustomApiKey;
             }
             else
             {
@@ -1361,7 +1349,7 @@ namespace lingualink_client.ViewModels
         private bool UpdateSettingsFromView(AppSettings updatedSettings)
         {
             Debug.WriteLine("[AccountPageViewModel] ValidateAndBuildSettings() called");
-            Debug.WriteLine($"[AccountPageViewModel] Loaded latest settings base - ServerUrl: '{updatedSettings.ServerUrl}'");
+            Debug.WriteLine($"[AccountPageViewModel] Loaded latest settings base - ActiveServerUrl: '{updatedSettings.ActiveServerUrl}'");
 
             if (UseCustomServer && (string.IsNullOrWhiteSpace(ServerUrl) || !Uri.TryCreate(ServerUrl, UriKind.Absolute, out _)))
             {
@@ -1380,8 +1368,6 @@ namespace lingualink_client.ViewModels
 
                 updatedSettings.CustomServerUrl = ServerUrl;
                 updatedSettings.CustomApiKey = ApiKey?.Trim() ?? string.Empty;
-                updatedSettings.ServerUrl = ServerUrl;
-                updatedSettings.ApiKey = updatedSettings.CustomApiKey;
             }
             else
             {
@@ -1390,11 +1376,6 @@ namespace lingualink_client.ViewModels
                 updatedSettings.OfficialServerUrl = string.IsNullOrWhiteSpace(updatedSettings.OfficialServerUrl)
                     ? AppSettings.GetEffectiveOfficialServerUrl()
                     : updatedSettings.OfficialServerUrl;
-
-                updatedSettings.ServerUrl = updatedSettings.OfficialServerUrl;
-                updatedSettings.ApiKey = string.IsNullOrWhiteSpace(updatedSettings.CustomApiKey)
-                    ? updatedSettings.ApiKey
-                    : updatedSettings.CustomApiKey;
             }
 
             return true;

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace lingualink_client.Models
 {
@@ -7,8 +8,7 @@ namespace lingualink_client.Models
     {
         public const string OfficialProductionServerUrl = "https://api.lingualink.aiatechco.com/api/v1/";
         public const string DefaultAuthServerUrl = "https://auth.lingualink.aiatechco.com";
-        public const string LegacyCustomServerUrl = "https://api2.lingualink.aiatechco.com/api/v1/";
-        public const string LegacyLocalOfficialServerUrl = "http://localhost:8080/api/v1/";
+
 
         /// <summary>
         /// 获取有效的官方 Core 服务器 URL。
@@ -33,8 +33,16 @@ namespace lingualink_client.Models
         public string GlobalLanguage { get; set; } = Services.LanguageManager.DetectSystemLanguage();
 
         public string TargetLanguages { get; set; } = "英文,日文"; // Default: English, Japanese
-        public string ServerUrl { get; set; } = GetEffectiveOfficialServerUrl();
-        public string ApiKey { get; set; } = string.Empty;
+
+        // Legacy compatibility only. New code should use ActiveServerUrl instead.
+        [Obsolete("Use ActiveServerUrl instead. Kept only for JSON deserialization compatibility.")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? ServerUrl { get; set; }
+
+        // Legacy compatibility only. New code should use ActiveApiKey instead.
+        [Obsolete("Use ActiveApiKey instead. Kept only for JSON deserialization compatibility.")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? ApiKey { get; set; }
 
         // Optional override for update feed (useful for debugging update service)
         public string UpdateFeedOverride { get; set; } = string.Empty;
@@ -78,11 +86,21 @@ namespace lingualink_client.Models
 
         // Account / server selection
         public bool UseCustomServer { get; set; } = false;
-        public string CustomServerUrl { get; set; } = LegacyCustomServerUrl;
+        public string CustomServerUrl { get; set; } = string.Empty;
         public string CustomApiKey { get; set; } = string.Empty;
         public string OfficialServerUrl { get; set; } = GetEffectiveOfficialServerUrl();
+        // 官方模式走 OAuth Bearer token，不需要 API Key，此字段已废弃
+        [Obsolete("Official mode uses OAuth Bearer tokens. Kept only for JSON deserialization compatibility.")]
         public string OfficialApiKey { get; set; } = string.Empty;
         public string PendingSubscriptionOrderOutTradeNo { get; set; } = string.Empty;
+
+        [JsonIgnore]
+        public string ActiveServerUrl => UseCustomServer
+            ? CustomServerUrl
+            : (string.IsNullOrWhiteSpace(OfficialServerUrl) ? GetEffectiveOfficialServerUrl() : OfficialServerUrl);
+
+        [JsonIgnore]
+        public string ActiveApiKey => UseCustomServer ? CustomApiKey : string.Empty;
 
         // Get the currently selected template
         public MessageTemplate GetSelectedTemplate()

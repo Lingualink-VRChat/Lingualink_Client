@@ -134,7 +134,7 @@ namespace lingualink_client.ViewModels.Components
             int? previouslySelectedMicDeviceNumber = wasWorking ? _microphoneManager.SelectedMicrophone?.WaveInDeviceIndex : null;
 
             _appSettings = latestSettings ?? _settingsService.LoadSettings();
-            System.Diagnostics.Debug.WriteLine($"[MainControlViewModel] Loaded settings - ServerUrl: '{_appSettings.ServerUrl}'");
+            System.Diagnostics.Debug.WriteLine($"[MainControlViewModel] Loaded settings - ActiveServerUrl: '{_appSettings.ActiveServerUrl}'");
             UpdateServerModeText();
 
             // 释放旧的协调器

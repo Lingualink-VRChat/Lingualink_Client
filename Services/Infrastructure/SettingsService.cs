@@ -33,7 +33,7 @@ namespace lingualink_client.Services
                     if (settings != null)
                     {
                         bool normalized = NormalizeSettings(settings);
-                        System.Diagnostics.Debug.WriteLine($"[SettingsService] Loaded settings - ServerUrl: '{settings.ServerUrl}'");
+                        System.Diagnostics.Debug.WriteLine($"[SettingsService] Loaded settings - ActiveServerUrl: '{settings.ActiveServerUrl}'");
                         if (normalized)
                         {
                             SaveSettings(settings);
@@ -82,48 +82,44 @@ namespace lingualink_client.Services
                 changed = true;
             }
 
-            bool isLegacyDefaultSelection =
-                settings.UseCustomServer
-                && string.Equals(settings.ServerUrl, AppSettings.LegacyCustomServerUrl, StringComparison.OrdinalIgnoreCase)
-                && string.Equals(settings.CustomServerUrl, AppSettings.LegacyCustomServerUrl, StringComparison.OrdinalIgnoreCase)
-                && string.Equals(settings.OfficialServerUrl, AppSettings.LegacyLocalOfficialServerUrl, StringComparison.OrdinalIgnoreCase)
-                && string.IsNullOrWhiteSpace(settings.ApiKey)
-                && string.IsNullOrWhiteSpace(settings.CustomApiKey)
-                && string.IsNullOrWhiteSpace(settings.OfficialApiKey);
-
-            if (isLegacyDefaultSelection)
-            {
-                settings.UseCustomServer = false;
-                settings.OfficialServerUrl = AppSettings.GetEffectiveOfficialServerUrl();
-                settings.ServerUrl = AppSettings.GetEffectiveOfficialServerUrl();
-                changed = true;
-            }
-
-            if (!settings.UseCustomServer
-                && string.Equals(settings.ServerUrl, AppSettings.LegacyLocalOfficialServerUrl, StringComparison.OrdinalIgnoreCase))
-            {
-                settings.ServerUrl = settings.OfficialServerUrl;
-                changed = true;
-            }
-
             var officialUrl = NormalizeUrl(settings.OfficialServerUrl);
-            var currentUrl = NormalizeUrl(settings.ServerUrl);
-            var customUrl = NormalizeUrl(settings.CustomServerUrl);
 
-            // Old desktop builds could persist the official production endpoint inside the
-            // "custom server" branch, which disables OAuth-backed Bearer auth for translation
-            // requests. When that happens, always migrate back to the official mode
-            // automatically so users don't need to delete local settings manually.
-            if (!string.IsNullOrWhiteSpace(officialUrl)
-                && (string.Equals(currentUrl, officialUrl, StringComparison.OrdinalIgnoreCase)
-                    || string.Equals(customUrl, officialUrl, StringComparison.OrdinalIgnoreCase)))
+#pragma warning disable CS0612
+            var legacyServerUrl = NormalizeUrl(settings.ServerUrl);
+            var legacyApiKey = settings.ApiKey?.Trim() ?? string.Empty;
+
+            if (string.IsNullOrWhiteSpace(settings.CustomServerUrl)
+                && !string.IsNullOrWhiteSpace(legacyServerUrl)
+                && !string.Equals(legacyServerUrl, officialUrl, StringComparison.OrdinalIgnoreCase))
+            {
+                settings.CustomServerUrl = settings.ServerUrl!.Trim();
+                changed = true;
+            }
+
+            if (string.IsNullOrWhiteSpace(settings.CustomApiKey) && !string.IsNullOrWhiteSpace(legacyApiKey))
+            {
+                settings.CustomApiKey = legacyApiKey;
+                changed = true;
+            }
+
+            if (settings.ServerUrl != null)
+            {
+                settings.ServerUrl = null;
+                changed = true;
+            }
+
+            if (settings.ApiKey != null)
+            {
+                settings.ApiKey = null;
+                changed = true;
+            }
+#pragma warning restore CS0612
+
+            var customUrl = NormalizeUrl(settings.CustomServerUrl);
+            if (!string.IsNullOrWhiteSpace(customUrl)
+                && string.Equals(customUrl, officialUrl, StringComparison.OrdinalIgnoreCase))
             {
                 settings.UseCustomServer = false;
-                settings.ServerUrl = settings.OfficialServerUrl;
-                settings.CustomServerUrl = settings.OfficialServerUrl;
-                settings.ApiKey = string.Empty;
-                settings.CustomApiKey = string.Empty;
-                settings.OfficialApiKey = string.Empty;
                 changed = true;
             }
 
@@ -140,7 +136,7 @@ namespace lingualink_client.Services
             try
             {
                 System.Diagnostics.Debug.WriteLine($"[SettingsService] Saving settings to: {_settingsFilePath}");
-                System.Diagnostics.Debug.WriteLine($"[SettingsService] ServerUrl: '{settings.ServerUrl}'");
+                System.Diagnostics.Debug.WriteLine($"[SettingsService] ActiveServerUrl: '{settings.ActiveServerUrl}'");
 
                 string json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
                 File.WriteAllText(_settingsFilePath, json);

@@ -31,7 +31,7 @@ namespace lingualink_client.Services
                 : (null, null);
 
             Debug.WriteLine($"[LingualinkApiServiceFactory] Creating API service with settings:");
-            Debug.WriteLine($"[LingualinkApiServiceFactory]   ServerUrl: '{settings.ServerUrl}'");
+            Debug.WriteLine($"[LingualinkApiServiceFactory]   ActiveServerUrl: '{settings.ActiveServerUrl}'");
             Debug.WriteLine($"[LingualinkApiServiceFactory]   UseCustomServer: {settings.UseCustomServer}");
             Debug.WriteLine($"[LingualinkApiServiceFactory]   UseOfficialAuthFlow: {useOfficialAuthFlow}");
             Debug.WriteLine($"[LingualinkApiServiceFactory]   HasApiKey: {!string.IsNullOrWhiteSpace(apiKey)}");
@@ -39,7 +39,7 @@ namespace lingualink_client.Services
             Debug.WriteLine($"[LingualinkApiServiceFactory]   OpusComplexity: {settings.OpusComplexity}");
 
             return new LingualinkApiService(
-                serverUrl: settings.ServerUrl,
+                serverUrl: settings.ActiveServerUrl,
                 apiKey: apiKey,
                 accessTokenProvider: accessTokenProvider,
                 unauthorizedHandler: unauthorizedHandler,
@@ -54,7 +54,7 @@ namespace lingualink_client.Services
                 return true;
             }
 
-            var serverUrl = NormalizeUrl(settings.ServerUrl);
+            var serverUrl = NormalizeUrl(settings.ActiveServerUrl);
             var officialUrl = NormalizeUrl(string.IsNullOrWhiteSpace(settings.OfficialServerUrl)
                 ? AppSettings.GetEffectiveOfficialServerUrl()
                 : settings.OfficialServerUrl);
@@ -86,9 +86,7 @@ namespace lingualink_client.Services
 
         private static string ResolveCustomServerApiKey(AppSettings settings)
         {
-            return string.IsNullOrWhiteSpace(settings.CustomApiKey)
-                ? settings.ApiKey
-                : settings.CustomApiKey;
+            return settings.ActiveApiKey;
         }
 
         private static (Func<Task<string?>>? accessTokenProvider, Func<Task>? unauthorizedHandler) ResolveAuthContext()
