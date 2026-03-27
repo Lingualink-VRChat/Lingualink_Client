@@ -91,18 +91,28 @@
                         TextWrapping="Wrap"
                         MaxHeight="42" />
                 </StackPanel>
-                <Button
-                    Grid.Column="2"
-                    Content="✕"
-                    Command="{Binding DismissAnnouncementCommand}"
-                    Background="Transparent"
-                    BorderThickness="0"
-                    Foreground="{Binding AnnouncementCloseForeground}"
-                    Padding="8,0"
-                    Cursor="Hand"
-                    VerticalAlignment="Top"
-                    FontSize="13"
-                    FontWeight="SemiBold" />
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Top">
+                    <Button
+                        Content="不再提示"
+                        Command="{Binding PermanentDismissAnnouncementCommand}"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Foreground="{Binding AnnouncementCloseForeground}"
+                        Padding="6,0"
+                        Cursor="Hand"
+                        FontSize="12"
+                        Opacity="0.85" />
+                    <Button
+                        Content="✕"
+                        Command="{Binding DismissAnnouncementCommand}"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Foreground="{Binding AnnouncementCloseForeground}"
+                        Padding="8,0"
+                        Cursor="Hand"
+                        FontSize="13"
+                        FontWeight="SemiBold" />
+                </StackPanel>
             </Grid>
         </Border>
 

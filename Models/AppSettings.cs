@@ -94,6 +94,11 @@ namespace lingualink_client.Models
         public string OfficialApiKey { get; set; } = string.Empty;
         public string PendingSubscriptionOrderOutTradeNo { get; set; } = string.Empty;
 
+        /// <summary>
+        /// 用户永久关闭的公告 ID 列表，持久化到 app_settings.json。
+        /// </summary>
+        public List<string> DismissedAnnouncementIds { get; set; } = new();
+
         [JsonIgnore]
         public string ActiveServerUrl => UseCustomServer
             ? CustomServerUrl

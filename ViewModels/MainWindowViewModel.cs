@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
@@ -20,8 +21,10 @@ namespace lingualink_client.ViewModels
     public partial class MainWindowViewModel : ViewModelBase, IDisposable
     {
         private readonly IAuthService? _authService;
+        private readonly SettingsService _settingsService;
+        private readonly AppSettings _appSettings;
         private readonly DispatcherTimer _announcementPollTimer;
-        private readonly HashSet<string> _dismissedAnnouncementIds = new();
+        private readonly HashSet<string> _sessionDismissedAnnouncementIds = new();
         private List<PublicAnnouncement> _announcements = new();
         private string _currentAnnouncementId = string.Empty;
         private bool _isRefreshingAnnouncements;
@@ -69,6 +72,9 @@ namespace lingualink_client.ViewModels
 
         public MainWindowViewModel()
         {
+            _settingsService = new SettingsService();
+            _appSettings = _settingsService.LoadSettings();
+
             if (ServiceContainer.TryResolve<IAuthService>(out var authService) && authService != null)
             {
                 _authService = authService;
@@ -118,18 +124,11 @@ namespace lingualink_client.ViewModels
             {
                 var items = await _authService.GetActiveAnnouncementsAsync();
                 _announcements = new List<PublicAnnouncement>(items);
+                CleanupStaleDismissedAnnouncementIds();
 
-                var next = _announcements.Find(item => !_dismissedAnnouncementIds.Contains(item.Id));
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    if (next == null)
-                    {
-                        _currentAnnouncementId = string.Empty;
-                        AnnouncementVisible = false;
-                        return;
-                    }
-
-                    ShowAnnouncement(next);
+                    ShowNextAnnouncement();
                 });
             }
             catch (Exception ex)
@@ -147,18 +146,29 @@ namespace lingualink_client.ViewModels
         {
             if (!string.IsNullOrWhiteSpace(_currentAnnouncementId))
             {
-                _dismissedAnnouncementIds.Add(_currentAnnouncementId);
+                _sessionDismissedAnnouncementIds.Add(_currentAnnouncementId);
             }
 
-            var next = _announcements.Find(item => !_dismissedAnnouncementIds.Contains(item.Id));
-            if (next == null)
+            ShowNextAnnouncement();
+        }
+
+        [RelayCommand]
+        private void PermanentDismissAnnouncement()
+        {
+            if (string.IsNullOrWhiteSpace(_currentAnnouncementId))
             {
-                _currentAnnouncementId = string.Empty;
-                AnnouncementVisible = false;
                 return;
             }
 
-            ShowAnnouncement(next);
+            _sessionDismissedAnnouncementIds.Add(_currentAnnouncementId);
+
+            if (!_appSettings.DismissedAnnouncementIds.Contains(_currentAnnouncementId, StringComparer.Ordinal))
+            {
+                _appSettings.DismissedAnnouncementIds.Add(_currentAnnouncementId);
+                _settingsService.SaveSettings(_appSettings);
+            }
+
+            ShowNextAnnouncement();
         }
 
         private void ShowAnnouncement(PublicAnnouncement announcement)
@@ -174,6 +184,50 @@ namespace lingualink_client.ViewModels
             AnnouncementCloseForeground = CreateBrush("#909399");
             AnnouncementIcon = GetIconForType(announcement.Type);
             AnnouncementVisible = true;
+        }
+
+        private void ShowNextAnnouncement()
+        {
+            var next = _announcements.FirstOrDefault(item => !IsAnnouncementDismissed(item.Id));
+            if (next == null)
+            {
+                _currentAnnouncementId = string.Empty;
+                AnnouncementVisible = false;
+                return;
+            }
+
+            ShowAnnouncement(next);
+        }
+
+        private bool IsAnnouncementDismissed(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                return true;
+            }
+
+            return _sessionDismissedAnnouncementIds.Contains(id)
+                || _appSettings.DismissedAnnouncementIds.Contains(id, StringComparer.Ordinal);
+        }
+
+        private void CleanupStaleDismissedAnnouncementIds()
+        {
+            if (_appSettings.DismissedAnnouncementIds.Count == 0)
+            {
+                return;
+            }
+
+            var activeIds = new HashSet<string>(
+                _announcements
+                    .Where(item => !string.IsNullOrWhiteSpace(item.Id))
+                    .Select(item => item.Id),
+                StringComparer.Ordinal);
+
+            var removed = _appSettings.DismissedAnnouncementIds.RemoveAll(id => !activeIds.Contains(id));
+            if (removed > 0)
+            {
+                _settingsService.SaveSettings(_appSettings);
+            }
         }
 
         private static MediaBrush GetBrushForType(string type)

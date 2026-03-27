@@ -76,6 +76,12 @@ namespace lingualink_client.Services
         {
             bool changed = false;
 
+            if (settings.DismissedAnnouncementIds == null)
+            {
+                settings.DismissedAnnouncementIds = new System.Collections.Generic.List<string>();
+                changed = true;
+            }
+
             if (string.IsNullOrWhiteSpace(settings.OfficialServerUrl))
             {
                 settings.OfficialServerUrl = AppSettings.GetEffectiveOfficialServerUrl();
