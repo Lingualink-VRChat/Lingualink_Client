@@ -1378,6 +1378,35 @@ namespace lingualink_client.Services.Auth
             return Array.Empty<SubscriptionPlanInfo>();
         }
 
+        public async Task<IReadOnlyList<PublicAnnouncement>> GetActiveAnnouncementsAsync()
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"{_authServerUrl}/api/v1/public/announcements");
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    Debug.WriteLine($"[AuthService] Failed to load announcements: {response.StatusCode}, {responseContent}");
+                    return Array.Empty<PublicAnnouncement>();
+                }
+
+                var envelope = JsonSerializer.Deserialize<ApiEnvelope<List<PublicAnnouncement>>>(responseContent, JsonOptions);
+                if (envelope?.Code == 0 && envelope.Data != null)
+                {
+                    return envelope.Data;
+                }
+
+                Debug.WriteLine($"[AuthService] Announcements response invalid: {responseContent}");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[AuthService] Failed to load announcements: {ex.Message}");
+            }
+
+            return Array.Empty<PublicAnnouncement>();
+        }
+
         private static IReadOnlyList<SubscriptionPlanInfo> FilterPurchasablePlans(IReadOnlyList<SubscriptionPlanInfo> plans)
         {
             if (plans.Count == 0)

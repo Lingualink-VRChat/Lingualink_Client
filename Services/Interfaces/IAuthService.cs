@@ -81,6 +81,11 @@ namespace lingualink_client.Services.Interfaces
         Task<IReadOnlyList<SubscriptionPlanInfo>> GetSubscriptionPlansAsync();
 
         /// <summary>
+        /// 获取当前生效公告
+        /// </summary>
+        Task<IReadOnlyList<PublicAnnouncement>> GetActiveAnnouncementsAsync();
+
+        /// <summary>
         /// 创建订阅支付订单
         /// </summary>
         Task<CreateSubscriptionOrderResult> CreateSubscriptionOrderAsync(string planId, string paymentMethod, int durationMonths = 1);

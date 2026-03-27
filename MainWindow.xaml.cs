@@ -82,7 +82,7 @@ namespace lingualink_client
 
         private void MainWindow_Closed(object sender, EventArgs e)
         {
-
+            _viewModel.Dispose();
         }
     }
 }

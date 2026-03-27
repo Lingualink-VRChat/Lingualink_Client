@@ -27,6 +27,7 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
@@ -46,9 +47,39 @@
             </ui:TitleBar.TrailingContent>
         </ui:TitleBar>
 
+        <Border
+            Grid.Row="1"
+            Visibility="{Binding AnnouncementVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
+            Background="{Binding AnnouncementBackground}"
+            Padding="16,10"
+            Margin="0,0,0,1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <ui:SymbolIcon Grid.Column="0" Symbol="{Binding AnnouncementIcon}" Margin="0,0,10,0" Foreground="White" />
+                <TextBlock Grid.Column="1" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Foreground="White">
+                    <Run FontWeight="SemiBold" Text="{Binding AnnouncementTitle}" />
+                    <Run Text=" — " />
+                    <Run Text="{Binding AnnouncementContent}" />
+                </TextBlock>
+                <Button
+                    Grid.Column="2"
+                    Content="✕"
+                    Command="{Binding DismissAnnouncementCommand}"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Foreground="White"
+                    Padding="8,0"
+                    Cursor="Hand" />
+            </Grid>
+        </Border>
+
         <ui:NavigationView
             x:Name="RootNavigation"
-            Grid.Row="1"
+            Grid.Row="2"
             IsBackButtonVisible="Collapsed"
             OpenPaneLength="200">
             <ui:NavigationView.Header>

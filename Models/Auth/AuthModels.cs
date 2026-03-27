@@ -255,6 +255,33 @@ namespace lingualink_client.Models.Auth
         }
     }
 
+    public class PublicAnnouncement
+    {
+        [JsonPropertyName("id")]
+        public string Id { get; set; } = string.Empty;
+
+        [JsonPropertyName("title")]
+        public string Title { get; set; } = string.Empty;
+
+        [JsonPropertyName("content")]
+        public string Content { get; set; } = string.Empty;
+
+        [JsonPropertyName("type")]
+        public string Type { get; set; } = "info";
+
+        [JsonPropertyName("priority")]
+        public int Priority { get; set; }
+
+        [JsonPropertyName("start_at")]
+        public DateTime? StartAt { get; set; }
+
+        [JsonPropertyName("end_at")]
+        public DateTime? EndAt { get; set; }
+
+        [JsonPropertyName("created_at")]
+        public string CreatedAt { get; set; } = string.Empty;
+    }
+
     /// <summary>
     /// 支付方式选项（用于下单 UI 绑定）
     /// </summary>
