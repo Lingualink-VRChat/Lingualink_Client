@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using lingualink_client.Models;
 using lingualink_client.Models.Auth;
 using lingualink_client.Services;
 using lingualink_client.Services.Interfaces;
