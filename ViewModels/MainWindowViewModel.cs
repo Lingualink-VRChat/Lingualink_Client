@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Media;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -11,6 +10,10 @@ using lingualink_client.Models.Auth;
 using lingualink_client.Services;
 using lingualink_client.Services.Interfaces;
 using Wpf.Ui.Controls;
+using MediaBrush = System.Windows.Media.Brush;
+using MediaColor = System.Windows.Media.Color;
+using MediaColorConverter = System.Windows.Media.ColorConverter;
+using MediaSolidColorBrush = System.Windows.Media.SolidColorBrush;
 
 namespace lingualink_client.ViewModels
 {
@@ -44,7 +47,7 @@ namespace lingualink_client.ViewModels
         private string _announcementContent = string.Empty;
 
         [ObservableProperty]
-        private Brush _announcementBackground = CreateBrush("#CC1A3A5C");
+        private MediaBrush _announcementBackground = CreateBrush("#CC1A3A5C");
 
         [ObservableProperty]
         private SymbolRegular _announcementIcon = SymbolRegular.Info24;
@@ -153,7 +156,7 @@ namespace lingualink_client.ViewModels
             AnnouncementVisible = true;
         }
 
-        private static Brush GetBrushForType(string type)
+        private static MediaBrush GetBrushForType(string type)
         {
             return type?.Trim().ToLowerInvariant() switch
             {
@@ -173,9 +176,9 @@ namespace lingualink_client.ViewModels
             };
         }
 
-        private static Brush CreateBrush(string hex)
+        private static MediaBrush CreateBrush(string hex)
         {
-            return new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex));
+            return new MediaSolidColorBrush((MediaColor)MediaColorConverter.ConvertFromString(hex));
         }
 
         public void Dispose()
