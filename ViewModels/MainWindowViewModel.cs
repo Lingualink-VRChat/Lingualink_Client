@@ -50,6 +50,21 @@ namespace lingualink_client.ViewModels
         private MediaBrush _announcementBackground = CreateBrush("#CC1A3A5C");
 
         [ObservableProperty]
+        private MediaBrush _announcementBorderBrush = CreateBrush("#E9E9EB");
+
+        [ObservableProperty]
+        private MediaBrush _announcementTitleForeground = CreateBrush("#303133");
+
+        [ObservableProperty]
+        private MediaBrush _announcementContentForeground = CreateBrush("#606266");
+
+        [ObservableProperty]
+        private MediaBrush _announcementAccentForeground = CreateBrush("#909399");
+
+        [ObservableProperty]
+        private MediaBrush _announcementCloseForeground = CreateBrush("#909399");
+
+        [ObservableProperty]
         private SymbolRegular _announcementIcon = SymbolRegular.Info24;
 
         public MainWindowViewModel()
@@ -152,6 +167,11 @@ namespace lingualink_client.ViewModels
             AnnouncementTitle = announcement.Title;
             AnnouncementContent = announcement.Content;
             AnnouncementBackground = GetBrushForType(announcement.Type);
+            AnnouncementBorderBrush = GetBorderBrushForType(announcement.Type);
+            AnnouncementTitleForeground = CreateBrush("#303133");
+            AnnouncementContentForeground = CreateBrush("#606266");
+            AnnouncementAccentForeground = GetAccentBrushForType(announcement.Type);
+            AnnouncementCloseForeground = CreateBrush("#909399");
             AnnouncementIcon = GetIconForType(announcement.Type);
             AnnouncementVisible = true;
         }
@@ -160,9 +180,29 @@ namespace lingualink_client.ViewModels
         {
             return type?.Trim().ToLowerInvariant() switch
             {
-                "warning" => CreateBrush("#CC5C4A1A"),
-                "critical" => CreateBrush("#CC5C1A1A"),
-                _ => CreateBrush("#CC1A3A5C"),
+                "warning" => CreateBrush("#FDF6EC"),
+                "critical" => CreateBrush("#FEF0F0"),
+                _ => CreateBrush("#F4F4F5"),
+            };
+        }
+
+        private static MediaBrush GetBorderBrushForType(string type)
+        {
+            return type?.Trim().ToLowerInvariant() switch
+            {
+                "warning" => CreateBrush("#FAECD8"),
+                "critical" => CreateBrush("#FDE2E2"),
+                _ => CreateBrush("#E9E9EB"),
+            };
+        }
+
+        private static MediaBrush GetAccentBrushForType(string type)
+        {
+            return type?.Trim().ToLowerInvariant() switch
+            {
+                "warning" => CreateBrush("#E6A23C"),
+                "critical" => CreateBrush("#F56C6C"),
+                _ => CreateBrush("#909399"),
             };
         }
 

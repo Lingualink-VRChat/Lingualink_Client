@@ -51,29 +51,58 @@
             Grid.Row="1"
             Visibility="{Binding AnnouncementVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
             Background="{Binding AnnouncementBackground}"
-            Padding="16,10"
-            Margin="0,0,0,1">
+            BorderBrush="{Binding AnnouncementBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="10"
+            Padding="14,12"
+            Margin="14,0,14,8">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <ui:SymbolIcon Grid.Column="0" Symbol="{Binding AnnouncementIcon}" Margin="0,0,10,0" Foreground="White" />
-                <TextBlock Grid.Column="1" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Foreground="White">
-                    <Run FontWeight="SemiBold" Text="{Binding AnnouncementTitle}" />
-                    <Run Text=" — " />
-                    <Run Text="{Binding AnnouncementContent}" />
-                </TextBlock>
+                <Border
+                    Grid.Column="0"
+                    Width="32"
+                    Height="32"
+                    Margin="0,0,12,0"
+                    CornerRadius="16"
+                    Background="#FFFFFFFF"
+                    BorderBrush="{Binding AnnouncementBorderBrush}"
+                    BorderThickness="1"
+                    VerticalAlignment="Top">
+                    <ui:SymbolIcon
+                        Symbol="{Binding AnnouncementIcon}"
+                        Foreground="{Binding AnnouncementAccentForeground}"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center" />
+                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock
+                        Text="{Binding AnnouncementTitle}"
+                        FontWeight="SemiBold"
+                        Foreground="{Binding AnnouncementTitleForeground}"
+                        TextTrimming="CharacterEllipsis" />
+                    <TextBlock
+                        Margin="0,4,0,0"
+                        Text="{Binding AnnouncementContent}"
+                        Foreground="{Binding AnnouncementContentForeground}"
+                        TextWrapping="Wrap"
+                        MaxHeight="42" />
+                </StackPanel>
                 <Button
                     Grid.Column="2"
                     Content="✕"
                     Command="{Binding DismissAnnouncementCommand}"
                     Background="Transparent"
                     BorderThickness="0"
-                    Foreground="White"
+                    Foreground="{Binding AnnouncementCloseForeground}"
                     Padding="8,0"
-                    Cursor="Hand" />
+                    Cursor="Hand"
+                    VerticalAlignment="Top"
+                    FontSize="13"
+                    FontWeight="SemiBold" />
             </Grid>
         </Border>
 
