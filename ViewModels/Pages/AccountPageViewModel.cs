@@ -65,8 +65,6 @@ namespace lingualink_client.ViewModels
         public string SubscriptionOverviewLabel => LanguageManager.GetString("AccountSubscriptionOverview");
         public string WalletSectionLabel => "钱包与自动续费";
         public string WalletBalanceLabel => "账户余额";
-        public string WalletTotalRechargedLabel => "累计充值";
-        public string WalletTotalConsumedLabel => "累计消费";
         public string WalletRechargeLabel => "充值";
         public string WalletAutoRenewLabel => "自动续费";
         public string WalletEnableAutoRenewLabel => "开启自动续费";
@@ -143,12 +141,6 @@ namespace lingualink_client.ViewModels
 
         [ObservableProperty]
         private int _walletBalanceCents;
-
-        [ObservableProperty]
-        private long _walletTotalRechargedCents;
-
-        [ObservableProperty]
-        private long _walletTotalConsumedCents;
 
         [ObservableProperty]
         private bool _isLoadingWallet;
@@ -290,8 +282,6 @@ namespace lingualink_client.ViewModels
         public string WechatBindingStatusDisplay => BuildSocialBindingStatusDisplay(UserProfile?.SocialBindings?.Wechat);
         public string QqBindingStatusDisplay => BuildSocialBindingStatusDisplay(UserProfile?.SocialBindings?.Qq);
         public string WalletBalanceDisplay => FormatCurrencyAmount(WalletBalanceCents);
-        public string WalletTotalRechargedDisplay => FormatCurrencyAmount((int)Math.Clamp(WalletTotalRechargedCents, int.MinValue, int.MaxValue));
-        public string WalletTotalConsumedDisplay => FormatCurrencyAmount((int)Math.Clamp(WalletTotalConsumedCents, int.MinValue, int.MaxValue));
         public string AutoRenewStatusDisplay => UserProfile?.Subscription?.AutoRenew == true ? "自动续费中" : "未开启";
         public string AutoRenewActionText => UserProfile?.Subscription?.AutoRenew == true ? WalletDisableAutoRenewLabel : WalletEnableAutoRenewLabel;
         public bool HasRenewalWarning => !string.IsNullOrWhiteSpace(RenewalWarning);
@@ -350,16 +340,6 @@ namespace lingualink_client.ViewModels
         {
             OnPropertyChanged(nameof(WalletBalanceDisplay));
             RechargeWalletCommand.NotifyCanExecuteChanged();
-        }
-
-        partial void OnWalletTotalRechargedCentsChanged(long value)
-        {
-            OnPropertyChanged(nameof(WalletTotalRechargedDisplay));
-        }
-
-        partial void OnWalletTotalConsumedCentsChanged(long value)
-        {
-            OnPropertyChanged(nameof(WalletTotalConsumedDisplay));
         }
 
         partial void OnIsLoadingWalletChanged(bool value)
@@ -806,8 +786,6 @@ namespace lingualink_client.ViewModels
         private void ResetWalletPresentation()
         {
             WalletBalanceCents = 0;
-            WalletTotalRechargedCents = 0;
-            WalletTotalConsumedCents = 0;
             IsLoadingWallet = false;
         }
 
@@ -824,8 +802,6 @@ namespace lingualink_client.ViewModels
             {
                 var wallet = await _authService.GetWalletAsync();
                 WalletBalanceCents = wallet?.BalanceCents ?? 0;
-                WalletTotalRechargedCents = wallet?.TotalRechargedCents ?? 0;
-                WalletTotalConsumedCents = wallet?.TotalConsumedCents ?? 0;
             }
             catch (Exception ex)
             {

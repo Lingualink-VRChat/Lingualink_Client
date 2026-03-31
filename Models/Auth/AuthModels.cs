@@ -644,12 +644,6 @@ namespace lingualink_client.Models.Auth
         [JsonPropertyName("balance_cents")]
         public int BalanceCents { get; set; }
 
-        [JsonPropertyName("total_recharged_cents")]
-        public long TotalRechargedCents { get; set; }
-
-        [JsonPropertyName("total_consumed_cents")]
-        public long TotalConsumedCents { get; set; }
-
         [JsonPropertyName("created_at")]
         public DateTime? CreatedAt { get; set; }
 

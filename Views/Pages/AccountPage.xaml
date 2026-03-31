@@ -194,24 +194,16 @@
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="Auto" />
                                         </Grid.RowDefinitions>
 
                                         <ui:TextBlock Grid.Row="0" Grid.Column="0" FontWeight="Medium" Text="{Binding WalletBalanceLabel}" />
                                         <ui:TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding WalletBalanceDisplay}" />
 
-                                        <ui:TextBlock Grid.Row="1" Grid.Column="0" Margin="0,6,0,0" FontWeight="Medium" Text="{Binding WalletTotalRechargedLabel}" />
-                                        <ui:TextBlock Grid.Row="1" Grid.Column="1" Margin="0,6,0,0" Text="{Binding WalletTotalRechargedDisplay}" />
-
-                                        <ui:TextBlock Grid.Row="2" Grid.Column="0" Margin="0,6,0,0" FontWeight="Medium" Text="{Binding WalletTotalConsumedLabel}" />
-                                        <ui:TextBlock Grid.Row="2" Grid.Column="1" Margin="0,6,0,0" Text="{Binding WalletTotalConsumedDisplay}" />
-
-                                        <ui:TextBlock Grid.Row="3" Grid.Column="0" Margin="0,6,0,0" FontWeight="Medium" Text="{Binding WalletAutoRenewLabel}" />
-                                        <ui:TextBlock Grid.Row="3" Grid.Column="1" Margin="0,6,0,0" Text="{Binding AutoRenewStatusDisplay}" />
+                                        <ui:TextBlock Grid.Row="1" Grid.Column="0" Margin="0,6,0,0" FontWeight="Medium" Text="{Binding WalletAutoRenewLabel}" />
+                                        <ui:TextBlock Grid.Row="1" Grid.Column="1" Margin="0,6,0,0" Text="{Binding AutoRenewStatusDisplay}" />
 
                                         <ui:TextBlock
-                                            Grid.Row="4"
+                                            Grid.Row="2"
                                             Grid.Column="1"
                                             Margin="0,8,0,0"
                                             FontSize="12"
