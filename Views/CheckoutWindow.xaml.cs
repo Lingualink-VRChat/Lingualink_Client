@@ -14,6 +14,7 @@ namespace lingualink_client.Views
     {
         private readonly string _accessToken;
         private readonly string _authHost;
+        private readonly string _mode;
         private CoreWebView2? _coreWebView2;
 
         /// <summary>
@@ -21,7 +22,7 @@ namespace lingualink_client.Views
         /// </summary>
         public event Action<string>? PaymentCompleted;
 
-        public CheckoutWindow(string accessToken, string? authHost = null)
+        public CheckoutWindow(string accessToken, string? authHost = null, string? mode = null)
         {
             InitializeComponent();
 
@@ -29,6 +30,7 @@ namespace lingualink_client.Views
             _authHost = string.IsNullOrWhiteSpace(authHost)
                 ? AppSettings.GetEffectiveAuthServerUrl()
                 : authHost.Trim().TrimEnd('/');
+            _mode = string.IsNullOrWhiteSpace(mode) ? string.Empty : mode.Trim();
 
             Loaded += OnLoaded;
         }
@@ -57,6 +59,10 @@ namespace lingualink_client.Views
                 _coreWebView2.Settings.IsStatusBarEnabled = false;
 
                 var checkoutUrl = $"{_authHost}/checkout?token={Uri.EscapeDataString(_accessToken)}";
+                if (!string.IsNullOrWhiteSpace(_mode))
+                {
+                    checkoutUrl += $"&mode={Uri.EscapeDataString(_mode)}";
+                }
                 _coreWebView2.Navigate(checkoutUrl);
             }
             catch (Exception ex)

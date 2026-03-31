@@ -184,6 +184,72 @@
                                 Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
                                 CornerRadius="8">
                                 <StackPanel>
+                                    <ui:TextBlock FontSize="14" FontWeight="SemiBold" Text="{Binding WalletSectionLabel}" />
+                                    <Grid Margin="0,10,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="100" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <ui:TextBlock Grid.Row="0" Grid.Column="0" FontWeight="Medium" Text="{Binding WalletBalanceLabel}" />
+                                        <ui:TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding WalletBalanceDisplay}" />
+
+                                        <ui:TextBlock Grid.Row="1" Grid.Column="0" Margin="0,6,0,0" FontWeight="Medium" Text="{Binding WalletTotalRechargedLabel}" />
+                                        <ui:TextBlock Grid.Row="1" Grid.Column="1" Margin="0,6,0,0" Text="{Binding WalletTotalRechargedDisplay}" />
+
+                                        <ui:TextBlock Grid.Row="2" Grid.Column="0" Margin="0,6,0,0" FontWeight="Medium" Text="{Binding WalletTotalConsumedLabel}" />
+                                        <ui:TextBlock Grid.Row="2" Grid.Column="1" Margin="0,6,0,0" Text="{Binding WalletTotalConsumedDisplay}" />
+
+                                        <ui:TextBlock Grid.Row="3" Grid.Column="0" Margin="0,6,0,0" FontWeight="Medium" Text="{Binding WalletAutoRenewLabel}" />
+                                        <ui:TextBlock Grid.Row="3" Grid.Column="1" Margin="0,6,0,0" Text="{Binding AutoRenewStatusDisplay}" />
+
+                                        <ui:TextBlock
+                                            Grid.Row="4"
+                                            Grid.Column="1"
+                                            Margin="0,8,0,0"
+                                            FontSize="12"
+                                            Foreground="{DynamicResource SystemFillColorCautionBrush}"
+                                            Text="{Binding RenewalWarning}"
+                                            TextWrapping="Wrap"
+                                            Visibility="{Binding HasRenewalWarning, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                    </Grid>
+
+                                    <StackPanel Margin="0,12,0,0" Orientation="Horizontal">
+                                        <ui:Button
+                                            Width="96"
+                                            Appearance="Primary"
+                                            Command="{Binding RechargeWalletCommand}"
+                                            Content="{Binding WalletRechargeLabel}" />
+                                        <ui:Button
+                                            Width="132"
+                                            Margin="12,0,0,0"
+                                            Appearance="Secondary"
+                                            Command="{Binding ToggleAutoRenewCommand}"
+                                            Content="{Binding AutoRenewActionText}" />
+                                        <ui:ProgressRing
+                                            Width="20"
+                                            Height="20"
+                                            Margin="12,0,0,0"
+                                            VerticalAlignment="Center"
+                                            IsIndeterminate="True"
+                                            Visibility="{Binding IsUpdatingAutoRenew, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <Border
+                                Margin="0,16,0,0"
+                                Padding="12"
+                                Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
+                                CornerRadius="8">
+                                <StackPanel>
                                     <ui:TextBlock FontSize="14" FontWeight="SemiBold" Text="{Binding PersonalInfoLabel}" />
 
                                     <Border

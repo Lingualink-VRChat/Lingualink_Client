@@ -29,6 +29,7 @@ namespace lingualink_client.Services.Auth
         private TokenResponse? _currentToken;
         private UserProfile? _currentUser;
         private bool _disposed = false;
+        private bool _deviceFingerprintReportedThisSession = false;
 
         private const string ClientCallbackUrl = "http://localhost:23456/callback";
         private const string OAuthLoginEndpoint = "/api/v1/auth/oauth/login";
@@ -97,6 +98,7 @@ namespace lingualink_client.Services.Auth
             _currentUser = await FetchUserProfileAsync();
             if (_currentUser != null)
             {
+                await TryReportDeviceFingerprintOnceAsync();
                 LoginStateChanged?.Invoke(this, true);
                 Debug.WriteLine($"[AuthService] Session restored for user: {DescribeUser(_currentUser)}");
             }
@@ -205,6 +207,7 @@ namespace lingualink_client.Services.Auth
                     _currentUser = profileFromApi;
                 }
 
+                await TryReportDeviceFingerprintOnceAsync();
                 Debug.WriteLine($"[AuthService] User profile fetched: {DescribeUser(_currentUser)}");
 
                 LoginStateChanged?.Invoke(this, true);
@@ -573,7 +576,8 @@ namespace lingualink_client.Services.Auth
                 EndDate = summary.Subscription?.EndDate,
                 AutoRenew = summary.Subscription?.AutoRenew ?? false,
                 Plan = summary.Plan,
-                LegacyPlanName = summary.Plan?.Name
+                LegacyPlanName = summary.Plan?.Name,
+                RenewalWarning = summary.RenewalWarning
             };
         }
 
@@ -584,6 +588,87 @@ namespace lingualink_client.Services.Auth
         {
             _currentUser = await FetchUserProfileAsync();
             return _currentUser;
+        }
+
+        public async Task<UserWalletInfo?> GetWalletAsync()
+        {
+            try
+            {
+                var response = await SendAuthorizedWithRefreshRetryAsync(token =>
+                {
+                    var request = new HttpRequestMessage(HttpMethod.Get, $"{_authServerUrl}/api/v1/user/wallet");
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    return request;
+                });
+
+                if (response == null)
+                {
+                    return null;
+                }
+
+                var json = await response.Content.ReadAsStringAsync();
+                var result = JsonSerializer.Deserialize<UserWalletResponse>(json, JsonOptions);
+                if (response.IsSuccessStatusCode && result?.Code == 0)
+                {
+                    return result.Data;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[AuthService] Failed to fetch wallet: {ex.Message}");
+            }
+
+            return null;
+        }
+
+        public async Task<ApiOperationResult> SetSubscriptionAutoRenewAsync(bool enabled)
+        {
+            try
+            {
+                var payload = JsonSerializer.Serialize(new { enabled });
+                var response = await SendAuthorizedWithRefreshRetryAsync(token =>
+                {
+                    var request = new HttpRequestMessage(HttpMethod.Post, $"{_authServerUrl}/api/v1/user/subscription/auto-renew");
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
+                    return request;
+                });
+
+                if (response == null)
+                {
+                    return new ApiOperationResult
+                    {
+                        Success = false,
+                        ErrorMessage = "登录状态已失效，请重新登录"
+                    };
+                }
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+                if (response.IsSuccessStatusCode)
+                {
+                    await RefreshUserProfileAsync();
+                    return new ApiOperationResult
+                    {
+                        Success = true,
+                        Message = enabled ? "已开启自动续费" : "已关闭自动续费"
+                    };
+                }
+
+                return new ApiOperationResult
+                {
+                    Success = false,
+                    ErrorMessage = ResolveApiErrorMessage(responseContent, enabled ? "开启自动续费失败" : "关闭自动续费失败")
+                };
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[AuthService] Failed to set auto renew: {ex.Message}");
+                return new ApiOperationResult
+                {
+                    Success = false,
+                    ErrorMessage = ex.Message
+                };
+            }
         }
 
         /// <summary>
@@ -1803,12 +1888,52 @@ namespace lingualink_client.Services.Auth
             return Task.CompletedTask;
         }
 
+        private async Task TryReportDeviceFingerprintOnceAsync()
+        {
+            if (_deviceFingerprintReportedThisSession || _currentToken == null)
+            {
+                return;
+            }
+
+            try
+            {
+                var fingerprint = DeviceFingerprintService.Generate();
+                if (string.IsNullOrWhiteSpace(fingerprint))
+                {
+                    return;
+                }
+
+                var payload = JsonSerializer.Serialize(new
+                {
+                    fingerprint
+                });
+
+                var response = await SendAuthorizedWithRefreshRetryAsync(token =>
+                {
+                    var request = new HttpRequestMessage(HttpMethod.Post, $"{_authServerUrl}/api/v1/user/device-fingerprint");
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
+                    return request;
+                });
+
+                if (response != null && response.IsSuccessStatusCode)
+                {
+                    _deviceFingerprintReportedThisSession = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[AuthService] Device fingerprint report skipped: {ex.Message}");
+            }
+        }
+
         private void ClearLocalSession()
         {
             var hadSession = _currentToken != null || _currentUser != null;
 
             _currentToken = null;
             _currentUser = null;
+            _deviceFingerprintReportedThisSession = false;
             _tokenStorage.ClearToken();
 
             if (hadSession)

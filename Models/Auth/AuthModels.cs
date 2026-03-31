@@ -111,6 +111,9 @@ namespace lingualink_client.Models.Auth
         [JsonPropertyName("renew_url")]
         public string? RenewUrl { get; set; }
 
+        [JsonPropertyName("renewal_warning")]
+        public string? RenewalWarning { get; set; }
+
         [JsonPropertyName("plan")]
         public SubscriptionPlanInfo? Plan { get; set; }
 
@@ -628,6 +631,45 @@ namespace lingualink_client.Models.Auth
 
         [JsonPropertyName("is_active")]
         public bool IsActive { get; set; }
+
+        [JsonPropertyName("renewal_warning")]
+        public string? RenewalWarning { get; set; }
+    }
+
+    public class UserWalletInfo
+    {
+        [JsonPropertyName("user_id")]
+        public string UserId { get; set; } = string.Empty;
+
+        [JsonPropertyName("balance_cents")]
+        public int BalanceCents { get; set; }
+
+        [JsonPropertyName("total_recharged_cents")]
+        public long TotalRechargedCents { get; set; }
+
+        [JsonPropertyName("total_consumed_cents")]
+        public long TotalConsumedCents { get; set; }
+
+        [JsonPropertyName("created_at")]
+        public DateTime? CreatedAt { get; set; }
+
+        [JsonPropertyName("updated_at")]
+        public DateTime? UpdatedAt { get; set; }
+    }
+
+    public class UserWalletResponse
+    {
+        [JsonPropertyName("code")]
+        public int Code { get; set; }
+
+        [JsonPropertyName("message")]
+        public string? Message { get; set; }
+
+        [JsonPropertyName("error")]
+        public string? Error { get; set; }
+
+        [JsonPropertyName("data")]
+        public UserWalletInfo? Data { get; set; }
     }
 
     public class UserSubscriptionRecord

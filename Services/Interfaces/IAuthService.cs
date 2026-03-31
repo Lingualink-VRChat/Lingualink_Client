@@ -86,6 +86,16 @@ namespace lingualink_client.Services.Interfaces
         Task<IReadOnlyList<PublicAnnouncement>> GetActiveAnnouncementsAsync();
 
         /// <summary>
+        /// 获取当前用户钱包余额
+        /// </summary>
+        Task<UserWalletInfo?> GetWalletAsync();
+
+        /// <summary>
+        /// 设置当前订阅的自动续费状态
+        /// </summary>
+        Task<ApiOperationResult> SetSubscriptionAutoRenewAsync(bool enabled);
+
+        /// <summary>
         /// 创建订阅支付订单
         /// </summary>
         Task<CreateSubscriptionOrderResult> CreateSubscriptionOrderAsync(string planId, string paymentMethod, int durationMonths = 1);

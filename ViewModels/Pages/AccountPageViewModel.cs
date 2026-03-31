@@ -63,6 +63,15 @@ namespace lingualink_client.ViewModels
         public string CurrentPlanPrefixLabel => LanguageManager.GetString("AccountCurrentPlanPrefix");
         public string RefreshProfileTooltipLabel => LanguageManager.GetString("AccountRefreshProfileTooltip");
         public string SubscriptionOverviewLabel => LanguageManager.GetString("AccountSubscriptionOverview");
+        public string WalletSectionLabel => "钱包与自动续费";
+        public string WalletBalanceLabel => "账户余额";
+        public string WalletTotalRechargedLabel => "累计充值";
+        public string WalletTotalConsumedLabel => "累计消费";
+        public string WalletRechargeLabel => "充值";
+        public string WalletAutoRenewLabel => "自动续费";
+        public string WalletEnableAutoRenewLabel => "开启自动续费";
+        public string WalletDisableAutoRenewLabel => "关闭自动续费";
+        public string WalletRenewalWarningLabel => "续费提醒";
         public string SubscriptionCurrentStatusLabel => LanguageManager.GetString("AccountSubscriptionCurrentStatus");
         public string SubscriptionCurrentPlanLabel => LanguageManager.GetString("AccountSubscriptionCurrentPlan");
         public string SubscriptionRemainingLabel => LanguageManager.GetString("AccountSubscriptionRemaining");
@@ -131,6 +140,24 @@ namespace lingualink_client.ViewModels
 
         [ObservableProperty]
         private string _expiryReminder = string.Empty;
+
+        [ObservableProperty]
+        private int _walletBalanceCents;
+
+        [ObservableProperty]
+        private long _walletTotalRechargedCents;
+
+        [ObservableProperty]
+        private long _walletTotalConsumedCents;
+
+        [ObservableProperty]
+        private bool _isLoadingWallet;
+
+        [ObservableProperty]
+        private bool _isUpdatingAutoRenew;
+
+        [ObservableProperty]
+        private string _renewalWarning = string.Empty;
 
         [ObservableProperty]
         private bool _hasActiveSubscription;
@@ -262,6 +289,12 @@ namespace lingualink_client.ViewModels
         public bool IsQqBound => UserProfile?.SocialBindings?.Qq?.Bound == true;
         public string WechatBindingStatusDisplay => BuildSocialBindingStatusDisplay(UserProfile?.SocialBindings?.Wechat);
         public string QqBindingStatusDisplay => BuildSocialBindingStatusDisplay(UserProfile?.SocialBindings?.Qq);
+        public string WalletBalanceDisplay => FormatCurrencyAmount(WalletBalanceCents);
+        public string WalletTotalRechargedDisplay => FormatCurrencyAmount((int)Math.Clamp(WalletTotalRechargedCents, int.MinValue, int.MaxValue));
+        public string WalletTotalConsumedDisplay => FormatCurrencyAmount((int)Math.Clamp(WalletTotalConsumedCents, int.MinValue, int.MaxValue));
+        public string AutoRenewStatusDisplay => UserProfile?.Subscription?.AutoRenew == true ? "自动续费中" : "未开启";
+        public string AutoRenewActionText => UserProfile?.Subscription?.AutoRenew == true ? WalletDisableAutoRenewLabel : WalletEnableAutoRenewLabel;
+        public bool HasRenewalWarning => !string.IsNullOrWhiteSpace(RenewalWarning);
 
 
         private static string BuildSocialBindingStatusDisplay(SocialBindingInfo? binding)
@@ -301,12 +334,48 @@ namespace lingualink_client.ViewModels
             OnPropertyChanged(nameof(IsQqBound));
             OnPropertyChanged(nameof(WechatBindingStatusDisplay));
             OnPropertyChanged(nameof(QqBindingStatusDisplay));
+            OnPropertyChanged(nameof(AutoRenewStatusDisplay));
+            OnPropertyChanged(nameof(AutoRenewActionText));
             SyncProfileEditorWithUser(value);
             BeginEditUsernameCommand.NotifyCanExecuteChanged();
             BeginEditEmailCommand.NotifyCanExecuteChanged();
             BeginEditProviderCommand.NotifyCanExecuteChanged();
             BindQqProviderCommand.NotifyCanExecuteChanged();
             BindWechatProviderCommand.NotifyCanExecuteChanged();
+            RechargeWalletCommand.NotifyCanExecuteChanged();
+            ToggleAutoRenewCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnWalletBalanceCentsChanged(int value)
+        {
+            OnPropertyChanged(nameof(WalletBalanceDisplay));
+            RechargeWalletCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnWalletTotalRechargedCentsChanged(long value)
+        {
+            OnPropertyChanged(nameof(WalletTotalRechargedDisplay));
+        }
+
+        partial void OnWalletTotalConsumedCentsChanged(long value)
+        {
+            OnPropertyChanged(nameof(WalletTotalConsumedDisplay));
+        }
+
+        partial void OnIsLoadingWalletChanged(bool value)
+        {
+            RechargeWalletCommand.NotifyCanExecuteChanged();
+            ToggleAutoRenewCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnIsUpdatingAutoRenewChanged(bool value)
+        {
+            ToggleAutoRenewCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnRenewalWarningChanged(string value)
+        {
+            OnPropertyChanged(nameof(HasRenewalWarning));
         }
 
         partial void OnEditUsernameChanged(string value)
@@ -541,6 +610,7 @@ namespace lingualink_client.ViewModels
                 ResetBindEmailState();
                 IsEditingProvider = false;
                 ClearPlans();
+                ResetWalletPresentation();
                 StopOrderPollingInternal();
                 ResetOrderState();
                 return;
@@ -556,6 +626,7 @@ namespace lingualink_client.ViewModels
                     : UserProfile.Email ?? UserProfile.Id ?? LanguageManager.GetString("AccountDefaultUserName");
 
                 UpdateSubscriptionPresentation(UserProfile.Subscription);
+                _ = RefreshWalletAsync();
             }
             else
             {
@@ -565,6 +636,7 @@ namespace lingualink_client.ViewModels
                 IsEditingProvider = false;
                 LoggedInUsername = string.Empty;
                 ResetSubscriptionPresentation();
+                ResetWalletPresentation();
                 ClearPlans();
                 StopOrderPollingInternal();
                 ResetOrderState();
@@ -594,6 +666,8 @@ namespace lingualink_client.ViewModels
             CreateSubscriptionOrderCommand.NotifyCanExecuteChanged();
             QueryOrderStatusCommand.NotifyCanExecuteChanged();
             StopOrderPollingCommand.NotifyCanExecuteChanged();
+            RechargeWalletCommand.NotifyCanExecuteChanged();
+            ToggleAutoRenewCommand.NotifyCanExecuteChanged();
         }
 
         private async Task EnsureUserProfileLoadedAsync()
@@ -715,6 +789,7 @@ namespace lingualink_client.ViewModels
             SubscriptionStatus = BuildSubscriptionStatusText(subscription);
             SubscriptionRemainingDisplay = BuildSubscriptionRemainingText(subscription);
             ExpiryReminder = BuildExpiryReminderText(subscription);
+            RenewalWarning = subscription.RenewalWarning ?? string.Empty;
         }
 
         private void ResetSubscriptionPresentation()
@@ -725,6 +800,41 @@ namespace lingualink_client.ViewModels
             CurrentPlanDisplay = LanguageManager.GetString("AccountPlanUnsubscribed");
             SubscriptionRemainingDisplay = LanguageManager.GetString("AccountPlanUnsubscribed");
             ExpiryReminder = LanguageManager.GetString("AccountSubscriptionPromptNoActiveSubscription");
+            RenewalWarning = string.Empty;
+        }
+
+        private void ResetWalletPresentation()
+        {
+            WalletBalanceCents = 0;
+            WalletTotalRechargedCents = 0;
+            WalletTotalConsumedCents = 0;
+            IsLoadingWallet = false;
+        }
+
+        private async Task RefreshWalletAsync()
+        {
+            if (_authService == null || !IsLoggedIn)
+            {
+                ResetWalletPresentation();
+                return;
+            }
+
+            IsLoadingWallet = true;
+            try
+            {
+                var wallet = await _authService.GetWalletAsync();
+                WalletBalanceCents = wallet?.BalanceCents ?? 0;
+                WalletTotalRechargedCents = wallet?.TotalRechargedCents ?? 0;
+                WalletTotalConsumedCents = wallet?.TotalConsumedCents ?? 0;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[AccountPageViewModel] Refresh wallet exception: {ex.Message}");
+            }
+            finally
+            {
+                IsLoadingWallet = false;
+            }
         }
 
         private static string BuildSubscriptionStatusText(SubscriptionInfo subscription)
@@ -838,6 +948,11 @@ namespace lingualink_client.ViewModels
         private static string FormatDate(DateTime value)
         {
             return value.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
+        }
+
+        private static string FormatCurrencyAmount(int amountCents)
+        {
+            return $"¥{amountCents / 100.0:0.00}";
         }
 
         private static string MapUserStatus(string? status)
@@ -1541,10 +1656,12 @@ namespace lingualink_client.ViewModels
             // 无论是否捕获到 postMessage，都刷新一次资料；
             // 部分 Web 环境只触发 window.close，不会直达 WebMessageReceived。
             await RefreshUserProfileAsync();
+            await RefreshWalletAsync();
             if (!paymentCompleted)
             {
                 await Task.Delay(1200);
                 await RefreshUserProfileAsync();
+                await RefreshWalletAsync();
             }
 
             if (paymentCompleted)
@@ -1564,6 +1681,77 @@ namespace lingualink_client.ViewModels
         private bool CanOpenSubscriptionDialog()
         {
             return IsLoggedIn && _authService != null;
+        }
+
+        [RelayCommand(CanExecute = nameof(CanRechargeWallet))]
+        private async Task RechargeWalletAsync()
+        {
+            if (!IsLoggedIn || _authService == null)
+            {
+                return;
+            }
+
+            var accessToken = await _authService.GetAccessTokenAsync();
+            if (string.IsNullOrWhiteSpace(accessToken))
+            {
+                MessageBox.Show(
+                    "登录状态已失效，请重新登录。",
+                    LanguageManager.GetString("WarningTitle"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            var checkoutWindow = new CheckoutWindow(accessToken, ResolveCheckoutAuthHost(_authService.AuthServerUrl), "recharge")
+            {
+                Owner = Application.Current.MainWindow
+            };
+            checkoutWindow.ShowDialog();
+
+            await RefreshUserProfileAsync();
+            await RefreshWalletAsync();
+        }
+
+        private bool CanRechargeWallet()
+        {
+            return IsLoggedIn && _authService != null && !IsLoadingWallet;
+        }
+
+        [RelayCommand(CanExecute = nameof(CanToggleAutoRenew))]
+        private async Task ToggleAutoRenewAsync()
+        {
+            if (_authService == null || !IsLoggedIn || UserProfile?.Subscription == null)
+            {
+                return;
+            }
+
+            IsUpdatingAutoRenew = true;
+            try
+            {
+                var enabled = !(UserProfile.Subscription.AutoRenew);
+                var result = await _authService.SetSubscriptionAutoRenewAsync(enabled);
+                if (!result.Success)
+                {
+                    MessageBox.Show(
+                        result.ErrorMessage ?? "自动续费设置失败",
+                        LanguageManager.GetString("ErrorTitle"),
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                    return;
+                }
+
+                await RefreshUserProfileAsync();
+                await RefreshWalletAsync();
+            }
+            finally
+            {
+                IsUpdatingAutoRenew = false;
+            }
+        }
+
+        private bool CanToggleAutoRenew()
+        {
+            return IsLoggedIn && _authService != null && UserProfile?.Subscription?.IsPaidPlan == true && !IsUpdatingAutoRenew && !IsLoadingWallet;
         }
 
         private static string ResolveCheckoutAuthHost(string? authServerUrl)
@@ -1588,6 +1776,7 @@ namespace lingualink_client.ViewModels
             {
                 await _authService.RefreshUserProfileAsync();
                 UpdateLoginState();
+                await RefreshWalletAsync();
             }
             catch (Exception ex)
             {
