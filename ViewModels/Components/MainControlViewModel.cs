@@ -237,6 +237,19 @@ namespace lingualink_client.ViewModels.Components
 
         private void OnTranslationCompleted(Services.Events.TranslationCompletedEvent e)
         {
+            if (!e.IsSuccess
+                && (_orchestrator?.IsWorking ?? false)
+                && IsFreeTrialQuotaExhaustedError(e.ErrorMessage))
+            {
+                _orchestrator?.Stop();
+                WorkButtonContent = LanguageManager.GetString("StartListening");
+                IsMicrophoneComboBoxEnabled = true;
+                if (!string.IsNullOrWhiteSpace(e.ErrorMessage))
+                {
+                    StatusText = $"{LanguageManager.GetString("StatusStopped")} {e.ErrorMessage}";
+                }
+            }
+
             _ = RefreshQuotaStatusAsync();
         }
 
@@ -385,6 +398,18 @@ namespace lingualink_client.ViewModels.Components
 
             FreeQuotaDisplay = string.Empty;
             ShowFreeQuotaDisplay = false;
+        }
+
+        private static bool IsFreeTrialQuotaExhaustedError(string? errorMessage)
+        {
+            if (string.IsNullOrWhiteSpace(errorMessage))
+            {
+                return false;
+            }
+
+            return errorMessage.Contains(
+                LanguageManager.GetString("FreeTrialQuotaExhausted"),
+                StringComparison.CurrentCulture);
         }
 
         /// <summary>
