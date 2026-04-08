@@ -251,6 +251,24 @@
   <data name="StatusTranslationFailedServer" xml:space="preserve">
     <value>状态：翻译失败 (服务器)。</value>
   </data>
+  <data name="FreeTrialQuotaExhausted" xml:space="preserve">
+    <value>免费试用额度已用完，请订阅后继续使用。</value>
+  </data>
+  <data name="RateLimitExceeded" xml:space="preserve">
+    <value>请求过于频繁，请稍后再试。</value>
+  </data>
+  <data name="FreeQuotaDisplayFormat" xml:space="preserve">
+    <value>免费额度 {0}/{1}</value>
+  </data>
+  <data name="FreeQuotaSubscribed" xml:space="preserve">
+    <value>已订阅套餐</value>
+  </data>
+  <data name="FreeQuotaStartBlockedFormat" xml:space="preserve">
+    <value>当前每小时免费额度已用完，请等待 {0} 刷新后再试，或订阅套餐继续使用。</value>
+  </data>
+  <data name="FreeQuotaStartBlockedNoReset" xml:space="preserve">
+    <value>当前每小时免费额度已用完，请等待额度刷新后再试，或订阅套餐继续使用。</value>
+  </data>
   <data name="TranslationServerError" xml:space="preserve">
     <value>服务器错误: {0}</value>
   </data>

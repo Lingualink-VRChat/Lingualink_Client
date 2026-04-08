@@ -217,11 +217,15 @@ namespace lingualink_client.Services.Managers
             if (!apiResult.IsSuccess)
             {
                 resultArgs.DurationSeconds = effectiveDuration;
-                currentUiStatus = LanguageManager.GetString("StatusTranslationFailed");
                 resultArgs.IsSuccess = false;
                 resultArgs.ErrorMessage = apiResult.ErrorMessage;
                 // [修复] 失败时不在VRChat输出框显示错误消息，保持为空
                 resultArgs.ProcessedText = string.Empty;
+                currentUiStatus = LanguageManager.GetString("StatusTranslationFailed");
+                if (!string.IsNullOrWhiteSpace(apiResult.ErrorMessage))
+                {
+                    currentUiStatus = $"{currentUiStatus} {apiResult.ErrorMessage}";
+                }
 
                 _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogTranslationError"),
                     e.TriggerReason, apiResult.ErrorMessage), LogLevel.Error, ApiCategory, apiResult.ErrorMessage);

@@ -153,10 +153,15 @@ namespace lingualink_client.Services.Managers
 
             if (!apiResult.IsSuccess)
             {
-                OnStatusUpdated(LanguageManager.GetString("StatusTranslationFailed"));
                 resultArgs.IsSuccess = false;
                 resultArgs.ErrorMessage = apiResult.ErrorMessage;
                 resultArgs.ProcessedText = string.Empty;
+                var statusText = LanguageManager.GetString("StatusTranslationFailed");
+                if (!string.IsNullOrWhiteSpace(apiResult.ErrorMessage))
+                {
+                    statusText = $"{statusText} {apiResult.ErrorMessage}";
+                }
+                OnStatusUpdated(statusText);
                 _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogTranslationError"), triggerReason, apiResult.ErrorMessage), LogLevel.Error, ApiCategory, apiResult.ErrorMessage);
             }
             else

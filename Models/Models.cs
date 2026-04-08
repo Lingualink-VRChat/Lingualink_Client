@@ -90,6 +90,30 @@ namespace lingualink_client.Models
         public bool ConversionApplied { get; set; }
     }
 
+    public class QuotaStatus
+    {
+        [JsonPropertyName("free_quota")]
+        public bool FreeQuota { get; set; }
+
+        [JsonPropertyName("subscription_active")]
+        public bool SubscriptionActive { get; set; }
+
+        [JsonPropertyName("limit")]
+        public int Limit { get; set; }
+
+        [JsonPropertyName("used")]
+        public int Used { get; set; }
+
+        [JsonPropertyName("remaining")]
+        public int Remaining { get; set; }
+
+        [JsonPropertyName("window_size_seconds")]
+        public int WindowSizeSeconds { get; set; }
+
+        [JsonPropertyName("reset_at")]
+        public DateTime? ResetAt { get; set; }
+    }
+
     public class TranslationData // Enhanced to support dynamic language fields
     {
         // Primary field we are interested in now

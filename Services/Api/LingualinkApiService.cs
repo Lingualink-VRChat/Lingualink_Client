@@ -21,6 +21,9 @@ namespace lingualink_client.Services
     /// </summary>
     public class LingualinkApiService : ILingualinkApiService
     {
+        private const string FreeTrialQuotaExhaustedError = "free_trial_quota_exhausted";
+        private const string RateLimitExceededError = "rate_limit_exceeded";
+
         private readonly string _serverUrl;
         private readonly HttpClient _httpClient;
         private readonly AudioEncoderService? _audioEncoder;
@@ -472,6 +475,38 @@ namespace lingualink_client.Services
             }
         }
 
+        public async Task<QuotaStatus?> GetQuotaStatusAsync(CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var requestUrl = new Uri(_serverUrl.TrimEnd('/') + "/quota");
+                using var request = new HttpRequestMessage(HttpMethod.Get, requestUrl);
+                var response = await SendAsync(request, cancellationToken);
+                var content = await response.Content.ReadAsStringAsync(cancellationToken);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return JsonSerializer.Deserialize<QuotaStatus>(content, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+                }
+
+                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                {
+                    await HandleUnauthorizedResponseAsync();
+                }
+
+                Debug.WriteLine($"[LingualinkApiService] Failed to get quota status: {(int)response.StatusCode}, {content}");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[LingualinkApiService] Failed to get quota status: {ex.Message}");
+                return null;
+            }
+        }
+
         private async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             await AttachAuthorizationHeaderAsync(request);
@@ -552,6 +587,16 @@ namespace lingualink_client.Services
                 if (errorResponse != null && !string.IsNullOrEmpty(errorResponse.Error))
                 {
                     Debug.WriteLine($"  - Parsed Error: {errorResponse.Error}");
+                    var mappedError = MapApiErrorMessage(response.StatusCode, errorResponse.Error);
+                    if (!string.IsNullOrWhiteSpace(mappedError))
+                    {
+                        return new ApiResult
+                        {
+                            IsSuccess = false,
+                            ErrorMessage = mappedError
+                        };
+                    }
+
                     return new ApiResult
                     {
                         IsSuccess = false,
@@ -577,7 +622,7 @@ namespace lingualink_client.Services
                 System.Net.HttpStatusCode.Forbidden => "Access forbidden. Insufficient permissions.",
                 System.Net.HttpStatusCode.NotFound => "API endpoint not found. Please check the server URL.",
                 System.Net.HttpStatusCode.RequestEntityTooLarge => "Request too large. Please reduce audio file size or text length.",
-                System.Net.HttpStatusCode.TooManyRequests => "Rate limit exceeded. Please wait before making more requests.",
+                System.Net.HttpStatusCode.TooManyRequests => LanguageManager.GetString("FreeTrialQuotaExhausted"),
                 _ => $"Server error ({(int)response.StatusCode}): {responseContent}"
             };
 
@@ -586,6 +631,28 @@ namespace lingualink_client.Services
                 IsSuccess = false,
                 ErrorMessage = errorMessage
             };
+        }
+
+        private static string? MapApiErrorMessage(System.Net.HttpStatusCode statusCode, string? errorCode)
+        {
+            var normalized = errorCode?.Trim();
+            if (string.IsNullOrWhiteSpace(normalized))
+            {
+                return null;
+            }
+
+            if (string.Equals(normalized, FreeTrialQuotaExhaustedError, StringComparison.OrdinalIgnoreCase))
+            {
+                return LanguageManager.GetString("FreeTrialQuotaExhausted");
+            }
+
+            if (statusCode == System.Net.HttpStatusCode.TooManyRequests
+                && string.Equals(normalized, RateLimitExceededError, StringComparison.OrdinalIgnoreCase))
+            {
+                return LanguageManager.GetString("RateLimitExceeded");
+            }
+
+            return null;
         }
 
         protected virtual void Dispose(bool disposing)
@@ -649,4 +716,3 @@ namespace lingualink_client.Services
         public string? Error { get; set; }
     }
 }
-

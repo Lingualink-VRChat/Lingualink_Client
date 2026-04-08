@@ -251,6 +251,24 @@
   <data name="StatusTranslationFailedServer" xml:space="preserve">
     <value>Status: Translation failed (server error).</value>
   </data>
+  <data name="FreeTrialQuotaExhausted" xml:space="preserve">
+    <value>Free trial quota exhausted. Please subscribe to continue.</value>
+  </data>
+  <data name="RateLimitExceeded" xml:space="preserve">
+    <value>Too many requests. Please try again later.</value>
+  </data>
+  <data name="FreeQuotaDisplayFormat" xml:space="preserve">
+    <value>Free quota {0}/{1}</value>
+  </data>
+  <data name="FreeQuotaSubscribed" xml:space="preserve">
+    <value>Subscribed plan</value>
+  </data>
+  <data name="FreeQuotaStartBlockedFormat" xml:space="preserve">
+    <value>Your hourly free quota is exhausted. Please wait until {0} for refresh, or subscribe to continue.</value>
+  </data>
+  <data name="FreeQuotaStartBlockedNoReset" xml:space="preserve">
+    <value>Your hourly free quota is exhausted. Please wait for the quota to refresh, or subscribe to continue.</value>
+  </data>
   <data name="TranslationServerError" xml:space="preserve">
     <value>Server error: {0}</value>
   </data>
@@ -1445,4 +1463,3 @@ Update now?</value>
     <value>An error occurred during the update process: {0}</value>
   </data>
 </root>
-

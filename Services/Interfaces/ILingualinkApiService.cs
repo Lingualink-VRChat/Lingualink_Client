@@ -61,6 +61,11 @@ namespace lingualink_client.Services.Interfaces
         /// </summary>
         /// <returns>语言列表</returns>
         Task<LanguageInfo[]?> GetSupportedLanguagesAsync(CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// 获取当前免费额度状态
+        /// </summary>
+        Task<QuotaStatus?> GetQuotaStatusAsync(CancellationToken cancellationToken = default);
     }
 
     /// <summary>
@@ -164,4 +169,3 @@ namespace lingualink_client.Services.Interfaces
         public string[] Aliases { get; set; } = Array.Empty<string>();
     }
 }
-

@@ -227,12 +227,30 @@
                         Padding="12"
                         VerticalAlignment="Stretch">
                     <StackPanel DataContext="{Binding MainControl}">
-                        <ui:Button
-                            HorizontalAlignment="Left"
-                            Command="{Binding ToggleWorkCommand}"
-                            Content="{Binding WorkButtonContent}"
-                            Appearance="Primary"
-                            Icon="{ui:SymbolIcon Mic24}" />
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <ui:Button
+                                Grid.Column="0"
+                                HorizontalAlignment="Left"
+                                Command="{Binding ToggleWorkCommand}"
+                                Content="{Binding WorkButtonContent}"
+                                Appearance="Primary"
+                                Icon="{ui:SymbolIcon Mic24}" />
+
+                            <TextBlock
+                                Grid.Column="1"
+                                Margin="12,0,0,0"
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                Text="{Binding FreeQuotaDisplay}"
+                                TextWrapping="Wrap"
+                                Visibility="{Binding ShowFreeQuotaDisplay, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                        </Grid>
 
                         <TextBlock
                             Margin="0,8,0,0"
