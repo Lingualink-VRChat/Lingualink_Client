@@ -14,6 +14,7 @@ using CommunityToolkit.Mvvm.Input;
 using lingualink_client.Models;
 using lingualink_client.Models.Auth;
 using lingualink_client.Services;
+using lingualink_client.Services.Interfaces;
 using lingualink_client.Views;
 using QRCoder;
 using MessageBox = lingualink_client.Services.MessageBox;
