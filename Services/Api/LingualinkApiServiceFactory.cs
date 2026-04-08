@@ -24,69 +24,22 @@ namespace lingualink_client.Services
                 throw new ArgumentNullException(nameof(settings));
             }
 
-            var useOfficialAuthFlow = ShouldUseOfficialAuthFlow(settings);
-            var apiKey = useOfficialAuthFlow ? string.Empty : ResolveCustomServerApiKey(settings);
-            var (accessTokenProvider, unauthorizedHandler) = useOfficialAuthFlow
-                ? ResolveAuthContext()
-                : (null, null);
+            var (accessTokenProvider, unauthorizedHandler) = ResolveAuthContext();
 
             Debug.WriteLine($"[LingualinkApiServiceFactory] Creating API service with settings:");
             Debug.WriteLine($"[LingualinkApiServiceFactory]   ActiveServerUrl: '{settings.ActiveServerUrl}'");
-            Debug.WriteLine($"[LingualinkApiServiceFactory]   UseCustomServer: {settings.UseCustomServer}");
-            Debug.WriteLine($"[LingualinkApiServiceFactory]   UseOfficialAuthFlow: {useOfficialAuthFlow}");
-            Debug.WriteLine($"[LingualinkApiServiceFactory]   HasApiKey: {!string.IsNullOrWhiteSpace(apiKey)}");
+            Debug.WriteLine($"[LingualinkApiServiceFactory]   UseOfficialAuthFlow: true");
+            Debug.WriteLine($"[LingualinkApiServiceFactory]   HasApiKey: false");
             Debug.WriteLine($"[LingualinkApiServiceFactory]   HasTokenProvider: {accessTokenProvider != null}");
             Debug.WriteLine($"[LingualinkApiServiceFactory]   OpusComplexity: {settings.OpusComplexity}");
 
             return new LingualinkApiService(
                 serverUrl: settings.ActiveServerUrl,
-                apiKey: apiKey,
+                apiKey: string.Empty,
                 accessTokenProvider: accessTokenProvider,
                 unauthorizedHandler: unauthorizedHandler,
                 opusComplexity: settings.OpusComplexity
             );
-        }
-
-        private static bool ShouldUseOfficialAuthFlow(AppSettings settings)
-        {
-            if (!settings.UseCustomServer)
-            {
-                return true;
-            }
-
-            var serverUrl = NormalizeUrl(settings.ActiveServerUrl);
-            var officialUrl = NormalizeUrl(string.IsNullOrWhiteSpace(settings.OfficialServerUrl)
-                ? AppSettings.GetEffectiveOfficialServerUrl()
-                : settings.OfficialServerUrl);
-
-            return !string.IsNullOrWhiteSpace(serverUrl)
-                && string.Equals(serverUrl, officialUrl, StringComparison.OrdinalIgnoreCase);
-        }
-
-        private static string NormalizeUrl(string? url)
-        {
-            return (url ?? string.Empty).Trim().TrimEnd('/');
-        }
-
-        /// <summary>
-        /// 创建用于测试连接的临时API服务实例
-        /// </summary>
-        /// <param name="serverUrl">服务器URL</param>
-        /// <returns>API服务实例</returns>
-        public static ILingualinkApiService CreateTestApiService(string serverUrl, string? apiKey = null)
-        {
-            Debug.WriteLine($"[LingualinkApiServiceFactory] Creating test API service with URL: {serverUrl}");
-
-            return new LingualinkApiService(
-                serverUrl: serverUrl,
-                apiKey: apiKey,
-                opusComplexity: 7 // 使用默认复杂度
-            );
-        }
-
-        private static string ResolveCustomServerApiKey(AppSettings settings)
-        {
-            return settings.ActiveApiKey;
         }
 
         private static (Func<Task<string?>>? accessTokenProvider, Func<Task>? unauthorizedHandler) ResolveAuthContext()

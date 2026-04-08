@@ -287,9 +287,7 @@ namespace lingualink_client.ViewModels.Components
         private void UpdateServerModeText()
         {
             if (_appSettings == null) return;
-            ServerModeText = _appSettings.UseCustomServer
-                ? $"⚙ {LanguageManager.GetString("ServerModeCustom")}"
-                : $"☁ {LanguageManager.GetString("ServerModeOfficial")}";
+            ServerModeText = $"☁ {LanguageManager.GetString("ServerModeOfficial")}";
         }
 
         /// <summary>

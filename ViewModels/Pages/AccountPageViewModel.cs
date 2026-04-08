@@ -14,7 +14,6 @@ using CommunityToolkit.Mvvm.Input;
 using lingualink_client.Models;
 using lingualink_client.Models.Auth;
 using lingualink_client.Services;
-using lingualink_client.Services.Interfaces;
 using lingualink_client.Views;
 using QRCoder;
 using MessageBox = lingualink_client.Services.MessageBox;
@@ -38,9 +37,7 @@ namespace lingualink_client.ViewModels
         // 语言相关的标签
         public string AuthenticationModeLabel => LanguageManager.GetString("AuthenticationMode");
         public string OfficialServiceLabel => LanguageManager.GetString("OfficialService");
-        public string CustomServiceLabel => LanguageManager.GetString("CustomService");
         public string OfficialServiceHint => LanguageManager.GetString("OfficialServiceHint");
-        public string CustomServiceHint => LanguageManager.GetString("CustomServiceHint");
         public string UserLoginLabel => LanguageManager.GetString("UserLogin");
         public string UsernameLabel => LanguageManager.GetString("Username");
         public string LoginLabel => LanguageManager.GetString("Login");
@@ -48,17 +45,10 @@ namespace lingualink_client.ViewModels
         public string LoginStatusLabel => LanguageManager.GetString("LoginStatus");
         public string NotLoggedInLabel => LanguageManager.GetString("NotLoggedIn");
         public string ComingSoonLabel => LanguageManager.GetString("ComingSoon");
-        public string CustomServerSettingsLabel => LanguageManager.GetString("CustomServerSettings");
-        public string ServerUrlLabel => LanguageManager.GetString("ServerUrl");
-        public string ApiKeyLabel => LanguageManager.GetString("ApiKey");
         public string SaveLabel => LanguageManager.GetString("Save");
         public string RevertLabel => LanguageManager.GetString("Revert");
         public string OfficialServiceLoginLabel => LanguageManager.GetString("OfficialServiceLogin");
         public string OfficialServiceSubtitleLabel => LanguageManager.GetString("OfficialServiceSubtitle");
-        public string AdvancedOptionsLabel => LanguageManager.GetString("AdvancedOptions");
-        public string UseCustomServerLabel => LanguageManager.GetString("UseCustomServer");
-        public string UseCustomServerHint => LanguageManager.GetString("UseCustomServerHint");
-        public string ConnectionTestLabel => LanguageManager.GetString("ConnectionTest");
         public string RefreshLabel => LanguageManager.GetString("Refresh");
         public string CurrentPlanPrefixLabel => LanguageManager.GetString("AccountCurrentPlanPrefix");
         public string RefreshProfileTooltipLabel => LanguageManager.GetString("AccountRefreshProfileTooltip");
@@ -93,19 +83,9 @@ namespace lingualink_client.ViewModels
         public string BindQqTooltipLabel => LanguageManager.GetString("AccountBindQqTooltip");
         public string BindWechatLabel => LanguageManager.GetString("AccountBindWechat");
         public string BindWechatTooltipLabel => LanguageManager.GetString("AccountBindWechatTooltip");
-        public string ServerUrlPlaceholderLabel => LanguageManager.GetString("AccountServerUrlPlaceholder");
-        public string ApiKeyPlaceholderLabel => LanguageManager.GetString("AccountApiKeyPlaceholder");
-        public string ConnectionTestHintLabel => LanguageManager.GetString("AccountConnectionTestHint");
         public string SendEmailCodeButtonText => EmailCodeCountdownSeconds > 0
             ? string.Format(LanguageManager.GetString("BindEmailSendCodeCountdown"), EmailCodeCountdownSeconds)
             : LanguageManager.GetString("BindEmailSendCode");
-
-        [ObservableProperty]
-        private bool _isTestingConnection;
-
-        // 认证模式属性 - 简化为只有一个开关
-        [ObservableProperty]
-        private bool _useCustomServer;
 
         // 官方服务登录相关属性
         [ObservableProperty]
@@ -113,13 +93,6 @@ namespace lingualink_client.ViewModels
 
         [ObservableProperty]
         private string _loggedInUsername = string.Empty;
-
-        // 自定义服务器设置
-        [ObservableProperty]
-        private string _serverUrl = string.Empty;
-
-        [ObservableProperty]
-        private string _apiKey = string.Empty;
 
         [ObservableProperty]
         private bool _isLoggingIn;
@@ -301,16 +274,6 @@ namespace lingualink_client.ViewModels
             }
 
             return string.Format(LanguageManager.GetString("AccountBoundMaskedFormat"), masked);
-        }
-
-        partial void OnServerUrlChanged(string value)
-        {
-            Debug.WriteLine($"[AccountPageViewModel] ServerUrl property changed to: '{value}'");
-        }
-
-        partial void OnApiKeyChanged(string value)
-        {
-            Debug.WriteLine($"[AccountPageViewModel] ApiKey property changed. HasValue: {!string.IsNullOrWhiteSpace(value)}");
         }
 
         partial void OnUserProfileChanged(UserProfile? value)
@@ -1328,20 +1291,6 @@ namespace lingualink_client.ViewModels
             try
             {
                 _currentSettings = settings;
-                UseCustomServer = settings.UseCustomServer;
-
-                if (UseCustomServer)
-                {
-                    ServerUrl = settings.CustomServerUrl;
-                    ApiKey = settings.CustomApiKey;
-                }
-                else
-                {
-                    ServerUrl = string.IsNullOrWhiteSpace(settings.OfficialServerUrl)
-                        ? AppSettings.GetEffectiveOfficialServerUrl()
-                        : settings.OfficialServerUrl;
-                    ApiKey = string.Empty;
-                }
             }
             finally
             {
@@ -1386,95 +1335,23 @@ namespace lingualink_client.ViewModels
 
         private static bool IsAutoSaveProperty(string propertyName)
         {
-            return propertyName == nameof(UseCustomServer)
-                   || propertyName == nameof(ServerUrl)
-                   || propertyName == nameof(ApiKey);
-        }
-
-        partial void OnUseCustomServerChanged(bool value)
-        {
-            if (_currentSettings == null || _isLoadingSettings)
-            {
-                return;
-            }
-
-            if (value)
-            {
-                _currentSettings.OfficialServerUrl = ServerUrl;
-                ServerUrl = _currentSettings.CustomServerUrl;
-                ApiKey = _currentSettings.CustomApiKey;
-            }
-            else
-            {
-                _currentSettings.CustomServerUrl = ServerUrl;
-                _currentSettings.CustomApiKey = ApiKey;
-
-                if (string.IsNullOrWhiteSpace(_currentSettings.OfficialServerUrl))
-                {
-                    _currentSettings.OfficialServerUrl = AppSettings.GetEffectiveOfficialServerUrl();
-                }
-
-                ServerUrl = _currentSettings.OfficialServerUrl;
-                ApiKey = string.Empty;
-            }
-
-            // 账号页没有显式“保存服务器设置”按钮，切换开关后应立即应用，
-            // 否则主界面和实际请求实例会在自动保存触发前继续显示旧状态。
-            if (_autoSaveTimer.IsEnabled)
-            {
-                _autoSaveTimer.Stop();
-            }
-
-            _hasPendingChanges = true;
-
-            if (!value || (!string.IsNullOrWhiteSpace(ServerUrl) && Uri.TryCreate(ServerUrl, UriKind.Absolute, out _)))
-            {
-                SaveInternal(showConfirmation: false, changeSource: "AccountPageServerModeToggle");
-            }
-            else
-            {
-                _autoSaveTimer.Start();
-            }
+            return false;
         }
 
         private bool UpdateSettingsFromView(AppSettings updatedSettings)
         {
             Debug.WriteLine("[AccountPageViewModel] ValidateAndBuildSettings() called");
             Debug.WriteLine($"[AccountPageViewModel] Loaded latest settings base - ActiveServerUrl: '{updatedSettings.ActiveServerUrl}'");
-
-            if (UseCustomServer && (string.IsNullOrWhiteSpace(ServerUrl) || !Uri.TryCreate(ServerUrl, UriKind.Absolute, out _)))
-            {
-                MessageBox.Show(LanguageManager.GetString("ValidationServerUrlInvalid"),
-                               LanguageManager.GetString("ValidationErrorTitle"),
-                               MessageBoxButton.OK, MessageBoxImage.Error);
-                return false;
-            }
-
-            updatedSettings.UseCustomServer = UseCustomServer;
-
-            if (UseCustomServer)
-            {
-                Debug.WriteLine("[AccountPageViewModel] Using custom server - updating settings");
-                Debug.WriteLine($"[AccountPageViewModel] ViewModel values - ServerUrl: '{ServerUrl}'");
-
-                updatedSettings.CustomServerUrl = ServerUrl;
-                updatedSettings.CustomApiKey = ApiKey?.Trim() ?? string.Empty;
-            }
-            else
-            {
-                Debug.WriteLine("[AccountPageViewModel] Using official service");
-
-                updatedSettings.OfficialServerUrl = string.IsNullOrWhiteSpace(updatedSettings.OfficialServerUrl)
-                    ? AppSettings.GetEffectiveOfficialServerUrl()
-                    : updatedSettings.OfficialServerUrl;
-            }
+            updatedSettings.OfficialServerUrl = string.IsNullOrWhiteSpace(updatedSettings.OfficialServerUrl)
+                ? AppSettings.GetEffectiveOfficialServerUrl()
+                : updatedSettings.OfficialServerUrl;
 
             return true;
         }
 
         private void SaveInternal(bool showConfirmation, string changeSource)
         {
-            Debug.WriteLine($"[AccountPageViewModel] SaveInternal() called - Source: {changeSource}, UseCustomServer: {UseCustomServer}");
+            Debug.WriteLine($"[AccountPageViewModel] SaveInternal() called - Source: {changeSource}");
 
             if (!_settingsManager.TryUpdateAndSave(changeSource, UpdateSettingsFromView, out var updatedSettings) || updatedSettings == null)
             {
@@ -2451,53 +2328,6 @@ namespace lingualink_client.ViewModels
         {
             return IsPollingOrder;
         }
-
-        #endregion
-
-        #region 自定义服务器测试
-
-        [RelayCommand(CanExecute = nameof(CanTestConnection))]
-        private async Task TestConnectionAsync()
-        {
-            IsTestingConnection = true;
-            OnPropertyChanged(nameof(ConnectionTestLabel));
-
-            ILingualinkApiService? testApiService = null;
-            bool success;
-            string errorMessage = LanguageManager.GetString("AccountConnectionUnknownError");
-
-            try
-            {
-                testApiService = LingualinkApiServiceFactory.CreateTestApiService(ServerUrl, ApiKey);
-                success = await testApiService.ValidateConnectionAsync();
-            }
-            catch (Exception ex)
-            {
-                success = false;
-                errorMessage = ex.Message;
-            }
-            finally
-            {
-                testApiService?.Dispose();
-                IsTestingConnection = false;
-                OnPropertyChanged(nameof(ConnectionTestLabel));
-            }
-
-            if (success)
-            {
-                MessageBox.Show(LanguageManager.GetString("AccountConnectionSuccess"), LanguageManager.GetString("SuccessTitle"), MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            else
-            {
-                MessageBox.Show(string.Format(LanguageManager.GetString("AccountConnectionFailedFormat"), errorMessage), LanguageManager.GetString("ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private bool CanTestConnection()
-        {
-            return !IsTestingConnection && !string.IsNullOrWhiteSpace(ServerUrl);
-        }
-
         #endregion
     }
 }

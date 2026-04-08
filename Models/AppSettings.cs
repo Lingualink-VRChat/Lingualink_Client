@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text.Json.Serialization;
 
 namespace lingualink_client.Models
 {
@@ -33,16 +32,6 @@ namespace lingualink_client.Models
         public string GlobalLanguage { get; set; } = Services.LanguageManager.DetectSystemLanguage();
 
         public string TargetLanguages { get; set; } = "英文,日文"; // Default: English, Japanese
-
-        // Legacy compatibility only. New code should use ActiveServerUrl instead.
-        [Obsolete("Use ActiveServerUrl instead. Kept only for JSON deserialization compatibility.")]
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string? ServerUrl { get; set; }
-
-        // Legacy compatibility only. New code should use ActiveApiKey instead.
-        [Obsolete("Use ActiveApiKey instead. Kept only for JSON deserialization compatibility.")]
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string? ApiKey { get; set; }
 
         // Optional override for update feed (useful for debugging update service)
         public string UpdateFeedOverride { get; set; } = string.Empty;
@@ -84,14 +73,8 @@ namespace lingualink_client.Models
         // Microphone selection - remember last used device
         public string LastSelectedMicrophoneId { get; set; } = string.Empty;
 
-        // Account / server selection
-        public bool UseCustomServer { get; set; } = false;
-        public string CustomServerUrl { get; set; } = string.Empty;
-        public string CustomApiKey { get; set; } = string.Empty;
+        // Account / official server selection
         public string OfficialServerUrl { get; set; } = GetEffectiveOfficialServerUrl();
-        // 官方模式走 OAuth Bearer token，不需要 API Key，此字段已废弃
-        [Obsolete("Official mode uses OAuth Bearer tokens. Kept only for JSON deserialization compatibility.")]
-        public string OfficialApiKey { get; set; } = string.Empty;
         public string PendingSubscriptionOrderOutTradeNo { get; set; } = string.Empty;
 
         /// <summary>
@@ -99,13 +82,9 @@ namespace lingualink_client.Models
         /// </summary>
         public List<string> DismissedAnnouncementIds { get; set; } = new();
 
-        [JsonIgnore]
-        public string ActiveServerUrl => UseCustomServer
-            ? CustomServerUrl
-            : (string.IsNullOrWhiteSpace(OfficialServerUrl) ? GetEffectiveOfficialServerUrl() : OfficialServerUrl);
-
-        [JsonIgnore]
-        public string ActiveApiKey => UseCustomServer ? CustomApiKey : string.Empty;
+        public string ActiveServerUrl => string.IsNullOrWhiteSpace(OfficialServerUrl)
+            ? GetEffectiveOfficialServerUrl()
+            : OfficialServerUrl;
 
         // Get the currently selected template
         public MessageTemplate GetSelectedTemplate()

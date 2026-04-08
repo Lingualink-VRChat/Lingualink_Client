@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using lingualink_client.Models;
 
 namespace lingualink_client.Services
@@ -28,13 +29,14 @@ namespace lingualink_client.Services
                 if (File.Exists(_settingsFilePath))
                 {
                     string json = File.ReadAllText(_settingsFilePath);
+                    bool strippedLegacyFields = StripRetiredServerSettings(json, out json);
                     var settings = JsonSerializer.Deserialize<AppSettings>(json);
 
                     if (settings != null)
                     {
                         bool normalized = NormalizeSettings(settings);
                         System.Diagnostics.Debug.WriteLine($"[SettingsService] Loaded settings - ActiveServerUrl: '{settings.ActiveServerUrl}'");
-                        if (normalized)
+                        if (normalized || strippedLegacyFields)
                         {
                             SaveSettings(settings);
                         }
@@ -88,53 +90,48 @@ namespace lingualink_client.Services
                 changed = true;
             }
 
-            var officialUrl = NormalizeUrl(settings.OfficialServerUrl);
-
-#pragma warning disable CS0612
-            var legacyServerUrl = NormalizeUrl(settings.ServerUrl);
-            var legacyApiKey = settings.ApiKey?.Trim() ?? string.Empty;
-
-            if (string.IsNullOrWhiteSpace(settings.CustomServerUrl)
-                && !string.IsNullOrWhiteSpace(legacyServerUrl)
-                && !string.Equals(legacyServerUrl, officialUrl, StringComparison.OrdinalIgnoreCase))
-            {
-                settings.CustomServerUrl = settings.ServerUrl!.Trim();
-                changed = true;
-            }
-
-            if (string.IsNullOrWhiteSpace(settings.CustomApiKey) && !string.IsNullOrWhiteSpace(legacyApiKey))
-            {
-                settings.CustomApiKey = legacyApiKey;
-                changed = true;
-            }
-
-            if (settings.ServerUrl != null)
-            {
-                settings.ServerUrl = null;
-                changed = true;
-            }
-
-            if (settings.ApiKey != null)
-            {
-                settings.ApiKey = null;
-                changed = true;
-            }
-#pragma warning restore CS0612
-
-            var customUrl = NormalizeUrl(settings.CustomServerUrl);
-            if (!string.IsNullOrWhiteSpace(customUrl)
-                && string.Equals(customUrl, officialUrl, StringComparison.OrdinalIgnoreCase))
-            {
-                settings.UseCustomServer = false;
-                changed = true;
-            }
-
             return changed;
         }
 
-        private static string NormalizeUrl(string? url)
+        private static bool StripRetiredServerSettings(string rawJson, out string sanitizedJson)
         {
-            return (url ?? string.Empty).Trim().TrimEnd('/');
+            sanitizedJson = rawJson;
+
+            if (string.IsNullOrWhiteSpace(rawJson))
+            {
+                return false;
+            }
+
+            JsonNode? root;
+            try
+            {
+                root = JsonNode.Parse(rawJson);
+            }
+            catch
+            {
+                return false;
+            }
+
+            if (root is not JsonObject obj)
+            {
+                return false;
+            }
+
+            bool changed = false;
+            changed |= obj.Remove("UseCustomServer");
+            changed |= obj.Remove("CustomServerUrl");
+            changed |= obj.Remove("CustomApiKey");
+            changed |= obj.Remove("ServerUrl");
+            changed |= obj.Remove("ApiKey");
+            changed |= obj.Remove("OfficialApiKey");
+
+            if (!changed)
+            {
+                return false;
+            }
+
+            sanitizedJson = obj.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
+            return true;
         }
 
         public void SaveSettings(AppSettings settings)
