@@ -388,10 +388,25 @@ namespace lingualink_client.ViewModels.Components
 
             if (status.FreeQuota && status.Limit > 0)
             {
-                FreeQuotaDisplay = string.Format(
-                    LanguageManager.GetString("FreeQuotaDisplayFormat"),
-                    status.Remaining,
-                    status.Limit);
+                if (status.Remaining <= 0)
+                {
+                    FreeQuotaDisplay = status.ResetAt.HasValue
+                        ? string.Format(
+                            LanguageManager.GetString("FreeQuotaDisplayExhaustedFormat"),
+                            status.Limit,
+                            status.ResetAt.Value.ToLocalTime().ToString("HH:mm"))
+                        : string.Format(
+                            LanguageManager.GetString("FreeQuotaDisplayHourlyFormat"),
+                            status.Remaining,
+                            status.Limit);
+                }
+                else
+                {
+                    FreeQuotaDisplay = string.Format(
+                        LanguageManager.GetString("FreeQuotaDisplayHourlyFormat"),
+                        status.Remaining,
+                        status.Limit);
+                }
                 ShowFreeQuotaDisplay = true;
                 return;
             }

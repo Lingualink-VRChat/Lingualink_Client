@@ -260,6 +260,12 @@
   <data name="FreeQuotaDisplayFormat" xml:space="preserve">
     <value>免费额度 {0}/{1}</value>
   </data>
+  <data name="FreeQuotaDisplayHourlyFormat" xml:space="preserve">
+    <value>免费额度 {0}/{1}，每小时刷新</value>
+  </data>
+  <data name="FreeQuotaDisplayExhaustedFormat" xml:space="preserve">
+    <value>免费额度已用完（0/{0}），将于 {1} 刷新</value>
+  </data>
   <data name="FreeQuotaSubscribed" xml:space="preserve">
     <value>已订阅套餐</value>
   </data>
