@@ -56,7 +56,7 @@ namespace lingualink_client.ViewModels
         public string SubscriptionOverviewLabel => LanguageManager.GetString("AccountSubscriptionOverview");
         public string WalletSectionLabel => "钱包与自动续费";
         public string WalletBalanceLabel => "账户余额";
-        public string WalletRechargeLabel => "充值";
+        public string WalletRechargeLabel => "余额充值";
         public string WalletAutoRenewLabel => "自动续费";
         public string WalletEnableAutoRenewLabel => "开启自动续费";
         public string WalletDisableAutoRenewLabel => "关闭自动续费";
