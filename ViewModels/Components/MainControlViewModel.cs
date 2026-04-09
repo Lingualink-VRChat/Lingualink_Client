@@ -334,11 +334,19 @@ namespace lingualink_client.ViewModels.Components
             }
 
             var message = LanguageManager.GetString("FreeQuotaStartBlockedNoReset");
+            var refreshIntervalLabel = GetQuotaRefreshIntervalLabel(status);
             if (status.ResetAt.HasValue)
             {
                 message = string.Format(
                     LanguageManager.GetString("FreeQuotaStartBlockedFormat"),
-                    status.ResetAt.Value.ToLocalTime().ToString("HH:mm"));
+                    status.ResetAt.Value.ToLocalTime().ToString("HH:mm"),
+                    refreshIntervalLabel);
+            }
+            else if (!string.IsNullOrWhiteSpace(refreshIntervalLabel))
+            {
+                message = string.Format(
+                    LanguageManager.GetString("FreeQuotaStartBlockedNoReset"),
+                    refreshIntervalLabel);
             }
 
             MessageBox.Show(
@@ -388,24 +396,28 @@ namespace lingualink_client.ViewModels.Components
 
             if (status.FreeQuota && status.Limit > 0)
             {
+                var refreshIntervalLabel = GetQuotaRefreshIntervalLabel(status);
                 if (status.Remaining <= 0)
                 {
                     FreeQuotaDisplay = status.ResetAt.HasValue
                         ? string.Format(
                             LanguageManager.GetString("FreeQuotaDisplayExhaustedFormat"),
                             status.Limit,
-                            status.ResetAt.Value.ToLocalTime().ToString("HH:mm"))
+                            status.ResetAt.Value.ToLocalTime().ToString("HH:mm"),
+                            refreshIntervalLabel)
                         : string.Format(
-                            LanguageManager.GetString("FreeQuotaDisplayHourlyFormat"),
+                            LanguageManager.GetString("FreeQuotaDisplayRefreshFormat"),
                             status.Remaining,
-                            status.Limit);
+                            status.Limit,
+                            refreshIntervalLabel);
                 }
                 else
                 {
                     FreeQuotaDisplay = string.Format(
-                        LanguageManager.GetString("FreeQuotaDisplayHourlyFormat"),
+                        LanguageManager.GetString("FreeQuotaDisplayRefreshFormat"),
                         status.Remaining,
-                        status.Limit);
+                        status.Limit,
+                        refreshIntervalLabel);
                 }
                 ShowFreeQuotaDisplay = true;
                 return;
@@ -413,6 +425,25 @@ namespace lingualink_client.ViewModels.Components
 
             FreeQuotaDisplay = string.Empty;
             ShowFreeQuotaDisplay = false;
+        }
+
+        private static string GetQuotaRefreshIntervalLabel(QuotaStatus status)
+        {
+            if (status == null || status.WindowSizeSeconds <= 0)
+            {
+                return LanguageManager.GetString("QuotaRefreshIntervalUnknown");
+            }
+
+            if (status.WindowSizeSeconds % 3600 == 0)
+            {
+                return string.Format(
+                    LanguageManager.GetString("QuotaRefreshIntervalHoursFormat"),
+                    status.WindowSizeSeconds / 3600);
+            }
+
+            return string.Format(
+                LanguageManager.GetString("QuotaRefreshIntervalMinutesFormat"),
+                Math.Max(1, status.WindowSizeSeconds / 60));
         }
 
         private static bool IsFreeTrialQuotaExhaustedError(string? errorMessage)

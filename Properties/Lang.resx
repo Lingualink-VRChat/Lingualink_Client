@@ -260,20 +260,29 @@
   <data name="FreeQuotaDisplayFormat" xml:space="preserve">
     <value>Free quota {0}/{1}</value>
   </data>
-  <data name="FreeQuotaDisplayHourlyFormat" xml:space="preserve">
-    <value>Free quota {0}/{1}, refreshes hourly</value>
+  <data name="FreeQuotaDisplayRefreshFormat" xml:space="preserve">
+    <value>Free quota {0}/{1}, refreshes every {2}</value>
   </data>
   <data name="FreeQuotaDisplayExhaustedFormat" xml:space="preserve">
-    <value>Free quota exhausted (0/{0}), refreshes at {1}</value>
+    <value>Free quota exhausted (0/{0}), refreshes at {1} (every {2})</value>
   </data>
   <data name="FreeQuotaSubscribed" xml:space="preserve">
     <value>Subscribed plan</value>
   </data>
   <data name="FreeQuotaStartBlockedFormat" xml:space="preserve">
-    <value>Your hourly free quota is exhausted. Please wait until {0} for refresh, or subscribe to continue.</value>
+    <value>Your free quota is exhausted. Please wait until {0} for refresh (window: {1}), or subscribe to continue.</value>
   </data>
   <data name="FreeQuotaStartBlockedNoReset" xml:space="preserve">
-    <value>Your hourly free quota is exhausted. Please wait for the quota to refresh, or subscribe to continue.</value>
+    <value>Your free quota is exhausted. Please wait for the quota to refresh (window: {0}), or subscribe to continue.</value>
+  </data>
+  <data name="QuotaRefreshIntervalMinutesFormat" xml:space="preserve">
+    <value>{0} minute(s)</value>
+  </data>
+  <data name="QuotaRefreshIntervalHoursFormat" xml:space="preserve">
+    <value>{0} hour(s)</value>
+  </data>
+  <data name="QuotaRefreshIntervalUnknown" xml:space="preserve">
+    <value>current window</value>
   </data>
   <data name="TranslationServerError" xml:space="preserve">
     <value>Server error: {0}</value>
