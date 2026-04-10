@@ -1,4 +1,4 @@
-# Release Notes – 4.0.0
+# Release Notes – 4.0.2
 
 ## 简体中文 (zh-CN)
 
