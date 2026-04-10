@@ -160,7 +160,7 @@ namespace lingualink_client.Services.Auth
                     return new LoginResult
                     {
                         Success = false,
-                        ErrorMessage = "登录流程异常：收到了账号绑定回调"
+                        ErrorMessage = LanguageManager.GetString("AuthLoginUnexpectedBindCallback")
                     };
                 }
 
@@ -184,7 +184,7 @@ namespace lingualink_client.Services.Auth
                 if (string.IsNullOrWhiteSpace(callbackResult.AccessToken))
                 {
                     Debug.WriteLine("[AuthService] Callback payload missing access token");
-                    return new LoginResult { Success = false, ErrorMessage = "登录回调缺少令牌信息" };
+                    return new LoginResult { Success = false, ErrorMessage = LanguageManager.GetString("AuthLoginCallbackMissingToken") };
                 }
 
                 Debug.WriteLine("[AuthService] Received access token from callback");
@@ -192,7 +192,7 @@ namespace lingualink_client.Services.Auth
                 if (tokenResult == null)
                 {
                     Debug.WriteLine("[AuthService] Token exchange failed");
-                    return new LoginResult { Success = false, ErrorMessage = "Token 获取失败" };
+                    return new LoginResult { Success = false, ErrorMessage = LanguageManager.GetString("AuthLoginTokenBuildFailed") };
                 }
 
                 _currentToken = tokenResult;
@@ -286,7 +286,7 @@ namespace lingualink_client.Services.Auth
                 {
                     return (null, string.Equals(endpointPath, OAuthBindLoginEndpoint, StringComparison.OrdinalIgnoreCase)
                         ? LanguageManager.GetString("BindRequireLogin")
-                        : "登录状态已失效，请重新登录");
+                        : LanguageManager.GetString("AuthSessionExpiredRelogin"));
                 }
 
                 using (response)
@@ -639,7 +639,7 @@ namespace lingualink_client.Services.Auth
                     return new ApiOperationResult
                     {
                         Success = false,
-                        ErrorMessage = "登录状态已失效，请重新登录"
+                        ErrorMessage = LanguageManager.GetString("AuthSessionExpiredRelogin")
                     };
                 }
 
@@ -684,7 +684,7 @@ namespace lingualink_client.Services.Auth
                 return new ApiOperationResult
                 {
                     Success = false,
-                    ErrorMessage = usernameError ?? "用户名不合法"
+                    ErrorMessage = usernameError ?? LanguageManager.GetString("AccountUsernameInvalid")
                 };
             }
 
@@ -693,7 +693,7 @@ namespace lingualink_client.Services.Auth
                 return new ApiOperationResult
                 {
                     Success = false,
-                    ErrorMessage = "至少填写一个字段"
+                    ErrorMessage = LanguageManager.GetString("AccountAtLeastOneFieldRequired")
                 };
             }
 
@@ -710,13 +710,13 @@ namespace lingualink_client.Services.Auth
         {
             if (string.IsNullOrWhiteSpace(value))
             {
-                errorMessage = "用户名不能为空";
+                errorMessage = LanguageManager.GetString("AccountUsernameRequired");
                 return false;
             }
 
             if (value.Length > 100)
             {
-                errorMessage = "用户名长度不能超过 100";
+                errorMessage = LanguageManager.GetString("AccountUsernameTooLong");
                 return false;
             }
 
@@ -724,7 +724,7 @@ namespace lingualink_client.Services.Auth
             {
                 if (c == '/')
                 {
-                    errorMessage = "用户名不能包含 /";
+                    errorMessage = LanguageManager.GetString("AccountUsernameSlashInvalid");
                     return false;
                 }
             }
@@ -1386,7 +1386,7 @@ namespace lingualink_client.Services.Auth
                     return new ApiOperationResult
                     {
                         Success = false,
-                        ErrorMessage = "登录状态已失效，请重新登录"
+                        ErrorMessage = LanguageManager.GetString("AuthSessionExpiredRelogin")
                     };
                 }
 
@@ -1535,12 +1535,12 @@ namespace lingualink_client.Services.Auth
         {
             if (string.IsNullOrWhiteSpace(planId))
             {
-                return new CreateSubscriptionOrderResult
-                {
-                    Success = false,
-                    ErrorMessage = "缺少套餐 ID"
-                };
-            }
+                    return new CreateSubscriptionOrderResult
+                    {
+                        Success = false,
+                        ErrorMessage = LanguageManager.GetString("AccountPlanIdRequired")
+                    };
+                }
 
             if (durationMonths <= 0)
             {
@@ -1569,7 +1569,7 @@ namespace lingualink_client.Services.Auth
                     return new CreateSubscriptionOrderResult
                     {
                         Success = false,
-                        ErrorMessage = "登录状态已失效，请重新登录"
+                        ErrorMessage = LanguageManager.GetString("AccountSubscriptionReloginRequired")
                     };
                 }
 

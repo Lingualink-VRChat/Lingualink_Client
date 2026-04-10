@@ -1145,6 +1145,33 @@
   <data name="AccountVipActionOpen" xml:space="preserve">
     <value>VIP を有効化</value>
   </data>
+  <data name="AccountWalletSection" xml:space="preserve">
+    <value>ウォレットと自動更新</value>
+  </data>
+  <data name="AccountWalletBalance" xml:space="preserve">
+    <value>ウォレット残高</value>
+  </data>
+  <data name="AccountWalletRecharge" xml:space="preserve">
+    <value>残高チャージ</value>
+  </data>
+  <data name="AccountWalletAutoRenew" xml:space="preserve">
+    <value>自動更新</value>
+  </data>
+  <data name="AccountWalletEnableAutoRenew" xml:space="preserve">
+    <value>自動更新を有効化</value>
+  </data>
+  <data name="AccountWalletDisableAutoRenew" xml:space="preserve">
+    <value>自動更新を無効化</value>
+  </data>
+  <data name="AccountWalletRenewalWarning" xml:space="preserve">
+    <value>更新リマインダー</value>
+  </data>
+  <data name="AccountWalletAutoRenewEnabledStatus" xml:space="preserve">
+    <value>自動更新中</value>
+  </data>
+  <data name="AccountWalletAutoRenewDisabledStatus" xml:space="preserve">
+    <value>未設定</value>
+  </data>
   <data name="AccountUnbound" xml:space="preserve">
     <value>未連携</value>
   </data>
@@ -1253,6 +1280,12 @@
   <data name="AccountUsernameInvalid" xml:space="preserve">
     <value>ユーザー名の形式が正しくありません。</value>
   </data>
+  <data name="AccountAtLeastOneFieldRequired" xml:space="preserve">
+    <value>少なくとも 1 つの項目を入力してください。</value>
+  </data>
+  <data name="AccountPlanIdRequired" xml:space="preserve">
+    <value>プラン ID が必要です。</value>
+  </data>
   <data name="AccountAuthServiceUnavailable" xml:space="preserve">
     <value>認証サービスが初期化されていません。</value>
   </data>
@@ -1273,6 +1306,18 @@
   </data>
   <data name="AccountSubscriptionReloginRequired" xml:space="preserve">
     <value>ログイン状態が失効しました。サブスクリプションの前に再度ログインしてください。</value>
+  </data>
+  <data name="AuthSessionExpiredRelogin" xml:space="preserve">
+    <value>ログイン状態が失効しました。再度ログインしてください。</value>
+  </data>
+  <data name="AuthLoginUnexpectedBindCallback" xml:space="preserve">
+    <value>ログインフローエラー：アカウント連携コールバックを受信しました。</value>
+  </data>
+  <data name="AuthLoginCallbackMissingToken" xml:space="preserve">
+    <value>ログインコールバックにトークン情報がありません。</value>
+  </data>
+  <data name="AuthLoginTokenBuildFailed" xml:space="preserve">
+    <value>トークンの取得に失敗しました。</value>
   </data>
   <data name="AccountSubscribeSuccess" xml:space="preserve">
     <value>サブスクリプションが完了し、状態を更新しました。</value>

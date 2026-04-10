@@ -54,13 +54,13 @@ namespace lingualink_client.ViewModels
         public string CurrentPlanPrefixLabel => LanguageManager.GetString("AccountCurrentPlanPrefix");
         public string RefreshProfileTooltipLabel => LanguageManager.GetString("AccountRefreshProfileTooltip");
         public string SubscriptionOverviewLabel => LanguageManager.GetString("AccountSubscriptionOverview");
-        public string WalletSectionLabel => "钱包与自动续费";
-        public string WalletBalanceLabel => "账户余额";
-        public string WalletRechargeLabel => "余额充值";
-        public string WalletAutoRenewLabel => "自动续费";
-        public string WalletEnableAutoRenewLabel => "开启自动续费";
-        public string WalletDisableAutoRenewLabel => "关闭自动续费";
-        public string WalletRenewalWarningLabel => "续费提醒";
+        public string WalletSectionLabel => LanguageManager.GetString("AccountWalletSection");
+        public string WalletBalanceLabel => LanguageManager.GetString("AccountWalletBalance");
+        public string WalletRechargeLabel => LanguageManager.GetString("AccountWalletRecharge");
+        public string WalletAutoRenewLabel => LanguageManager.GetString("AccountWalletAutoRenew");
+        public string WalletEnableAutoRenewLabel => LanguageManager.GetString("AccountWalletEnableAutoRenew");
+        public string WalletDisableAutoRenewLabel => LanguageManager.GetString("AccountWalletDisableAutoRenew");
+        public string WalletRenewalWarningLabel => LanguageManager.GetString("AccountWalletRenewalWarning");
         public string SubscriptionCurrentStatusLabel => LanguageManager.GetString("AccountSubscriptionCurrentStatus");
         public string SubscriptionCurrentPlanLabel => LanguageManager.GetString("AccountSubscriptionCurrentPlan");
         public string SubscriptionRemainingLabel => LanguageManager.GetString("AccountSubscriptionRemaining");
@@ -256,7 +256,9 @@ namespace lingualink_client.ViewModels
         public string WechatBindingStatusDisplay => BuildSocialBindingStatusDisplay(UserProfile?.SocialBindings?.Wechat);
         public string QqBindingStatusDisplay => BuildSocialBindingStatusDisplay(UserProfile?.SocialBindings?.Qq);
         public string WalletBalanceDisplay => FormatCurrencyAmount(WalletBalanceCents);
-        public string AutoRenewStatusDisplay => UserProfile?.Subscription?.AutoRenew == true ? "自动续费中" : "未开启";
+        public string AutoRenewStatusDisplay => UserProfile?.Subscription?.AutoRenew == true
+            ? LanguageManager.GetString("AccountWalletAutoRenewEnabledStatus")
+            : LanguageManager.GetString("AccountWalletAutoRenewDisabledStatus");
         public string AutoRenewActionText => UserProfile?.Subscription?.AutoRenew == true ? WalletDisableAutoRenewLabel : WalletEnableAutoRenewLabel;
         public bool HasRenewalWarning => !string.IsNullOrWhiteSpace(RenewalWarning);
 
@@ -1549,7 +1551,7 @@ namespace lingualink_client.ViewModels
             if (string.IsNullOrWhiteSpace(accessToken))
             {
                 MessageBox.Show(
-                    "登录状态已失效，请重新登录。",
+                    LanguageManager.GetString("AuthSessionExpiredRelogin"),
                     LanguageManager.GetString("WarningTitle"),
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);

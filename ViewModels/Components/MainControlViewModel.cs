@@ -264,6 +264,16 @@ namespace lingualink_client.ViewModels.Components
         {
             if (!(_orchestrator?.IsWorking ?? false))
             {
+                if (_authService?.IsLoggedIn != true)
+                {
+                    MessageBox.Show(
+                        LanguageManager.GetString("BindRequireLogin"),
+                        LanguageManager.GetString("WarningTitle"),
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    return;
+                }
+
                 if (!await EnsureListeningQuotaAvailableAsync())
                 {
                     return;

@@ -1228,6 +1228,33 @@
   <data name="AccountVipActionOpen" xml:space="preserve">
     <value>开通 VIP</value>
   </data>
+  <data name="AccountWalletSection" xml:space="preserve">
+    <value>钱包与自动续费</value>
+  </data>
+  <data name="AccountWalletBalance" xml:space="preserve">
+    <value>账户余额</value>
+  </data>
+  <data name="AccountWalletRecharge" xml:space="preserve">
+    <value>余额充值</value>
+  </data>
+  <data name="AccountWalletAutoRenew" xml:space="preserve">
+    <value>自动续费</value>
+  </data>
+  <data name="AccountWalletEnableAutoRenew" xml:space="preserve">
+    <value>开启自动续费</value>
+  </data>
+  <data name="AccountWalletDisableAutoRenew" xml:space="preserve">
+    <value>关闭自动续费</value>
+  </data>
+  <data name="AccountWalletRenewalWarning" xml:space="preserve">
+    <value>续费提醒</value>
+  </data>
+  <data name="AccountWalletAutoRenewEnabledStatus" xml:space="preserve">
+    <value>自动续费中</value>
+  </data>
+  <data name="AccountWalletAutoRenewDisabledStatus" xml:space="preserve">
+    <value>未开启</value>
+  </data>
   <data name="AccountUnbound" xml:space="preserve">
     <value>未绑定</value>
   </data>
@@ -1336,6 +1363,12 @@
   <data name="AccountUsernameInvalid" xml:space="preserve">
     <value>用户名格式不正确</value>
   </data>
+  <data name="AccountAtLeastOneFieldRequired" xml:space="preserve">
+    <value>至少填写一个字段</value>
+  </data>
+  <data name="AccountPlanIdRequired" xml:space="preserve">
+    <value>缺少套餐 ID</value>
+  </data>
   <data name="AccountAuthServiceUnavailable" xml:space="preserve">
     <value>认证服务未初始化</value>
   </data>
@@ -1356,6 +1389,18 @@
   </data>
   <data name="AccountSubscriptionReloginRequired" xml:space="preserve">
     <value>登录状态已失效，请重新登录后再订阅。</value>
+  </data>
+  <data name="AuthSessionExpiredRelogin" xml:space="preserve">
+    <value>登录状态已失效，请重新登录。</value>
+  </data>
+  <data name="AuthLoginUnexpectedBindCallback" xml:space="preserve">
+    <value>登录流程异常：收到了账号绑定回调</value>
+  </data>
+  <data name="AuthLoginCallbackMissingToken" xml:space="preserve">
+    <value>登录回调缺少令牌信息</value>
+  </data>
+  <data name="AuthLoginTokenBuildFailed" xml:space="preserve">
+    <value>Token 获取失败</value>
   </data>
   <data name="AccountSubscribeSuccess" xml:space="preserve">
     <value>订阅成功，订阅状态已刷新。</value>

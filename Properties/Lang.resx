@@ -1229,6 +1229,33 @@
   <data name="AccountVipActionOpen" xml:space="preserve">
     <value>Activate VIP</value>
   </data>
+  <data name="AccountWalletSection" xml:space="preserve">
+    <value>Wallet & Auto-Renew</value>
+  </data>
+  <data name="AccountWalletBalance" xml:space="preserve">
+    <value>Wallet Balance</value>
+  </data>
+  <data name="AccountWalletRecharge" xml:space="preserve">
+    <value>Recharge Balance</value>
+  </data>
+  <data name="AccountWalletAutoRenew" xml:space="preserve">
+    <value>Auto-Renew</value>
+  </data>
+  <data name="AccountWalletEnableAutoRenew" xml:space="preserve">
+    <value>Enable Auto-Renew</value>
+  </data>
+  <data name="AccountWalletDisableAutoRenew" xml:space="preserve">
+    <value>Disable Auto-Renew</value>
+  </data>
+  <data name="AccountWalletRenewalWarning" xml:space="preserve">
+    <value>Renewal Reminder</value>
+  </data>
+  <data name="AccountWalletAutoRenewEnabledStatus" xml:space="preserve">
+    <value>Auto-renew enabled</value>
+  </data>
+  <data name="AccountWalletAutoRenewDisabledStatus" xml:space="preserve">
+    <value>Not enabled</value>
+  </data>
   <data name="AccountUnbound" xml:space="preserve">
     <value>Not Bound</value>
   </data>
@@ -1337,6 +1364,12 @@
   <data name="AccountUsernameInvalid" xml:space="preserve">
     <value>Invalid username format.</value>
   </data>
+  <data name="AccountAtLeastOneFieldRequired" xml:space="preserve">
+    <value>At least one field is required.</value>
+  </data>
+  <data name="AccountPlanIdRequired" xml:space="preserve">
+    <value>Plan ID is required.</value>
+  </data>
   <data name="AccountAuthServiceUnavailable" xml:space="preserve">
     <value>Authentication service is not initialized.</value>
   </data>
@@ -1357,6 +1390,18 @@
   </data>
   <data name="AccountSubscriptionReloginRequired" xml:space="preserve">
     <value>Your login session has expired. Please log in again before subscribing.</value>
+  </data>
+  <data name="AuthSessionExpiredRelogin" xml:space="preserve">
+    <value>Your login session has expired. Please sign in again.</value>
+  </data>
+  <data name="AuthLoginUnexpectedBindCallback" xml:space="preserve">
+    <value>Login flow error: received an account-binding callback.</value>
+  </data>
+  <data name="AuthLoginCallbackMissingToken" xml:space="preserve">
+    <value>Login callback did not include token information.</value>
+  </data>
+  <data name="AuthLoginTokenBuildFailed" xml:space="preserve">
+    <value>Failed to obtain token.</value>
   </data>
   <data name="AccountSubscribeSuccess" xml:space="preserve">
     <value>Subscription succeeded. Subscription status has been refreshed.</value>
