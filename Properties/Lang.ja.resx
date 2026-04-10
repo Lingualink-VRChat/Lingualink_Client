@@ -354,6 +354,18 @@
   <data name="SuccessTitle" xml:space="preserve">
     <value>成功</value>
   </data>
+  <data name="WarningTitle" xml:space="preserve">
+    <value>警告</value>
+  </data>
+  <data name="ErrorTitle" xml:space="preserve">
+    <value>エラー</value>
+  </data>
+  <data name="QuestionTitle" xml:space="preserve">
+    <value>確認</value>
+  </data>
+  <data name="ConfirmTitle" xml:space="preserve">
+    <value>確認</value>
+  </data>
   <data name="SettingsSavedSuccess" xml:space="preserve">
     <value>サービス関連の設定が正常に保存されました。</value>
   </data>

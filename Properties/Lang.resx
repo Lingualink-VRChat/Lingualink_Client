@@ -379,6 +379,18 @@
   <data name="SuccessTitle" xml:space="preserve">
     <value>Success</value>
   </data>
+  <data name="WarningTitle" xml:space="preserve">
+    <value>Warning</value>
+  </data>
+  <data name="ErrorTitle" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="QuestionTitle" xml:space="preserve">
+    <value>Question</value>
+  </data>
+  <data name="ConfirmTitle" xml:space="preserve">
+    <value>Confirm</value>
+  </data>
   <data name="SettingsSavedSuccess" xml:space="preserve">
     <value>Service-related settings saved successfully.</value>
   </data>

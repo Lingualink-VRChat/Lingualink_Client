@@ -379,6 +379,18 @@
   <data name="SuccessTitle" xml:space="preserve">
     <value>成功</value>
   </data>
+  <data name="WarningTitle" xml:space="preserve">
+    <value>警告</value>
+  </data>
+  <data name="ErrorTitle" xml:space="preserve">
+    <value>错误</value>
+  </data>
+  <data name="QuestionTitle" xml:space="preserve">
+    <value>提示</value>
+  </data>
+  <data name="ConfirmTitle" xml:space="preserve">
+    <value>确认</value>
+  </data>
   <data name="SettingsSavedSuccess" xml:space="preserve">
     <value>服务相关设置已保存。</value>
   </data>
