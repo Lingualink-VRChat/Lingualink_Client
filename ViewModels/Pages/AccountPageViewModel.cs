@@ -1345,10 +1345,6 @@ namespace lingualink_client.ViewModels
         {
             Debug.WriteLine("[AccountPageViewModel] ValidateAndBuildSettings() called");
             Debug.WriteLine($"[AccountPageViewModel] Loaded latest settings base - ActiveServerUrl: '{updatedSettings.ActiveServerUrl}'");
-            updatedSettings.OfficialServerUrl = string.IsNullOrWhiteSpace(updatedSettings.OfficialServerUrl)
-                ? AppSettings.GetEffectiveOfficialServerUrl()
-                : updatedSettings.OfficialServerUrl;
-
             return true;
         }
 

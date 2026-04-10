@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace lingualink_client.Models
 {
@@ -73,8 +74,6 @@ namespace lingualink_client.Models
         // Microphone selection - remember last used device
         public string LastSelectedMicrophoneId { get; set; } = string.Empty;
 
-        // Account / official server selection
-        public string OfficialServerUrl { get; set; } = GetEffectiveOfficialServerUrl();
         public string PendingSubscriptionOrderOutTradeNo { get; set; } = string.Empty;
 
         /// <summary>
@@ -82,9 +81,8 @@ namespace lingualink_client.Models
         /// </summary>
         public List<string> DismissedAnnouncementIds { get; set; } = new();
 
-        public string ActiveServerUrl => string.IsNullOrWhiteSpace(OfficialServerUrl)
-            ? GetEffectiveOfficialServerUrl()
-            : OfficialServerUrl;
+        [JsonIgnore]
+        public string ActiveServerUrl => GetEffectiveOfficialServerUrl();
 
         // Get the currently selected template
         public MessageTemplate GetSelectedTemplate()

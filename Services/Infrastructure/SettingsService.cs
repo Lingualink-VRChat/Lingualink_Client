@@ -84,12 +84,6 @@ namespace lingualink_client.Services
                 changed = true;
             }
 
-            if (string.IsNullOrWhiteSpace(settings.OfficialServerUrl))
-            {
-                settings.OfficialServerUrl = AppSettings.GetEffectiveOfficialServerUrl();
-                changed = true;
-            }
-
             return changed;
         }
 
@@ -124,6 +118,7 @@ namespace lingualink_client.Services
             changed |= obj.Remove("ServerUrl");
             changed |= obj.Remove("ApiKey");
             changed |= obj.Remove("OfficialApiKey");
+            changed |= obj.Remove("OfficialServerUrl");
 
             if (!changed)
             {
