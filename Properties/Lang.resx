@@ -1230,7 +1230,7 @@
     <value>Activate VIP</value>
   </data>
   <data name="AccountWalletSection" xml:space="preserve">
-    <value>Wallet & Auto-Renew</value>
+    <value>Wallet &amp; Auto-Renew</value>
   </data>
   <data name="AccountWalletBalance" xml:space="preserve">
     <value>Wallet Balance</value>
