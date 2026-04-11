@@ -21,7 +21,7 @@ using MessageBox = lingualink_client.Services.MessageBox;
 
 namespace lingualink_client.ViewModels
 {
-    public partial class AccountPageViewModel : ViewModelBase
+    public partial class AccountPageViewModel : ViewModelBase, IDisposable
     {
         private readonly ISettingsManager _settingsManager;
         private readonly IAuthService? _authService;
@@ -2353,5 +2353,32 @@ namespace lingualink_client.ViewModels
         }
 
         #endregion
+
+        public void Dispose()
+        {
+            PropertyChanged -= OnAccountPropertyChanged;
+            LanguageManager.LanguageChanged -= OnLanguageChanged;
+
+            if (_authService != null)
+            {
+                _authService.LoginStateChanged -= OnAuthServiceLoginStateChanged;
+            }
+
+            if (_autoSaveTimer.IsEnabled)
+            {
+                _autoSaveTimer.Stop();
+            }
+
+            if (_emailCodeTimer.IsEnabled)
+            {
+                _emailCodeTimer.Stop();
+            }
+
+            _autoSaveTimer.Tick -= AutoSaveTimerOnTick;
+            _emailCodeTimer.Tick -= EmailCodeTimerOnTick;
+
+            CancelPendingProfileSync();
+            StopOrderPollingInternal();
+        }
     }
 }

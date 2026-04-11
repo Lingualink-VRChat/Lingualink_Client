@@ -13,7 +13,7 @@ using Velopack;
 
 namespace lingualink_client.ViewModels
 {
-    public partial class SettingPageViewModel : ViewModelBase
+    public partial class SettingPageViewModel : ViewModelBase, IDisposable
     {
         private readonly IUpdateService _updateService;
 
@@ -69,19 +69,21 @@ namespace lingualink_client.ViewModels
 
             RefreshLatestVersionText();
 
-            LanguageManager.LanguageChanged += () =>
-            {
-                OnPropertyChanged(nameof(PageTitle));
-                OnPropertyChanged(nameof(InterfaceLanguage));
-                OnPropertyChanged(nameof(LanguageHint));
-                OnPropertyChanged(nameof(UpdateSectionTitle));
-                OnPropertyChanged(nameof(CurrentVersionLabel));
-                OnPropertyChanged(nameof(LatestVersionLabel));
-                OnPropertyChanged(nameof(CheckForUpdatesLabel));
-                OnPropertyChanged(nameof(DownloadAndUpdateLabel));
-                OnPropertyChanged(nameof(DownloadProgressLabel));
-                RefreshLatestVersionText();
-            };
+            LanguageManager.LanguageChanged += OnLanguageChanged;
+        }
+
+        private void OnLanguageChanged()
+        {
+            OnPropertyChanged(nameof(PageTitle));
+            OnPropertyChanged(nameof(InterfaceLanguage));
+            OnPropertyChanged(nameof(LanguageHint));
+            OnPropertyChanged(nameof(UpdateSectionTitle));
+            OnPropertyChanged(nameof(CurrentVersionLabel));
+            OnPropertyChanged(nameof(LatestVersionLabel));
+            OnPropertyChanged(nameof(CheckForUpdatesLabel));
+            OnPropertyChanged(nameof(DownloadAndUpdateLabel));
+            OnPropertyChanged(nameof(DownloadProgressLabel));
+            RefreshLatestVersionText();
         }
 
         [RelayCommand(CanExecute = nameof(CanCheckForUpdate))]
@@ -332,6 +334,11 @@ namespace lingualink_client.ViewModels
             UpdateAvailable,
             Failed,
             Disabled
+        }
+
+        public void Dispose()
+        {
+            LanguageManager.LanguageChanged -= OnLanguageChanged;
         }
     }
 }

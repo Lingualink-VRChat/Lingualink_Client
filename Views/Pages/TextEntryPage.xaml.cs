@@ -7,12 +7,18 @@ namespace lingualink_client.Views
 {
     public partial class TextEntryPage : Page
     {
-        private readonly TextEntryPageViewModel _viewModel;
+        private TextEntryPageViewModel? _viewModel;
 
         public TextEntryPage()
         {
             InitializeComponent();
-            _viewModel = new TextEntryPageViewModel();
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
+        }
+
+        private void OnLoaded(object sender, RoutedEventArgs e)
+        {
+            _viewModel ??= new TextEntryPageViewModel();
             DataContext = _viewModel;
         }
 
@@ -34,7 +40,7 @@ namespace lingualink_client.Views
         /// </summary>
         private void InputTextBox_GotFocus(object sender, RoutedEventArgs e)
         {
-            _viewModel.HandleTextBoxFocusGained();
+            _viewModel?.HandleTextBoxFocusGained();
         }
 
         /// <summary>
@@ -42,7 +48,14 @@ namespace lingualink_client.Views
         /// </summary>
         private void InputTextBox_LostFocus(object sender, RoutedEventArgs e)
         {
-            _viewModel.HandleTextBoxFocusLost();
+            _viewModel?.HandleTextBoxFocusLost();
+        }
+
+        private void OnUnloaded(object sender, RoutedEventArgs e)
+        {
+            DataContext = null;
+            _viewModel?.Dispose();
+            _viewModel = null;
         }
     }
 }

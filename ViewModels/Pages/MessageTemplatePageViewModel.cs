@@ -13,9 +13,10 @@ using lingualink_client.Services.Interfaces;
 
 namespace lingualink_client.ViewModels
 {
-    public partial class MessageTemplatePageViewModel : ViewModelBase
+    public partial class MessageTemplatePageViewModel : ViewModelBase, IDisposable
     {
         private readonly ISettingsManager _settingsManager;
+        private readonly IEventAggregator _eventAggregator;
         private AppSettings _appSettings;
         private bool _isLoadingSettings;
 
@@ -50,8 +51,8 @@ namespace lingualink_client.ViewModels
             LanguageManager.LanguageChanged += OnLanguageChanged;
 
             // 订阅语言初始化事件
-            var eventAggregator = ServiceContainer.Resolve<IEventAggregator>();
-            eventAggregator.Subscribe<LanguagesInitializedEvent>(OnLanguagesInitialized);
+            _eventAggregator = ServiceContainer.Resolve<IEventAggregator>();
+            _eventAggregator.Subscribe<LanguagesInitializedEvent>(OnLanguagesInitialized);
 
             LoadSettings();
             InitializePlaceholders();
@@ -220,6 +221,12 @@ namespace lingualink_client.ViewModels
         public void RefreshSettings()
         {
             LoadSettings();
+        }
+
+        public void Dispose()
+        {
+            LanguageManager.LanguageChanged -= OnLanguageChanged;
+            _eventAggregator.Unsubscribe<LanguagesInitializedEvent>(OnLanguagesInitialized);
         }
     }
 }

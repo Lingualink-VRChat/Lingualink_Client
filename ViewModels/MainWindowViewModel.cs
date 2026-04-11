@@ -1,8 +1,9 @@
-﻿using lingualink_client.Services;
+﻿using System;
+using lingualink_client.Services;
 
 namespace lingualink_client.ViewModels
 {
-    public class MainWindowViewModel : ViewModelBase
+    public class MainWindowViewModel : ViewModelBase, IDisposable
     {
         public string Start => LanguageManager.GetString("Start");
         public string Account => LanguageManager.GetString("Account");
@@ -32,6 +33,11 @@ namespace lingualink_client.ViewModels
             OnPropertyChanged(nameof(Logs));
             OnPropertyChanged(nameof(AppTitle));
             OnPropertyChanged(nameof(AppTitleBar));
+        }
+
+        public void Dispose()
+        {
+            LanguageManager.LanguageChanged -= RefreshLanguageBindings;
         }
     }
 }

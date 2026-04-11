@@ -15,7 +15,7 @@ using MessageBox = lingualink_client.Services.MessageBox;
 
 namespace lingualink_client.ViewModels
 {
-    public partial class ServicePageViewModel : ViewModelBase
+    public partial class ServicePageViewModel : ViewModelBase, IDisposable
     {
         private readonly ISettingsManager _settingsManager;
         private AppSettings _currentSettings; 
@@ -432,6 +432,14 @@ namespace lingualink_client.ViewModels
 
             // 重置后立即保存一次
             SaveSettingsInternal(showConfirmation: true, changeSource: "ServicePageResetToDefaults");
+        }
+
+        public void Dispose()
+        {
+            PropertyChanged -= OnServicePagePropertyChanged;
+            LanguageManager.LanguageChanged -= OnLanguageChanged;
+            _autoSaveTimer.Stop();
+            _autoSaveTimer.Tick -= AutoSaveTimerOnTick;
         }
     }
 }
