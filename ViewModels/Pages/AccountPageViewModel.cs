@@ -1587,12 +1587,7 @@ namespace lingualink_client.ViewModels
 
         private static string ResolveCheckoutAuthHost(string? authServerUrl)
         {
-            if (string.IsNullOrWhiteSpace(authServerUrl))
-            {
-                return "https://auth.lingualink.aiatechco.com";
-            }
-
-            return authServerUrl.Trim().TrimEnd('/');
+            return AppEndpoints.NormalizeBaseUrl(authServerUrl, AppEndpoints.DefaultAuthServerUrl);
         }
 
         [RelayCommand(CanExecute = nameof(CanRefreshUserProfile))]

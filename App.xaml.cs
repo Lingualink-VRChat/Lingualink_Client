@@ -2,6 +2,7 @@ using lingualink_client.ViewModels;
 using lingualink_client.Services;
 using lingualink_client.Services.Interfaces;
 using lingualink_client.Services.Logging;
+using lingualink_client.Models;
 using System;
 using System.Diagnostics;
 using System.Linq;
@@ -86,8 +87,8 @@ namespace lingualink_client
             {
                 Debug.WriteLine($"WebView2 Runtime is not available: {ex.Message}");
                 var result = MessageBox.Show(
-                    "本应用需要 WebView2 Runtime 才能使用登录和订阅功能。是否前往下载？",
-                    "缺少 WebView2",
+                    LanguageManager.GetString("WebView2MissingRuntimeMessage"),
+                    LanguageManager.GetString("WarningTitle"),
                     MessageBoxButton.YesNo,
                     MessageBoxImage.Warning);
 
@@ -100,7 +101,7 @@ namespace lingualink_client
                 {
                     Process.Start(new ProcessStartInfo
                     {
-                        FileName = "https://go.microsoft.com/fwlink/p/?LinkId=2124703",
+                        FileName = AppEndpoints.WebView2RuntimeDownloadUrl,
                         UseShellExecute = true
                     });
                 }

@@ -13,7 +13,7 @@ using lingualink_client.Services.Interfaces;
 using lingualink_client.ViewModels.Components;
 using lingualink_client.Services.Events;
 using lingualink_client.ViewModels.Managers;
-using MessageBox = System.Windows.MessageBox;
+using MessageBox = lingualink_client.Services.MessageBox;
 
 namespace lingualink_client.ViewModels
 {

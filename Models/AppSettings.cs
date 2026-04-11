@@ -4,9 +4,9 @@ namespace lingualink_client.Models
 {
     public class AppSettings
     {
-        public const string OfficialProductionServerUrl = "https://api.lingualink.aiatechco.com/api/v1/";
-        public const string LegacyCustomServerUrl = "https://api2.lingualink.aiatechco.com/api/v1/";
-        public const string LegacyLocalOfficialServerUrl = "http://localhost:8080/api/v1/";
+        public const string OfficialProductionServerUrl = AppEndpoints.OfficialApiBaseUrl;
+        public const string LegacyCustomServerUrl = AppEndpoints.LegacyCustomApiBaseUrl;
+        public const string LegacyLocalOfficialServerUrl = AppEndpoints.LegacyLocalOfficialApiBaseUrl;
 
         public string GlobalLanguage { get; set; } = Services.LanguageManager.DetectSystemLanguage();
 

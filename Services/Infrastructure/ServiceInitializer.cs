@@ -1,3 +1,4 @@
+using lingualink_client.Models;
 using lingualink_client.Services.Auth;
 using lingualink_client.Services.Events;
 using lingualink_client.Services.Interfaces;
@@ -73,12 +74,9 @@ namespace lingualink_client.Services
 
             // 注册认证服务
             // 默认使用生产 Auth Server；本地联调可通过环境变量 LINGUALINK_AUTH_SERVER_URL 覆盖。
-            var authServerUrl = Environment.GetEnvironmentVariable("LINGUALINK_AUTH_SERVER_URL");
-            if (string.IsNullOrWhiteSpace(authServerUrl))
-            {
-                authServerUrl = "https://auth.lingualink.aiatechco.com";
-            }
-            authServerUrl = authServerUrl.TrimEnd('/');
+            var authServerUrl = AppEndpoints.NormalizeBaseUrl(
+                Environment.GetEnvironmentVariable("LINGUALINK_AUTH_SERVER_URL"),
+                AppEndpoints.DefaultAuthServerUrl);
             // 登录入口应走 Auth Server 托管登录页。
             var loginPageUrl = $"{authServerUrl}/auth";
             var authService = new AuthService(authServerUrl, loginPageUrl);

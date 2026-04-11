@@ -3,13 +3,13 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using WpfMessageBox = System.Windows.MessageBox;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using lingualink_client.Services;
 using lingualink_client.Models.Updates;
 using lingualink_client.Services.Interfaces;
 using Velopack;
+using MessageBox = lingualink_client.Services.MessageBox;
 
 namespace lingualink_client.ViewModels
 {
@@ -200,7 +200,7 @@ namespace lingualink_client.ViewModels
 
                 var prompt = LanguageManager.GetString("UpdateDialogDownloadPrompt");
                 var title = LanguageManager.GetString("UpdateReadyTitle");
-                var result = WpfMessageBox.Show(prompt, title, MessageBoxButton.YesNo, MessageBoxImage.Question);
+                var result = MessageBox.Show(prompt, title, MessageBoxButton.YesNo, MessageBoxImage.Question);
 
                 if (result == MessageBoxResult.Yes)
                 {
@@ -270,7 +270,7 @@ namespace lingualink_client.ViewModels
         private static void ShowError(string message, Exception exception)
         {
             var errorTitle = LanguageManager.GetString("UpdateErrorTitle");
-            WpfMessageBox.Show($"{message}: {exception.Message}", errorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show($"{message}: {exception.Message}", errorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
         }
 
         private string ResolveCurrentVersion()
