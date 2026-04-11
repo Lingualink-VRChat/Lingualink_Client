@@ -21,6 +21,7 @@ git config --global core.safecrlf warn
 - 新功能先判断应落在 `Views/Pages`、`ViewModels/Pages`、`ViewModels/Components`、`Services/*` 的哪一层，避免直接把逻辑堆进页面代码后置文件。
 - 能通过构造参数注入的依赖，不要新增 `ServiceContainer.Resolve<T>()` 调用；服务定位器只作为兼容旧代码的过渡手段。
 - 页面级设置修改优先走 `ISettingsManager.TryUpdateAndSave(...)`，避免每个页面自己拼装加载、保存、广播逻辑。
+- 内建服务地址、下载源和运行时下载链接统一放在 `Models/AppEndpoints.cs`，不要把环境常量散落到窗口、ViewModel 或服务实现里。
 - 所有面向用户的字符串都进入 `Properties/Lang*.resx`，不要把界面文本硬编码在 ViewModel、服务或 XAML 后置代码里。
 - 剪贴板写入统一使用 `ClipboardHelper.TrySetText(...)`，不要直接调用 `System.Windows.Clipboard` 或 `System.Windows.Forms.Clipboard`。
 - UI 提示优先使用 `Services/Ui/MessageBox.cs` 的封装，而不是散落的 `System.Windows.MessageBox`。
