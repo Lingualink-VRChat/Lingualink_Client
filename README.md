@@ -39,5 +39,6 @@
 - 日常开发规范与 WSL/Windows 混合工作流建议：参见 docs/DevelopmentConventions.md。
 - 代码质量改进与后续重构抓手：参见 docs/CodeQualityRoadmap.md。
 - 构建 / 发布与脚本使用：参见 docs/ReleaseGuide.md。
+- 纯逻辑自动化测试入口：参见 tests/LinguaLink.Client.Tests/。
 - 参考文档（后端 API、Web 下载页说明等）：参见 docs/reference/。
 - 版本更新日志：参见根目录 RELEASENOTES.md。

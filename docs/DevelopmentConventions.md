@@ -48,9 +48,12 @@ git config --global core.safecrlf warn
 ## 6. 提交与验证
 
 - 保持一个提交只做一类事情，例如 `docs:`、`refactor:`、`fix:` 分开处理。
+- 偏结构整理的重构，优先拆成“ViewModel/页面结构”、“基础设施注入”、“测试/文档”几个阶段提交，方便回滚和评审。
 - 提交前至少检查：
   - `git diff --check`
+  - `dotnet build lingualink_client.csproj -c Debug -p:EnableWindowsTargeting=true`
+  - 纯逻辑改动对应的 `dotnet test tests/LinguaLink.Client.Tests/LinguaLink.Client.Tests.csproj`
   - 受影响页面的手动流程
   - 本地化字符串是否补齐
   - 页面切换、重复打开、退出应用时是否存在资源未释放的问题
-- 当前仓库还没有完整自动化测试。涉及音频、翻译、OSC、更新和本地化改动时，请在 PR 里附上手动验证步骤。
+- 当前仓库只有轻量级纯逻辑自动化测试。涉及音频、翻译、OSC、更新、认证、支付和本地化改动时，请在 PR 里附上手动验证步骤。
