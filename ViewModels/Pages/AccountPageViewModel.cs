@@ -2,22 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.IO;
-using System.Net.Mail;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using lingualink_client.Models;
 using lingualink_client.Models.Auth;
 using lingualink_client.Services;
 using lingualink_client.Services.Interfaces;
-using lingualink_client.Views;
-using QRCoder;
-using MessageBox = lingualink_client.Services.MessageBox;
 
 namespace lingualink_client.ViewModels
 {
@@ -35,7 +28,6 @@ namespace lingualink_client.ViewModels
         private bool _isRestoringPendingOrder;
         private bool _isRecoveringUserProfile;
 
-        // 语言相关的标签
         public string AuthenticationModeLabel => LanguageManager.GetString("AuthenticationMode");
         public string OfficialServiceLabel => LanguageManager.GetString("OfficialService");
         public string CustomServiceLabel => LanguageManager.GetString("CustomService");
@@ -96,18 +88,15 @@ namespace lingualink_client.ViewModels
         [ObservableProperty]
         private bool _isTestingConnection;
 
-        // 认证模式属性 - 简化为只有一个开关
         [ObservableProperty]
         private bool _useCustomServer;
 
-        // 官方服务登录相关属性
         [ObservableProperty]
         private bool _isLoggedIn;
 
         [ObservableProperty]
         private string _loggedInUsername = string.Empty;
 
-        // 自定义服务器设置
         [ObservableProperty]
         private string _serverUrl = string.Empty;
 
@@ -263,6 +252,53 @@ namespace lingualink_client.ViewModels
         public string WechatBindingStatusDisplay => BuildSocialBindingStatusDisplay(UserProfile?.SocialBindings?.Wechat);
         public string QqBindingStatusDisplay => BuildSocialBindingStatusDisplay(UserProfile?.SocialBindings?.Qq);
 
+        public AccountPageViewModel()
+            : this(CreateSettingsManager(), TryResolveAuthService())
+        {
+        }
+
+        public AccountPageViewModel(ISettingsManager settingsManager, IAuthService? authService = null)
+        {
+            _settingsManager = settingsManager ?? throw new ArgumentNullException(nameof(settingsManager));
+            _authService = authService;
+            _currentSettings = _settingsManager.LoadSettings();
+            RefreshLocalizedOptions();
+            LoadSettingsFromModel(_currentSettings);
+
+            LanguageManager.LanguageChanged += OnLanguageChanged;
+
+            _autoSaveTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(1)
+            };
+            _autoSaveTimer.Tick += AutoSaveTimerOnTick;
+
+            _emailCodeTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(1)
+            };
+            _emailCodeTimer.Tick += EmailCodeTimerOnTick;
+
+            PropertyChanged += OnAccountPropertyChanged;
+
+            if (_authService != null)
+            {
+                _authService.LoginStateChanged += OnAuthServiceLoginStateChanged;
+                UpdateLoginState();
+            }
+        }
+
+        private static ISettingsManager CreateSettingsManager()
+        {
+            return ServiceContainer.TryResolve<ISettingsManager>(out var settingsManager) && settingsManager != null
+                ? settingsManager
+                : new SettingsManager();
+        }
+
+        private static IAuthService? TryResolveAuthService()
+        {
+            return ServiceContainer.TryResolve<IAuthService>(out var authService) ? authService : null;
+        }
 
         private static string BuildSocialBindingStatusDisplay(SocialBindingInfo? binding)
         {
@@ -283,6 +319,7 @@ namespace lingualink_client.ViewModels
         partial void OnServerUrlChanged(string value)
         {
             Debug.WriteLine($"[AccountPageViewModel] ServerUrl property changed to: '{value}'");
+            TestConnectionCommand.NotifyCanExecuteChanged();
         }
 
         partial void OnApiKeyChanged(string value)
@@ -302,11 +339,7 @@ namespace lingualink_client.ViewModels
             OnPropertyChanged(nameof(WechatBindingStatusDisplay));
             OnPropertyChanged(nameof(QqBindingStatusDisplay));
             SyncProfileEditorWithUser(value);
-            BeginEditUsernameCommand.NotifyCanExecuteChanged();
-            BeginEditEmailCommand.NotifyCanExecuteChanged();
-            BeginEditProviderCommand.NotifyCanExecuteChanged();
-            BindQqProviderCommand.NotifyCanExecuteChanged();
-            BindWechatProviderCommand.NotifyCanExecuteChanged();
+            RefreshProfileEditingCommandStates();
         }
 
         partial void OnEditUsernameChanged(string value)
@@ -453,6 +486,22 @@ namespace lingualink_client.ViewModels
 
         partial void OnIsUpdatingUserProfileChanged(bool value)
         {
+            RefreshProfileEditingCommandStates();
+        }
+
+        partial void OnHasPaidSubscriptionPlanChanged(bool value)
+        {
+            OnPropertyChanged(nameof(VipActionButtonText));
+        }
+
+        private void RefreshLoginCommandStates()
+        {
+            LoginCommand.NotifyCanExecuteChanged();
+            LogoutCommand.NotifyCanExecuteChanged();
+        }
+
+        private void RefreshProfileEditingCommandStates()
+        {
             UpdateUserProfileCommand.NotifyCanExecuteChanged();
             SendEmailCodeCommand.NotifyCanExecuteChanged();
             BindProviderCommand.NotifyCanExecuteChanged();
@@ -466,52 +515,22 @@ namespace lingualink_client.ViewModels
             SaveProviderCommand.NotifyCanExecuteChanged();
         }
 
-        partial void OnHasPaidSubscriptionPlanChanged(bool value)
+        private void RefreshSubscriptionCommandStates()
         {
-            OnPropertyChanged(nameof(VipActionButtonText));
+            OpenSubscriptionDialogCommand.NotifyCanExecuteChanged();
+            LoadSubscriptionPlansCommand.NotifyCanExecuteChanged();
+            CreateSubscriptionOrderCommand.NotifyCanExecuteChanged();
+            QueryOrderStatusCommand.NotifyCanExecuteChanged();
+            StopOrderPollingCommand.NotifyCanExecuteChanged();
         }
 
-        public AccountPageViewModel(ISettingsManager? settingsManager = null, IAuthService? authService = null)
+        private void RefreshAccountCommandStates()
         {
-            _settingsManager = settingsManager
-                               ?? (ServiceContainer.TryResolve<ISettingsManager>(out var resolved) && resolved != null
-                                   ? resolved
-                                   : new SettingsManager());
-            _currentSettings = _settingsManager.LoadSettings();
-            RefreshLocalizedOptions();
-
-            if (authService != null)
-            {
-                _authService = authService;
-            }
-            else if (ServiceContainer.TryResolve<IAuthService>(out var resolvedAuth) && resolvedAuth != null)
-            {
-                _authService = resolvedAuth;
-            }
-
-            LoadSettingsFromModel(_currentSettings);
-
-            LanguageManager.LanguageChanged += OnLanguageChanged;
-
-            _autoSaveTimer = new DispatcherTimer
-            {
-                Interval = TimeSpan.FromSeconds(1)
-            };
-            _autoSaveTimer.Tick += AutoSaveTimerOnTick;
-
-            _emailCodeTimer = new DispatcherTimer
-            {
-                Interval = TimeSpan.FromSeconds(1)
-            };
-            _emailCodeTimer.Tick += EmailCodeTimerOnTick;
-
-            PropertyChanged += OnAccountPropertyChanged;
-
-            if (_authService != null)
-            {
-                _authService.LoginStateChanged += OnAuthServiceLoginStateChanged;
-                UpdateLoginState();
-            }
+            RefreshLoginCommandStates();
+            RefreshProfileEditingCommandStates();
+            RefreshSubscriptionCommandStates();
+            RefreshUserProfileCommand.NotifyCanExecuteChanged();
+            TestConnectionCommand.NotifyCanExecuteChanged();
         }
 
         private void EmailCodeTimerOnTick(object? sender, EventArgs e)
@@ -528,7 +547,7 @@ namespace lingualink_client.ViewModels
 
         private void OnAuthServiceLoginStateChanged(object? sender, bool isLoggedIn)
         {
-            Application.Current.Dispatcher.Invoke(UpdateLoginState);
+            System.Windows.Application.Current.Dispatcher.Invoke(UpdateLoginState);
         }
 
         private void UpdateLoginState()
@@ -543,6 +562,7 @@ namespace lingualink_client.ViewModels
                 ClearPlans();
                 StopOrderPollingInternal();
                 ResetOrderState();
+                RefreshAccountCommandStates();
                 return;
             }
 
@@ -575,25 +595,7 @@ namespace lingualink_client.ViewModels
                 }
             }
 
-            LoginCommand.NotifyCanExecuteChanged();
-            LogoutCommand.NotifyCanExecuteChanged();
-            OpenSubscriptionDialogCommand.NotifyCanExecuteChanged();
-            RefreshUserProfileCommand.NotifyCanExecuteChanged();
-            UpdateUserProfileCommand.NotifyCanExecuteChanged();
-            SendEmailCodeCommand.NotifyCanExecuteChanged();
-            BindProviderCommand.NotifyCanExecuteChanged();
-            BindQqProviderCommand.NotifyCanExecuteChanged();
-            BindWechatProviderCommand.NotifyCanExecuteChanged();
-            BeginEditUsernameCommand.NotifyCanExecuteChanged();
-            BeginEditEmailCommand.NotifyCanExecuteChanged();
-            BeginEditProviderCommand.NotifyCanExecuteChanged();
-            SaveUsernameCommand.NotifyCanExecuteChanged();
-            SaveEmailCommand.NotifyCanExecuteChanged();
-            SaveProviderCommand.NotifyCanExecuteChanged();
-            LoadSubscriptionPlansCommand.NotifyCanExecuteChanged();
-            CreateSubscriptionOrderCommand.NotifyCanExecuteChanged();
-            QueryOrderStatusCommand.NotifyCanExecuteChanged();
-            StopOrderPollingCommand.NotifyCanExecuteChanged();
+            RefreshAccountCommandStates();
         }
 
         private async Task EnsureUserProfileLoadedAsync()
@@ -664,7 +666,6 @@ namespace lingualink_client.ViewModels
                             return;
                         }
 
-                        // 兜底：页面进入时主动从本地恢复会话，避免只依赖应用启动阶段的恢复任务。
                         await _authService.TryRestoreSessionAsync();
                         UpdateLoginState();
                     }
@@ -883,339 +884,6 @@ namespace lingualink_client.ViewModels
             return true;
         }
 
-        private void SyncProfileEditorWithUser(UserProfile? profile)
-        {
-            if (profile == null)
-            {
-                EditUsername = string.Empty;
-                return;
-            }
-
-            EditUsername = profile.Username ?? string.Empty;
-        }
-
-        private void ResetBindEmailState()
-        {
-            _emailCodeTimer.Stop();
-            BindEmailInput = string.Empty;
-            BindEmailCodeInput = string.Empty;
-            BindEmailPasswordInput = string.Empty;
-            BindEmailConfirmPasswordInput = string.Empty;
-            IsEmailCodeSent = false;
-            IsSendingEmailCode = false;
-            EmailCodeCountdownSeconds = 0;
-        }
-
-        private static bool TryValidateEmailInput(string? email)
-        {
-            if (string.IsNullOrWhiteSpace(email))
-            {
-                return false;
-            }
-
-            try
-            {
-                var parsed = new MailAddress(email.Trim());
-                return string.Equals(parsed.Address, email.Trim(), StringComparison.OrdinalIgnoreCase);
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        private bool HasValidBindEmailPassword()
-        {
-            var password = BindEmailPasswordInput ?? string.Empty;
-            if (password.Length < 8 || password.Length > 128)
-            {
-                return false;
-            }
-
-            return string.Equals(password, BindEmailConfirmPasswordInput ?? string.Empty, StringComparison.Ordinal);
-        }
-
-        private void ClearPlans()
-        {
-            AvailablePlans = Array.Empty<SubscriptionPlanInfo>();
-            SelectedPlan = null;
-        }
-
-        private void ResetOrderState()
-        {
-            LatestOrderOutTradeNo = string.Empty;
-            LatestOrderStatus = string.Empty;
-            LatestOrderAmountDisplay = string.Empty;
-            LatestOrderExpireAtDisplay = string.Empty;
-            LatestOrderProvider = string.Empty;
-            LatestOrderIntegrationStatus = string.Empty;
-            LatestOrderCodeUrl = string.Empty;
-            LatestOrderQrImage = null;
-            LatestOrderMessage = string.Empty;
-        }
-
-        private void UpdateOrderPresentation(SubscriptionOrderInfo order, PaymentInstructionInfo? payment = null)
-        {
-            LatestOrderOutTradeNo = order.OutTradeNo ?? string.Empty;
-            LatestOrderStatus = string.IsNullOrWhiteSpace(order.Status) ? "unknown" : order.Status;
-            LatestOrderAmountDisplay = order.AmountDisplay;
-            LatestOrderExpireAtDisplay = order.ExpireAt.HasValue ? FormatDate(order.ExpireAt.Value) : string.Empty;
-
-            if (payment != null)
-            {
-                LatestOrderProvider = payment.Provider ?? string.Empty;
-                LatestOrderIntegrationStatus = payment.IntegrationStatus ?? string.Empty;
-                LatestOrderCodeUrl = payment.CodeUrl?.Trim() ?? string.Empty;
-
-                if (!order.ExpireAt.HasValue && payment.OrderExpireAt.HasValue)
-                {
-                    LatestOrderExpireAtDisplay = FormatDate(payment.OrderExpireAt.Value);
-                }
-
-                if (!string.IsNullOrWhiteSpace(payment.Message))
-                {
-                    LatestOrderMessage = payment.Message;
-                }
-            }
-        }
-
-        private static BitmapImage? BuildQrCodeImage(string? codeUrl)
-        {
-            if (string.IsNullOrWhiteSpace(codeUrl))
-            {
-                return null;
-            }
-
-            try
-            {
-                using var generator = new QRCodeGenerator();
-                using var qrData = generator.CreateQrCode(codeUrl, QRCodeGenerator.ECCLevel.Q);
-                var qrCode = new PngByteQRCode(qrData);
-                var pngBytes = qrCode.GetGraphic(20);
-
-                using var memoryStream = new MemoryStream(pngBytes);
-                var image = new BitmapImage();
-                image.BeginInit();
-                image.CacheOption = BitmapCacheOption.OnLoad;
-                image.StreamSource = memoryStream;
-                image.EndInit();
-                image.Freeze();
-                return image;
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        private void PersistPendingOrderOutTradeNo(string outTradeNo)
-        {
-            var normalized = outTradeNo?.Trim() ?? string.Empty;
-            var current = _currentSettings.PendingSubscriptionOrderOutTradeNo?.Trim() ?? string.Empty;
-
-            if (string.Equals(normalized, current, StringComparison.Ordinal))
-            {
-                return;
-            }
-
-            if (_settingsManager.TryUpdateAndSave(
-                    "AccountPagePendingOrder",
-                    settings =>
-                    {
-                        settings.PendingSubscriptionOrderOutTradeNo = normalized;
-                        return true;
-                    },
-                    out var updated)
-                && updated != null)
-            {
-                _currentSettings = updated;
-            }
-        }
-
-        private void ClearPendingOrderOutTradeNo()
-        {
-            PersistPendingOrderOutTradeNo(string.Empty);
-        }
-
-        private static bool IsTerminalOrderStatus(string status)
-        {
-            if (string.IsNullOrWhiteSpace(status))
-            {
-                return false;
-            }
-
-            return string.Equals(status, "paid", StringComparison.OrdinalIgnoreCase)
-                   || string.Equals(status, "failed", StringComparison.OrdinalIgnoreCase)
-                   || string.Equals(status, "canceled", StringComparison.OrdinalIgnoreCase)
-                   || string.Equals(status, "cancelled", StringComparison.OrdinalIgnoreCase)
-                   || string.Equals(status, "expired", StringComparison.OrdinalIgnoreCase);
-        }
-
-        private async Task ApplyTerminalOrderStateAsync(SubscriptionOrderInfo order, bool refreshSubscriptionIfPaid)
-        {
-            if (string.IsNullOrWhiteSpace(order.Status))
-            {
-                return;
-            }
-
-            var normalized = order.Status.Trim().ToLowerInvariant();
-            switch (normalized)
-            {
-                case "paid":
-                    LatestOrderMessage = LanguageManager.GetString("AccountOrderPaidRefreshing");
-                    if (refreshSubscriptionIfPaid)
-                    {
-                        await RefreshUserProfileAsync();
-                    }
-                    break;
-                case "failed":
-                    LatestOrderMessage = LanguageManager.GetString("AccountOrderFailed");
-                    break;
-                case "expired":
-                    LatestOrderMessage = LanguageManager.GetString("AccountOrderExpired");
-                    break;
-                case "cancelled":
-                case "canceled":
-                    LatestOrderMessage = LanguageManager.GetString("AccountOrderCancelled");
-                    break;
-            }
-        }
-
-        private void StopOrderPollingInternal()
-        {
-            try
-            {
-                _orderPollingCts?.Cancel();
-                _orderPollingCts?.Dispose();
-            }
-            catch
-            {
-            }
-            finally
-            {
-                _orderPollingCts = null;
-                IsPollingOrder = false;
-            }
-        }
-
-        private async Task StartOrderPollingAsync(string outTradeNo)
-        {
-            StopOrderPollingInternal();
-
-            var cts = new CancellationTokenSource();
-            _orderPollingCts = cts;
-            var token = cts.Token;
-            IsPollingOrder = true;
-
-            try
-            {
-                for (var i = 0; i < 60; i++)
-                {
-                    token.ThrowIfCancellationRequested();
-
-                    var order = await QueryOrderStatusInternalAsync(outTradeNo, showErrorMessage: false);
-                    if (order != null && IsTerminalOrderStatus(order.Status))
-                    {
-                        await ApplyTerminalOrderStateAsync(order, refreshSubscriptionIfPaid: true);
-                        return;
-                    }
-
-                    await Task.Delay(TimeSpan.FromSeconds(3), token);
-                }
-
-                LatestOrderMessage = LanguageManager.GetString("AccountOrderPollingTimeout");
-            }
-            catch (OperationCanceledException)
-            {
-            }
-            finally
-            {
-                if (ReferenceEquals(_orderPollingCts, cts))
-                {
-                    StopOrderPollingInternal();
-                }
-            }
-        }
-
-        private async Task RestorePendingOrderAsync()
-        {
-            if (_authService == null || !IsLoggedIn || _isRestoringPendingOrder)
-            {
-                return;
-            }
-
-            var outTradeNo = _currentSettings.PendingSubscriptionOrderOutTradeNo?.Trim() ?? string.Empty;
-            if (string.IsNullOrWhiteSpace(outTradeNo))
-            {
-                return;
-            }
-
-            _isRestoringPendingOrder = true;
-            try
-            {
-                LatestOrderOutTradeNo = outTradeNo;
-                LatestOrderMessage = string.Format(LanguageManager.GetString("AccountOrderRestoreDetectedFormat"), outTradeNo);
-
-                var order = await QueryOrderStatusInternalAsync(outTradeNo, showErrorMessage: false);
-                if (order == null)
-                {
-                    LatestOrderMessage = string.Format(LanguageManager.GetString("AccountOrderRestoreRecoveredFormat"), outTradeNo);
-                    return;
-                }
-
-                if (string.Equals(order.Status, "pending", StringComparison.OrdinalIgnoreCase))
-                {
-                    _ = StartOrderPollingAsync(outTradeNo);
-                    return;
-                }
-
-                if (IsTerminalOrderStatus(order.Status))
-                {
-                    await ApplyTerminalOrderStateAsync(order, refreshSubscriptionIfPaid: true);
-                }
-            }
-            finally
-            {
-                _isRestoringPendingOrder = false;
-            }
-        }
-
-        private async Task<SubscriptionOrderInfo?> QueryOrderStatusInternalAsync(string outTradeNo, bool showErrorMessage)
-        {
-            if (_authService == null || !IsLoggedIn || string.IsNullOrWhiteSpace(outTradeNo))
-            {
-                return null;
-            }
-
-            var order = await _authService.GetSubscriptionOrderStatusAsync(outTradeNo);
-            if (order == null)
-            {
-                if (showErrorMessage)
-                {
-                    MessageBox.Show(
-                        LanguageManager.GetString("AccountOrderQueryFailed"),
-                        LanguageManager.GetString("ErrorTitle"),
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error);
-                }
-
-                return null;
-            }
-
-            UpdateOrderPresentation(order);
-
-            if (string.Equals(order.Status, "pending", StringComparison.OrdinalIgnoreCase))
-            {
-                PersistPendingOrderOutTradeNo(order.OutTradeNo);
-            }
-            else if (IsTerminalOrderStatus(order.Status))
-            {
-                ClearPendingOrderOutTradeNo();
-            }
-
-            return order;
-        }
-
         private void OnLanguageChanged()
         {
             RefreshLocalizedOptions();
@@ -1230,1124 +898,6 @@ namespace lingualink_client.ViewModels
                 new PaymentMethodOption("alipay", LanguageManager.GetString("AccountPaymentMethodAlipayReserved"))
             };
         }
-
-        private void LoadSettingsFromModel(AppSettings settings)
-        {
-            _isLoadingSettings = true;
-            try
-            {
-                _currentSettings = settings;
-                UseCustomServer = settings.UseCustomServer;
-
-                if (UseCustomServer)
-                {
-                    ServerUrl = string.IsNullOrWhiteSpace(settings.CustomServerUrl)
-                        ? settings.ServerUrl
-                        : settings.CustomServerUrl;
-                    ApiKey = string.IsNullOrWhiteSpace(settings.CustomApiKey)
-                        ? settings.ApiKey
-                        : settings.CustomApiKey;
-                }
-                else
-                {
-                    ServerUrl = string.IsNullOrWhiteSpace(settings.OfficialServerUrl)
-                        ? AppSettings.OfficialProductionServerUrl
-                        : settings.OfficialServerUrl;
-                    ApiKey = string.Empty;
-                }
-            }
-            finally
-            {
-                _isLoadingSettings = false;
-            }
-        }
-
-        private void OnAccountPropertyChanged(object? sender, PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName == null || _isLoadingSettings)
-            {
-                return;
-            }
-
-            if (!IsAutoSaveProperty(e.PropertyName))
-            {
-                return;
-            }
-
-            _hasPendingChanges = true;
-
-            if (_autoSaveTimer.IsEnabled)
-            {
-                _autoSaveTimer.Stop();
-            }
-
-            _autoSaveTimer.Start();
-        }
-
-        private void AutoSaveTimerOnTick(object? sender, EventArgs e)
-        {
-            _autoSaveTimer.Stop();
-
-            if (!_hasPendingChanges)
-            {
-                return;
-            }
-
-            _hasPendingChanges = false;
-            SaveInternal(showConfirmation: false, changeSource: "AccountPageAutoSave");
-        }
-
-        private static bool IsAutoSaveProperty(string propertyName)
-        {
-            return propertyName == nameof(UseCustomServer)
-                   || propertyName == nameof(ServerUrl)
-                   || propertyName == nameof(ApiKey);
-        }
-
-        partial void OnUseCustomServerChanged(bool value)
-        {
-            if (_currentSettings == null || _isLoadingSettings)
-            {
-                return;
-            }
-
-            if (value)
-            {
-                _currentSettings.OfficialServerUrl = ServerUrl;
-
-                var customUrl = string.IsNullOrWhiteSpace(_currentSettings.CustomServerUrl)
-                    ? _currentSettings.ServerUrl
-                    : _currentSettings.CustomServerUrl;
-                var customApiKey = string.IsNullOrWhiteSpace(_currentSettings.CustomApiKey)
-                    ? _currentSettings.ApiKey
-                    : _currentSettings.CustomApiKey;
-
-                ServerUrl = customUrl;
-                ApiKey = customApiKey;
-            }
-            else
-            {
-                _currentSettings.CustomServerUrl = ServerUrl;
-                _currentSettings.CustomApiKey = ApiKey;
-
-                if (string.IsNullOrWhiteSpace(_currentSettings.OfficialServerUrl))
-                {
-                    _currentSettings.OfficialServerUrl = AppSettings.OfficialProductionServerUrl;
-                }
-
-                ServerUrl = _currentSettings.OfficialServerUrl;
-                ApiKey = string.Empty;
-            }
-
-            // 账号页没有显式“保存服务器设置”按钮，切换开关后应立即应用，
-            // 否则主界面和实际请求实例会在自动保存触发前继续显示旧状态。
-            if (_autoSaveTimer.IsEnabled)
-            {
-                _autoSaveTimer.Stop();
-            }
-
-            _hasPendingChanges = true;
-
-            if (!value || (!string.IsNullOrWhiteSpace(ServerUrl) && Uri.TryCreate(ServerUrl, UriKind.Absolute, out _)))
-            {
-                SaveInternal(showConfirmation: false, changeSource: "AccountPageServerModeToggle");
-            }
-            else
-            {
-                _autoSaveTimer.Start();
-            }
-        }
-
-        private bool UpdateSettingsFromView(AppSettings updatedSettings)
-        {
-            Debug.WriteLine("[AccountPageViewModel] ValidateAndBuildSettings() called");
-            Debug.WriteLine($"[AccountPageViewModel] Loaded latest settings base - ServerUrl: '{updatedSettings.ServerUrl}'");
-
-            if (UseCustomServer && (string.IsNullOrWhiteSpace(ServerUrl) || !Uri.TryCreate(ServerUrl, UriKind.Absolute, out _)))
-            {
-                MessageBox.Show(LanguageManager.GetString("ValidationServerUrlInvalid"),
-                               LanguageManager.GetString("ValidationErrorTitle"),
-                               MessageBoxButton.OK, MessageBoxImage.Error);
-                return false;
-            }
-
-            updatedSettings.UseCustomServer = UseCustomServer;
-
-            if (UseCustomServer)
-            {
-                Debug.WriteLine("[AccountPageViewModel] Using custom server - updating settings");
-                Debug.WriteLine($"[AccountPageViewModel] ViewModel values - ServerUrl: '{ServerUrl}'");
-
-                updatedSettings.CustomServerUrl = ServerUrl;
-                updatedSettings.CustomApiKey = ApiKey?.Trim() ?? string.Empty;
-                updatedSettings.ServerUrl = ServerUrl;
-                updatedSettings.ApiKey = updatedSettings.CustomApiKey;
-            }
-            else
-            {
-                Debug.WriteLine("[AccountPageViewModel] Using official service");
-
-                updatedSettings.OfficialServerUrl = string.IsNullOrWhiteSpace(updatedSettings.OfficialServerUrl)
-                    ? AppSettings.OfficialProductionServerUrl
-                    : updatedSettings.OfficialServerUrl;
-
-                updatedSettings.ServerUrl = updatedSettings.OfficialServerUrl;
-                updatedSettings.ApiKey = string.IsNullOrWhiteSpace(updatedSettings.CustomApiKey)
-                    ? updatedSettings.ApiKey
-                    : updatedSettings.CustomApiKey;
-            }
-
-            return true;
-        }
-
-        private void SaveInternal(bool showConfirmation, string changeSource)
-        {
-            Debug.WriteLine($"[AccountPageViewModel] SaveInternal() called - Source: {changeSource}, UseCustomServer: {UseCustomServer}");
-
-            if (!_settingsManager.TryUpdateAndSave(changeSource, UpdateSettingsFromView, out var updatedSettings) || updatedSettings == null)
-            {
-                return;
-            }
-
-            _currentSettings = updatedSettings;
-            _hasPendingChanges = false;
-
-            if (_autoSaveTimer.IsEnabled)
-            {
-                _autoSaveTimer.Stop();
-            }
-
-            Debug.WriteLine("[AccountPageViewModel] Settings saved, raising SettingsChanged event");
-
-            if (showConfirmation)
-            {
-                MessageBox.Show(
-                    LanguageManager.GetString("SettingsSavedSuccess"),
-                    LanguageManager.GetString("SuccessTitle"),
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
-            }
-        }
-
-        [RelayCommand]
-        private void Save()
-        {
-            SaveInternal(showConfirmation: true, changeSource: "AccountPage");
-        }
-
-        #region 登录/登出
-
-        [RelayCommand(CanExecute = nameof(CanLogin))]
-        private async Task LoginAsync()
-        {
-            if (_authService == null)
-            {
-                MessageBox.Show(LanguageManager.GetString("AccountAuthServiceUnavailable"),
-                    LanguageManager.GetString("ErrorTitle"),
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            IsLoggingIn = true;
-            LoginCommand.NotifyCanExecuteChanged();
-
-            try
-            {
-                var result = await _authService.LoginAsync();
-
-                if (!result.Success)
-                {
-                    if (result.IsCancelled)
-                    {
-                        return;
-                    }
-
-                    MessageBox.Show(
-                        result.ErrorMessage ?? LanguageManager.GetString("AccountLoginFailed"),
-                        LanguageManager.GetString("ErrorTitle"),
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error);
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[AccountPageViewModel] Login exception: {ex.Message}");
-                MessageBox.Show(
-                    string.Format(LanguageManager.GetString("AccountLoginFailedFormat"), ex.Message),
-                    LanguageManager.GetString("ErrorTitle"),
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-            }
-            finally
-            {
-                IsLoggingIn = false;
-                LoginCommand.NotifyCanExecuteChanged();
-            }
-        }
-
-        private bool CanLogin() => !IsLoggingIn && !IsLoggedIn && _authService != null;
-
-        [RelayCommand(CanExecute = nameof(CanLogout))]
-        private async Task LogoutAsync()
-        {
-            if (_authService == null)
-            {
-                return;
-            }
-
-            var result = MessageBox.Show(
-                LanguageManager.GetString("AccountLogoutConfirmMessage"),
-                LanguageManager.GetString("AccountLogoutConfirmTitle"),
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
-
-            if (result == MessageBoxResult.Yes)
-            {
-                try
-                {
-                    StopOrderPollingInternal();
-                    ClearPendingOrderOutTradeNo();
-                    await _authService.LogoutAsync();
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"[AccountPageViewModel] Logout exception: {ex.Message}");
-                }
-            }
-        }
-
-        private bool CanLogout() => IsLoggedIn && _authService != null;
-
-        [RelayCommand(CanExecute = nameof(CanOpenSubscriptionDialog))]
-        private async Task OpenSubscriptionDialogAsync()
-        {
-            if (!IsLoggedIn || _authService == null)
-            {
-                MessageBox.Show(
-                    LanguageManager.GetString("AccountVipRequireLogin"),
-                    LanguageManager.GetString("InfoTitle"),
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
-                return;
-            }
-
-            var accessToken = await _authService.GetAccessTokenAsync();
-            if (string.IsNullOrWhiteSpace(accessToken))
-            {
-                MessageBox.Show(
-                    LanguageManager.GetString("AccountSubscriptionReloginRequired"),
-                    LanguageManager.GetString("WarningTitle"),
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
-                return;
-            }
-
-            var checkoutWindow = new CheckoutWindow(accessToken, ResolveCheckoutAuthHost(_authService.AuthServerUrl))
-            {
-                Owner = Application.Current.MainWindow
-            };
-
-            var paymentCompleted = false;
-            var paidOutTradeNo = string.Empty;
-            checkoutWindow.PaymentCompleted += outTradeNo =>
-            {
-                paymentCompleted = true;
-                paidOutTradeNo = outTradeNo ?? string.Empty;
-            };
-
-            checkoutWindow.ShowDialog();
-
-            // 无论是否捕获到 postMessage，都刷新一次资料；
-            // 部分 Web 环境只触发 window.close，不会直达 WebMessageReceived。
-            await RefreshUserProfileAsync();
-            if (!paymentCompleted)
-            {
-                await Task.Delay(1200);
-                await RefreshUserProfileAsync();
-            }
-
-            if (paymentCompleted)
-            {
-                var message = string.IsNullOrWhiteSpace(paidOutTradeNo)
-                    ? LanguageManager.GetString("AccountSubscribeSuccess")
-                    : string.Format(LanguageManager.GetString("AccountSubscribeSuccessWithOrderFormat"), paidOutTradeNo);
-
-                MessageBox.Show(
-                    message,
-                    LanguageManager.GetString("SuccessTitle"),
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
-            }
-        }
-
-        private bool CanOpenSubscriptionDialog()
-        {
-            return IsLoggedIn && _authService != null;
-        }
-
-        private static string ResolveCheckoutAuthHost(string? authServerUrl)
-        {
-            return AppEndpoints.NormalizeBaseUrl(authServerUrl, AppEndpoints.DefaultAuthServerUrl);
-        }
-
-        [RelayCommand(CanExecute = nameof(CanRefreshUserProfile))]
-        private async Task RefreshUserProfileAsync()
-        {
-            if (_authService == null)
-            {
-                return;
-            }
-
-            try
-            {
-                await _authService.RefreshUserProfileAsync();
-                UpdateLoginState();
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[AccountPageViewModel] Refresh profile exception: {ex.Message}");
-            }
-        }
-
-        private bool CanRefreshUserProfile() => IsLoggedIn && _authService != null;
-
-        [RelayCommand(CanExecute = nameof(CanBeginEditUsername))]
-        private void BeginEditUsername()
-        {
-            EditUsername = UserProfile?.Username ?? string.Empty;
-            IsEditingUsername = true;
-        }
-
-        private bool CanBeginEditUsername() => IsLoggedIn && !IsUpdatingUserProfile;
-
-        [RelayCommand]
-        private void CancelEditUsername()
-        {
-            IsEditingUsername = false;
-            EditUsername = UserProfile?.Username ?? string.Empty;
-        }
-
-        [RelayCommand(CanExecute = nameof(CanSaveUsername))]
-        private async Task SaveUsernameAsync()
-        {
-            if (_authService == null || !IsLoggedIn)
-            {
-                return;
-            }
-
-            var trimmedUsername = string.IsNullOrWhiteSpace(EditUsername) ? string.Empty : EditUsername.Trim();
-            if (!TryValidateUsernameInput(trimmedUsername, out var validationError))
-            {
-                MessageBox.Show(validationError ?? LanguageManager.GetString("AccountUsernameInvalid"), LanguageManager.GetString("ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            IsUpdatingUserProfile = true;
-            try
-            {
-                var result = await _authService.UpdateUserProfileAsync(trimmedUsername, null);
-                if (!result.Success)
-                {
-                    MessageBox.Show(result.ErrorMessage ?? LanguageManager.GetString("AccountUpdateUsernameFailed"), LanguageManager.GetString("ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
-                IsEditingUsername = false;
-                await RefreshUserProfileAsync();
-            }
-            finally
-            {
-                IsUpdatingUserProfile = false;
-            }
-        }
-
-        private bool CanSaveUsername()
-        {
-            if (!IsLoggedIn || _authService == null || IsUpdatingUserProfile || string.IsNullOrWhiteSpace(EditUsername))
-            {
-                return false;
-            }
-
-            return TryValidateUsernameInput(EditUsername.Trim(), out _);
-        }
-
-        [RelayCommand(CanExecute = nameof(CanBeginEditEmail))]
-        private void BeginEditEmail()
-        {
-            BindEmailInput = UserProfile?.Email ?? string.Empty;
-            BindEmailCodeInput = string.Empty;
-            BindEmailPasswordInput = string.Empty;
-            BindEmailConfirmPasswordInput = string.Empty;
-            IsEmailCodeSent = false;
-            EmailCodeCountdownSeconds = 0;
-            _emailCodeTimer.Stop();
-            IsEditingEmail = true;
-        }
-
-        private bool CanBeginEditEmail() => IsLoggedIn && !IsUpdatingUserProfile;
-
-        [RelayCommand]
-        private void CancelEditEmail()
-        {
-            IsEditingEmail = false;
-            ResetBindEmailState();
-        }
-
-        [RelayCommand(CanExecute = nameof(CanSendEmailCode))]
-        private async Task SendEmailCodeAsync()
-        {
-            if (_authService == null || !IsLoggedIn)
-            {
-                return;
-            }
-
-            if (!TryValidateEmailInput(BindEmailInput))
-            {
-                MessageBox.Show(
-                    LanguageManager.GetString("BindEmailInvalidFormat"),
-                    LanguageManager.GetString("EmailBindingErrorTitle"),
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
-                return;
-            }
-
-            IsSendingEmailCode = true;
-            try
-            {
-                var result = await _authService.SendBindEmailCodeAsync(BindEmailInput);
-                if (!result.Success)
-                {
-                    MessageBox.Show(
-                        result.ErrorMessage ?? LanguageManager.GetString("BindEmailCodeSendFailed"),
-                        LanguageManager.GetString("EmailBindingErrorTitle"),
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error);
-                    return;
-                }
-
-                IsEmailCodeSent = true;
-                EmailCodeCountdownSeconds = 60;
-                _emailCodeTimer.Stop();
-                _emailCodeTimer.Start();
-
-                MessageBox.Show(
-                    result.Message ?? LanguageManager.GetString("BindEmailCodeSent"),
-                    LanguageManager.GetString("EmailBindingSuccessTitle"),
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
-            }
-            finally
-            {
-                IsSendingEmailCode = false;
-            }
-        }
-
-        private bool CanSendEmailCode()
-        {
-            return IsLoggedIn
-                   && _authService != null
-                   && !IsUpdatingUserProfile
-                   && !IsSendingEmailCode
-                   && EmailCodeCountdownSeconds == 0
-                   && TryValidateEmailInput(BindEmailInput);
-        }
-
-        [RelayCommand(CanExecute = nameof(CanSaveEmail))]
-        private async Task SaveEmailAsync()
-        {
-            if (_authService == null || !IsLoggedIn)
-            {
-                return;
-            }
-
-            if (!TryValidateEmailInput(BindEmailInput))
-            {
-                MessageBox.Show(
-                    LanguageManager.GetString("BindEmailInvalidFormat"),
-                    LanguageManager.GetString("EmailBindingErrorTitle"),
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
-                return;
-            }
-
-            if (!IsEmailCodeSent || string.IsNullOrWhiteSpace(BindEmailCodeInput))
-            {
-                MessageBox.Show(
-                    LanguageManager.GetString("BindEmailCodeInvalid"),
-                    LanguageManager.GetString("EmailBindingErrorTitle"),
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
-                return;
-            }
-
-            if ((BindEmailPasswordInput ?? string.Empty).Length < 8)
-            {
-                MessageBox.Show(
-                    LanguageManager.GetString("BindEmailPasswordTooShort"),
-                    LanguageManager.GetString("EmailBindingErrorTitle"),
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
-                return;
-            }
-
-            if ((BindEmailPasswordInput ?? string.Empty).Length > 128)
-            {
-                MessageBox.Show(
-                    LanguageManager.GetString("BindEmailPasswordTooLong"),
-                    LanguageManager.GetString("EmailBindingErrorTitle"),
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
-                return;
-            }
-
-            if (!string.Equals(BindEmailPasswordInput, BindEmailConfirmPasswordInput, StringComparison.Ordinal))
-            {
-                MessageBox.Show(
-                    LanguageManager.GetString("BindEmailPasswordMismatch"),
-                    LanguageManager.GetString("EmailBindingErrorTitle"),
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
-                return;
-            }
-
-            IsUpdatingUserProfile = true;
-            try
-            {
-                var result = await _authService.BindEmailAsync(
-                    BindEmailInput,
-                    BindEmailCodeInput,
-                    BindEmailPasswordInput ?? string.Empty);
-                if (!result.Success)
-                {
-                    MessageBox.Show(
-                        result.ErrorMessage ?? LanguageManager.GetString("BindEmailFailedLater"),
-                        LanguageManager.GetString("EmailBindingErrorTitle"),
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error);
-                    return;
-                }
-
-                IsEditingEmail = false;
-                ResetBindEmailState();
-                await RefreshUserProfileAsync();
-
-                MessageBox.Show(
-                    result.Message ?? LanguageManager.GetString("BindEmailSuccess"),
-                    LanguageManager.GetString("EmailBindingSuccessTitle"),
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
-            }
-            finally
-            {
-                IsUpdatingUserProfile = false;
-            }
-        }
-
-        private bool CanSaveEmail()
-        {
-            return IsLoggedIn
-                   && _authService != null
-                   && !IsUpdatingUserProfile
-                   && IsEmailCodeSent
-                   && TryValidateEmailInput(BindEmailInput)
-                   && !string.IsNullOrWhiteSpace(BindEmailCodeInput)
-                   && HasValidBindEmailPassword();
-        }
-
-        [RelayCommand(CanExecute = nameof(CanBeginEditProvider))]
-        private void BeginEditProvider()
-        {
-            IsEditingProvider = true;
-        }
-
-        private bool CanBeginEditProvider() => IsLoggedIn && !IsUpdatingUserProfile;
-
-        [RelayCommand]
-        private void CancelEditProvider()
-        {
-            IsEditingProvider = false;
-            ProviderUserIdInput = string.Empty;
-        }
-
-        [RelayCommand(CanExecute = nameof(CanSaveProvider))]
-        private async Task SaveProviderAsync()
-        {
-            if (_authService == null || !IsLoggedIn)
-            {
-                return;
-            }
-
-            IsUpdatingUserProfile = true;
-            try
-            {
-                var provider = SelectedProvider?.Trim() ?? string.Empty;
-                var result = await _authService.BindProviderAsync(provider, ProviderUserIdInput);
-                if (!result.Success)
-                {
-                    MessageBox.Show(
-                        result.ErrorMessage ?? LanguageManager.GetString("BindFailedLater"),
-                        LanguageManager.GetString("ProviderBindingErrorTitle"),
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error);
-                    return;
-                }
-
-                IsEditingProvider = false;
-                ProviderUserIdInput = string.Empty;
-                await RefreshUserProfileAsync();
-            }
-            finally
-            {
-                IsUpdatingUserProfile = false;
-            }
-        }
-
-        private bool CanSaveProvider()
-        {
-            return IsLoggedIn
-                   && _authService != null
-                   && !IsUpdatingUserProfile
-                   && UserBindProviderCatalog.IsAllowed(SelectedProvider)
-                   && !string.IsNullOrWhiteSpace(ProviderUserIdInput);
-        }
-
-        [RelayCommand(CanExecute = nameof(CanUpdateUserProfile))]
-        private async Task UpdateUserProfileAsync()
-        {
-            if (_authService == null || !IsLoggedIn)
-            {
-                return;
-            }
-
-            var trimmedUsername = string.IsNullOrWhiteSpace(EditUsername) ? null : EditUsername.Trim();
-            if (trimmedUsername != null && !TryValidateUsernameInput(trimmedUsername, out var validationError))
-            {
-                MessageBox.Show(
-                    validationError ?? LanguageManager.GetString("AccountUsernameInvalid"),
-                    LanguageManager.GetString("ErrorTitle"),
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
-                return;
-            }
-
-            IsUpdatingUserProfile = true;
-
-            try
-            {
-                var result = await _authService.UpdateUserProfileAsync(trimmedUsername, null);
-                if (!result.Success)
-                {
-                    MessageBox.Show(
-                        result.ErrorMessage ?? LanguageManager.GetString("AccountUpdateProfileFailed"),
-                        LanguageManager.GetString("ErrorTitle"),
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error);
-                    return;
-                }
-
-                UpdateLoginState();
-                MessageBox.Show(
-                    result.Message ?? LanguageManager.GetString("AccountUpdateProfileSuccess"),
-                    LanguageManager.GetString("SuccessTitle"),
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[AccountPageViewModel] Update profile exception: {ex.Message}");
-                MessageBox.Show(
-                    string.Format(LanguageManager.GetString("AccountUpdateProfileFailedFormat"), ex.Message),
-                    LanguageManager.GetString("ErrorTitle"),
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-            }
-            finally
-            {
-                IsUpdatingUserProfile = false;
-            }
-        }
-
-        private bool CanUpdateUserProfile()
-        {
-            var hasUsername = !string.IsNullOrWhiteSpace(EditUsername);
-            if (hasUsername && !TryValidateUsernameInput(EditUsername.Trim(), out _))
-            {
-                return false;
-            }
-
-            return IsLoggedIn
-                   && _authService != null
-                   && !IsUpdatingUserProfile
-                   && hasUsername;
-        }
-
-        [RelayCommand(CanExecute = nameof(CanBindProvider))]
-        private async Task BindProviderAsync()
-        {
-            if (_authService == null || !IsLoggedIn)
-            {
-                return;
-            }
-
-            IsUpdatingUserProfile = true;
-
-            try
-            {
-                var provider = SelectedProvider?.Trim() ?? string.Empty;
-                var result = await _authService.BindProviderAsync(provider, ProviderUserIdInput);
-                if (!result.Success)
-                {
-                    MessageBox.Show(
-                        result.ErrorMessage ?? LanguageManager.GetString("AccountBindProviderFailed"),
-                        LanguageManager.GetString("ErrorTitle"),
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error);
-                    return;
-                }
-
-                ProviderUserIdInput = string.Empty;
-                UpdateLoginState();
-                MessageBox.Show(
-                    result.Message ?? LanguageManager.GetString("AccountBindProviderSuccess"),
-                    LanguageManager.GetString("SuccessTitle"),
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[AccountPageViewModel] Bind provider exception: {ex.Message}");
-                MessageBox.Show(
-                    string.Format(LanguageManager.GetString("AccountBindProviderFailedFormat"), ex.Message),
-                    LanguageManager.GetString("ErrorTitle"),
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-            }
-            finally
-            {
-                IsUpdatingUserProfile = false;
-            }
-        }
-
-        [RelayCommand(CanExecute = nameof(CanBindQqProvider))]
-        private Task BindQqProviderAsync()
-        {
-            return BindSocialProviderInternalAsync("qq", LanguageManager.GetString("AccountQq"));
-        }
-
-        private bool CanBindQqProvider()
-        {
-            return IsLoggedIn && _authService != null && !IsUpdatingUserProfile && !IsQqBound;
-        }
-
-        [RelayCommand(CanExecute = nameof(CanBindWechatProvider))]
-        private Task BindWechatProviderAsync()
-        {
-            return BindSocialProviderInternalAsync("wechat", LanguageManager.GetString("AccountWechat"));
-        }
-
-        private bool CanBindWechatProvider()
-        {
-            return IsLoggedIn && _authService != null && !IsUpdatingUserProfile && !IsWechatBound;
-        }
-
-        private async Task BindSocialProviderInternalAsync(string provider, string providerDisplayName)
-        {
-            if (_authService == null || !IsLoggedIn)
-            {
-                return;
-            }
-
-            var isAlreadyBound = string.Equals(provider, "wechat", StringComparison.OrdinalIgnoreCase)
-                ? IsWechatBound
-                : IsQqBound;
-
-            if (isAlreadyBound)
-            {
-                MessageBox.Show(
-                    string.Format(LanguageManager.GetString("AccountProviderAlreadyBoundFormat"), providerDisplayName),
-                    LanguageManager.GetString("ProviderBindingSuccessTitle"),
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
-                return;
-            }
-
-            IsUpdatingUserProfile = true;
-            try
-            {
-                var result = await _authService.BindSocialProviderAsync(provider);
-                if (!result.Success)
-                {
-                    MessageBox.Show(
-                        result.ErrorMessage ?? LanguageManager.GetString("BindFailedLater"),
-                        LanguageManager.GetString("ProviderBindingErrorTitle"),
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error);
-                    return;
-                }
-
-                await RefreshUserProfileAsync();
-                MessageBox.Show(
-                    result.Message ?? string.Format(LanguageManager.GetString("AccountProviderBindSuccessFormat"), providerDisplayName),
-                    LanguageManager.GetString("ProviderBindingSuccessTitle"),
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[AccountPageViewModel] Bind {providerDisplayName} exception: {ex.Message}");
-                MessageBox.Show(
-                    LanguageManager.GetString("BindFailedLater"),
-                    LanguageManager.GetString("ProviderBindingErrorTitle"),
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-            }
-            finally
-            {
-                IsUpdatingUserProfile = false;
-            }
-        }
-
-        private bool CanBindProvider()
-        {
-            return IsLoggedIn
-                   && _authService != null
-                   && !IsUpdatingUserProfile
-                   && UserBindProviderCatalog.IsAllowed(SelectedProvider)
-                   && !string.IsNullOrWhiteSpace(ProviderUserIdInput);
-        }
-
-        [RelayCommand(CanExecute = nameof(CanLoadSubscriptionPlans))]
-        private async Task LoadSubscriptionPlansAsync()
-        {
-            if (_authService == null || !IsLoggedIn)
-            {
-                return;
-            }
-
-            IsLoadingPlans = true;
-
-            try
-            {
-                var plans = await _authService.GetSubscriptionPlansAsync();
-                AvailablePlans = plans;
-
-                if (plans.Count == 0)
-                {
-                    SelectedPlan = null;
-                    LatestOrderMessage = LanguageManager.GetString("AccountPlansEmpty");
-                    return;
-                }
-
-                if (SelectedPlan == null || string.IsNullOrWhiteSpace(SelectedPlan.Id))
-                {
-                    SelectedPlan = plans[0];
-                }
-
-                LatestOrderMessage = string.Format(LanguageManager.GetString("AccountPlansLoadedFormat"), plans.Count);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[AccountPageViewModel] Load plans exception: {ex.Message}");
-                LatestOrderMessage = string.Format(LanguageManager.GetString("AccountPlansLoadFailedFormat"), ex.Message);
-            }
-            finally
-            {
-                IsLoadingPlans = false;
-            }
-        }
-
-        private bool CanLoadSubscriptionPlans()
-        {
-            return IsLoggedIn && !IsLoadingPlans && _authService != null;
-        }
-
-        [RelayCommand(CanExecute = nameof(CanCreateSubscriptionOrder))]
-        private async Task CreateSubscriptionOrderAsync()
-        {
-            if (_authService == null || !IsLoggedIn)
-            {
-                return;
-            }
-
-            if (HasPendingOrder)
-            {
-                MessageBox.Show(
-                    LanguageManager.GetString("AccountPendingOrderExists"),
-                    LanguageManager.GetString("ErrorTitle"),
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
-                return;
-            }
-
-            if (SelectedPlan == null || string.IsNullOrWhiteSpace(SelectedPlan.Id))
-            {
-                MessageBox.Show(
-                    LanguageManager.GetString("AccountSelectPlanFirst"),
-                    LanguageManager.GetString("ErrorTitle"),
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
-                return;
-            }
-
-            IsCreatingOrder = true;
-            StopOrderPollingInternal();
-
-            try
-            {
-                var result = await _authService.CreateSubscriptionOrderAsync(
-                    SelectedPlan.Id,
-                    SelectedPaymentMethod,
-                    OrderDurationMonths);
-
-                if (!result.Success || result.Order == null)
-                {
-                    var errorMessage = result.ErrorMessage ?? LanguageManager.GetString("AccountCreateOrderFailed");
-                    LatestOrderMessage = errorMessage;
-                    MessageBox.Show(
-                        errorMessage,
-                        LanguageManager.GetString("ErrorTitle"),
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error);
-                    return;
-                }
-
-                UpdateOrderPresentation(result.Order, result.Payment);
-                PersistPendingOrderOutTradeNo(result.Order.OutTradeNo);
-
-                if (result.Payment != null)
-                {
-                    if (!string.IsNullOrWhiteSpace(result.Payment.Message))
-                    {
-                        LatestOrderMessage = result.Payment.Message;
-                    }
-
-                    if (string.Equals(result.Payment.IntegrationStatus, "native_qr_ready", StringComparison.OrdinalIgnoreCase)
-                        && string.IsNullOrWhiteSpace(result.Payment.CodeUrl))
-                    {
-                        LatestOrderMessage = LanguageManager.GetString("AccountPaymentQrMissing");
-                    }
-                }
-
-                if (string.Equals(result.Order.Status, "pending", StringComparison.OrdinalIgnoreCase))
-                {
-                    _ = StartOrderPollingAsync(result.Order.OutTradeNo);
-                }
-                else if (IsTerminalOrderStatus(result.Order.Status))
-                {
-                    ClearPendingOrderOutTradeNo();
-                    await ApplyTerminalOrderStateAsync(result.Order, refreshSubscriptionIfPaid: true);
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[AccountPageViewModel] Create order exception: {ex.Message}");
-                LatestOrderMessage = string.Format(LanguageManager.GetString("AccountCreateOrderFailedFormat"), ex.Message);
-                MessageBox.Show(
-                    LatestOrderMessage,
-                    LanguageManager.GetString("ErrorTitle"),
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-            }
-            finally
-            {
-                IsCreatingOrder = false;
-            }
-        }
-
-        private bool CanCreateSubscriptionOrder()
-        {
-            return IsLoggedIn
-                   && !IsCreatingOrder
-                   && !IsLoadingPlans
-                   && _authService != null
-                   && SelectedPlan != null
-                   && !string.IsNullOrWhiteSpace(SelectedPlan.Id)
-                   && OrderDurationMonths > 0
-                   && !HasPendingOrder
-                   && !IsPollingOrder;
-        }
-
-        [RelayCommand(CanExecute = nameof(CanQueryOrderStatus))]
-        private async Task QueryOrderStatusAsync()
-        {
-            if (string.IsNullOrWhiteSpace(LatestOrderOutTradeNo))
-            {
-                return;
-            }
-
-            var order = await QueryOrderStatusInternalAsync(LatestOrderOutTradeNo, showErrorMessage: true);
-            if (order != null && IsTerminalOrderStatus(order.Status))
-            {
-                await ApplyTerminalOrderStateAsync(order, refreshSubscriptionIfPaid: true);
-            }
-        }
-
-        private bool CanQueryOrderStatus()
-        {
-            return IsLoggedIn
-                   && _authService != null
-                   && !string.IsNullOrWhiteSpace(LatestOrderOutTradeNo)
-                   && !IsCreatingOrder;
-        }
-
-        [RelayCommand(CanExecute = nameof(CanStopOrderPolling))]
-        private void StopOrderPolling()
-        {
-            StopOrderPollingInternal();
-        }
-
-        private bool CanStopOrderPolling()
-        {
-            return IsPollingOrder;
-        }
-
-        #endregion
-
-        #region 自定义服务器测试
-
-        [RelayCommand(CanExecute = nameof(CanTestConnection))]
-        private async Task TestConnectionAsync()
-        {
-            IsTestingConnection = true;
-            OnPropertyChanged(nameof(ConnectionTestLabel));
-
-            ILingualinkApiService? testApiService = null;
-            bool success;
-            string errorMessage = LanguageManager.GetString("AccountConnectionUnknownError");
-
-            try
-            {
-                testApiService = LingualinkApiServiceFactory.CreateTestApiService(ServerUrl, ApiKey);
-                success = await testApiService.ValidateConnectionAsync();
-            }
-            catch (Exception ex)
-            {
-                success = false;
-                errorMessage = ex.Message;
-            }
-            finally
-            {
-                testApiService?.Dispose();
-                IsTestingConnection = false;
-                OnPropertyChanged(nameof(ConnectionTestLabel));
-            }
-
-            if (success)
-            {
-                MessageBox.Show(LanguageManager.GetString("AccountConnectionSuccess"), LanguageManager.GetString("SuccessTitle"), MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            else
-            {
-                MessageBox.Show(string.Format(LanguageManager.GetString("AccountConnectionFailedFormat"), errorMessage), LanguageManager.GetString("ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private bool CanTestConnection()
-        {
-            return !IsTestingConnection && !string.IsNullOrWhiteSpace(ServerUrl);
-        }
-
-        #endregion
 
         public void Dispose()
         {
