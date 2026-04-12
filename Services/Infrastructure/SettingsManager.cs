@@ -14,15 +14,10 @@ namespace lingualink_client.Services
         private readonly SettingsService _settingsService;
         private readonly IEventAggregator? _eventAggregator;
 
-        public SettingsManager()
+        public SettingsManager(SettingsService? settingsService = null, IEventAggregator? eventAggregator = null)
         {
-            _settingsService = new SettingsService();
-
-            // 设计时或早期启动阶段可能尚未注册事件聚合器，这里采用 TryResolve 以避免抛异常。
-            if (ServiceContainer.TryResolve<IEventAggregator>(out var aggregator) && aggregator != null)
-            {
-                _eventAggregator = aggregator;
-            }
+            _settingsService = settingsService ?? new SettingsService();
+            _eventAggregator = eventAggregator;
         }
 
         public AppSettings LoadSettings()

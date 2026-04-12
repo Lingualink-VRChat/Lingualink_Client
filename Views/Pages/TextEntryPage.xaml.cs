@@ -27,10 +27,16 @@ namespace lingualink_client.Views
             // [修复] 之前这里的逻辑是 Ctrl+Enter，现在改为用户更习惯的 Enter 发送，Shift+Enter 换行
             if (e.Key == Key.Enter && (Keyboard.Modifiers & ModifierKeys.Shift) == 0)
             {
-                e.Handled = true;
-                if (_viewModel.SendCommand.CanExecute(null))
+                var viewModel = _viewModel;
+                if (viewModel == null)
                 {
-                    _viewModel.SendCommand.Execute(null);
+                    return;
+                }
+
+                e.Handled = true;
+                if (viewModel.SendCommand.CanExecute(null))
+                {
+                    viewModel.SendCommand.Execute(null);
                 }
             }
         }

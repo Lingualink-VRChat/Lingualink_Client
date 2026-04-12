@@ -95,10 +95,13 @@ namespace lingualink_client.ViewModels.Managers
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        public MicrophoneManager(SettingsService? settingsService = null)
+        public MicrophoneManager(
+            SettingsService? settingsService = null,
+            IEventAggregator? eventAggregator = null,
+            ILoggingManager? loggingManager = null)
         {
-            _eventAggregator = ServiceContainer.Resolve<IEventAggregator>();
-            _logger = ServiceContainer.Resolve<ILoggingManager>();
+            _eventAggregator = eventAggregator ?? throw new ArgumentNullException(nameof(eventAggregator));
+            _logger = loggingManager ?? throw new ArgumentNullException(nameof(loggingManager));
             _settingsService = settingsService ?? new SettingsService();
             _appSettings = _settingsService.LoadSettings();
             _microphoneService = new Services.MicrophoneService();

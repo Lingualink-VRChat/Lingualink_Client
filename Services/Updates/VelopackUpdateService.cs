@@ -18,14 +18,10 @@ namespace lingualink_client.Services
         private readonly SettingsService _settingsService;
         private bool _disposed;
 
-        public VelopackUpdateService()
+        public VelopackUpdateService(SettingsService? settingsService = null, ILoggingManager? loggingManager = null)
         {
-            _settingsService = new SettingsService();
-
-            if (ServiceContainer.TryResolve<ILoggingManager>(out var logger))
-            {
-                _loggingManager = logger;
-            }
+            _settingsService = settingsService ?? new SettingsService();
+            _loggingManager = loggingManager;
         }
 
         public bool IsSupported
@@ -232,17 +228,12 @@ namespace lingualink_client.Services
         private string? ResolveFeedUrl()
         {
             var overrideUrl = ResolveFeedOverride();
-            if (!string.IsNullOrWhiteSpace(overrideUrl))
-            {
-                return AppEndpoints.EnsureTrailingSlash(overrideUrl);
-            }
-
 #if SELF_CONTAINED
-            return AppEndpoints.SelfContainedUpdateFeedUrl;
+            return UpdateFeedResolver.Resolve(overrideUrl, UpdateFeedChannel.SelfContained);
 #elif FRAMEWORK_DEPENDENT
-            return AppEndpoints.FrameworkDependentUpdateFeedUrl;
+            return UpdateFeedResolver.Resolve(overrideUrl, UpdateFeedChannel.FrameworkDependent);
 #else
-            return null;
+            return UpdateFeedResolver.Resolve(overrideUrl, UpdateFeedChannel.None);
 #endif
         }
 
