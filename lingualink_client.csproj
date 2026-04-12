@@ -139,6 +139,7 @@
     <ApplicationDefinition Remove="CSharpWpf\App.xaml" />
     <Page Remove="CSharpWpf\**\*.xaml" />
     <Compile Remove="CSharpWpf\**\*.cs" />
+    <Compile Remove="tests\**\*.cs" />
     <None Include="CSharpWpf\**\*" />
   </ItemGroup>
   <ItemGroup>
