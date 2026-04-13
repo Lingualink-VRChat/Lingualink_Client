@@ -1,5 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
+using lingualink_client.Services;
+using lingualink_client.Services.Interfaces;
 using lingualink_client.ViewModels.Components;
 
 namespace lingualink_client.Views
@@ -20,7 +22,9 @@ namespace lingualink_client.Views
         {
             if (_viewModel == null)
             {
-                _viewModel = new ConversationHistoryViewModel();
+                _viewModel = new ConversationHistoryViewModel(
+                    ServiceContainer.Resolve<IConversationHistoryService>(),
+                    ServiceContainer.Resolve<ILoggingManager>());
             }
 
             DataContext = _viewModel;

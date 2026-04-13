@@ -1,0 +1,24 @@
+# Default all text files to LF so WSL/Linux tooling and Git agree.
+* text=auto eol=lf
+
+# Keep common Windows-only entrypoints in CRLF form.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+*.sln text eol=crlf
+
+# Treat common assets and archives as binary.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.bmp binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.7z binary
+*.dll binary
+*.exe binary
+*.pdb binary
+*.woff binary
+*.woff2 binary

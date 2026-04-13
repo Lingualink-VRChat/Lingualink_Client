@@ -15,16 +15,13 @@ namespace lingualink_client.Services
     {
         private readonly object _syncRoot = new();
         private readonly ILoggingManager? _loggingManager;
+        private readonly SettingsService _settingsService;
         private bool _disposed;
 
-        public VelopackUpdateService()
+        public VelopackUpdateService(SettingsService? settingsService = null, ILoggingManager? loggingManager = null)
         {
-            if (ServiceContainer.TryResolve<ILoggingManager>(out var logger))
-            {
-                _loggingManager = logger;
-            }
-
-            FeedUrl = ResolveFeedUrl();
+            _settingsService = settingsService ?? new SettingsService();
+            _loggingManager = loggingManager;
         }
 
         public bool IsSupported
@@ -45,7 +42,7 @@ namespace lingualink_client.Services
             }
         }
 
-        public string? FeedUrl { get; }
+        public string? FeedUrl => ResolveFeedUrl();
 
         public UpdateSession? ActiveSession { get; private set; }
 
@@ -228,25 +225,32 @@ namespace lingualink_client.Services
             return currentVersion is null || info.TargetFullRelease.Version > currentVersion;
         }
 
-        private static string? ResolveFeedUrl()
+        private string? ResolveFeedUrl()
         {
+            var overrideUrl = ResolveFeedOverride();
 #if SELF_CONTAINED
-            return EnsureTrailingSlash("https://download.cn-nb1.rains3.com/lingualink/stable-self-contained");
+            return UpdateFeedResolver.Resolve(overrideUrl, UpdateFeedChannel.SelfContained);
 #elif FRAMEWORK_DEPENDENT
-            return EnsureTrailingSlash("https://download.cn-nb1.rains3.com/lingualink/stable-framework-dependent");
+            return UpdateFeedResolver.Resolve(overrideUrl, UpdateFeedChannel.FrameworkDependent);
 #else
-            return null;
+            return UpdateFeedResolver.Resolve(overrideUrl, UpdateFeedChannel.None);
 #endif
         }
 
-        private static string EnsureTrailingSlash(string url)
+        private string? ResolveFeedOverride()
         {
-            if (string.IsNullOrWhiteSpace(url))
+            try
             {
-                return url;
+                var settings = _settingsService.LoadSettings();
+                return string.IsNullOrWhiteSpace(settings.UpdateFeedOverride)
+                    ? null
+                    : settings.UpdateFeedOverride.Trim();
             }
-
-            return url.EndsWith("/", StringComparison.Ordinal) ? url : url + "/";
+            catch (Exception ex)
+            {
+                LogWarning($"Failed to read update feed override: {ex.Message}");
+                return null;
+            }
         }
 
         private void LogInfo(string message)

@@ -7,12 +7,18 @@ namespace lingualink_client.Views
 {
     public partial class TextEntryPage : Page
     {
-        private readonly TextEntryPageViewModel _viewModel;
+        private TextEntryPageViewModel? _viewModel;
 
         public TextEntryPage()
         {
             InitializeComponent();
-            _viewModel = new TextEntryPageViewModel();
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
+        }
+
+        private void OnLoaded(object sender, RoutedEventArgs e)
+        {
+            _viewModel ??= new TextEntryPageViewModel();
             DataContext = _viewModel;
         }
 
@@ -21,10 +27,16 @@ namespace lingualink_client.Views
             // [修复] 之前这里的逻辑是 Ctrl+Enter，现在改为用户更习惯的 Enter 发送，Shift+Enter 换行
             if (e.Key == Key.Enter && (Keyboard.Modifiers & ModifierKeys.Shift) == 0)
             {
-                e.Handled = true;
-                if (_viewModel.SendCommand.CanExecute(null))
+                var viewModel = _viewModel;
+                if (viewModel == null)
                 {
-                    _viewModel.SendCommand.Execute(null);
+                    return;
+                }
+
+                e.Handled = true;
+                if (viewModel.SendCommand.CanExecute(null))
+                {
+                    viewModel.SendCommand.Execute(null);
                 }
             }
         }
@@ -34,7 +46,7 @@ namespace lingualink_client.Views
         /// </summary>
         private void InputTextBox_GotFocus(object sender, RoutedEventArgs e)
         {
-            _viewModel.HandleTextBoxFocusGained();
+            _viewModel?.HandleTextBoxFocusGained();
         }
 
         /// <summary>
@@ -42,7 +54,14 @@ namespace lingualink_client.Views
         /// </summary>
         private void InputTextBox_LostFocus(object sender, RoutedEventArgs e)
         {
-            _viewModel.HandleTextBoxFocusLost();
+            _viewModel?.HandleTextBoxFocusLost();
+        }
+
+        private void OnUnloaded(object sender, RoutedEventArgs e)
+        {
+            DataContext = null;
+            _viewModel?.Dispose();
+            _viewModel = null;
         }
     }
 }

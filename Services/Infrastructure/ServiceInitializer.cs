@@ -44,8 +44,10 @@ namespace lingualink_client.Services
             var eventAggregator = new EventAggregator();
             ServiceContainer.Register<IEventAggregator, EventAggregator>(eventAggregator);
 
+            var settingsService = new SettingsService();
+
             // 注册设置管理器（基于 SettingsService 封装加载/保存/事件逻辑）
-            var settingsManager = new SettingsManager();
+            var settingsManager = new SettingsManager(settingsService, eventAggregator);
             ServiceContainer.Register<ISettingsManager, SettingsManager>(settingsManager);
 
             // 注册日志管理器
@@ -53,23 +55,23 @@ namespace lingualink_client.Services
             ServiceContainer.Register<ILoggingManager, LoggingManager>(loggingManager);
 
             // 注册对话历史管理器
-            var conversationHistoryService = new ConversationHistoryService();
+            var conversationHistoryService = new ConversationHistoryService(settingsService, eventAggregator, loggingManager);
             ServiceContainer.Register<IConversationHistoryService, ConversationHistoryService>(conversationHistoryService);
 
             // 注册目标语言管理器
-            var targetLanguageManager = new TargetLanguageManager();
+            var targetLanguageManager = new TargetLanguageManager(settingsService, eventAggregator, loggingManager);
             ServiceContainer.Register<ITargetLanguageManager, TargetLanguageManager>(targetLanguageManager);
 
             // 注册麦克风管理器
-            var microphoneManager = new ViewModels.Managers.MicrophoneManager();
+            var microphoneManager = new ViewModels.Managers.MicrophoneManager(settingsService, eventAggregator, loggingManager);
             ServiceContainer.Register<IMicrophoneManager, ViewModels.Managers.MicrophoneManager>(microphoneManager);
 
             // 注册全局共享状态ViewModel
-            var sharedStateViewModel = new SharedStateViewModel();
+            var sharedStateViewModel = new SharedStateViewModel(eventAggregator);
             ServiceContainer.Register<SharedStateViewModel, SharedStateViewModel>(sharedStateViewModel);
 
             // 注册自动更新服务
-            var updateService = new VelopackUpdateService();
+            var updateService = new VelopackUpdateService(settingsService, loggingManager);
             ServiceContainer.Register<IUpdateService, VelopackUpdateService>(updateService);
 
             // 注册认证服务

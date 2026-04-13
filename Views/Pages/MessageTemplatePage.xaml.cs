@@ -25,25 +25,32 @@ namespace lingualink_client.Views
     /// </summary>
     public partial class MessageTemplatePage : Page
     {
-        private readonly MessageTemplatePageViewModel _viewModel;
+        private MessageTemplatePageViewModel? _viewModel;
 
         public MessageTemplatePage()
         {
             InitializeComponent();
 
             this.Loaded += MessageTemplatePage_Loaded;
-
-            _viewModel = new MessageTemplatePageViewModel();
-            DataContext = _viewModel;
-
-            // Set up language change handler for template hint
-            LanguageManager.LanguageChanged += UpdateTemplateHint;
-            UpdateTemplateHint();
+            this.Unloaded += MessageTemplatePage_Unloaded;
         }
 
         private void MessageTemplatePage_Loaded(object sender, RoutedEventArgs e)
         {
+            _viewModel ??= new MessageTemplatePageViewModel();
+            DataContext = _viewModel;
+            LanguageManager.LanguageChanged -= UpdateTemplateHint;
+            LanguageManager.LanguageChanged += UpdateTemplateHint;
+            UpdateTemplateHint();
             _viewModel.RefreshSettings();
+        }
+
+        private void MessageTemplatePage_Unloaded(object sender, RoutedEventArgs e)
+        {
+            LanguageManager.LanguageChanged -= UpdateTemplateHint;
+            DataContext = null;
+            _viewModel?.Dispose();
+            _viewModel = null;
         }
 
         private void UpdateTemplateHint()

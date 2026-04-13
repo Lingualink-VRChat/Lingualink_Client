@@ -25,7 +25,7 @@ namespace lingualink_client.Views
     /// </summary>
     public partial class SettingPage : Page
     {
-        private readonly SettingPageViewModel _viewModel;
+        private SettingPageViewModel? _viewModel;
         private readonly SettingsService _settingsService;
         private AppSettings _appSettings;
 
@@ -36,12 +36,10 @@ namespace lingualink_client.Views
             InitializeComponent();
 
             this.Loaded += SettingPage_Loaded;
+            this.Unloaded += SettingPage_Unloaded;
 
-            _viewModel = new SettingPageViewModel();
             _settingsService = new SettingsService();
             _appSettings = _settingsService.LoadSettings();
-
-            DataContext = _viewModel;
 
             Languages = LanguageManager.GetAvailableLanguages();
             LanguageComboBox.ItemsSource = Languages;
@@ -53,8 +51,17 @@ namespace lingualink_client.Views
 
         private void SettingPage_Loaded(object sender, RoutedEventArgs e)
         {
+            _viewModel ??= new SettingPageViewModel();
+            DataContext = _viewModel;
             _appSettings = _settingsService.LoadSettings();
             _viewModel.RefreshSettings();
+        }
+
+        private void SettingPage_Unloaded(object sender, RoutedEventArgs e)
+        {
+            DataContext = null;
+            _viewModel?.Dispose();
+            _viewModel = null;
         }
 
         private void OnLanguageChanged(object sender, SelectionChangedEventArgs e)

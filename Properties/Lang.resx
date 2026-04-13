@@ -1534,4 +1534,13 @@ Update now?</value>
   <data name="UpdateProcessErrorFormat" xml:space="preserve">
     <value>An error occurred during the update process: {0}</value>
   </data>
+  <data name="WebView2MissingRuntimeMessage" xml:space="preserve">
+    <value>WebView2 Runtime is required for login and subscription features. Open the download page now?</value>
+  </data>
+  <data name="CheckoutInitFailed" xml:space="preserve">
+    <value>Unable to initialize the checkout page. Please try again later.</value>
+  </data>
+  <data name="CheckoutNavigationFailed" xml:space="preserve">
+    <value>Unable to load the checkout page. Please check your network connection and try again.</value>
+  </data>
 </root>

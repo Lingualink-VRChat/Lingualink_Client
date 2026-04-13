@@ -27,9 +27,7 @@ namespace lingualink_client.Views
             InitializeComponent();
 
             _accessToken = accessToken ?? string.Empty;
-            _authHost = string.IsNullOrWhiteSpace(authHost)
-                ? AppSettings.GetEffectiveAuthServerUrl()
-                : authHost.Trim().TrimEnd('/');
+            _authHost = AppEndpoints.NormalizeBaseUrl(authHost, AppSettings.GetEffectiveAuthServerUrl());
             _mode = string.IsNullOrWhiteSpace(mode) ? string.Empty : mode.Trim();
 
             Loaded += OnLoaded;
@@ -69,7 +67,7 @@ namespace lingualink_client.Views
             {
                 Debug.WriteLine($"[CheckoutWindow] Failed to initialize checkout: {ex.Message}");
                 MessageBox.Show(
-                    "无法初始化支付页面，请稍后重试。",
+                    LanguageManager.GetString("CheckoutInitFailed"),
                     LanguageManager.GetString("ErrorTitle"),
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
@@ -126,7 +124,7 @@ namespace lingualink_client.Views
 
             Debug.WriteLine($"[CheckoutWindow] Navigation failed: {args.WebErrorStatus}");
             MessageBox.Show(
-                "无法加载支付页面，请检查网络连接后重试。",
+                LanguageManager.GetString("CheckoutNavigationFailed"),
                 LanguageManager.GetString("WarningTitle"),
                 MessageBoxButton.OK,
                 MessageBoxImage.Warning);

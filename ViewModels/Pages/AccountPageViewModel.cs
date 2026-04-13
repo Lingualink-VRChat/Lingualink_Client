@@ -21,7 +21,7 @@ using MessageBox = lingualink_client.Services.MessageBox;
 
 namespace lingualink_client.ViewModels
 {
-    public partial class AccountPageViewModel : ViewModelBase
+    public partial class AccountPageViewModel : ViewModelBase, IDisposable
     {
         private readonly ISettingsManager _settingsManager;
         private readonly IAuthService? _authService;
@@ -32,10 +32,8 @@ namespace lingualink_client.ViewModels
         private bool _hasPendingChanges;
         private CancellationTokenSource? _orderPollingCts;
         private CancellationTokenSource? _profileSyncCts;
-        private bool _isRestoringPendingOrder;
         private bool _isRecoveringUserProfile;
 
-        // 语言相关的标签
         public string AuthenticationModeLabel => LanguageManager.GetString("AuthenticationMode");
         public string OfficialServiceLabel => LanguageManager.GetString("OfficialService");
         public string OfficialServiceHint => LanguageManager.GetString("OfficialServiceHint");
@@ -262,6 +260,105 @@ namespace lingualink_client.ViewModels
         public string AutoRenewActionText => UserProfile?.Subscription?.AutoRenew == true ? WalletDisableAutoRenewLabel : WalletEnableAutoRenewLabel;
         public bool HasRenewalWarning => !string.IsNullOrWhiteSpace(RenewalWarning);
 
+        public AccountPageViewModel()
+            : this(CreateSettingsManager(), TryResolveAuthService())
+        {
+        }
+
+        public AccountPageViewModel(ISettingsManager settingsManager, IAuthService? authService = null)
+        {
+            _settingsManager = settingsManager ?? throw new ArgumentNullException(nameof(settingsManager));
+            _authService = authService;
+            _currentSettings = _settingsManager.LoadSettings();
+            RefreshLocalizedOptions();
+            LoadSettingsFromModel(_currentSettings);
+
+            LanguageManager.LanguageChanged += OnLanguageChanged;
+
+            _autoSaveTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(1)
+            };
+            _autoSaveTimer.Tick += AutoSaveTimerOnTick;
+
+            _emailCodeTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(1)
+            };
+            _emailCodeTimer.Tick += EmailCodeTimerOnTick;
+
+            PropertyChanged += OnAccountPropertyChanged;
+
+            if (_authService != null)
+            {
+                _authService.LoginStateChanged += OnAuthServiceLoginStateChanged;
+                UpdateLoginState();
+            }
+        }
+
+        private static ISettingsManager CreateSettingsManager()
+        {
+            return ServiceContainer.TryResolve<ISettingsManager>(out var settingsManager) && settingsManager != null
+                ? settingsManager
+                : new SettingsManager();
+        }
+
+        private static IAuthService? TryResolveAuthService()
+        {
+            return ServiceContainer.TryResolve<IAuthService>(out var authService) ? authService : null;
+        }
+
+        private void SyncProfileEditorWithUser(UserProfile? profile)
+        {
+            if (profile == null)
+            {
+                EditUsername = string.Empty;
+                return;
+            }
+
+            EditUsername = profile.Username ?? string.Empty;
+        }
+
+        private void ResetBindEmailState()
+        {
+            _emailCodeTimer.Stop();
+            BindEmailInput = string.Empty;
+            BindEmailCodeInput = string.Empty;
+            BindEmailPasswordInput = string.Empty;
+            BindEmailConfirmPasswordInput = string.Empty;
+            IsEmailCodeSent = false;
+            IsSendingEmailCode = false;
+            EmailCodeCountdownSeconds = 0;
+        }
+
+        private static bool TryValidateEmailInput(string? email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                return false;
+            }
+
+            try
+            {
+                var parsed = new MailAddress(email.Trim());
+                return string.Equals(parsed.Address, email.Trim(), StringComparison.OrdinalIgnoreCase);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private bool HasValidBindEmailPassword()
+        {
+            var password = BindEmailPasswordInput ?? string.Empty;
+            if (password.Length < 8 || password.Length > 128)
+            {
+                return false;
+            }
+
+            return string.Equals(password, BindEmailConfirmPasswordInput ?? string.Empty, StringComparison.Ordinal);
+        }
 
         private static string BuildSocialBindingStatusDisplay(SocialBindingInfo? binding)
         {
@@ -293,11 +390,7 @@ namespace lingualink_client.ViewModels
             OnPropertyChanged(nameof(AutoRenewStatusDisplay));
             OnPropertyChanged(nameof(AutoRenewActionText));
             SyncProfileEditorWithUser(value);
-            BeginEditUsernameCommand.NotifyCanExecuteChanged();
-            BeginEditEmailCommand.NotifyCanExecuteChanged();
-            BeginEditProviderCommand.NotifyCanExecuteChanged();
-            BindQqProviderCommand.NotifyCanExecuteChanged();
-            BindWechatProviderCommand.NotifyCanExecuteChanged();
+            RefreshProfileEditingCommandStates();
             RechargeWalletCommand.NotifyCanExecuteChanged();
             ToggleAutoRenewCommand.NotifyCanExecuteChanged();
         }
@@ -468,6 +561,22 @@ namespace lingualink_client.ViewModels
 
         partial void OnIsUpdatingUserProfileChanged(bool value)
         {
+            RefreshProfileEditingCommandStates();
+        }
+
+        partial void OnHasPaidSubscriptionPlanChanged(bool value)
+        {
+            OnPropertyChanged(nameof(VipActionButtonText));
+        }
+
+        private void RefreshLoginCommandStates()
+        {
+            LoginCommand.NotifyCanExecuteChanged();
+            LogoutCommand.NotifyCanExecuteChanged();
+        }
+
+        private void RefreshProfileEditingCommandStates()
+        {
             UpdateUserProfileCommand.NotifyCanExecuteChanged();
             SendEmailCodeCommand.NotifyCanExecuteChanged();
             BindProviderCommand.NotifyCanExecuteChanged();
@@ -481,52 +590,23 @@ namespace lingualink_client.ViewModels
             SaveProviderCommand.NotifyCanExecuteChanged();
         }
 
-        partial void OnHasPaidSubscriptionPlanChanged(bool value)
+        private void RefreshSubscriptionCommandStates()
         {
-            OnPropertyChanged(nameof(VipActionButtonText));
+            OpenSubscriptionDialogCommand.NotifyCanExecuteChanged();
+            LoadSubscriptionPlansCommand.NotifyCanExecuteChanged();
+            CreateSubscriptionOrderCommand.NotifyCanExecuteChanged();
+            QueryOrderStatusCommand.NotifyCanExecuteChanged();
+            StopOrderPollingCommand.NotifyCanExecuteChanged();
         }
 
-        public AccountPageViewModel(ISettingsManager? settingsManager = null, IAuthService? authService = null)
+        private void RefreshAccountCommandStates()
         {
-            _settingsManager = settingsManager
-                               ?? (ServiceContainer.TryResolve<ISettingsManager>(out var resolved) && resolved != null
-                                   ? resolved
-                                   : new SettingsManager());
-            _currentSettings = _settingsManager.LoadSettings();
-            RefreshLocalizedOptions();
-
-            if (authService != null)
-            {
-                _authService = authService;
-            }
-            else if (ServiceContainer.TryResolve<IAuthService>(out var resolvedAuth) && resolvedAuth != null)
-            {
-                _authService = resolvedAuth;
-            }
-
-            LoadSettingsFromModel(_currentSettings);
-
-            LanguageManager.LanguageChanged += OnLanguageChanged;
-
-            _autoSaveTimer = new DispatcherTimer
-            {
-                Interval = TimeSpan.FromSeconds(1)
-            };
-            _autoSaveTimer.Tick += AutoSaveTimerOnTick;
-
-            _emailCodeTimer = new DispatcherTimer
-            {
-                Interval = TimeSpan.FromSeconds(1)
-            };
-            _emailCodeTimer.Tick += EmailCodeTimerOnTick;
-
-            PropertyChanged += OnAccountPropertyChanged;
-
-            if (_authService != null)
-            {
-                _authService.LoginStateChanged += OnAuthServiceLoginStateChanged;
-                UpdateLoginState();
-            }
+            RefreshLoginCommandStates();
+            RefreshProfileEditingCommandStates();
+            RefreshSubscriptionCommandStates();
+            RefreshUserProfileCommand.NotifyCanExecuteChanged();
+            RechargeWalletCommand.NotifyCanExecuteChanged();
+            ToggleAutoRenewCommand.NotifyCanExecuteChanged();
         }
 
         private void EmailCodeTimerOnTick(object? sender, EventArgs e)
@@ -543,7 +623,7 @@ namespace lingualink_client.ViewModels
 
         private void OnAuthServiceLoginStateChanged(object? sender, bool isLoggedIn)
         {
-            Application.Current.Dispatcher.Invoke(UpdateLoginState);
+            System.Windows.Application.Current.Dispatcher.Invoke(UpdateLoginState);
         }
 
         private void UpdateLoginState()
@@ -559,6 +639,7 @@ namespace lingualink_client.ViewModels
                 ResetWalletPresentation();
                 StopOrderPollingInternal();
                 ResetOrderState();
+                RefreshAccountCommandStates();
                 return;
             }
 
@@ -593,27 +674,7 @@ namespace lingualink_client.ViewModels
                 }
             }
 
-            LoginCommand.NotifyCanExecuteChanged();
-            LogoutCommand.NotifyCanExecuteChanged();
-            OpenSubscriptionDialogCommand.NotifyCanExecuteChanged();
-            RefreshUserProfileCommand.NotifyCanExecuteChanged();
-            UpdateUserProfileCommand.NotifyCanExecuteChanged();
-            SendEmailCodeCommand.NotifyCanExecuteChanged();
-            BindProviderCommand.NotifyCanExecuteChanged();
-            BindQqProviderCommand.NotifyCanExecuteChanged();
-            BindWechatProviderCommand.NotifyCanExecuteChanged();
-            BeginEditUsernameCommand.NotifyCanExecuteChanged();
-            BeginEditEmailCommand.NotifyCanExecuteChanged();
-            BeginEditProviderCommand.NotifyCanExecuteChanged();
-            SaveUsernameCommand.NotifyCanExecuteChanged();
-            SaveEmailCommand.NotifyCanExecuteChanged();
-            SaveProviderCommand.NotifyCanExecuteChanged();
-            LoadSubscriptionPlansCommand.NotifyCanExecuteChanged();
-            CreateSubscriptionOrderCommand.NotifyCanExecuteChanged();
-            QueryOrderStatusCommand.NotifyCanExecuteChanged();
-            StopOrderPollingCommand.NotifyCanExecuteChanged();
-            RechargeWalletCommand.NotifyCanExecuteChanged();
-            ToggleAutoRenewCommand.NotifyCanExecuteChanged();
+            RefreshAccountCommandStates();
         }
 
         private async Task EnsureUserProfileLoadedAsync()
@@ -684,7 +745,6 @@ namespace lingualink_client.ViewModels
                             return;
                         }
 
-                        // 兜底：页面进入时主动从本地恢复会话，避免只依赖应用启动阶段的恢复任务。
                         await _authService.TryRestoreSessionAsync();
                         UpdateLoginState();
                     }
@@ -940,58 +1000,6 @@ namespace lingualink_client.ViewModels
             return true;
         }
 
-        private void SyncProfileEditorWithUser(UserProfile? profile)
-        {
-            if (profile == null)
-            {
-                EditUsername = string.Empty;
-                return;
-            }
-
-            EditUsername = profile.Username ?? string.Empty;
-        }
-
-        private void ResetBindEmailState()
-        {
-            _emailCodeTimer.Stop();
-            BindEmailInput = string.Empty;
-            BindEmailCodeInput = string.Empty;
-            BindEmailPasswordInput = string.Empty;
-            BindEmailConfirmPasswordInput = string.Empty;
-            IsEmailCodeSent = false;
-            IsSendingEmailCode = false;
-            EmailCodeCountdownSeconds = 0;
-        }
-
-        private static bool TryValidateEmailInput(string? email)
-        {
-            if (string.IsNullOrWhiteSpace(email))
-            {
-                return false;
-            }
-
-            try
-            {
-                var parsed = new MailAddress(email.Trim());
-                return string.Equals(parsed.Address, email.Trim(), StringComparison.OrdinalIgnoreCase);
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        private bool HasValidBindEmailPassword()
-        {
-            var password = BindEmailPasswordInput ?? string.Empty;
-            if (password.Length < 8 || password.Length > 128)
-            {
-                return false;
-            }
-
-            return string.Equals(password, BindEmailConfirmPasswordInput ?? string.Empty, StringComparison.Ordinal);
-        }
-
         private void ClearPlans()
         {
             AvailablePlans = Array.Empty<SubscriptionPlanInfo>();
@@ -1191,49 +1199,6 @@ namespace lingualink_client.ViewModels
                 {
                     StopOrderPollingInternal();
                 }
-            }
-        }
-
-        private async Task RestorePendingOrderAsync()
-        {
-            if (_authService == null || !IsLoggedIn || _isRestoringPendingOrder)
-            {
-                return;
-            }
-
-            var outTradeNo = _currentSettings.PendingSubscriptionOrderOutTradeNo?.Trim() ?? string.Empty;
-            if (string.IsNullOrWhiteSpace(outTradeNo))
-            {
-                return;
-            }
-
-            _isRestoringPendingOrder = true;
-            try
-            {
-                LatestOrderOutTradeNo = outTradeNo;
-                LatestOrderMessage = string.Format(LanguageManager.GetString("AccountOrderRestoreDetectedFormat"), outTradeNo);
-
-                var order = await QueryOrderStatusInternalAsync(outTradeNo, showErrorMessage: false);
-                if (order == null)
-                {
-                    LatestOrderMessage = string.Format(LanguageManager.GetString("AccountOrderRestoreRecoveredFormat"), outTradeNo);
-                    return;
-                }
-
-                if (string.Equals(order.Status, "pending", StringComparison.OrdinalIgnoreCase))
-                {
-                    _ = StartOrderPollingAsync(outTradeNo);
-                    return;
-                }
-
-                if (IsTerminalOrderStatus(order.Status))
-                {
-                    await ApplyTerminalOrderStateAsync(order, refreshSubscriptionIfPaid: true);
-                }
-            }
-            finally
-            {
-                _isRestoringPendingOrder = false;
             }
         }
 
@@ -2326,6 +2291,33 @@ namespace lingualink_client.ViewModels
         private bool CanStopOrderPolling()
         {
             return IsPollingOrder;
+        }
+
+        public void Dispose()
+        {
+            PropertyChanged -= OnAccountPropertyChanged;
+            LanguageManager.LanguageChanged -= OnLanguageChanged;
+
+            if (_authService != null)
+            {
+                _authService.LoginStateChanged -= OnAuthServiceLoginStateChanged;
+            }
+
+            if (_autoSaveTimer.IsEnabled)
+            {
+                _autoSaveTimer.Stop();
+            }
+
+            if (_emailCodeTimer.IsEnabled)
+            {
+                _emailCodeTimer.Stop();
+            }
+
+            _autoSaveTimer.Tick -= AutoSaveTimerOnTick;
+            _emailCodeTimer.Tick -= EmailCodeTimerOnTick;
+
+            CancelPendingProfileSync();
+            StopOrderPollingInternal();
         }
         #endregion
     }

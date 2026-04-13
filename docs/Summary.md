@@ -1,171 +1,181 @@
-# LinguaLink Client - 项目总结与开发者指南
+# LinguaLink Client - Architecture Summary
 
-## 1. 项目概述
+## 1. 项目现状
 
-**LinguaLink Client** 是一个基于 C# 和 WPF 构建的桌面应用程序，旨在提供实时语音识别和翻译功能。它深度集成了 VRChat，可以通过 OSC 协议将翻译结果直接发送到游戏聊天框中。
+LinguaLink Client 是一个基于 `net8.0-windows` 的 WPF MVVM 桌面客户端，核心目标是把语音识别、文本翻译和 VRChat OSC 输出整合成一个可配置、可持久化、可本地化的工作流。
 
-此客户端设计为一个功能全面、高度可配置的工具，其核心特性包括：
-- **实时音频处理**: 集成了高效的语音活动检测 (VAD)。
-- **多语言翻译**: 通过 LinguaLink 后端 API (v2.0) 实现多种语言的互译。
-- **高效音频传输**: 默认使用 Opus 音频编码 (16kbps)，并结合音频增强技术，以最小的带宽占用实现最高的识别准确率。
-- **模块化和可扩展性**: 采用现代化的 MVVM 架构，结合依赖注入和服务分层，易于维护和扩展。
-- **现代化 UI**: 使用 WPF-UI 库构建，提供流畅的、符合 Fluent Design 的用户界面。
-- **会话历史记录**: 借助 LiteDB 持久化所有成功会话，支持按会话/来源/时间筛选、复制与导出。
-- **高级日志中心**: 新的日志面板提供等级和分类过滤、全文搜索、复制与导出等能力。
+当前主功能包括：
+- 实时麦克风监听、VAD 分段与音频增强
+- 音频翻译与文本翻译两条独立流程
+- VRChat OSC 输出与自定义模板格式化
+- 账户登录、用户资料同步与订阅支付入口
+- 会话历史记录与日志中心
+- 多语言界面、自动更新与现代化消息框
 
-## 2. 核心技术栈
+## 2. 代码结构
 
-- **框架**: .NET 8.0
-- **UI**: WPF (Windows Presentation Foundation)
-- **UI 库**: [WPF-UI (Fluent for WPF)](https://github.com/lepoco/wpfui) - 用于实现现代化、流畅的界面。
-- **MVVM 框架**: [CommunityToolkit.Mvvm](https://learn.microsoft.com/en-us/dotnet/communitytoolkit/mvvm/) - 用于实现模型-视图-视图模型 (MVVM) 设计模式。
-- **音频处理**:
-    - **NAudio**: 用于音频输入/输出 (I/O) 和设备管理。
-    - **WebRtcVadSharp**: 用于高效的语音活动检测 (VAD)。
-    - **Concentus**: 用于 Opus 音频编码，以实现高效的音频压缩。
-- **网络与通信**:
-    - **HttpClient**: 用于与后端 LinguaLink API v2.0 进行通信。
-    - **OscCore**: 用于通过 OSC (Open Sound Control) 协议与 VRChat 进行通信。
+仓库主要分为以下几层：
 
-## 3. 架构深度解析
+- `Views/`
+  - 页面与窗口的 XAML，以及少量 UI 事件桥接逻辑
+- `ViewModels/`
+  - 页面级、组件级和管理器级 ViewModel
+- `Models/`
+  - `AppSettings`、认证模型、翻译结果、更新模型、历史记录模型
+- `Services/`
+  - API、音频、认证、更新、日志、本地化、基础设施、UI 封装
+- `docs/`
+  - 架构说明、开发规范、发布说明、重构路线图和参考资料
 
-项目采用了清晰的分层和模块化架构，遵循了 MVVM 设计模式和 SOLID 原则。
+和旧版本相比，当前代码已经逐步从“直接在页面里保存设置和广播事件”收敛到：
+- 用 `ISettingsManager` 统一处理设置加载、校验、保存和 `SettingsChangedEvent`
+- 用 `IEventAggregator` 做跨模块通信
+- 用组件化 ViewModel 组织主页面
 
-### 3.1. MVVM 模式 (Model-View-ViewModel)
+## 3. 当前关键模块
 
-- **Views (`/Views`)**: 负责界面的呈现。XAML 文件非常"轻"，几乎不包含业务逻辑。后台代码 (`.xaml.cs`) 主要用于处理纯粹的 UI 事件（如窗口加载、控件交互）并将它们连接到 ViewModel。
-- **ViewModels (`/ViewModels`)**: 负责 UI 的状态和逻辑。这是应用的核心，包含了所有的数据绑定属性和命令。`CommunityToolkit.Mvvm` 的 `ObservableObject` 和 `RelayCommand` 被广泛使用以减少样板代码。
-- **Models (`/Models`)**: 负责数据结构和业务实体，如 `AppSettings` (应用配置) 和 `NewApiResponse` (API 响应)。
+### 3.1 应用入口
 
-### 3.2. 服务层 (`/Services`)
+- [App.xaml.cs](../App.xaml.cs)
+  - 启动 Velopack
+  - 初始化服务容器
+  - 恢复认证会话
+  - 应用界面语言
+  - 创建共享的 `IndexWindowViewModel`
+  - 触发自动更新检查
 
-服务层封装了所有的业务逻辑、外部通信和核心功能，使 ViewModel 保持整洁。
+- [MainWindow.xaml.cs](../MainWindow.xaml.cs)
+  - 承载根导航框架
+  - 在窗口加载时应用主题与主页面导航
 
-- **依赖注入 (`ServiceContainer`)**: 项目使用一个简单的静态依赖注入容器 `ServiceContainer` 来管理服务的生命周期和解析。在应用启动时，`ServiceInitializer` 会注册所有核心服务。
-- **事件聚合器 (`EventAggregator`)**: `IEventAggregator` 接口及其实现 `EventAggregator` 用于模块间的松耦合通信。这避免了组件之间的直接引用，使得系统更加灵活。例如，当翻译完成时，`AudioTranslationOrchestrator` 会发布一个 `TranslationCompletedEvent`，而 `TranslationResultViewModel` 会订阅并响应此事件以更新UI。
-- **核心服务**:
-    - `SettingsService`: 负责加载和保存 `app_settings.json` 文件。
-    - `AudioService`: 封装了麦克风录音、VAD 处理、音频增强（峰值归一化、安静语音增强）和音频分段逻辑。
-    - `LingualinkApiService`: 负责与后端 API v2.0 通信，包括音频编码 (Opus)、发送请求和解析响应。
-    - `OscService`: 封装了向 VRChat 发送 OSC 消息的逻辑。
-    - `LoggingManager`: 提供一个集中的、线程安全的日志记录系统。
-- **协调器 (`Orchestrators`)**:
-    - `AudioTranslationOrchestrator`: 这是一个关键类，它协调了从音频输入到最终 OSC 输出的完整流程。它监听 `AudioService` 的事件，调用 `LingualinkApiService` 进行翻译，并使用 `OscService` 发送结果。
+### 3.2 主工作流
 
-### 3.3. 组件化 ViewModel 架构
+- [ViewModels/Pages/IndexWindowViewModel.cs](../ViewModels/Pages/IndexWindowViewModel.cs)
+  - 作为主页面容器，持有 `MainControl`、`MicrophoneSelection`、`TargetLanguage`、`TranslationResult`
+  - 在启动后负责语言初始化、麦克风刷新和更新提示
 
-这是一个重要的架构特点。主界面 (`IndexPage`) 并非由一个庞大的 ViewModel 控制，而是由一个容器 ViewModel (`IndexWindowViewModel`) 和多个独立的、可复用的组件 ViewModel 构成。
+- [ViewModels/Components/MainControlViewModel.cs](../ViewModels/Components/MainControlViewModel.cs)
+  - 驱动音频监听启停
+  - 响应设置变化并重建 `AudioTranslationOrchestrator`
 
-- **`IndexWindowViewModel`**: 作为容器，它持有其他组件 ViewModel 的实例，并负责协调它们之间的数据流。
-- **组件 ViewModels (`/ViewModels/Components`)**:
-    - `MainControlViewModel`: 控制核心工作流程（开始/停止），并显示状态文本。
-    - `MicrophoneSelectionViewModel`: 管理麦克风列表和选择。
-    - `TargetLanguageViewModel`: 管理目标语言的选择。
-    - `TranslationResultViewModel`: 显示翻译结果和日志。
-    - `LogViewModel`: 为独立的日志页面提供支持。
-- **管理器 (`/ViewModels/Managers`)**:
-    - 为了进一步分离关注点，`MicrophoneManager` 和 `TargetLanguageManager` 被引入，用于处理与UI相关的复杂状态逻辑（如麦克风刷新、可用语言列表动态更新等），使组件 ViewModel 更加轻量。
+- [Services/Managers/AudioTranslationOrchestrator.cs](../Services/Managers/AudioTranslationOrchestrator.cs)
+  - 串联音频采集、编码、API 请求和 OSC 输出
 
-这种设计使得每个部分都高度内聚，易于独立测试和修改。
+- [Services/Managers/TextTranslationOrchestrator.cs](../Services/Managers/TextTranslationOrchestrator.cs)
+  - 负责文本输入页的翻译与输出流程
 
-## 4. 关键工作流程
+### 3.3 设置与持久化
 
-### 4.1. 应用启动流程
+- [Models/AppSettings.cs](../Models/AppSettings.cs)
+  - 统一承载服务器、模板、OSC、历史记录、音频参数和更新源覆写等配置
 
-1.  `App.xaml.cs` 的 `OnStartup` 方法被调用。
-2.  `ServiceInitializer.Initialize()` 注册所有单例服务（如 `ILoggingManager`, `IEventAggregator`）。
-3.  `SettingsService` 加载用户设置，并应用全局语言。
-4.  主窗口 `MainWindow` 被创建，`IndexWindowViewModel` 被实例化，进而创建所有组件 ViewModel。
-5.  `IndexWindowViewModel` 从 `SettingsService` 加载配置，并初始化其管理的组件（如 `TargetLanguageManager`）。
+- [Services/Infrastructure/SettingsService.cs](../Services/Infrastructure/SettingsService.cs)
+  - 负责 `app_settings.json` 的读写与旧配置归一化
 
-### 4.2. 实时音频翻译流程
+- [Services/Infrastructure/SettingsManager.cs](../Services/Infrastructure/SettingsManager.cs)
+  - 封装页面常见的“读取最新设置 -> 应用当前页面修改 -> 保存 -> 广播设置变更”流程
 
-这是一个核心的、异步的、事件驱动的流程：
+### 3.4 认证与支付
 
-1.  **用户操作**: 用户在 `IndexPage` 上选择麦克风，然后点击 "开始监听" 按钮。
-2.  **ViewModel (UI -> Logic)**:
-    - `MainControlViewModel` 的 `ToggleWorkCommand` 被执行。
-    - 它调用 `AudioTranslationOrchestrator.Start()`，并传入所选麦克风的设备索引。
-3.  **音频服务 (录音与VAD)**:
-    - `AudioService.Start()` 初始化 `NAudio` 的 `WaveInEvent` 和 `WebRtcVad`。
-    - `OnVadDataAvailable` 事件处理器持续接收音频数据。
-    - VAD 算法检测语音的开始和结束。`PostSpeechRecordingDuration` 确保捕捉到完整的语音尾音。
-    - 当一个完整的语音片段形成后（满足最小时长且静音超时），`AudioService` 会对音频应用增强处理（`ProcessAndNormalizeAudio`），然后触发 `AudioSegmentReady` 事件，并附带音频数据。
-4.  **协调器 (核心逻辑)**:
-    - `AudioTranslationOrchestrator` 监听到 `AudioSegmentReady` 事件。
-    - 它从 `AppSettings` 获取目标语言（或从模板中提取）。
-    - 音频数据被传递给 `AudioEncoderService` 进行 Opus 编码，得到压缩后的字节数组。
-    - `LingualinkApiService.ProcessAudioAsync()` 被调用，将编码后的音频数据发送到后端。
-5.  **API 服务 (网络通信)**:
-    - `LingualinkApiService` 发送 HTTP POST 请求到后端 `/process_audio` 端点。
-    - 它异步等待服务器的 JSON 响应 (`NewApiResponse`)。
-6.  **结果处理 (返回路径)**:
-    - `AudioTranslationOrchestrator` 接收到 `ApiResult`。
-    - 如果成功，它会根据用户的模板设置 (`UseCustomTemplate`) 格式化翻译文本。
-    - 它通过 `IEventAggregator` 发布一个 `TranslationCompletedEvent`，其中包含原始文本和处理后的文本。
-    - 如果 `EnableOsc` 为 `true`，它会调用 `OscService.SendChatboxMessageAsync()` 将处理后的文本发送到 VRChat。
-7.  **ViewModel (Logic -> UI)**:
-    - `TranslationResultViewModel` 订阅了 `TranslationCompletedEvent`。
-    - 当事件被接收时，它会更新其 `OriginalText` 和 `ProcessedText` 属性，UI 会通过数据绑定自动刷新。
-    - `MainControlViewModel` 也会更新 `StatusText` 以向用户反馈当前状态（如 "翻译成功"、"发送中..."）。
+- [Services/Auth/AuthService.cs](../Services/Auth/AuthService.cs)
+  - 管理登录状态、令牌持久化、用户资料同步和未授权恢复
 
-### 4.3. 设置更改流程
+- [ViewModels/Pages/AccountPageViewModel.cs](../ViewModels/Pages/AccountPageViewModel.cs)
+  - 当前仍然作为页面级协调器存在，但已经按职责拆为多个 partial 文件：
+  - [AccountPageViewModel.ServiceSettings.cs](../ViewModels/Pages/AccountPageViewModel.ServiceSettings.cs)
+  - [AccountPageViewModel.Profile.cs](../ViewModels/Pages/AccountPageViewModel.Profile.cs)
+  - [AccountPageViewModel.Subscription.cs](../ViewModels/Pages/AccountPageViewModel.Subscription.cs)
+  - 保持原有绑定面的同时，把服务设置、资料编辑和订阅支付分离到更清晰的代码边界
 
-1.  用户在 `ServicePage` 或 `AccountPage` 等页面上修改设置。
-2.  对应 ViewModel (`ServicePageViewModel`, `AccountPageViewModel`) 的属性通过双向绑定更新。
-3.  用户点击 "保存" 按钮，触发 `SaveCommand`。
-4.  ViewModel 验证输入，然后从 `SettingsService` 加载最新的 `AppSettings` 对象（以避免覆盖其他页面的更改）。
-5.  ViewModel 将当前页面管理的设置更新到这个 `AppSettings` 对象中。
-6.  `SettingsService.SaveSettings()` 将更新后的对象序列化为 JSON 并保存到磁盘。
-7.  `SettingsChangedNotifier.RaiseSettingsChanged()` 被调用，这是一个全局静态事件。
-8.  `IndexWindowViewModel` 和 `MainControlViewModel` 等关心设置变化的组件会监听到此事件，并重新加载配置以应用更改（例如，重新创建 `AudioTranslationOrchestrator` 以应用新的服务地址或 OSC 地址）。
+### 3.5 历史记录与日志
 
-## 5. 重要类及其职责
+- [Services/Managers/ConversationHistoryService.cs](../Services/Managers/ConversationHistoryService.cs)
+  - 负责 LiteDB 存储、历史查询、迁移和导出支撑
 
-| 类别       | 类/接口                                    | 职责                                                               |
-|------------|--------------------------------------------|--------------------------------------------------------------------|
-| **Models** | `AppSettings.cs`                           | 定义所有用户可配置的设置项，是 `app_settings.json` 的C#映射。        |
-|            | `Models.cs` (`NewApiResponse`, `ApiResult`) | 定义与后端 API v2.0 交互的数据模型和统一的 API 结果封装。          |
-| **Services** | `IEventAggregator.cs` / `EventAggregator.cs` | 提供松耦合的发布/订阅事件总线。                                    |
-|            | `ILingualinkApiService.cs` / `LingualinkApiService.cs` | 封装与后端 API v2.0 的所有 HTTP 通信，包括认证、编码和请求。   |
-|            | `AudioService.cs`                          | 核心音频处理：录音、VAD、分段、音频增强。                          |
-|            | `AudioTranslationOrchestrator.cs`          | 流程协调器，粘合音频输入、API翻译和OSC输出。                       |
-|            | `SettingsService.cs`                       | 负责 `app_settings.json` 的读写操作。                              |
-|            | `ServiceContainer.cs` / `ServiceInitializer.cs` | 实现简单的依赖注入和服务生命周期管理。                             |
-| **ViewModels**| `IndexWindowViewModel.cs`                    | 作为组件容器，管理所有主界面上的子 ViewModel。                     |
-|            | `MainControlViewModel.cs`                  | 控制核心工作流程（启停）、状态显示，并持有 `Orchestrator` 实例。 |
-|            | `AccountPageViewModel.cs`                  | 管理账户登录态与自定义服务器 URL 设置。                               |
-|            | `ServicePageViewModel.cs`                  | 管理服务相关的详细参数（VAD、OSC、音频处理等）。                   |
-|            | `TargetLanguageManager.cs`                 | 封装目标语言选择的复杂UI逻辑，如动态更新可用语言列表。           |
+- [ViewModels/Components/ConversationHistoryViewModel.cs](../ViewModels/Components/ConversationHistoryViewModel.cs)
+  - 作为组件协调器保留现有绑定与命令
+  - 实现已拆分到：
+  - [ConversationHistoryViewModel.Loading.cs](../ViewModels/Components/ConversationHistoryViewModel.Loading.cs)
+  - [ConversationHistoryViewModel.Filters.cs](../ViewModels/Components/ConversationHistoryViewModel.Filters.cs)
+  - [ConversationHistoryViewModel.Actions.cs](../ViewModels/Components/ConversationHistoryViewModel.Actions.cs)
+  - 过滤与摘要导出逻辑进一步提炼到 [ConversationHistoryLogic.cs](../ViewModels/Components/ConversationHistoryLogic.cs)
 
-## 6. 未来开发指南
+- [Services/Managers/LoggingManager.cs](../Services/Managers/LoggingManager.cs)
+  - 集中管理 UI 侧日志条目
 
-### 6.1. 如何添加一个新的设置项
+## 4. 当前配置与端点策略
 
-1.  **Model**: 在 `Models/AppSettings.cs` 中添加新的属性。
-2.  **View**: 在相应的设置页面 XAML (如 `ServicePage.xaml`) 中添加 UI 控件（如 `Slider`, `CheckBox`）。
-3.  **ViewModel**: 在对应的 ViewModel (如 `ServicePageViewModel.cs`) 中：
-    -   添加一个与新属性同名的 `[ObservableProperty]`。
-    -   在 `LoadSettingsFromModel` 方法中，从 `AppSettings` 加载值到 ViewModel 属性。
-    -   在 `ValidateAndBuildSettings` 方法中，将 ViewModel 属性的值写回 `AppSettings` 对象。
-    -   添加对应的本地化标签字符串到 `.resx` 文件和 ViewModel。
-4.  **Service**: 如果新设置影响了某个服务（如 `AudioService`），请确保在服务的构造函数中接收并使用该值。
+目前仓库已经把内建端点集中到：
 
-### 6.2. 如何添加一个新的UI页面
+- [Models/AppEndpoints.cs](../Models/AppEndpoints.cs)
 
-1.  **View**: 在 `Views/Pages/` 目录下创建一个新的 `Page` (e.g., `NewFeaturePage.xaml`)。
-2.  **ViewModel**: 在 `ViewModels/` 目录下创建一个对应的 ViewModel (`NewFeaturePageViewModel.cs`)，继承自 `ViewModelBase`。
-3.  **MainWindow**: 在 `MainWindow.xaml` 的 `ui:NavigationView.MenuItems` 中添加一个新的 `ui:NavigationViewItem`，并将其 `TargetPageType` 指向你的新页面。
-4.  **Localization**: 为新的导航项在 `.resx` 文件中添加内容，并在 `MainWindowViewModel.cs` 中添加对应的属性绑定。
+其中包括：
+- 官方 API 地址
+- Auth Server 地址
+- 更新下载源
+- WebView2 Runtime 下载链接
 
-### 6.3. 开发最佳实践
+这样做的目的，是减少散落在 ViewModel、窗口和服务里的重复常量，降低迁移地址时的修改面。
 
-- **保持 ViewModel 简洁**: 复杂的业务逻辑应移至服务层。ViewModel 的主要职责是管理UI状态和响应用户交互。
-- **使用 `ServiceContainer`**: 需要使用服务时，通过 `ServiceContainer.Resolve<T>()` 获取。新的单例服务应在 `ServiceInitializer` 中注册。
-- **使用 `EventAggregator`**: 当模块间需要通信但又不希望产生强引用时（如 ViewModel A 需要通知 ViewModel B 某事发生），请使用事件聚合器。定义一个新的事件类，然后发布和订阅它。
-- **利用组件化**: 对于复杂界面，优先考虑将其拆分为多个子组件 ViewModel，而不是创建一个庞大的单体 ViewModel。`IndexPage` 是一个很好的例子。
-- **本地化**: 所有面向用户的字符串都应通过 `LanguageManager.GetString("ResourceKey")` 获取，并添加到所有 `.resx` 文件中。
+更新服务当前支持两层来源：
+- 编译目标决定的默认 feed
+- 用户设置里的 `UpdateFeedOverride`
 
-## 7. 结论
+对应默认源解析目前集中在：
 
-LinguaLink Client v3.0 是一个架构清晰、功能强大且易于扩展的应用程序。通过采用现代化的 MVVM 模式、服务分层和事件驱动设计，项目具备了良好的可维护性。未来的开发者可以基于此坚实的基础，轻松地添加新功能或进行修改。
+- [Services/Updates/UpdateFeedResolver.cs](../Services/Updates/UpdateFeedResolver.cs)
+
+## 5. 当前推荐开发方式
+
+优先参考以下文档：
+
+- [DevelopmentConventions.md](./DevelopmentConventions.md)
+  - 日常开发规范、换行策略、依赖注入约定、页面生命周期约定
+- [CodeQualityRoadmap.md](./CodeQualityRoadmap.md)
+  - 当前值得优先治理的耦合、去重和拆分热点
+- [ReleaseGuide.md](./ReleaseGuide.md)
+  - 构建、打包、上传和发布核对流程
+
+开发实践上，建议优先遵守：
+
+- 新代码优先显式注入依赖，不新增 `ServiceContainer.Resolve<T>()`
+- 页面保存设置优先复用 `ISettingsManager.TryUpdateAndSave(...)`
+- 用户可见字符串统一进入 `Lang*.resx`
+- UI 弹窗优先走 [Services/Ui/MessageBox.cs](../Services/Ui/MessageBox.cs)
+- 页面和 ViewModel 只要订阅了事件、定时器或 `LanguageChanged`，就必须有释放路径
+- 纯逻辑优先抽到可测试 helper，并在 `tests/` 下补最小覆盖，避免把行为验证全部压到手测
+
+## 6. 当前验证能力
+
+当前仓库除了手动验证外，已经补上少量低风险的自动化测试入口：
+
+- [tests/LinguaLink.Client.Tests/AppEndpointsTests.cs](../tests/LinguaLink.Client.Tests/AppEndpointsTests.cs)
+  - 覆盖端点归一化与更新源解析
+- [tests/LinguaLink.Client.Tests/ConversationHistoryLogicTests.cs](../tests/LinguaLink.Client.Tests/ConversationHistoryLogicTests.cs)
+  - 覆盖历史记录筛选、摘要构建与导出文本拼接
+
+这些测试目前仍然偏向纯逻辑层，尚未替代更新、认证、支付等流程的集成验证。
+
+## 7. 当前最需要继续优化的区域
+
+以下区域仍然值得持续治理：
+
+- [ViewModels/Pages/AccountPageViewModel.cs](../ViewModels/Pages/AccountPageViewModel.cs)
+  - 虽然已经拆成 partial，但仍然是页面级协调器，后续可继续把资料编辑、服务设置、订阅支付下沉到更独立的状态对象或服务
+- [ViewModels/Components/ConversationHistoryViewModel.cs](../ViewModels/Components/ConversationHistoryViewModel.cs)
+  - 导出、复制和目录迁移可以继续下沉到更独立的服务或命令帮助类
+- `ServiceContainer` 使用仍偏多
+  - 老代码和新代码的依赖获取方式尚未完全统一
+- 本地化标签属性仍有明显样板
+  - 后续可考虑统一的本地化包装层
+
+## 8. 总结
+
+当前仓库已经从“功能堆叠式迭代”逐步过渡到“有明确基础设施边界的桌面客户端”。最适合下一阶段做的事情，不是一次性重写，而是持续推进：
+
+1. 端点与配置集中化
+2. 页面级大 ViewModel 拆分
+3. 设置编辑流程复用
+4. UI 基础设施统一
+
+这也是当前文档、提交和代码质量治理在对齐的方向。

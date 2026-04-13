@@ -2,6 +2,8 @@ using System;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
+using lingualink_client.Services;
+using lingualink_client.Services.Interfaces;
 using lingualink_client.ViewModels;
 
 namespace lingualink_client.Views
@@ -11,20 +13,22 @@ namespace lingualink_client.Views
     /// </summary>
     public partial class AccountPage : Page
     {
+        private AccountPageViewModel? _viewModel;
+
         public AccountPage()
         {
             InitializeComponent();
-            DataContext = new AccountPageViewModel();
             Loaded += OnLoaded;
             Unloaded += OnUnloaded;
         }
 
         private async void OnLoaded(object sender, RoutedEventArgs e)
         {
-            if (DataContext is not AccountPageViewModel viewModel)
-            {
-                return;
-            }
+            _viewModel ??= new AccountPageViewModel(
+                ServiceContainer.Resolve<ISettingsManager>(),
+                ServiceContainer.TryResolve<IAuthService>(out var authService) ? authService : null);
+            DataContext = _viewModel;
+            var viewModel = _viewModel;
 
             try
             {
@@ -38,10 +42,14 @@ namespace lingualink_client.Views
 
         private void OnUnloaded(object sender, RoutedEventArgs e)
         {
-            if (DataContext is AccountPageViewModel viewModel)
+            if (_viewModel != null)
             {
-                viewModel.CancelPendingProfileSync();
+                _viewModel.CancelPendingProfileSync();
+                _viewModel.Dispose();
+                _viewModel = null;
             }
+
+            DataContext = null;
         }
     }
 }

@@ -47,8 +47,8 @@ namespace lingualink_client.Services.Managers
             IEventAggregator? eventAggregator = null,
             ILoggingManager? loggingManager = null)
         {
-            _eventAggregator = eventAggregator ?? ServiceContainer.Resolve<IEventAggregator>();
-            _loggingManager = loggingManager ?? ServiceContainer.Resolve<ILoggingManager>();
+            _eventAggregator = eventAggregator ?? throw new ArgumentNullException(nameof(eventAggregator));
+            _loggingManager = loggingManager ?? throw new ArgumentNullException(nameof(loggingManager));
             _settingsService = settingsService ?? new SettingsService();
             _settings = _settingsService.LoadSettings();
 

@@ -1450,4 +1450,13 @@
   <data name="UpdateProcessErrorFormat" xml:space="preserve">
     <value>更新処理中にエラーが発生しました: {0}</value>
   </data>
+  <data name="WebView2MissingRuntimeMessage" xml:space="preserve">
+    <value>ログインと購読機能には WebView2 Runtime が必要です。今すぐダウンロードページを開きますか？</value>
+  </data>
+  <data name="CheckoutInitFailed" xml:space="preserve">
+    <value>決済ページを初期化できませんでした。しばらくしてからもう一度お試しください。</value>
+  </data>
+  <data name="CheckoutNavigationFailed" xml:space="preserve">
+    <value>決済ページを読み込めませんでした。ネットワーク接続を確認してから再試行してください。</value>
+  </data>
 </root>

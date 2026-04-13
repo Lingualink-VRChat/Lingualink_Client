@@ -16,8 +16,13 @@ namespace lingualink_client.ViewModels
         private string _lastSentMessage = string.Empty;
 
         public SharedStateViewModel()
+            : this(ServiceContainer.Resolve<IEventAggregator>())
         {
-            _eventAggregator = ServiceContainer.Resolve<IEventAggregator>();
+        }
+
+        public SharedStateViewModel(IEventAggregator eventAggregator)
+        {
+            _eventAggregator = eventAggregator ?? throw new ArgumentNullException(nameof(eventAggregator));
 
             // 订阅所有可能产生VRChat输出的事件
             _eventAggregator.Subscribe<TranslationCompletedEvent>(OnTranslationCompleted);

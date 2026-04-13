@@ -1,4 +1,5 @@
 using System;
+using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
@@ -6,9 +7,8 @@ namespace lingualink_client.Models
 {
     public class AppSettings
     {
-        public const string OfficialProductionServerUrl = "https://api.lingualink.aiatechco.com/api/v1/";
-        public const string DefaultAuthServerUrl = "https://auth.lingualink.aiatechco.com";
-
+        public const string OfficialProductionServerUrl = AppEndpoints.OfficialApiBaseUrl;
+        public const string DefaultAuthServerUrl = AppEndpoints.DefaultAuthServerUrl;
 
         /// <summary>
         /// 获取有效的官方 Core 服务器 URL。
@@ -17,7 +17,8 @@ namespace lingualink_client.Models
         public static string GetEffectiveOfficialServerUrl()
         {
             var envUrl = Environment.GetEnvironmentVariable("LINGUALINK_CORE_SERVER_URL");
-            return string.IsNullOrWhiteSpace(envUrl) ? OfficialProductionServerUrl : envUrl;
+            var effectiveUrl = string.IsNullOrWhiteSpace(envUrl) ? OfficialProductionServerUrl : envUrl;
+            return AppEndpoints.EnsureTrailingSlash(effectiveUrl);
         }
 
         /// <summary>
@@ -26,8 +27,9 @@ namespace lingualink_client.Models
         /// </summary>
         public static string GetEffectiveAuthServerUrl()
         {
-            var envUrl = Environment.GetEnvironmentVariable("LINGUALINK_AUTH_SERVER_URL");
-            return string.IsNullOrWhiteSpace(envUrl) ? DefaultAuthServerUrl : envUrl.TrimEnd('/');
+            return AppEndpoints.NormalizeBaseUrl(
+                Environment.GetEnvironmentVariable("LINGUALINK_AUTH_SERVER_URL"),
+                DefaultAuthServerUrl);
         }
 
         public string GlobalLanguage { get; set; } = Services.LanguageManager.DetectSystemLanguage();

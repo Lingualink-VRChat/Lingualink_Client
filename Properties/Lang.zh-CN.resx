@@ -1533,4 +1533,13 @@
   <data name="UpdateProcessErrorFormat" xml:space="preserve">
     <value>更新过程中发生错误: {0}</value>
   </data>
+  <data name="WebView2MissingRuntimeMessage" xml:space="preserve">
+    <value>登录和订阅功能需要 WebView2 Runtime。是否立即打开下载页面？</value>
+  </data>
+  <data name="CheckoutInitFailed" xml:space="preserve">
+    <value>无法初始化支付页面，请稍后重试。</value>
+  </data>
+  <data name="CheckoutNavigationFailed" xml:space="preserve">
+    <value>无法加载支付页面，请检查网络连接后重试。</value>
+  </data>
 </root>

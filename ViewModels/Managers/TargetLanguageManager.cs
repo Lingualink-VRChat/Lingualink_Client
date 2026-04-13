@@ -54,11 +54,14 @@ namespace lingualink_client.ViewModels.Managers
         public event EventHandler<bool>? EnabledStateChanged;
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        public TargetLanguageManager()
+        public TargetLanguageManager(
+            SettingsService? settingsService = null,
+            IEventAggregator? eventAggregator = null,
+            ILoggingManager? loggingManager = null)
         {
-            _eventAggregator = ServiceContainer.Resolve<IEventAggregator>();
-            _logger = ServiceContainer.Resolve<ILoggingManager>();
-            _settingsService = new SettingsService();
+            _eventAggregator = eventAggregator ?? throw new ArgumentNullException(nameof(eventAggregator));
+            _logger = loggingManager ?? throw new ArgumentNullException(nameof(loggingManager));
+            _settingsService = settingsService ?? new SettingsService();
 
             LanguageItems = new ObservableCollection<SelectableTargetLanguageViewModel>();
 
