@@ -22,9 +22,10 @@ namespace lingualink_client.Views
             if (_viewModel == null)
             {
                 _viewModel = new LogViewModel();
-                _viewModel.EntryAppended += OnEntryAppended;
             }
 
+            _viewModel.EntryAppended -= OnEntryAppended;
+            _viewModel.EntryAppended += OnEntryAppended;
             DataContext = _viewModel;
         }
 
@@ -49,16 +50,12 @@ namespace lingualink_client.Views
 
         private void OnUnloaded(object sender, RoutedEventArgs e)
         {
-            DataContext = null;
-
             if (_viewModel == null)
             {
                 return;
             }
 
             _viewModel.EntryAppended -= OnEntryAppended;
-            _viewModel.Dispose();
-            _viewModel = null;
         }
     }
 }

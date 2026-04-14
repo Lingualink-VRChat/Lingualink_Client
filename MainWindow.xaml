@@ -93,7 +93,7 @@
                 </StackPanel>
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Top">
                     <Button
-                        Content="不再提示"
+                        Content="{Binding AnnouncementPermanentDismissLabel}"
                         Command="{Binding PermanentDismissAnnouncementCommand}"
                         Background="Transparent"
                         BorderThickness="0"
@@ -103,7 +103,7 @@
                         FontSize="12"
                         Opacity="0.85" />
                     <Button
-                        Content="✕"
+                        Content="{Binding AnnouncementDismissLabel}"
                         Command="{Binding DismissAnnouncementCommand}"
                         Background="Transparent"
                         BorderThickness="0"

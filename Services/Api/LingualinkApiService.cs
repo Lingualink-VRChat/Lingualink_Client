@@ -21,9 +21,6 @@ namespace lingualink_client.Services
     /// </summary>
     public class LingualinkApiService : ILingualinkApiService
     {
-        private const string FreeTrialQuotaExhaustedError = "free_trial_quota_exhausted";
-        private const string RateLimitExceededError = "rate_limit_exceeded";
-
         private readonly string _serverUrl;
         private readonly HttpClient _httpClient;
         private readonly AudioEncoderService? _audioEncoder;
@@ -587,7 +584,7 @@ namespace lingualink_client.Services
                 if (errorResponse != null && !string.IsNullOrEmpty(errorResponse.Error))
                 {
                     Debug.WriteLine($"  - Parsed Error: {errorResponse.Error}");
-                    var mappedError = MapApiErrorMessage(response.StatusCode, errorResponse.Error);
+                    var mappedError = ApiErrorMessageResolver.ResolveKnownErrorCode(response.StatusCode, errorResponse.Error);
                     if (!string.IsNullOrWhiteSpace(mappedError))
                     {
                         return new ApiResult
@@ -616,43 +613,13 @@ namespace lingualink_client.Services
             }
 
             // 处理特殊HTTP状态码
-            var errorMessage = response.StatusCode switch
-            {
-                System.Net.HttpStatusCode.Unauthorized => "Authentication failed. Please sign in again.",
-                System.Net.HttpStatusCode.Forbidden => "Access forbidden. Insufficient permissions.",
-                System.Net.HttpStatusCode.NotFound => "API endpoint not found. Please check the server URL.",
-                System.Net.HttpStatusCode.RequestEntityTooLarge => "Request too large. Please reduce audio file size or text length.",
-                System.Net.HttpStatusCode.TooManyRequests => LanguageManager.GetString("FreeTrialQuotaExhausted"),
-                _ => $"Server error ({(int)response.StatusCode}): {responseContent}"
-            };
+            var errorMessage = ApiErrorMessageResolver.ResolveHttpStatus(response.StatusCode, responseContent);
 
             return new ApiResult
             {
                 IsSuccess = false,
                 ErrorMessage = errorMessage
             };
-        }
-
-        private static string? MapApiErrorMessage(System.Net.HttpStatusCode statusCode, string? errorCode)
-        {
-            var normalized = errorCode?.Trim();
-            if (string.IsNullOrWhiteSpace(normalized))
-            {
-                return null;
-            }
-
-            if (string.Equals(normalized, FreeTrialQuotaExhaustedError, StringComparison.OrdinalIgnoreCase))
-            {
-                return LanguageManager.GetString("FreeTrialQuotaExhausted");
-            }
-
-            if (statusCode == System.Net.HttpStatusCode.TooManyRequests
-                && string.Equals(normalized, RateLimitExceededError, StringComparison.OrdinalIgnoreCase))
-            {
-                return LanguageManager.GetString("RateLimitExceeded");
-            }
-
-            return null;
         }
 
         protected virtual void Dispose(bool disposing)

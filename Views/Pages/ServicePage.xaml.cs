@@ -15,20 +15,12 @@ namespace lingualink_client.Views
         {
             InitializeComponent();
             Loaded += OnLoaded;
-            Unloaded += OnUnloaded;
         }
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
             _viewModel ??= new ServicePageViewModel();
             DataContext = _viewModel;
-        }
-
-        private void OnUnloaded(object sender, RoutedEventArgs e)
-        {
-            DataContext = null;
-            _viewModel?.Dispose();
-            _viewModel = null;
         }
     }
 }

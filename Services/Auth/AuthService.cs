@@ -586,7 +586,12 @@ namespace lingualink_client.Services.Auth
         /// </summary>
         public async Task<UserProfile?> RefreshUserProfileAsync()
         {
-            _currentUser = await FetchUserProfileAsync();
+            var refreshedUser = await FetchUserProfileAsync();
+            if (refreshedUser != null)
+            {
+                _currentUser = refreshedUser;
+            }
+
             return _currentUser;
         }
 

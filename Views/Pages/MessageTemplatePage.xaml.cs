@@ -32,7 +32,6 @@ namespace lingualink_client.Views
             InitializeComponent();
 
             this.Loaded += MessageTemplatePage_Loaded;
-            this.Unloaded += MessageTemplatePage_Unloaded;
         }
 
         private void MessageTemplatePage_Loaded(object sender, RoutedEventArgs e)
@@ -43,14 +42,6 @@ namespace lingualink_client.Views
             LanguageManager.LanguageChanged += UpdateTemplateHint;
             UpdateTemplateHint();
             _viewModel.RefreshSettings();
-        }
-
-        private void MessageTemplatePage_Unloaded(object sender, RoutedEventArgs e)
-        {
-            LanguageManager.LanguageChanged -= UpdateTemplateHint;
-            DataContext = null;
-            _viewModel?.Dispose();
-            _viewModel = null;
         }
 
         private void UpdateTemplateHint()

@@ -1543,4 +1543,22 @@ Update now?</value>
   <data name="CheckoutNavigationFailed" xml:space="preserve">
     <value>Unable to load the checkout page. Please check your network connection and try again.</value>
   </data>
+  <data name="AnnouncementPermanentDismiss" xml:space="preserve">
+    <value>Don't show again</value>
+  </data>
+  <data name="AnnouncementDismiss" xml:space="preserve">
+    <value>Dismiss</value>
+  </data>
+  <data name="ApiUnauthorized" xml:space="preserve">
+    <value>Authentication failed. Please sign in again.</value>
+  </data>
+  <data name="ApiForbidden" xml:space="preserve">
+    <value>Access forbidden. Insufficient permissions.</value>
+  </data>
+  <data name="ApiEndpointNotFound" xml:space="preserve">
+    <value>API endpoint not found. Please check the server URL.</value>
+  </data>
+  <data name="ApiRequestTooLarge" xml:space="preserve">
+    <value>Request too large. Please reduce audio file size or text length.</value>
+  </data>
 </root>

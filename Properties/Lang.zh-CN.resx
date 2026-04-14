@@ -1542,4 +1542,22 @@
   <data name="CheckoutNavigationFailed" xml:space="preserve">
     <value>无法加载支付页面，请检查网络连接后重试。</value>
   </data>
+  <data name="AnnouncementPermanentDismiss" xml:space="preserve">
+    <value>不再显示</value>
+  </data>
+  <data name="AnnouncementDismiss" xml:space="preserve">
+    <value>关闭</value>
+  </data>
+  <data name="ApiUnauthorized" xml:space="preserve">
+    <value>认证失败，请重新登录。</value>
+  </data>
+  <data name="ApiForbidden" xml:space="preserve">
+    <value>访问被拒绝，当前权限不足。</value>
+  </data>
+  <data name="ApiEndpointNotFound" xml:space="preserve">
+    <value>未找到 API 端点，请检查服务器地址。</value>
+  </data>
+  <data name="ApiRequestTooLarge" xml:space="preserve">
+    <value>请求内容过大，请减少音频大小或文本长度。</value>
+  </data>
 </root>

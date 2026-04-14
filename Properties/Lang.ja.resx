@@ -1459,4 +1459,22 @@
   <data name="CheckoutNavigationFailed" xml:space="preserve">
     <value>決済ページを読み込めませんでした。ネットワーク接続を確認してから再試行してください。</value>
   </data>
+  <data name="AnnouncementPermanentDismiss" xml:space="preserve">
+    <value>今後表示しない</value>
+  </data>
+  <data name="AnnouncementDismiss" xml:space="preserve">
+    <value>閉じる</value>
+  </data>
+  <data name="ApiUnauthorized" xml:space="preserve">
+    <value>認証に失敗しました。もう一度サインインしてください。</value>
+  </data>
+  <data name="ApiForbidden" xml:space="preserve">
+    <value>アクセスが拒否されました。権限が不足しています。</value>
+  </data>
+  <data name="ApiEndpointNotFound" xml:space="preserve">
+    <value>API エンドポイントが見つかりません。サーバー URL を確認してください。</value>
+  </data>
+  <data name="ApiRequestTooLarge" xml:space="preserve">
+    <value>リクエストが大きすぎます。音声サイズまたはテキスト長を減らしてください。</value>
+  </data>
 </root>

@@ -19,7 +19,6 @@ namespace lingualink_client.Views
         {
             InitializeComponent();
             Loaded += OnLoaded;
-            Unloaded += OnUnloaded;
         }
 
         private async void OnLoaded(object sender, RoutedEventArgs e)
@@ -38,18 +37,6 @@ namespace lingualink_client.Views
             {
                 Debug.WriteLine($"[AccountPage] EnsureProfileFreshOnPageEnterAsync failed: {ex.Message}");
             }
-        }
-
-        private void OnUnloaded(object sender, RoutedEventArgs e)
-        {
-            if (_viewModel != null)
-            {
-                _viewModel.CancelPendingProfileSync();
-                _viewModel.Dispose();
-                _viewModel = null;
-            }
-
-            DataContext = null;
         }
     }
 }
