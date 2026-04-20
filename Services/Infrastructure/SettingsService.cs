@@ -84,6 +84,44 @@ namespace lingualink_client.Services
                 changed = true;
             }
 
+            if (settings.CustomVocabularyTables == null)
+            {
+                settings.CustomVocabularyTables = new System.Collections.Generic.List<CustomVocabularyTable>();
+                changed = true;
+            }
+            else
+            {
+                foreach (var table in settings.CustomVocabularyTables)
+                {
+                    if (string.IsNullOrWhiteSpace(table.Id))
+                    {
+                        table.Id = Guid.NewGuid().ToString("N");
+                        changed = true;
+                    }
+
+                    if (table.Entries == null)
+                    {
+                        table.Entries = new System.Collections.Generic.List<CustomVocabularyEntry>();
+                        changed = true;
+                        continue;
+                    }
+
+                    foreach (var entry in table.Entries)
+                    {
+                        if (entry.Aliases == null)
+                        {
+                            entry.Aliases = new System.Collections.Generic.List<string>();
+                            changed = true;
+                        }
+
+                        if (entry.Pronunciations == null)
+                        {
+                            entry.Pronunciations = new System.Collections.Generic.List<string>();
+                            changed = true;
+                        }
+                    }
+                }
+            }
             return changed;
         }
 

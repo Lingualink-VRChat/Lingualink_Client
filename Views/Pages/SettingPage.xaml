@@ -3,14 +3,13 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:lingualink_client.Views"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:vm="clr-namespace:lingualink_client.ViewModels"
     Title="SettingPage"
     d:DataContext="{d:DesignInstance Type=vm:SettingPageViewModel}"
-    d:DesignHeight="450"
-    d:DesignWidth="800"
+    d:DesignHeight="900"
+    d:DesignWidth="1100"
     mc:Ignorable="d">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <Grid Margin="{DynamicResource PageContentMargin}">
@@ -18,23 +17,22 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <!-- Page Title -->
             <TextBlock
                 Grid.Row="0"
                 Text="{Binding PageTitle}"
                 Style="{DynamicResource PageTitleTextBlockStyle}" />
 
-            <!-- Interface Language Section -->
             <StackPanel Grid.Row="1" Margin="0,0,0,30">
-                <Label Content="{Binding InterfaceLanguage}" FontWeight="Bold" FontSize="14" />
+                <Label Content="{Binding InterfaceLanguage}" FontSize="14" FontWeight="Bold" />
                 <ComboBox
                     x:Name="LanguageComboBox"
+                    Margin="0,5,0,0"
                     VerticalAlignment="Stretch"
-                    SelectionChanged="OnLanguageChanged"
-                    Margin="0,5,0,0">
+                    SelectionChanged="OnLanguageChanged">
                     <ComboBox.ItemTemplate>
                         <DataTemplate>
                             <ui:TextBlock Text="{Binding NativeName}" />
@@ -42,24 +40,23 @@
                     </ComboBox.ItemTemplate>
                 </ComboBox>
                 <TextBlock
-                    Text="{Binding LanguageHint}"
-                    TextWrapping="Wrap"
                     Margin="0,5,0,0"
+                    FontSize="11"
                     FontStyle="Italic"
                     Foreground="Gray"
-                    FontSize="11" />
+                    Text="{Binding LanguageHint}"
+                    TextWrapping="Wrap" />
             </StackPanel>
 
-            <!-- Update Section -->
             <StackPanel Grid.Row="2" Margin="0,0,0,30">
-                <Label Content="{Binding UpdateSectionTitle}" FontWeight="Bold" FontSize="14" />
+                <Label Content="{Binding UpdateSectionTitle}" FontSize="14" FontWeight="Bold" />
 
                 <Grid Margin="0,10,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="{Binding CurrentVersionLabel}" FontWeight="SemiBold" />
+                    <TextBlock FontWeight="SemiBold" Text="{Binding CurrentVersionLabel}" />
                     <TextBlock Grid.Column="1" Margin="12,0,0,0" Text="{Binding CurrentVersion}" />
                 </Grid>
 
@@ -68,7 +65,7 @@
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="{Binding LatestVersionLabel}" FontWeight="SemiBold" />
+                    <TextBlock FontWeight="SemiBold" Text="{Binding LatestVersionLabel}" />
                     <TextBlock Grid.Column="1" Margin="12,0,0,0" Text="{Binding LatestVersion}" />
                 </Grid>
 
@@ -84,11 +81,15 @@
                         Command="{Binding DownloadAndUpdateCommand}"
                         Content="{Binding DownloadAndUpdateLabel}" />
 
-                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0" VerticalAlignment="Center" Visibility="{Binding IsDownloading, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <StackPanel
+                        Margin="0,10,0,0"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal"
+                        Visibility="{Binding IsDownloading, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <TextBlock
-                            Text="{Binding DownloadProgressLabel}"
+                            Margin="0,0,12,0"
                             VerticalAlignment="Center"
-                            Margin="0,0,12,0" />
+                            Text="{Binding DownloadProgressLabel}" />
                         <ProgressBar
                             Width="200"
                             Height="16"
@@ -98,18 +99,193 @@
 
                     <Border
                         Margin="0,12,0,0"
+                        Padding="10"
                         BorderBrush="#FFE0E0E0"
                         BorderThickness="1"
                         CornerRadius="4"
-                        Padding="10"
                         Visibility="{Binding HasUpdate, Converter={StaticResource BooleanToVisibilityConverter}}">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="120">
+                        <ScrollViewer MaxHeight="120" VerticalScrollBarVisibility="Auto">
                             <TextBlock Text="{Binding UpdateNotes}" TextWrapping="Wrap" />
                         </ScrollViewer>
                     </Border>
                 </StackPanel>
             </StackPanel>
+
+            <StackPanel Grid.Row="3" Margin="0,0,0,20">
+                <Label Content="{Binding CustomVocabularySectionTitle}" FontSize="14" FontWeight="Bold" />
+                <TextBlock
+                    Margin="0,4,0,12"
+                    Foreground="Gray"
+                    Text="{Binding CustomVocabularySectionHint}"
+                    TextWrapping="Wrap" />
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="280" />
+                        <ColumnDefinition Width="20" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border
+                        Grid.Column="0"
+                        Padding="12"
+                        Background="#FFF7F7F7"
+                        BorderBrush="#FFE0E0E0"
+                        BorderThickness="1"
+                        CornerRadius="6">
+                        <DockPanel LastChildFill="True">
+                            <StackPanel DockPanel.Dock="Top">
+                                <WrapPanel Margin="0,0,0,10">
+                                    <ui:Button
+                                        Margin="0,0,8,8"
+                                        Command="{Binding AddVocabularyTableCommand}"
+                                        Content="{Binding CustomVocabularyAddTableLabel}" />
+                                    <ui:Button
+                                        Margin="0,0,8,8"
+                                        Command="{Binding ImportVocabularyTableCommand}"
+                                        Content="{Binding CustomVocabularyImportLabel}" />
+                                    <ui:Button
+                                        Margin="0,0,8,8"
+                                        Command="{Binding ExportVocabularyTableCommand}"
+                                        Content="{Binding CustomVocabularyExportLabel}" />
+                                    <ui:Button
+                                        Margin="0,0,0,8"
+                                        Command="{Binding RemoveVocabularyTableCommand}"
+                                        Content="{Binding CustomVocabularyDeleteTableLabel}" />
+                                </WrapPanel>
+
+                                <TextBlock
+                                    Margin="0,0,0,10"
+                                    FontStyle="Italic"
+                                    Foreground="Gray"
+                                    Text="{Binding CustomVocabularyTableCountSummary}"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+
+                            <ListBox
+                                ItemsSource="{Binding VocabularyTables}"
+                                SelectedItem="{Binding SelectedVocabularyTable, Mode=TwoWay}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Margin="0,0,0,8" Padding="8" BorderBrush="#11000000" BorderThickness="1" CornerRadius="4">
+                                            <StackPanel>
+                                                <DockPanel LastChildFill="True">
+                                                    <CheckBox
+                                                        Margin="0,0,8,0"
+                                                        VerticalAlignment="Center"
+                                                        IsChecked="{Binding Enabled, Mode=TwoWay}" />
+                                                    <TextBlock
+                                                        FontWeight="SemiBold"
+                                                        Text="{Binding Name}"
+                                                        TextTrimming="CharacterEllipsis" />
+                                                </DockPanel>
+                                                <TextBlock
+                                                    Margin="24,4,0,0"
+                                                    FontSize="11"
+                                                    Foreground="Gray"
+                                                    Text="{Binding TotalEntries, StringFormat={}{0} entries}" />
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </DockPanel>
+                    </Border>
+
+                    <Border
+                        Grid.Column="2"
+                        Padding="12"
+                        Background="White"
+                        BorderBrush="#FFE0E0E0"
+                        BorderThickness="1"
+                        CornerRadius="6">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <StackPanel Visibility="{Binding HasSelectedVocabularyTable, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                                        <TextBlock FontWeight="SemiBold" Text="{Binding CustomVocabularyTableNameLabel}" />
+                                        <TextBox
+                                            Margin="0,6,0,0"
+                                            Text="{Binding SelectedVocabularyTable.Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    </StackPanel>
+
+                                    <CheckBox
+                                        Grid.Column="1"
+                                        VerticalAlignment="Bottom"
+                                        Content="{Binding CustomVocabularyTableEnabledLabel}"
+                                        IsChecked="{Binding SelectedVocabularyTable.Enabled, Mode=TwoWay}" />
+                                </Grid>
+
+                                <TextBlock
+                                    Margin="0,0,0,10"
+                                    FontStyle="Italic"
+                                    Foreground="Gray"
+                                    Text="{Binding CustomVocabularySelectedTableSummary}"
+                                    TextWrapping="Wrap" />
+
+                                <WrapPanel Margin="0,0,0,10">
+                                    <ui:Button
+                                        Margin="0,0,8,8"
+                                        Command="{Binding AddVocabularyEntryCommand}"
+                                        Content="{Binding CustomVocabularyAddEntryLabel}" />
+                                    <ui:Button
+                                        Margin="0,0,0,8"
+                                        Command="{Binding RemoveVocabularyEntryCommand}"
+                                        Content="{Binding CustomVocabularyDeleteEntryLabel}" />
+                                </WrapPanel>
+                            </StackPanel>
+
+                            <DataGrid
+                                Grid.Row="2"
+                                AutoGenerateColumns="False"
+                                CanUserAddRows="False"
+                                HeadersVisibility="Column"
+                                ItemsSource="{Binding SelectedVocabularyEntries}"
+                                SelectedItem="{Binding SelectedVocabularyEntry, Mode=TwoWay}"
+                                Visibility="{Binding HasSelectedVocabularyTable, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <DataGrid.Columns>
+                                    <DataGridCheckBoxColumn Binding="{Binding Enabled, Mode=TwoWay}" Header="On" Width="58" />
+                                    <DataGridTextColumn Binding="{Binding Term, UpdateSourceTrigger=PropertyChanged}" Header="Term" Width="1.4*" />
+                                    <DataGridTextColumn Binding="{Binding AliasesText, UpdateSourceTrigger=PropertyChanged}" Header="Aliases" Width="1.6*" />
+                                    <DataGridTextColumn Binding="{Binding PronunciationsText, UpdateSourceTrigger=PropertyChanged}" Header="Pronunciations" Width="1.4*" />
+                                    <DataGridTextColumn Binding="{Binding Priority, UpdateSourceTrigger=PropertyChanged}" Header="Priority" Width="88" />
+                                    <DataGridTextColumn Binding="{Binding Note, UpdateSourceTrigger=PropertyChanged}" Header="Note" Width="1.2*" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                            <TextBlock
+                                Grid.Row="2"
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="Center"
+                                FontStyle="Italic"
+                                Foreground="Gray"
+                                Text="{Binding CustomVocabularyNoTableSelected}"
+                                Visibility="{Binding HasSelectedVocabularyTable, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=invert}" />
+
+                            <TextBlock
+                                Grid.Row="3"
+                                Margin="0,10,0,0"
+                                FontSize="11"
+                                FontStyle="Italic"
+                                Foreground="Gray"
+                                Text="{Binding CustomVocabularyAliasesHint}"
+                                TextWrapping="Wrap" />
+                        </Grid>
+                    </Border>
+                </Grid>
+            </StackPanel>
         </Grid>
     </ScrollViewer>
 </Page>
-

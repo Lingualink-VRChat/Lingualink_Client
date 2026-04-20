@@ -233,11 +233,11 @@ namespace lingualink_client.Services.Managers
             else
             {
                 // 处理成功的情况
-                if (!string.IsNullOrEmpty(apiResult.Transcription))
+                if (!string.IsNullOrEmpty(apiResult.DisplayTranscription))
                 {
                     currentUiStatus = LanguageManager.GetString("StatusTranslationSuccess");
                     resultArgs.IsSuccess = true;
-                    resultArgs.OriginalText = apiResult.Transcription;
+                    resultArgs.OriginalText = apiResult.DisplayTranscription;
                     resultArgs.DurationSeconds = effectiveDuration;
                     
                     // 生成OSC文本 - 直接使用新API格式
@@ -262,7 +262,7 @@ namespace lingualink_client.Services.Managers
                     resultArgs.ProcessedText = translatedTextForOsc;
                     
                     _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogTranslationSuccess"),
-                        e.TriggerReason, apiResult.Transcription, apiResult.ProcessingTime), LogLevel.Info, ApiCategory);
+                        e.TriggerReason, apiResult.DisplayTranscription, apiResult.ProcessingTime), LogLevel.Info, ApiCategory);
                 }
                 else
                 {

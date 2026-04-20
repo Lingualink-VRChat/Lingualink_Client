@@ -25,15 +25,20 @@ namespace lingualink_client.Services
             string result = template;
 
             // 替换原文占位符 (支持多种格式)
+            if (!string.IsNullOrEmpty(apiResult.DisplayTranscription))
+            {
+                result = result.Replace("{source_text}", apiResult.DisplayTranscription);
+                result = result.Replace("{transcription}", apiResult.DisplayTranscription);
+                // 保留旧格式以向后兼容
+                result = result.Replace("{原文}", apiResult.DisplayTranscription);
+                result = result.Replace("{raw_text}", apiResult.DisplayTranscription);
+                result = result.Replace("{原始文本}", apiResult.DisplayTranscription);
+                result = result.Replace("{完整文本}", apiResult.RawResponse ?? apiResult.DisplayTranscription);
+            }
+
             if (!string.IsNullOrEmpty(apiResult.Transcription))
             {
-                result = result.Replace("{source_text}", apiResult.Transcription);
-                result = result.Replace("{transcription}", apiResult.Transcription);
-                // 保留旧格式以向后兼容
-                result = result.Replace("{原文}", apiResult.Transcription);
-                result = result.Replace("{raw_text}", apiResult.Transcription);
-                result = result.Replace("{原始文本}", apiResult.Transcription);
-                result = result.Replace("{完整文本}", apiResult.RawResponse ?? apiResult.Transcription);
+                result = result.Replace("{raw_transcription}", apiResult.Transcription);
             }
 
             // 替换翻译占位符 - 直接使用语言代码
@@ -81,9 +86,9 @@ namespace lingualink_client.Services
                 if (backendName == LanguageDisplayHelper.TranscriptionBackendName)
                 {
                     // 处理"仅转录"选项
-                    if (!string.IsNullOrEmpty(apiResult.Transcription))
+                    if (!string.IsNullOrEmpty(apiResult.DisplayTranscription))
                     {
-                        outputParts.Add(apiResult.Transcription);
+                        outputParts.Add(apiResult.DisplayTranscription);
                     }
                 }
                 else

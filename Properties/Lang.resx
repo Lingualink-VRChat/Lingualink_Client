@@ -1561,4 +1561,79 @@ Update now?</value>
   <data name="ApiRequestTooLarge" xml:space="preserve">
     <value>Request too large. Please reduce audio file size or text length.</value>
   </data>
+  <data name="CustomVocabularySectionTitle" xml:space="preserve">
+    <value>Custom Vocabulary</value>
+  </data>
+  <data name="CustomVocabularySectionHint" xml:space="preserve">
+    <value>Manage local vocabulary tables for ASR correction. Up to {0} tables, {1} entries per table, and {2} active entries sent per request.</value>
+  </data>
+  <data name="CustomVocabularyAddTable" xml:space="preserve">
+    <value>Add Table</value>
+  </data>
+  <data name="CustomVocabularyImport" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="CustomVocabularyExport" xml:space="preserve">
+    <value>Export</value>
+  </data>
+  <data name="CustomVocabularyDeleteTable" xml:space="preserve">
+    <value>Delete Table</value>
+  </data>
+  <data name="CustomVocabularyTableName" xml:space="preserve">
+    <value>Table Name</value>
+  </data>
+  <data name="CustomVocabularyTableEnabled" xml:space="preserve">
+    <value>Enabled</value>
+  </data>
+  <data name="CustomVocabularyEntries" xml:space="preserve">
+    <value>Entries</value>
+  </data>
+  <data name="CustomVocabularyAddEntry" xml:space="preserve">
+    <value>Add Entry</value>
+  </data>
+  <data name="CustomVocabularyDeleteEntry" xml:space="preserve">
+    <value>Delete Entry</value>
+  </data>
+  <data name="CustomVocabularyNoTableSelected" xml:space="preserve">
+    <value>Select or create a vocabulary table to start editing.</value>
+  </data>
+  <data name="CustomVocabularyAliasesHint" xml:space="preserve">
+    <value>Separate aliases and pronunciation hints with commas or new lines. Up to {0} aliases and {1} pronunciation hints per entry.</value>
+  </data>
+  <data name="CustomVocabularyTableCountSummary" xml:space="preserve">
+    <value>{0}/{1} tables, {2} total entries</value>
+  </data>
+  <data name="CustomVocabularySelectedTableSummary" xml:space="preserve">
+    <value>{0}/{1} entries in this table, {2} enabled</value>
+  </data>
+  <data name="CustomVocabularyMaxTablesReached" xml:space="preserve">
+    <value>You have reached the maximum of {0} vocabulary tables.</value>
+  </data>
+  <data name="CustomVocabularyDefaultTableName" xml:space="preserve">
+    <value>New Vocabulary</value>
+  </data>
+  <data name="CustomVocabularyDeleteTableConfirm" xml:space="preserve">
+    <value>Delete vocabulary table "{0}"?</value>
+  </data>
+  <data name="CustomVocabularyImportInvalid" xml:space="preserve">
+    <value>The imported file is invalid or missing a table payload.</value>
+  </data>
+  <data name="CustomVocabularyImportConflict" xml:space="preserve">
+    <value>A table named "{0}" already exists. Yes = overwrite, No = import as copy, Cancel = abort.</value>
+  </data>
+  <data name="CustomVocabularyImportTruncated" xml:space="preserve">
+    <value>The imported table exceeded one or more limits and was truncated during import.</value>
+  </data>
+  <data name="CustomVocabularyImportFailed" xml:space="preserve">
+    <value>Failed to import vocabulary table: {0}</value>
+  </data>
+  <data name="CustomVocabularyExportSuccess" xml:space="preserve">
+    <value>Vocabulary table exported successfully.</value>
+  </data>
+  <data name="CustomVocabularyExportFailed" xml:space="preserve">
+    <value>Failed to export vocabulary table: {0}</value>
+  </data>
+  <data name="CustomVocabularyMaxEntriesReached" xml:space="preserve">
+    <value>This table already has the maximum of {0} entries.</value>
+  </data>
 </root>

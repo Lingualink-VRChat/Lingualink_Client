@@ -28,6 +28,7 @@ namespace lingualink_client.Services
         private readonly string _apiKey;
         private readonly Func<Task<string?>>? _accessTokenProvider;
         private readonly Func<Task>? _unauthorizedHandler;
+        private readonly Func<Task<IReadOnlyList<CustomVocabularyEntry>>>? _terminologyProvider;
         private int _unauthorizedHandled;
         private bool _disposed = false;
 
@@ -36,6 +37,7 @@ namespace lingualink_client.Services
             string? apiKey = null,
             Func<Task<string?>>? accessTokenProvider = null,
             Func<Task>? unauthorizedHandler = null,
+            Func<Task<IReadOnlyList<CustomVocabularyEntry>>>? terminologyProvider = null,
             int opusComplexity = 7)
         {
             _serverUrl = serverUrl.TrimEnd('/');
@@ -43,6 +45,7 @@ namespace lingualink_client.Services
             _apiKey = apiKey?.Trim() ?? string.Empty;
             _accessTokenProvider = accessTokenProvider;
             _unauthorizedHandler = unauthorizedHandler;
+            _terminologyProvider = terminologyProvider;
 
             Debug.WriteLine($"[LingualinkApiService] Constructor called - ServerUrl: '{_serverUrl}', HasApiKey: {!string.IsNullOrWhiteSpace(_apiKey)}, HasTokenProvider: {_accessTokenProvider != null}, UseOpus: true (always enabled)");
 
@@ -138,18 +141,22 @@ namespace lingualink_client.Services
                     audioFormat = "wav";
                 }
 
+                var userDictionary = await BuildUserDictionaryAsync();
+
                 // 创建请求负载
                 var requestPayload = new
                 {
                     audio = audioBase64,
                     audio_format = audioFormat,
                     task = task, // 使用传入的task参数
-                    target_languages = targetLangArray
+                    target_languages = targetLangArray,
+                    user_dictionary = userDictionary
                 };
 
                 var jsonContent = JsonSerializer.Serialize(requestPayload, new JsonSerializerOptions
                 {
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
                 });
 
                 // [详细日志] 记录请求JSON内容
@@ -182,6 +189,7 @@ namespace lingualink_client.Services
                         Debug.WriteLine($"  - Status: {apiResponse.Status} (IsSuccess: {isSuccessful})");
                         Debug.WriteLine($"  - RequestId: {apiResponse.RequestId}");
                         Debug.WriteLine($"  - Transcription: {apiResponse.Transcription}");
+                        Debug.WriteLine($"  - CorrectedText: {apiResponse.CorrectedText}");
                         Debug.WriteLine($"  - Translations Count: {apiResponse.Translations?.Count ?? 0}");
                         if (apiResponse.Translations != null)
                         {
@@ -198,6 +206,7 @@ namespace lingualink_client.Services
                             IsSuccess = apiResponse.Status == "success" || apiResponse.Status == "partial_success",
                             RequestId = apiResponse.RequestId,
                             Transcription = apiResponse.Transcription,
+                            CorrectedText = apiResponse.CorrectedText,
                             Translations = apiResponse.Translations ?? new Dictionary<string, string>(),
                             RawResponse = apiResponse.RawResponse,
                             ProcessingTime = apiResponse.ProcessingTime,
@@ -323,6 +332,7 @@ namespace lingualink_client.Services
                         Debug.WriteLine($"  - Status: {apiResponse.Status} (IsSuccess: {isSuccessful})");
                         Debug.WriteLine($"  - RequestId: {apiResponse.RequestId}");
                         Debug.WriteLine($"  - SourceText: {apiResponse.SourceText}");
+                        Debug.WriteLine($"  - CorrectedText: {apiResponse.CorrectedText}");
                         Debug.WriteLine($"  - Translations Count: {apiResponse.Translations?.Count ?? 0}");
                         if (apiResponse.Translations != null)
                         {
@@ -339,6 +349,7 @@ namespace lingualink_client.Services
                             IsSuccess = apiResponse.Status == "success" || apiResponse.Status == "partial_success",
                             RequestId = apiResponse.RequestId,
                             Transcription = apiResponse.SourceText, // 对于文本处理，源文本作为"转录"
+                            CorrectedText = apiResponse.CorrectedText,
                             Translations = apiResponse.Translations ?? new Dictionary<string, string>(),
                             RawResponse = apiResponse.RawResponse,
                             ProcessingTime = apiResponse.ProcessingTime,
@@ -385,6 +396,51 @@ namespace lingualink_client.Services
                     IsSuccess = false,
                     ErrorMessage = $"Unexpected error: {ex.Message}"
                 };
+            }
+        }
+
+        private async Task<object[]?> BuildUserDictionaryAsync()
+        {
+            if (_terminologyProvider == null)
+            {
+                return null;
+            }
+
+            try
+            {
+                var entries = await _terminologyProvider();
+                if (entries == null)
+                {
+                    return null;
+                }
+
+                var enabledEntries = entries
+                    .Where(entry => entry != null && entry.Enabled && !string.IsNullOrWhiteSpace(entry.Term))
+                    .Select(entry => new
+                    {
+                        term = entry.Term.Trim(),
+                        aliases = (entry.Aliases ?? new List<string>())
+                            .Where(alias => !string.IsNullOrWhiteSpace(alias))
+                            .Select(alias => alias.Trim())
+                            .Distinct()
+                            .Take(AppSettings.MaxAliasesPerVocabularyEntry)
+                            .ToArray(),
+                        pronunciations = (entry.Pronunciations ?? new List<string>())
+                            .Where(item => !string.IsNullOrWhiteSpace(item))
+                            .Select(item => item.Trim())
+                            .Distinct()
+                            .Take(AppSettings.MaxPronunciationsPerVocabularyEntry)
+                            .ToArray()
+                    })
+                    .Cast<object>()
+                    .ToArray();
+
+                return enabledEntries.Length == 0 ? null : enabledEntries;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[LingualinkApiService] Failed to build user dictionary payload: {ex.Message}");
+                return null;
             }
         }
 
@@ -666,6 +722,9 @@ namespace lingualink_client.Services
 
         [JsonPropertyName("source_text")]
         public string? SourceText { get; set; }
+
+        [JsonPropertyName("corrected_text")]
+        public string? CorrectedText { get; set; }
 
         [JsonPropertyName("translations")]
         public Dictionary<string, string>? Translations { get; set; }

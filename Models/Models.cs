@@ -50,6 +50,9 @@ namespace lingualink_client.Models
         [JsonPropertyName("transcription")]
         public string? Transcription { get; set; }
 
+        [JsonPropertyName("corrected_text")]
+        public string? CorrectedText { get; set; }
+
         [JsonPropertyName("translations")]
         public Dictionary<string, string>? Translations { get; set; }
 

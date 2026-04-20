@@ -77,10 +77,14 @@ namespace lingualink_client.Services.Interfaces
         public string? ErrorMessage { get; set; }
         public string? RequestId { get; set; }
         public string? Transcription { get; set; }
+        public string? CorrectedText { get; set; }
         public Dictionary<string, string> Translations { get; set; } = new();
         public string? RawResponse { get; set; }
         public double ProcessingTime { get; set; }
         public ApiMetadata? Metadata { get; set; }
+
+        [JsonIgnore]
+        public string? DisplayTranscription => !string.IsNullOrWhiteSpace(CorrectedText) ? CorrectedText : Transcription;
 
         /// <summary>
         /// 转换为旧版ServerResponse格式以保持兼容性
@@ -89,10 +93,10 @@ namespace lingualink_client.Services.Interfaces
         {
             var translationData = new TranslationData();
 
-            if (!string.IsNullOrEmpty(Transcription))
+            if (!string.IsNullOrEmpty(DisplayTranscription))
             {
-                translationData.Raw_Text = RawResponse ?? Transcription;
-                translationData.原文 = Transcription;
+                translationData.Raw_Text = RawResponse ?? DisplayTranscription;
+                translationData.原文 = DisplayTranscription;
             }
 
             // 将语言代码转换为中文名称并设置字段

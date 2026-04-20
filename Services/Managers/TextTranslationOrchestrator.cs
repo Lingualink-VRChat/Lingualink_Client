@@ -166,11 +166,11 @@ namespace lingualink_client.Services.Managers
             }
             else
             {
-                if (!string.IsNullOrEmpty(apiResult.Transcription))
+                if (!string.IsNullOrEmpty(apiResult.DisplayTranscription))
                 {
                     OnStatusUpdated(LanguageManager.GetString("StatusTranslationSuccess"));
                     resultArgs.IsSuccess = true;
-                    resultArgs.OriginalText = apiResult.Transcription;
+                    resultArgs.OriginalText = apiResult.DisplayTranscription;
                     resultArgs.DurationSeconds = effectiveDuration;
 
                     if (_appSettings.UseCustomTemplate)
@@ -189,7 +189,7 @@ namespace lingualink_client.Services.Managers
                     }
 
                     resultArgs.ProcessedText = translatedTextForOsc;
-                    _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogTranslationSuccess"), triggerReason, apiResult.Transcription, apiResult.ProcessingTime), LogLevel.Info, ApiCategory);
+                    _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogTranslationSuccess"), triggerReason, apiResult.DisplayTranscription, apiResult.ProcessingTime), LogLevel.Info, ApiCategory);
                 }
                 else
                 {

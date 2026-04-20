@@ -1560,4 +1560,79 @@
   <data name="ApiRequestTooLarge" xml:space="preserve">
     <value>请求内容过大，请减少音频大小或文本长度。</value>
   </data>
+  <data name="CustomVocabularySectionTitle" xml:space="preserve">
+    <value>自定义词表</value>
+  </data>
+  <data name="CustomVocabularySectionHint" xml:space="preserve">
+    <value>管理仅保存在本地的 ASR 纠错词表。最多 {0} 张词表，每张最多 {1} 条词条，每次请求最多发送 {2} 条启用词条。</value>
+  </data>
+  <data name="CustomVocabularyAddTable" xml:space="preserve">
+    <value>新建词表</value>
+  </data>
+  <data name="CustomVocabularyImport" xml:space="preserve">
+    <value>导入</value>
+  </data>
+  <data name="CustomVocabularyExport" xml:space="preserve">
+    <value>导出</value>
+  </data>
+  <data name="CustomVocabularyDeleteTable" xml:space="preserve">
+    <value>删除词表</value>
+  </data>
+  <data name="CustomVocabularyTableName" xml:space="preserve">
+    <value>词表名称</value>
+  </data>
+  <data name="CustomVocabularyTableEnabled" xml:space="preserve">
+    <value>启用该词表</value>
+  </data>
+  <data name="CustomVocabularyEntries" xml:space="preserve">
+    <value>词条</value>
+  </data>
+  <data name="CustomVocabularyAddEntry" xml:space="preserve">
+    <value>新增词条</value>
+  </data>
+  <data name="CustomVocabularyDeleteEntry" xml:space="preserve">
+    <value>删除词条</value>
+  </data>
+  <data name="CustomVocabularyNoTableSelected" xml:space="preserve">
+    <value>请选择或新建一张词表后再编辑。</value>
+  </data>
+  <data name="CustomVocabularyAliasesHint" xml:space="preserve">
+    <value>别名和发音提示可用逗号或换行分隔。每条最多 {0} 个 aliases，最多 {1} 个 pronunciations。</value>
+  </data>
+  <data name="CustomVocabularyTableCountSummary" xml:space="preserve">
+    <value>{0}/{1} 张词表，共 {2} 条词条</value>
+  </data>
+  <data name="CustomVocabularySelectedTableSummary" xml:space="preserve">
+    <value>当前词表 {0}/{1} 条词条，其中已启用 {2} 条</value>
+  </data>
+  <data name="CustomVocabularyMaxTablesReached" xml:space="preserve">
+    <value>已达到词表数量上限 {0}。</value>
+  </data>
+  <data name="CustomVocabularyDefaultTableName" xml:space="preserve">
+    <value>新词表</value>
+  </data>
+  <data name="CustomVocabularyDeleteTableConfirm" xml:space="preserve">
+    <value>确认删除词表“{0}”吗？</value>
+  </data>
+  <data name="CustomVocabularyImportInvalid" xml:space="preserve">
+    <value>导入文件无效，或缺少有效的词表数据。</value>
+  </data>
+  <data name="CustomVocabularyImportConflict" xml:space="preserve">
+    <value>已存在同名词表“{0}”。选择“是”覆盖，选择“否”导入为副本，选择“取消”中止。</value>
+  </data>
+  <data name="CustomVocabularyImportTruncated" xml:space="preserve">
+    <value>导入内容超过限制，已在导入时自动截断。</value>
+  </data>
+  <data name="CustomVocabularyImportFailed" xml:space="preserve">
+    <value>导入词表失败：{0}</value>
+  </data>
+  <data name="CustomVocabularyExportSuccess" xml:space="preserve">
+    <value>词表导出成功。</value>
+  </data>
+  <data name="CustomVocabularyExportFailed" xml:space="preserve">
+    <value>词表导出失败：{0}</value>
+  </data>
+  <data name="CustomVocabularyMaxEntriesReached" xml:space="preserve">
+    <value>当前词表已达到词条上限 {0}。</value>
+  </data>
 </root>

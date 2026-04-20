@@ -1477,4 +1477,79 @@
   <data name="ApiRequestTooLarge" xml:space="preserve">
     <value>リクエストが大きすぎます。音声サイズまたはテキスト長を減らしてください。</value>
   </data>
+  <data name="CustomVocabularySectionTitle" xml:space="preserve">
+    <value>カスタム用語集</value>
+  </data>
+  <data name="CustomVocabularySectionHint" xml:space="preserve">
+    <value>ASR 補正用のローカル用語集を管理します。最大 {0} テーブル、各テーブル最大 {1} エントリ、1 リクエストあたり最大 {2} 件の有効エントリを送信します。</value>
+  </data>
+  <data name="CustomVocabularyAddTable" xml:space="preserve">
+    <value>テーブル追加</value>
+  </data>
+  <data name="CustomVocabularyImport" xml:space="preserve">
+    <value>インポート</value>
+  </data>
+  <data name="CustomVocabularyExport" xml:space="preserve">
+    <value>エクスポート</value>
+  </data>
+  <data name="CustomVocabularyDeleteTable" xml:space="preserve">
+    <value>テーブル削除</value>
+  </data>
+  <data name="CustomVocabularyTableName" xml:space="preserve">
+    <value>テーブル名</value>
+  </data>
+  <data name="CustomVocabularyTableEnabled" xml:space="preserve">
+    <value>このテーブルを有効化</value>
+  </data>
+  <data name="CustomVocabularyEntries" xml:space="preserve">
+    <value>エントリ</value>
+  </data>
+  <data name="CustomVocabularyAddEntry" xml:space="preserve">
+    <value>エントリ追加</value>
+  </data>
+  <data name="CustomVocabularyDeleteEntry" xml:space="preserve">
+    <value>エントリ削除</value>
+  </data>
+  <data name="CustomVocabularyNoTableSelected" xml:space="preserve">
+    <value>編集するには、用語集テーブルを選択または作成してください。</value>
+  </data>
+  <data name="CustomVocabularyAliasesHint" xml:space="preserve">
+    <value>別名と発音ヒントはカンマまたは改行で区切ってください。1 エントリあたり aliases は最大 {0} 件、pronunciations は最大 {1} 件です。</value>
+  </data>
+  <data name="CustomVocabularyTableCountSummary" xml:space="preserve">
+    <value>{0}/{1} テーブル、合計 {2} エントリ</value>
+  </data>
+  <data name="CustomVocabularySelectedTableSummary" xml:space="preserve">
+    <value>このテーブルは {0}/{1} エントリ、うち {2} 件が有効です</value>
+  </data>
+  <data name="CustomVocabularyMaxTablesReached" xml:space="preserve">
+    <value>用語集テーブルの上限 {0} に達しました。</value>
+  </data>
+  <data name="CustomVocabularyDefaultTableName" xml:space="preserve">
+    <value>新しい用語集</value>
+  </data>
+  <data name="CustomVocabularyDeleteTableConfirm" xml:space="preserve">
+    <value>用語集テーブル「{0}」を削除しますか？</value>
+  </data>
+  <data name="CustomVocabularyImportInvalid" xml:space="preserve">
+    <value>インポートしたファイルが無効か、用語集データが含まれていません。</value>
+  </data>
+  <data name="CustomVocabularyImportConflict" xml:space="preserve">
+    <value>同名のテーブル「{0}」が既に存在します。はい = 上書き、いいえ = コピーとして追加、キャンセル = 中止。</value>
+  </data>
+  <data name="CustomVocabularyImportTruncated" xml:space="preserve">
+    <value>インポート内容が制限を超えていたため、取り込み時に切り詰めました。</value>
+  </data>
+  <data name="CustomVocabularyImportFailed" xml:space="preserve">
+    <value>用語集のインポートに失敗しました: {0}</value>
+  </data>
+  <data name="CustomVocabularyExportSuccess" xml:space="preserve">
+    <value>用語集をエクスポートしました。</value>
+  </data>
+  <data name="CustomVocabularyExportFailed" xml:space="preserve">
+    <value>用語集のエクスポートに失敗しました: {0}</value>
+  </data>
+  <data name="CustomVocabularyMaxEntriesReached" xml:space="preserve">
+    <value>このテーブルはエントリ上限 {0} に達しています。</value>
+  </data>
 </root>

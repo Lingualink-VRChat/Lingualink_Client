@@ -1,5 +1,4 @@
 using System;
-using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
@@ -7,6 +6,11 @@ namespace lingualink_client.Models
 {
     public class AppSettings
     {
+        public const int MaxCustomVocabularyTables = 20;
+        public const int MaxEntriesPerVocabularyTable = 200;
+        public const int MaxAliasesPerVocabularyEntry = 20;
+        public const int MaxPronunciationsPerVocabularyEntry = 20;
+        public const int MaxCustomVocabularyPayloadEntries = 400;
         public const string OfficialProductionServerUrl = AppEndpoints.OfficialApiBaseUrl;
         public const string DefaultAuthServerUrl = AppEndpoints.DefaultAuthServerUrl;
 
@@ -83,6 +87,11 @@ namespace lingualink_client.Models
         /// </summary>
         public List<string> DismissedAnnouncementIds { get; set; } = new();
 
+        /// <summary>
+        /// 本地自定义词表，支持多张词表、导入导出与独立启停。
+        /// </summary>
+        public List<CustomVocabularyTable> CustomVocabularyTables { get; set; } = new();
+
         [JsonIgnore]
         public string ActiveServerUrl => GetEffectiveOfficialServerUrl();
 
@@ -98,5 +107,23 @@ namespace lingualink_client.Models
             // Default fallback when custom template is disabled
             return new MessageTemplate("完整文本", "{raw_text}", "显示服务器返回的完整原始文本");
         }
+    }
+
+    public class CustomVocabularyTable
+    {
+        public string Id { get; set; } = Guid.NewGuid().ToString("N");
+        public string Name { get; set; } = "新词表";
+        public bool Enabled { get; set; } = true;
+        public List<CustomVocabularyEntry> Entries { get; set; } = new();
+    }
+
+    public class CustomVocabularyEntry
+    {
+        public string Term { get; set; } = string.Empty;
+        public List<string> Aliases { get; set; } = new();
+        public List<string> Pronunciations { get; set; } = new();
+        public string Note { get; set; } = string.Empty;
+        public int Priority { get; set; }
+        public bool Enabled { get; set; } = true;
     }
 }
