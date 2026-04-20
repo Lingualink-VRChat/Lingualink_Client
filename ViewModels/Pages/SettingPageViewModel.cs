@@ -16,8 +16,9 @@ using lingualink_client.Models;
 using lingualink_client.Models.Updates;
 using lingualink_client.Services;
 using lingualink_client.Services.Interfaces;
-using Microsoft.Win32;
 using Velopack;
+using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
+using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 using UiMessageBox = lingualink_client.Services.MessageBox;
 using WpfMessageBox = System.Windows.MessageBox;
 
