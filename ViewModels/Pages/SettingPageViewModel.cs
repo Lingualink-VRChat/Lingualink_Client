@@ -250,7 +250,7 @@ namespace lingualink_client.ViewModels
 
                 var prompt = LanguageManager.GetString("UpdateDialogDownloadPrompt");
                 var title = LanguageManager.GetString("UpdateReadyTitle");
-                var result = MessageBox.Show(prompt, title, MessageBoxButton.YesNo, MessageBoxImage.Question);
+                var result = WpfMessageBox.Show(prompt, title, MessageBoxButton.YesNo, MessageBoxImage.Question);
 
                 if (result == MessageBoxResult.Yes)
                 {
@@ -796,7 +796,7 @@ namespace lingualink_client.ViewModels
         private static void ShowError(string message, Exception exception)
         {
             var errorTitle = LanguageManager.GetString("UpdateErrorTitle");
-            MessageBox.Show($"{message}: {exception.Message}", errorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+            WpfMessageBox.Show($"{message}: {exception.Message}", errorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
         }
 
         private string ResolveCurrentVersion()
