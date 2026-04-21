@@ -82,6 +82,35 @@
                 Severity="Informational"
                 IsOpen="True"
                 IsClosable="False">
+                <ui:InfoBar.ToolTip>
+                    <ToolTip Placement="Mouse" MaxWidth="520">
+                        <StackPanel>
+                            <TextBlock
+                                FontWeight="SemiBold"
+                                Text="{Binding EntryGuideTitle}" />
+                            <TextBlock
+                                Margin="0,6,0,0"
+                                Text="{Binding TermGuideText}"
+                                TextWrapping="Wrap" />
+                            <TextBlock
+                                Margin="0,4,0,0"
+                                Text="{Binding AliasesGuideText}"
+                                TextWrapping="Wrap" />
+                            <TextBlock
+                                Margin="0,4,0,0"
+                                Text="{Binding PronunciationsGuideText}"
+                                TextWrapping="Wrap" />
+                            <Separator Margin="0,10,0,10" />
+                            <TextBlock
+                                FontWeight="SemiBold"
+                                Text="{Binding ExampleTitle}" />
+                            <TextBlock
+                                Margin="0,6,0,0"
+                                Text="{Binding ExampleBody}"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                    </ToolTip>
+                </ui:InfoBar.ToolTip>
                 <ui:InfoBar.Content>
                     <StackPanel Margin="0,8,0,0">
                         <TextBlock
@@ -208,47 +237,10 @@
                                                 Style="{DynamicResource BodyStrongTextBlockStyle}"
                                                 Text="{Binding DataContext.SelectedTableSummary, RelativeSource={RelativeSource AncestorType=Page}}" />
                                             <TextBlock
-                                                Margin="0,8,0,0"
-                                                Style="{DynamicResource BodyStrongTextBlockStyle}"
-                                                Text="{Binding DataContext.EntryGuideTitle, RelativeSource={RelativeSource AncestorType=Page}}" />
-                                            <TextBlock
                                                 Margin="0,4,0,0"
                                                 FontSize="11"
                                                 Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                                Text="{Binding DataContext.TermGuideText, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                TextWrapping="Wrap" />
-                                            <TextBlock
-                                                Margin="0,2,0,0"
-                                                FontSize="11"
-                                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                                Text="{Binding DataContext.AliasesGuideText, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                TextWrapping="Wrap" />
-                                            <TextBlock
-                                                Margin="0,2,0,0"
-                                                FontSize="11"
-                                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                                Text="{Binding DataContext.PronunciationsGuideText, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                TextWrapping="Wrap" />
-                                            <Border
-                                                Margin="0,10,0,0"
-                                                Padding="10"
-                                                Background="{DynamicResource ControlFillColorSecondaryBrush}"
-                                                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
-                                                BorderThickness="1"
-                                                CornerRadius="8">
-                                                <StackPanel>
-                                                    <TextBlock
-                                                        FontSize="11"
-                                                        FontWeight="SemiBold"
-                                                        Text="{Binding DataContext.ExampleTitle, RelativeSource={RelativeSource AncestorType=Page}}" />
-                                                    <TextBlock
-                                                        Margin="0,4,0,0"
-                                                        FontSize="11"
-                                                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                                        Text="{Binding DataContext.ExampleBody, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                        TextWrapping="Wrap" />
-                                                </StackPanel>
-                                            </Border>
+                                                Text="{Binding DataContext.AliasesHint, RelativeSource={RelativeSource AncestorType=Page}}" />
                                         </StackPanel>
 
                                         <ui:Button
