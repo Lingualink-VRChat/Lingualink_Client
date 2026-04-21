@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using lingualink_client.Models;
 using lingualink_client.Services;
@@ -20,6 +20,7 @@ namespace lingualink_client.ViewModels
         public string Settings => LanguageManager.GetString("Settings");
         public string ConversationHistory => LanguageManager.GetString("ConversationHistory");
         public string Logs => LanguageManager.GetString("Logs");
+        public string CustomVocabulary => LanguageManager.GetString("CustomVocabularySectionTitle");
         public string AppTitle => LanguageManager.GetString("AppTitle");
         public string AppTitleBar => LanguageManager.GetString("AppTitleBar");
 
@@ -47,6 +48,7 @@ namespace lingualink_client.ViewModels
             OnPropertyChanged(nameof(Settings));
             OnPropertyChanged(nameof(ConversationHistory));
             OnPropertyChanged(nameof(Logs));
+            OnPropertyChanged(nameof(CustomVocabulary));
             OnPropertyChanged(nameof(AppTitle));
             OnPropertyChanged(nameof(AppTitleBar));
             RefreshAnnouncementBindings();

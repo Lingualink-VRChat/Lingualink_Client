@@ -1,4 +1,4 @@
-﻿<ui:FluentWindow
+<ui:FluentWindow
     x:Class="lingualink_client.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -150,6 +150,14 @@
                     TargetPageType="{x:Type pages:MessageTemplatePage}">
                     <ui:NavigationViewItem.Icon>
                         <ui:SymbolIcon Symbol="TextEditStyle24" />
+                    </ui:NavigationViewItem.Icon>
+                </ui:NavigationViewItem>
+                <ui:NavigationViewItem
+                    Content="{Binding CustomVocabulary}"
+                    NavigationCacheMode="Enabled"
+                    TargetPageType="{x:Type pages:VocabularyPage}">
+                    <ui:NavigationViewItem.Icon>
+                        <ui:SymbolIcon Symbol="TextBulletListLtr24" />
                     </ui:NavigationViewItem.Icon>
                 </ui:NavigationViewItem>
                 <ui:NavigationViewItem

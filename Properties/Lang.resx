@@ -1564,6 +1564,9 @@ Update now?</value>
   <data name="CustomVocabularySectionTitle" xml:space="preserve">
     <value>Custom Vocabulary</value>
   </data>
+  <data name="CustomVocabularyGuidanceTitle" xml:space="preserve">
+    <value>How to use Vocabulary?</value>
+  </data>
   <data name="CustomVocabularySectionHint" xml:space="preserve">
     <value>Manage local vocabulary tables for ASR correction. Up to {0} tables, {1} entries per table, and {2} active entries sent per request.</value>
   </data>

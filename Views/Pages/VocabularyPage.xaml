@@ -1,0 +1,281 @@
+<Page
+    x:Class="lingualink_client.Views.VocabularyPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:vm="clr-namespace:lingualink_client.ViewModels"
+    Title="VocabularyPage"
+    d:DataContext="{d:DesignInstance Type=vm:VocabularyPageViewModel}"
+    d:DesignHeight="700"
+    d:DesignWidth="1100"
+    mc:Ignorable="d">
+
+    <Grid Margin="{DynamicResource PageContentMargin}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <TextBlock
+            Grid.Row="0"
+            Margin="0,0,0,12"
+            Text="{Binding PageTitle}"
+            Style="{DynamicResource PageTitleTextBlockStyle}" />
+
+        <!-- Guidance Info Bar -->
+        <ui:InfoBar
+            Grid.Row="1"
+            Margin="0,0,0,24"
+            Title="{Binding GuidanceTitle}"
+            Message="{Binding SectionHint}"
+            Severity="Informational"
+            IsOpen="True"
+            IsClosable="False">
+            <ui:InfoBar.Content>
+                <StackPanel Margin="0,8,0,0">
+                    <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextWrapping="Wrap">
+                        词表用于向模型提供热词（Hotwords），帮助纠正特定的语音识别错误（例如将“终末地”识别为“周末帝”）。
+                        启用词表后，其中的词汇将优先被识别。
+                    </TextBlock>
+                </StackPanel>
+            </ui:InfoBar.Content>
+        </ui:InfoBar>
+
+        <!-- Main Content Layout -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="300" />
+                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Sidebar: Table Management -->
+            <ui:Card Grid.Column="0" Padding="0">
+                <DockPanel LastChildFill="True">
+                    <Border DockPanel.Dock="Top" Padding="12" Background="{DynamicResource SubtleFillColorSecondaryBrush}" BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="0,0,0,1">
+                        <StackPanel>
+                            <TextBlock FontWeight="SemiBold" Text="词表列表" />
+                            <TextBlock Margin="0,4,0,0" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding TableCountSummary}" />
+                            <WrapPanel Margin="0,12,0,0">
+                                <ui:Button
+                                    Padding="8,4"
+                                    Margin="0,0,4,4"
+                                    Command="{Binding AddVocabularyTableCommand}"
+                                    Icon="{ui:SymbolIcon Symbol=Add24}">
+                                    <ui:Button.ToolTip>
+                                        <ToolTip Content="{Binding AddTableLabel}" />
+                                    </ui:Button.ToolTip>
+                                </ui:Button>
+                                <ui:Button
+                                    Padding="8,4"
+                                    Margin="0,0,4,4"
+                                    Command="{Binding ImportVocabularyTableAsyncCommand}"
+                                    Icon="{ui:SymbolIcon Symbol=ArrowImport24}">
+                                    <ui:Button.ToolTip>
+                                        <ToolTip Content="{Binding ImportLabel}" />
+                                    </ui:Button.ToolTip>
+                                </ui:Button>
+                                <ui:Button
+                                    Padding="8,4"
+                                    Margin="0,0,4,4"
+                                    Command="{Binding ExportVocabularyTableAsyncCommand}"
+                                    Icon="{ui:SymbolIcon Symbol=ArrowExport24}">
+                                    <ui:Button.ToolTip>
+                                        <ToolTip Content="{Binding ExportLabel}" />
+                                    </ui:Button.ToolTip>
+                                </ui:Button>
+                                <ui:Button
+                                    Padding="8,4"
+                                    Margin="0,0,0,4"
+                                    Command="{Binding RemoveVocabularyTableCommand}"
+                                    Icon="{ui:SymbolIcon Symbol=Delete24}"
+                                    Appearance="Danger">
+                                    <ui:Button.ToolTip>
+                                        <ToolTip Content="{Binding DeleteTableLabel}" />
+                                    </ui:Button.ToolTip>
+                                </ui:Button>
+                            </WrapPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <ListBox
+                        BorderThickness="0"
+                        Background="Transparent"
+                        ItemsSource="{Binding VocabularyTables}"
+                        SelectedItem="{Binding SelectedVocabularyTable, Mode=TwoWay}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="4,2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <ui:ToggleSwitch
+                                        Grid.Column="0"
+                                        Margin="0,0,12,0"
+                                        VerticalAlignment="Center"
+                                        IsChecked="{Binding Enabled, Mode=TwoWay}" />
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock FontWeight="Medium" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding TotalEntries, StringFormat={}{0} entries}" />
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </DockPanel>
+            </ui:Card>
+
+            <!-- Main Panel: Entry Editor -->
+            <ui:Card Grid.Column="2" Padding="20">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Visibility="{Binding HasSelectedVocabularyTable, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <!-- Table Settings Row -->
+                        <Grid Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                                <TextBlock Text="{Binding TableNameLabel}" Style="{DynamicResource BodyStrongTextBlockStyle}" Margin="0,0,0,8" />
+                                <ui:TextBox
+                                    PlaceholderText="输入词表名称"
+                                    Text="{Binding SelectedVocabularyTable.Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+
+                            <ui:ToggleSwitch
+                                Grid.Column="1"
+                                VerticalAlignment="Bottom"
+                                Margin="0,0,0,4"
+                                Content="{Binding TableEnabledLabel}"
+                                IsChecked="{Binding SelectedVocabularyTable.Enabled, Mode=TwoWay}" />
+                        </Grid>
+
+                        <Separator Margin="0,0,0,16" />
+
+                        <!-- Entry Management Header -->
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="词条管理" Style="{DynamicResource BodyStrongTextBlockStyle}" />
+                                <TextBlock FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding SelectedTableSummary}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <ui:Button
+                                    Margin="8,0,0,0"
+                                    Command="{Binding AddVocabularyEntryCommand}"
+                                    Content="{Binding AddEntryLabel}"
+                                    Appearance="Primary"
+                                    Icon="{ui:SymbolIcon Symbol=Add24}" />
+                                <ui:Button
+                                    Margin="8,0,0,0"
+                                    Command="{Binding RemoveVocabularyEntryCommand}"
+                                    Content="{Binding DeleteEntryLabel}"
+                                    Appearance="Secondary"
+                                    Icon="{ui:SymbolIcon Symbol=Delete24}" />
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+
+                    <!-- Data Grid for Entries -->
+                    <DataGrid
+                        Grid.Row="2"
+                        AutoGenerateColumns="False"
+                        CanUserAddRows="False"
+                        HeadersVisibility="Column"
+                        ItemsSource="{Binding SelectedVocabularyEntries}"
+                        SelectedItem="{Binding SelectedVocabularyEntry, Mode=TwoWay}"
+                        Visibility="{Binding HasSelectedVocabularyTable, Converter={StaticResource BooleanToVisibilityConverter}}"
+                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        Background="Transparent"
+                        RowHeaderWidth="0">
+                        <DataGrid.Columns>
+                            <DataGridCheckBoxColumn Binding="{Binding Enabled, Mode=TwoWay}" Header="启" Width="40" />
+                            <DataGridTemplateColumn Header="核心词汇 (Term)" Width="1.5*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ui:TextBox BorderThickness="0" Margin="2" Text="{Binding Term, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="例如：终末地" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="别名 (Aliases)" Width="2*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ui:TextBox BorderThickness="0" Margin="2" Text="{Binding AliasesText, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="逗号分隔" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="发音 (Pronunciations)" Width="2*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ui:TextBox BorderThickness="0" Margin="2" Text="{Binding PronunciationsText, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="逗号分隔" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="优先级" Width="80">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ui:NumberBox BorderThickness="0" Margin="2" Value="{Binding Priority, UpdateSourceTrigger=PropertyChanged}" Minimum="1" Maximum="100" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!-- Empty State -->
+                    <StackPanel
+                        Grid.Row="2"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Center"
+                        Visibility="{Binding HasSelectedVocabularyTable, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=invert}">
+                        <ui:SymbolIcon Symbol="TextBulletListLtr24" FontSize="48" Margin="0,0,0,16" Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                        <TextBlock
+                            Style="{DynamicResource SubtitleTextBlockStyle}"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            Text="{Binding NoTableSelectedHint}"
+                            TextAlignment="Center" />
+                    </StackPanel>
+
+                    <!-- Footer Tip -->
+                    <ui:Card
+                        Grid.Row="3"
+                        Margin="0,16,0,0"
+                        Padding="12"
+                        Background="{DynamicResource SubtleFillColorSecondaryBrush}"
+                        BorderThickness="0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <ui:SymbolIcon Grid.Column="0" Symbol="Lightbulb24" Margin="0,0,12,0" />
+                            <TextBlock
+                                Grid.Column="1"
+                                FontSize="11"
+                                VerticalAlignment="Center"
+                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                Text="{Binding AliasesHint}"
+                                TextWrapping="Wrap" />
+                        </Grid>
+                    </ui:Card>
+                </Grid>
+            </ui:Card>
+        </Grid>
+    </Grid>
+</Page>

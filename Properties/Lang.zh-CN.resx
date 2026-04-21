@@ -1563,6 +1563,9 @@
   <data name="CustomVocabularySectionTitle" xml:space="preserve">
     <value>自定义词表</value>
   </data>
+  <data name="CustomVocabularyGuidanceTitle" xml:space="preserve">
+    <value>如何使用词表？</value>
+  </data>
   <data name="CustomVocabularySectionHint" xml:space="preserve">
     <value>管理仅保存在本地的 ASR 纠错词表。最多 {0} 张词表，每张最多 {1} 条词条，每次请求最多发送 {2} 条启用词条。</value>
   </data>
