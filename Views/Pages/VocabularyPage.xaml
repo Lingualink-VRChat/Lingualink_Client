@@ -79,7 +79,6 @@
                 Margin="0,0,0,20"
                 ToolTipService.InitialShowDelay="150"
                 Title="{Binding GuidanceTitle}"
-                Message="{Binding GuidanceHint}"
                 Severity="Informational"
                 IsOpen="True"
                 IsClosable="False">
@@ -115,6 +114,18 @@
                 <ui:InfoBar.Content>
                     <StackPanel Margin="0,8,0,0">
                         <TextBlock
+                            FontSize="11"
+                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                            Text="{Binding GuidanceHint}"
+                            TextWrapping="Wrap" />
+                        <TextBlock
+                            Margin="0,8,0,0"
+                            FontSize="12"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            Text="{Binding GuidanceSummary}"
+                            TextWrapping="Wrap" />
+                        <TextBlock
+                            Margin="0,8,0,0"
                             FontSize="12"
                             Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                             Text="{Binding GuidanceBody}"
