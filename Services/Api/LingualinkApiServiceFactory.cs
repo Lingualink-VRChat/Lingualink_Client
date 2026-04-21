@@ -3,6 +3,7 @@ using lingualink_client.Services.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace lingualink_client.Services
@@ -68,33 +69,61 @@ namespace lingualink_client.Services
                 return Array.Empty<CustomVocabularyEntry>();
             }
 
-            var entries = new System.Collections.Generic.List<CustomVocabularyEntry>();
-            foreach (var table in settings.CustomVocabularyTables)
+            var activeTable = settings.CustomVocabularyTables
+                .FirstOrDefault(table => table != null && table.Enabled && table.Entries != null);
+            if (activeTable == null)
             {
-                if (table == null || !table.Enabled || table.Entries == null)
+                return Array.Empty<CustomVocabularyEntry>();
+            }
+
+            var entries = new List<CustomVocabularyEntry>();
+            int totalCharacters = 0;
+
+            foreach (var entry in activeTable.Entries)
+            {
+                if (entry == null || !entry.Enabled)
                 {
                     continue;
                 }
 
-                int addedFromCurrentTable = 0;
-                foreach (var entry in table.Entries)
+                var term = AppSettings.NormalizeVocabularyTerm(entry.Term);
+                if (string.IsNullOrWhiteSpace(term))
                 {
-                    if (entry == null || !entry.Enabled || string.IsNullOrWhiteSpace(entry.Term))
-                    {
-                        continue;
-                    }
-
-                    entries.Add(entry);
-                    addedFromCurrentTable++;
-                    if (addedFromCurrentTable >= AppSettings.MaxEntriesPerVocabularyTable)
-                    {
-                        break;
-                    }
-                    if (entries.Count >= AppSettings.MaxCustomVocabularyPayloadEntries)
-                    {
-                        return entries;
-                    }
+                    continue;
                 }
+
+                var aliases = AppSettings.NormalizeVocabularyValues(
+                    entry.Aliases,
+                    AppSettings.MaxAliasesPerVocabularyEntry,
+                    AppSettings.MaxAliasesCharactersPerVocabularyEntry);
+                var pronunciations = AppSettings.NormalizeVocabularyValues(
+                    entry.Pronunciations,
+                    AppSettings.MaxPronunciationsPerVocabularyEntry,
+                    AppSettings.MaxPronunciationsCharactersPerVocabularyEntry);
+
+                var entryCharacters = AppSettings.CountVocabularyEntryCharacters(term, aliases, pronunciations);
+                if (entryCharacters <= 0)
+                {
+                    continue;
+                }
+
+                if (entries.Count >= AppSettings.MaxEntriesPerVocabularyTable
+                    || entries.Count >= AppSettings.MaxCustomVocabularyPayloadEntries
+                    || totalCharacters + entryCharacters > AppSettings.MaxCustomVocabularyTableCharacters)
+                {
+                    break;
+                }
+
+                entries.Add(new CustomVocabularyEntry
+                {
+                    Term = term,
+                    Aliases = aliases,
+                    Pronunciations = pronunciations,
+                    Note = entry.Note,
+                    Priority = entry.Priority,
+                    Enabled = true
+                });
+                totalCharacters += entryCharacters;
             }
 
             return entries;

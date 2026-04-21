@@ -1,16 +1,22 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json.Serialization;
 
 namespace lingualink_client.Models
 {
     public class AppSettings
     {
+        public const int MaxEnabledCustomVocabularyTables = 1;
         public const int MaxCustomVocabularyTables = 20;
-        public const int MaxEntriesPerVocabularyTable = 200;
-        public const int MaxAliasesPerVocabularyEntry = 20;
-        public const int MaxPronunciationsPerVocabularyEntry = 20;
-        public const int MaxCustomVocabularyPayloadEntries = 400;
+        public const int MaxEntriesPerVocabularyTable = 80;
+        public const int MaxAliasesPerVocabularyEntry = 6;
+        public const int MaxPronunciationsPerVocabularyEntry = 4;
+        public const int MaxCustomVocabularyTableCharacters = 2500;
+        public const int MaxCustomVocabularyPayloadEntries = MaxEntriesPerVocabularyTable;
+        public const int MaxTermCharactersPerVocabularyEntry = 24;
+        public const int MaxAliasesCharactersPerVocabularyEntry = 48;
+        public const int MaxPronunciationsCharactersPerVocabularyEntry = 64;
         public const string OfficialProductionServerUrl = AppEndpoints.OfficialApiBaseUrl;
         public const string DefaultAuthServerUrl = AppEndpoints.DefaultAuthServerUrl;
 
@@ -94,6 +100,82 @@ namespace lingualink_client.Models
 
         [JsonIgnore]
         public string ActiveServerUrl => GetEffectiveOfficialServerUrl();
+
+        public static string NormalizeVocabularyTerm(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return string.Empty;
+            }
+
+            var trimmed = value.Trim();
+            return trimmed.Length <= MaxTermCharactersPerVocabularyEntry
+                ? trimmed
+                : trimmed[..MaxTermCharactersPerVocabularyEntry];
+        }
+
+        public static List<string> NormalizeVocabularyValues(
+            IEnumerable<string>? values,
+            int maxCount,
+            int maxTotalCharacters)
+        {
+            if (values == null)
+            {
+                return new List<string>();
+            }
+
+            var result = new List<string>();
+            var totalCharacters = 0;
+
+            foreach (var value in values)
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    continue;
+                }
+
+                var trimmed = value.Trim();
+                if (result.Any(existing => string.Equals(existing, trimmed, StringComparison.OrdinalIgnoreCase)))
+                {
+                    continue;
+                }
+
+                if (result.Count >= maxCount)
+                {
+                    break;
+                }
+
+                var remainingCharacters = maxTotalCharacters - totalCharacters;
+                if (remainingCharacters <= 0)
+                {
+                    break;
+                }
+
+                var normalized = trimmed.Length <= remainingCharacters
+                    ? trimmed
+                    : trimmed[..remainingCharacters];
+
+                if (string.IsNullOrWhiteSpace(normalized))
+                {
+                    break;
+                }
+
+                result.Add(normalized);
+                totalCharacters += normalized.Length;
+            }
+
+            return result;
+        }
+
+        public static int CountVocabularyEntryCharacters(
+            string term,
+            IEnumerable<string>? aliases,
+            IEnumerable<string>? pronunciations)
+        {
+            return (term?.Length ?? 0)
+                   + (aliases?.Sum(alias => alias?.Length ?? 0) ?? 0)
+                   + (pronunciations?.Sum(item => item?.Length ?? 0) ?? 0);
+        }
 
         // Get the currently selected template
         public MessageTemplate GetSelectedTemplate()

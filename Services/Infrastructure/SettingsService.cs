@@ -91,6 +91,7 @@ namespace lingualink_client.Services
             }
             else
             {
+                int enabledTableCount = 0;
                 foreach (var table in settings.CustomVocabularyTables)
                 {
                     if (string.IsNullOrWhiteSpace(table.Id))
@@ -104,6 +105,16 @@ namespace lingualink_client.Services
                         table.Entries = new System.Collections.Generic.List<CustomVocabularyEntry>();
                         changed = true;
                         continue;
+                    }
+
+                    if (table.Enabled)
+                    {
+                        enabledTableCount++;
+                        if (enabledTableCount > AppSettings.MaxEnabledCustomVocabularyTables)
+                        {
+                            table.Enabled = false;
+                            changed = true;
+                        }
                     }
 
                     foreach (var entry in table.Entries)
@@ -171,6 +182,7 @@ namespace lingualink_client.Services
         {
             try
             {
+                NormalizeSettings(settings);
                 System.Diagnostics.Debug.WriteLine($"[SettingsService] Saving settings to: {_settingsFilePath}");
                 System.Diagnostics.Debug.WriteLine($"[SettingsService] ActiveServerUrl: '{settings.ActiveServerUrl}'");
 

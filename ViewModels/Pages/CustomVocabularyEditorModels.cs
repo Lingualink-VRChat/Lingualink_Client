@@ -98,9 +98,15 @@ namespace lingualink_client.ViewModels
         {
             return new CustomVocabularyEntry
             {
-                Term = Term.Trim(),
-                Aliases = SplitMultiValueText(AliasesText, AppSettings.MaxAliasesPerVocabularyEntry),
-                Pronunciations = SplitMultiValueText(PronunciationsText, AppSettings.MaxPronunciationsPerVocabularyEntry),
+                Term = AppSettings.NormalizeVocabularyTerm(Term),
+                Aliases = AppSettings.NormalizeVocabularyValues(
+                    SplitMultiValueText(AliasesText, AppSettings.MaxAliasesPerVocabularyEntry),
+                    AppSettings.MaxAliasesPerVocabularyEntry,
+                    AppSettings.MaxAliasesCharactersPerVocabularyEntry),
+                Pronunciations = AppSettings.NormalizeVocabularyValues(
+                    SplitMultiValueText(PronunciationsText, AppSettings.MaxPronunciationsPerVocabularyEntry),
+                    AppSettings.MaxPronunciationsPerVocabularyEntry,
+                    AppSettings.MaxPronunciationsCharactersPerVocabularyEntry),
                 Note = Note?.Trim() ?? string.Empty,
                 Priority = Priority,
                 Enabled = Enabled
