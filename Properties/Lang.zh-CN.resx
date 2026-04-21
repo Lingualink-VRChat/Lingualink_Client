@@ -1566,6 +1566,9 @@
   <data name="CustomVocabularyGuidanceTitle" xml:space="preserve">
     <value>如何使用自定义词表？</value>
   </data>
+  <data name="CustomVocabularyGuidanceHint" xml:space="preserve">
+    <value>悬停查看填写说明与示例</value>
+  </data>
   <data name="CustomVocabularyGuidanceSummary" xml:space="preserve">
     <value>当语音识别总是把您的特定词汇听错，或者 AI 听不懂某些“网络黑话”时，您可以通过这张词表来“教”它。</value>
   </data>

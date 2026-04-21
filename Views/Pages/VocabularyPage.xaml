@@ -78,13 +78,35 @@
             <ui:InfoBar
                 Margin="0,0,0,20"
                 ToolTipService.InitialShowDelay="150"
-                Title="{Binding GuidanceTitle}"
-                Message="{Binding GuidanceSummary}"
                 Severity="Informational"
                 IsOpen="True"
                 IsClosable="False">
+                <ui:InfoBar.Title>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock
+                            Grid.Column="0"
+                            VerticalAlignment="Center"
+                            FontWeight="SemiBold"
+                            Text="{Binding GuidanceTitle}" />
+                        <TextBlock
+                            Grid.Column="1"
+                            Margin="8,0,0,0"
+                            VerticalAlignment="Center"
+                            FontSize="14"
+                            Text="ⓘ" />
+                    </Grid>
+                </ui:InfoBar.Title>
+                <ui:InfoBar.Message>
+                    <TextBlock
+                        Text="{Binding GuidanceHint}"
+                        TextWrapping="Wrap" />
+                </ui:InfoBar.Message>
                 <ui:InfoBar.ToolTip>
-                    <ToolTip Placement="Mouse" MaxWidth="520">
+                    <ToolTip Placement="Mouse" MaxWidth="520" StaysOpen="False" IsHitTestVisible="False" Focusable="False">
                         <StackPanel>
                             <TextBlock
                                 FontWeight="SemiBold"

@@ -1483,6 +1483,9 @@
   <data name="CustomVocabularyGuidanceTitle" xml:space="preserve">
     <value>カスタム用語集の使い方</value>
   </data>
+  <data name="CustomVocabularyGuidanceHint" xml:space="preserve">
+    <value>ホバーして入力方法と例を表示</value>
+  </data>
   <data name="CustomVocabularyGuidanceSummary" xml:space="preserve">
     <value>音声認識が特定の単語を聞き間違えたり、AI がネットスラングを理解できないときは、この用語集で教えることができます。</value>
   </data>

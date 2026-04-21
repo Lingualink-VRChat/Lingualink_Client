@@ -1567,6 +1567,9 @@ Update now?</value>
   <data name="CustomVocabularyGuidanceTitle" xml:space="preserve">
     <value>How to Use Custom Vocabulary?</value>
   </data>
+  <data name="CustomVocabularyGuidanceHint" xml:space="preserve">
+    <value>Hover to view filling tips and examples</value>
+  </data>
   <data name="CustomVocabularyGuidanceSummary" xml:space="preserve">
     <value>When speech recognition keeps mishearing your specific terms, or the AI does not understand certain slang, use this vocabulary table to teach it.</value>
   </data>

@@ -32,6 +32,7 @@ namespace lingualink_client.ViewModels
 
         public string PageTitle => LanguageManager.GetString("CustomVocabularySectionTitle");
         public string GuidanceTitle => LanguageManager.GetString("CustomVocabularyGuidanceTitle");
+        public string GuidanceHint => LanguageManager.GetString("CustomVocabularyGuidanceHint");
         public string GuidanceSummary => LanguageManager.GetString("CustomVocabularyGuidanceSummary");
         public string GuidanceBody => LanguageManager.GetString("CustomVocabularyGuidanceBody");
         public string EntryGuideTitle => LanguageManager.GetString("CustomVocabularyEntryGuideTitle");
