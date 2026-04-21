@@ -1565,10 +1565,31 @@ Update now?</value>
     <value>Custom Vocabulary</value>
   </data>
   <data name="CustomVocabularyGuidanceTitle" xml:space="preserve">
-    <value>How to use Vocabulary?</value>
+    <value>How to Use Custom Vocabulary?</value>
+  </data>
+  <data name="CustomVocabularyGuidanceSummary" xml:space="preserve">
+    <value>When speech recognition keeps mishearing your specific terms, or the AI does not understand certain slang, use this vocabulary table to teach it.</value>
   </data>
   <data name="CustomVocabularyGuidanceBody" xml:space="preserve">
-    <value>Vocabulary tables help the model correct recurring ASR mistakes such as recognizing a game title as a similar-sounding meme word. You can keep multiple local tables, but only one table can be enabled at a time.</value>
+    <value>The app will automatically map your spoken wording to the standard term before sending it to the AI.</value>
+  </data>
+  <data name="CustomVocabularyEntryGuideTitle" xml:space="preserve">
+    <value>What should I fill in?</value>
+  </data>
+  <data name="CustomVocabularyTermGuideText" xml:space="preserve">
+    <value>Core Term: the standard answer you ultimately want the AI to see and understand.</value>
+  </data>
+  <data name="CustomVocabularyAliasesGuideText" xml:space="preserve">
+    <value>Aliases: common ASR mistakes, slang, or short forms you often say. Separate multiple items with commas.</value>
+  </data>
+  <data name="CustomVocabularyPronunciationsGuideText" xml:space="preserve">
+    <value>Pronunciations: pinyin or English-style readings that can significantly improve recognition. Separate multiple items with commas.</value>
+  </data>
+  <data name="CustomVocabularyExampleTitle" xml:space="preserve">
+    <value>Common Example</value>
+  </data>
+  <data name="CustomVocabularyExampleBody" xml:space="preserve">
+    <value>Example for homophone correction: if “Genshin” keeps being recognized as a wrong same-sounding word, set Core Term to “原神”, Aliases to “元神, 圆神”, and Pronunciations to “yuan shen”.</value>
   </data>
   <data name="CustomVocabularySectionHint" xml:space="preserve">
     <value>Manage local vocabulary tables for ASR correction. Up to {0} tables, only {1} enabled at a time, with {2} entries and {3} effective characters per table.</value>
@@ -1637,13 +1658,13 @@ Update now?</value>
     <value>Actions</value>
   </data>
   <data name="CustomVocabularyTermPlaceholder" xml:space="preserve">
-    <value>Example: Endfield</value>
+    <value>The standard term you want the AI to see</value>
   </data>
   <data name="CustomVocabularyAliasesPlaceholder" xml:space="preserve">
-    <value>Use commas to separate aliases</value>
+    <value>Typos, slang, or short forms, separated with commas</value>
   </data>
   <data name="CustomVocabularyPronunciationsPlaceholder" xml:space="preserve">
-    <value>Use commas to separate pronunciations</value>
+    <value>Pinyin or English-style readings, separated with commas</value>
   </data>
   <data name="CustomVocabularyNoTablesTitle" xml:space="preserve">
     <value>No vocabulary table yet</value>

@@ -1564,10 +1564,31 @@
     <value>自定义词表</value>
   </data>
   <data name="CustomVocabularyGuidanceTitle" xml:space="preserve">
-    <value>如何使用词表？</value>
+    <value>如何使用自定义词表？</value>
+  </data>
+  <data name="CustomVocabularyGuidanceSummary" xml:space="preserve">
+    <value>当语音识别总是把您的特定词汇听错，或者 AI 听不懂某些“网络黑话”时，您可以通过这张词表来“教”它。</value>
   </data>
   <data name="CustomVocabularyGuidanceBody" xml:space="preserve">
-    <value>词表用于帮助模型纠正反复出现的 ASR 误识别，比如把游戏名识别成同音梗词。你可以保留多张本地词表，但同一时刻只能启用一张。</value>
+    <value>系统会自动把您的口语替换成“标准词”，再发送给 AI。</value>
+  </data>
+  <data name="CustomVocabularyEntryGuideTitle" xml:space="preserve">
+    <value>各项该怎么填？</value>
+  </data>
+  <data name="CustomVocabularyTermGuideText" xml:space="preserve">
+    <value>核心词汇：您最终希望 AI 看到、且能听懂的标准答案。</value>
+  </data>
+  <data name="CustomVocabularyAliasesGuideText" xml:space="preserve">
+    <value>别名：语音识别经常写错的错别字，或者您常说的网络黑话 / 简称。多个请用逗号隔开。</value>
+  </data>
+  <data name="CustomVocabularyPronunciationsGuideText" xml:space="preserve">
+    <value>发音：词汇的拼音或英文读音，能大幅提升识别成功率。多个请用逗号隔开。</value>
+  </data>
+  <data name="CustomVocabularyExampleTitle" xml:space="preserve">
+    <value>常见使用场景举例</value>
+  </data>
+  <data name="CustomVocabularyExampleBody" xml:space="preserve">
+    <value>例如纠正同音字：如果“原神”总被识别成“元神”，可填写为 核心词汇：原神；别名：元神，圆神；发音：yuan shen。</value>
   </data>
   <data name="CustomVocabularySectionHint" xml:space="preserve">
     <value>管理仅保存在本地的 ASR 纠错词表。最多 {0} 张词表，同一时刻最多启用 {1} 张；每张词表最多 {2} 条词条、{3} 个有效字符。</value>
@@ -1636,13 +1657,13 @@
     <value>操作</value>
   </data>
   <data name="CustomVocabularyTermPlaceholder" xml:space="preserve">
-    <value>例如：终末地</value>
+    <value>最终希望 AI 看到的标准词</value>
   </data>
   <data name="CustomVocabularyAliasesPlaceholder" xml:space="preserve">
-    <value>多个别名请用逗号隔开</value>
+    <value>错别字、黑话或简称，多个用逗号隔开</value>
   </data>
   <data name="CustomVocabularyPronunciationsPlaceholder" xml:space="preserve">
-    <value>多个发音请用逗号隔开</value>
+    <value>拼音或英文读音，多个用逗号隔开</value>
   </data>
   <data name="CustomVocabularyNoTablesTitle" xml:space="preserve">
     <value>还没有词表</value>

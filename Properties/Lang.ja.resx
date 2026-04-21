@@ -1481,10 +1481,31 @@
     <value>カスタム用語集</value>
   </data>
   <data name="CustomVocabularyGuidanceTitle" xml:space="preserve">
-    <value>用語集の使い方</value>
+    <value>カスタム用語集の使い方</value>
+  </data>
+  <data name="CustomVocabularyGuidanceSummary" xml:space="preserve">
+    <value>音声認識が特定の単語を聞き間違えたり、AI がネットスラングを理解できないときは、この用語集で教えることができます。</value>
   </data>
   <data name="CustomVocabularyGuidanceBody" xml:space="preserve">
-    <value>用語集は、ゲーム名などを似た発音の別語として認識してしまうような、繰り返し発生する ASR 誤認識を補正するために使います。ローカルに複数保持できますが、同時に有効化できるのは 1 テーブルだけです。</value>
+    <value>アプリはあなたの話した表現を自動で「標準語句」に置き換えてから AI に送信します。</value>
+  </data>
+  <data name="CustomVocabularyEntryGuideTitle" xml:space="preserve">
+    <value>各項目の入力方法</value>
+  </data>
+  <data name="CustomVocabularyTermGuideText" xml:space="preserve">
+    <value>コア用語：最終的に AI に見せたい、正しい標準語句です。</value>
+  </data>
+  <data name="CustomVocabularyAliasesGuideText" xml:space="preserve">
+    <value>別名：音声認識がよく書き間違える語、ネットスラング、略称です。複数ある場合はカンマで区切ってください。</value>
+  </data>
+  <data name="CustomVocabularyPronunciationsGuideText" xml:space="preserve">
+    <value>発音：ピンインや英語風の読みです。認識精度の向上に役立ちます。複数ある場合はカンマで区切ってください。</value>
+  </data>
+  <data name="CustomVocabularyExampleTitle" xml:space="preserve">
+    <value>よくある利用例</value>
+  </data>
+  <data name="CustomVocabularyExampleBody" xml:space="preserve">
+    <value>同音語の補正例：「原神」がいつも「元神」と誤認識されるなら、コア用語に「原神」、別名に「元神, 圆神」、発音に「yuan shen」と入力します。</value>
   </data>
   <data name="CustomVocabularySectionHint" xml:space="preserve">
     <value>ASR 補正用のローカル用語集を管理します。最大 {0} テーブル、同時に有効化できるのは {1} テーブル、各テーブルは最大 {2} エントリ・{3} 文字です。</value>
@@ -1553,13 +1574,13 @@
     <value>操作</value>
   </data>
   <data name="CustomVocabularyTermPlaceholder" xml:space="preserve">
-    <value>例: エンドフィールド</value>
+    <value>最終的に AI に見せたい標準語句</value>
   </data>
   <data name="CustomVocabularyAliasesPlaceholder" xml:space="preserve">
-    <value>複数の別名はカンマで区切ってください</value>
+    <value>誤字、スラング、略称をカンマ区切りで入力</value>
   </data>
   <data name="CustomVocabularyPronunciationsPlaceholder" xml:space="preserve">
-    <value>複数の発音はカンマで区切ってください</value>
+    <value>ピンインや英語風の読みをカンマ区切りで入力</value>
   </data>
   <data name="CustomVocabularyNoTablesTitle" xml:space="preserve">
     <value>用語集テーブルがありません</value>

@@ -32,7 +32,14 @@ namespace lingualink_client.ViewModels
 
         public string PageTitle => LanguageManager.GetString("CustomVocabularySectionTitle");
         public string GuidanceTitle => LanguageManager.GetString("CustomVocabularyGuidanceTitle");
+        public string GuidanceSummary => LanguageManager.GetString("CustomVocabularyGuidanceSummary");
         public string GuidanceBody => LanguageManager.GetString("CustomVocabularyGuidanceBody");
+        public string EntryGuideTitle => LanguageManager.GetString("CustomVocabularyEntryGuideTitle");
+        public string TermGuideText => LanguageManager.GetString("CustomVocabularyTermGuideText");
+        public string AliasesGuideText => LanguageManager.GetString("CustomVocabularyAliasesGuideText");
+        public string PronunciationsGuideText => LanguageManager.GetString("CustomVocabularyPronunciationsGuideText");
+        public string ExampleTitle => LanguageManager.GetString("CustomVocabularyExampleTitle");
+        public string ExampleBody => LanguageManager.GetString("CustomVocabularyExampleBody");
         public string SectionHint => string.Format(
             LanguageManager.GetString("CustomVocabularySectionHint"),
             AppSettings.MaxCustomVocabularyTables,

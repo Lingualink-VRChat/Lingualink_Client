@@ -78,17 +78,24 @@
             <ui:InfoBar
                 Margin="0,0,0,20"
                 Title="{Binding GuidanceTitle}"
-                Message="{Binding SectionHint}"
+                Message="{Binding GuidanceSummary}"
                 Severity="Informational"
                 IsOpen="True"
                 IsClosable="False">
                 <ui:InfoBar.Content>
-                    <TextBlock
-                        Margin="0,8,0,0"
-                        FontSize="12"
-                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                        Text="{Binding GuidanceBody}"
-                        TextWrapping="Wrap" />
+                    <StackPanel Margin="0,8,0,0">
+                        <TextBlock
+                            FontSize="12"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            Text="{Binding GuidanceBody}"
+                            TextWrapping="Wrap" />
+                        <TextBlock
+                            Margin="0,8,0,0"
+                            FontSize="12"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            Text="{Binding SectionHint}"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
                 </ui:InfoBar.Content>
             </ui:InfoBar>
 
@@ -176,7 +183,6 @@
                                             Grid.Column="4"
                                             Command="{Binding DataContext.RemoveVocabularyTableCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                             CommandParameter="{Binding}"
-                                            Appearance="Danger"
                                             Content="{Binding DataContext.DeleteTableLabel, RelativeSource={RelativeSource AncestorType=Page}}"
                                             Icon="{ui:SymbolIcon Symbol=Delete24}" />
                                     </Grid>
@@ -202,10 +208,47 @@
                                                 Style="{DynamicResource BodyStrongTextBlockStyle}"
                                                 Text="{Binding DataContext.SelectedTableSummary, RelativeSource={RelativeSource AncestorType=Page}}" />
                                             <TextBlock
+                                                Margin="0,8,0,0"
+                                                Style="{DynamicResource BodyStrongTextBlockStyle}"
+                                                Text="{Binding DataContext.EntryGuideTitle, RelativeSource={RelativeSource AncestorType=Page}}" />
+                                            <TextBlock
                                                 Margin="0,4,0,0"
                                                 FontSize="11"
                                                 Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                                Text="{Binding DataContext.AliasesHint, RelativeSource={RelativeSource AncestorType=Page}}" />
+                                                Text="{Binding DataContext.TermGuideText, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                TextWrapping="Wrap" />
+                                            <TextBlock
+                                                Margin="0,2,0,0"
+                                                FontSize="11"
+                                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                Text="{Binding DataContext.AliasesGuideText, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                TextWrapping="Wrap" />
+                                            <TextBlock
+                                                Margin="0,2,0,0"
+                                                FontSize="11"
+                                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                Text="{Binding DataContext.PronunciationsGuideText, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                TextWrapping="Wrap" />
+                                            <Border
+                                                Margin="0,10,0,0"
+                                                Padding="10"
+                                                Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                                                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                                                BorderThickness="1"
+                                                CornerRadius="8">
+                                                <StackPanel>
+                                                    <TextBlock
+                                                        FontSize="11"
+                                                        FontWeight="SemiBold"
+                                                        Text="{Binding DataContext.ExampleTitle, RelativeSource={RelativeSource AncestorType=Page}}" />
+                                                    <TextBlock
+                                                        Margin="0,4,0,0"
+                                                        FontSize="11"
+                                                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                        Text="{Binding DataContext.ExampleBody, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                        TextWrapping="Wrap" />
+                                                </StackPanel>
+                                            </Border>
                                         </StackPanel>
 
                                         <ui:Button
