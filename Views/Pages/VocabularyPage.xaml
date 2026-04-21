@@ -77,6 +77,7 @@
 
             <ui:InfoBar
                 Margin="0,0,0,20"
+                ToolTipService.InitialShowDelay="150"
                 Title="{Binding GuidanceTitle}"
                 Message="{Binding GuidanceSummary}"
                 Severity="Informational"
