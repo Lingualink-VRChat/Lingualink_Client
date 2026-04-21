@@ -74,7 +74,7 @@
                                 <ui:Button
                                     Padding="8,4"
                                     Margin="0,0,4,4"
-                                    Command="{Binding ImportVocabularyTableAsyncCommand}"
+                                    Command="{Binding ImportVocabularyTableCommand}"
                                     Icon="{ui:SymbolIcon Symbol=ArrowImport24}">
                                     <ui:Button.ToolTip>
                                         <ToolTip Content="{Binding ImportLabel}" />
@@ -83,7 +83,7 @@
                                 <ui:Button
                                     Padding="8,4"
                                     Margin="0,0,4,4"
-                                    Command="{Binding ExportVocabularyTableAsyncCommand}"
+                                    Command="{Binding ExportVocabularyTableCommand}"
                                     Icon="{ui:SymbolIcon Symbol=ArrowExport24}">
                                     <ui:Button.ToolTip>
                                         <ToolTip Content="{Binding ExportLabel}" />
