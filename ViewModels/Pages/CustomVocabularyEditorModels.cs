@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using lingualink_client.Models;
+using lingualink_client.Services;
 
 namespace lingualink_client.ViewModels
 {
@@ -18,6 +19,9 @@ namespace lingualink_client.ViewModels
         [ObservableProperty]
         private bool enabled = true;
 
+        [ObservableProperty]
+        private bool isExpanded;
+
         public ObservableCollection<VocabularyEntryEditor> Entries { get; }
 
         public int TotalEntries => Entries.Count;
@@ -30,6 +34,15 @@ namespace lingualink_client.ViewModels
             .Sum(entry => AppSettings.CountVocabularyEntryCharacters(entry.Term, entry.Aliases, entry.Pronunciations));
 
         public bool IsOverCharacterBudget => EffectiveCharacterCount > AppSettings.MaxCustomVocabularyTableCharacters;
+
+        public string HeaderSummary => string.Format(
+            LanguageManager.GetString("CustomVocabularyTableStatusSummary"),
+            TotalEntries,
+            AppSettings.MaxEntriesPerVocabularyTable,
+            EffectiveCharacterCount,
+            AppSettings.MaxCustomVocabularyTableCharacters);
+
+        public string ExpandGlyph => IsExpanded ? "▼" : "▶";
 
         public VocabularyTableEditor()
         {
@@ -51,6 +64,13 @@ namespace lingualink_client.ViewModels
             OnPropertyChanged(nameof(EnabledEntries));
             OnPropertyChanged(nameof(EffectiveCharacterCount));
             OnPropertyChanged(nameof(IsOverCharacterBudget));
+            OnPropertyChanged(nameof(HeaderSummary));
+            OnPropertyChanged(nameof(ExpandGlyph));
+        }
+
+        partial void OnIsExpandedChanged(bool value)
+        {
+            OnPropertyChanged(nameof(ExpandGlyph));
         }
 
         public CustomVocabularyTable ToModel()

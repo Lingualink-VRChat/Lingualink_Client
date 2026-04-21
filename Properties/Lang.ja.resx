@@ -1525,11 +1525,62 @@
   <data name="CustomVocabularyTableCountSummary" xml:space="preserve">
     <value>{0}/{1} テーブル、合計 {2} エントリ、有効 {3} テーブル</value>
   </data>
+  <data name="CustomVocabularyTableStatusSummary" xml:space="preserve">
+    <value>{0}/{1} エントリ、{2}/{3} 文字</value>
+  </data>
   <data name="CustomVocabularySelectedTableSummary" xml:space="preserve">
     <value>このテーブルは {0}/{1} エントリ、うち {2} 件が有効、使用中 {3}/{4} 文字です</value>
   </data>
   <data name="CustomVocabularyCharacterBudgetSummary" xml:space="preserve">
     <value>文字予算: {0}/{1}</value>
+  </data>
+  <data name="CustomVocabularyEnabledBadge" xml:space="preserve">
+    <value>有効</value>
+  </data>
+  <data name="CustomVocabularyTableNamePlaceholder" xml:space="preserve">
+    <value>用語集テーブル名を入力</value>
+  </data>
+  <data name="CustomVocabularyEntryTermHeader" xml:space="preserve">
+    <value>コア用語</value>
+  </data>
+  <data name="CustomVocabularyEntryAliasesHeader" xml:space="preserve">
+    <value>別名（カンマ区切り）</value>
+  </data>
+  <data name="CustomVocabularyEntryPronunciationsHeader" xml:space="preserve">
+    <value>発音（カンマ区切り）</value>
+  </data>
+  <data name="CustomVocabularyEntryActionsHeader" xml:space="preserve">
+    <value>操作</value>
+  </data>
+  <data name="CustomVocabularyTermPlaceholder" xml:space="preserve">
+    <value>例: エンドフィールド</value>
+  </data>
+  <data name="CustomVocabularyAliasesPlaceholder" xml:space="preserve">
+    <value>複数の別名はカンマで区切ってください</value>
+  </data>
+  <data name="CustomVocabularyPronunciationsPlaceholder" xml:space="preserve">
+    <value>複数の発音はカンマで区切ってください</value>
+  </data>
+  <data name="CustomVocabularyNoTablesTitle" xml:space="preserve">
+    <value>用語集テーブルがありません</value>
+  </data>
+  <data name="CustomVocabularyNoTablesBody" xml:space="preserve">
+    <value>まずローカル用語集を作成し、展開したパネル内でエントリを追加またはインポートしてください。</value>
+  </data>
+  <data name="CustomVocabularyMoveEntryUp" xml:space="preserve">
+    <value>上へ移動</value>
+  </data>
+  <data name="CustomVocabularyMoveEntryDown" xml:space="preserve">
+    <value>下へ移動</value>
+  </data>
+  <data name="CustomVocabularyExpandTable" xml:space="preserve">
+    <value>テーブルを展開</value>
+  </data>
+  <data name="CustomVocabularyCollapseTable" xml:space="preserve">
+    <value>テーブルを折りたたむ</value>
+  </data>
+  <data name="CustomVocabularyBudgetExceeded" xml:space="preserve">
+    <value>この変更はテーブルの文字予算 {0} を超えるため、直前の有効な状態に戻しました。</value>
   </data>
   <data name="CustomVocabularyMaxTablesReached" xml:space="preserve">
     <value>用語集テーブルの上限 {0} に達しました。</value>

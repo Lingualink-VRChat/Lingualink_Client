@@ -1609,11 +1609,62 @@ Update now?</value>
   <data name="CustomVocabularyTableCountSummary" xml:space="preserve">
     <value>{0}/{1} tables, {2} total entries, {3} enabled</value>
   </data>
+  <data name="CustomVocabularyTableStatusSummary" xml:space="preserve">
+    <value>{0}/{1} entries, {2}/{3} characters</value>
+  </data>
   <data name="CustomVocabularySelectedTableSummary" xml:space="preserve">
     <value>{0}/{1} entries in this table, {2} enabled, {3}/{4} effective characters</value>
   </data>
   <data name="CustomVocabularyCharacterBudgetSummary" xml:space="preserve">
     <value>Character budget: {0}/{1}</value>
+  </data>
+  <data name="CustomVocabularyEnabledBadge" xml:space="preserve">
+    <value>Enabled</value>
+  </data>
+  <data name="CustomVocabularyTableNamePlaceholder" xml:space="preserve">
+    <value>Enter vocabulary table name</value>
+  </data>
+  <data name="CustomVocabularyEntryTermHeader" xml:space="preserve">
+    <value>Core Term</value>
+  </data>
+  <data name="CustomVocabularyEntryAliasesHeader" xml:space="preserve">
+    <value>Aliases (comma separated)</value>
+  </data>
+  <data name="CustomVocabularyEntryPronunciationsHeader" xml:space="preserve">
+    <value>Pronunciations (comma separated)</value>
+  </data>
+  <data name="CustomVocabularyEntryActionsHeader" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="CustomVocabularyTermPlaceholder" xml:space="preserve">
+    <value>Example: Endfield</value>
+  </data>
+  <data name="CustomVocabularyAliasesPlaceholder" xml:space="preserve">
+    <value>Use commas to separate aliases</value>
+  </data>
+  <data name="CustomVocabularyPronunciationsPlaceholder" xml:space="preserve">
+    <value>Use commas to separate pronunciations</value>
+  </data>
+  <data name="CustomVocabularyNoTablesTitle" xml:space="preserve">
+    <value>No vocabulary table yet</value>
+  </data>
+  <data name="CustomVocabularyNoTablesBody" xml:space="preserve">
+    <value>Create your first local vocabulary table, then import or add entries below.</value>
+  </data>
+  <data name="CustomVocabularyMoveEntryUp" xml:space="preserve">
+    <value>Move up</value>
+  </data>
+  <data name="CustomVocabularyMoveEntryDown" xml:space="preserve">
+    <value>Move down</value>
+  </data>
+  <data name="CustomVocabularyExpandTable" xml:space="preserve">
+    <value>Expand table</value>
+  </data>
+  <data name="CustomVocabularyCollapseTable" xml:space="preserve">
+    <value>Collapse table</value>
+  </data>
+  <data name="CustomVocabularyBudgetExceeded" xml:space="preserve">
+    <value>This change would exceed the table character budget of {0}, so it was reverted.</value>
   </data>
   <data name="CustomVocabularyMaxTablesReached" xml:space="preserve">
     <value>You have reached the maximum of {0} vocabulary tables.</value>

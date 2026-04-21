@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -23,8 +24,11 @@ namespace lingualink_client.ViewModels
     {
         private readonly ISettingsManager _settingsManager;
         private readonly DispatcherTimer _vocabularySaveTimer;
+        private readonly Dictionary<string, CustomVocabularyTable> _lastValidTableSnapshots = new(StringComparer.OrdinalIgnoreCase);
         private string _pendingVocabularyChangeSource = "VocabularyPage";
+        private bool _suppressBudgetRecovery;
         private bool _suppressEnabledSync;
+        private bool _suppressExpansionSync;
 
         public string PageTitle => LanguageManager.GetString("CustomVocabularySectionTitle");
         public string GuidanceTitle => LanguageManager.GetString("CustomVocabularyGuidanceTitle");
@@ -45,6 +49,21 @@ namespace lingualink_client.ViewModels
         public string AddEntryLabel => LanguageManager.GetString("CustomVocabularyAddEntry");
         public string DeleteEntryLabel => LanguageManager.GetString("CustomVocabularyDeleteEntry");
         public string NoTableSelectedHint => LanguageManager.GetString("CustomVocabularyNoTableSelected");
+        public string TableNamePlaceholder => LanguageManager.GetString("CustomVocabularyTableNamePlaceholder");
+        public string EntryTermHeader => LanguageManager.GetString("CustomVocabularyEntryTermHeader");
+        public string EntryAliasesHeader => LanguageManager.GetString("CustomVocabularyEntryAliasesHeader");
+        public string EntryPronunciationsHeader => LanguageManager.GetString("CustomVocabularyEntryPronunciationsHeader");
+        public string EntryActionsHeader => LanguageManager.GetString("CustomVocabularyEntryActionsHeader");
+        public string TermPlaceholder => LanguageManager.GetString("CustomVocabularyTermPlaceholder");
+        public string AliasesPlaceholder => LanguageManager.GetString("CustomVocabularyAliasesPlaceholder");
+        public string PronunciationsPlaceholder => LanguageManager.GetString("CustomVocabularyPronunciationsPlaceholder");
+        public string EnabledBadgeLabel => LanguageManager.GetString("CustomVocabularyEnabledBadge");
+        public string NoTablesTitle => LanguageManager.GetString("CustomVocabularyNoTablesTitle");
+        public string NoTablesBody => LanguageManager.GetString("CustomVocabularyNoTablesBody");
+        public string MoveEntryUpLabel => LanguageManager.GetString("CustomVocabularyMoveEntryUp");
+        public string MoveEntryDownLabel => LanguageManager.GetString("CustomVocabularyMoveEntryDown");
+        public string ExpandTableLabel => LanguageManager.GetString("CustomVocabularyExpandTable");
+        public string CollapseTableLabel => LanguageManager.GetString("CustomVocabularyCollapseTable");
         
         public string AliasesHint => string.Format(
             LanguageManager.GetString("CustomVocabularyAliasesHint"),
@@ -111,6 +130,11 @@ namespace lingualink_client.ViewModels
 
         private void OnLanguageChanged()
         {
+            foreach (var table in VocabularyTables)
+            {
+                table.RefreshCounts();
+            }
+
             OnPropertyChanged(string.Empty);
         }
 
@@ -135,32 +159,36 @@ namespace lingualink_client.ViewModels
             {
                 EnforceSingleEnabledTable(table, queueSave: false);
             }
+            CaptureTableSnapshot(table);
             SelectedVocabularyTable = table;
             QueueVocabularySave("VocabularyPageAddTable");
         }
 
-        [RelayCommand(CanExecute = nameof(CanRemoveVocabularyTable))]
-        private void RemoveVocabularyTable()
+        [RelayCommand]
+        private void RemoveVocabularyTable(VocabularyTableEditor? table)
         {
-            if (SelectedVocabularyTable == null)
+            var targetTable = table ?? SelectedVocabularyTable;
+            if (targetTable == null)
             {
                 return;
             }
 
             var confirmMessage = string.Format(
                 LanguageManager.GetString("CustomVocabularyDeleteTableConfirm"),
-                SelectedVocabularyTable.Name);
+                targetTable.Name);
             if (UiMessageBox.ShowConfirm(confirmMessage) != MessageBoxResult.Yes)
             {
                 return;
             }
 
-            var removed = SelectedVocabularyTable;
+            var removed = targetTable;
             var removedIndex = VocabularyTables.IndexOf(removed);
             VocabularyTables.Remove(removed);
+            _lastValidTableSnapshots.Remove(removed.Id);
             SelectedVocabularyTable = VocabularyTables.Count == 0
                 ? null
                 : VocabularyTables[Math.Clamp(removedIndex, 0, VocabularyTables.Count - 1)];
+            ApplyAccordionState(SelectedVocabularyTable);
             SelectedVocabularyEntry = SelectedVocabularyTable?.Entries.FirstOrDefault();
             QueueVocabularySave("VocabularyPageRemoveTable");
         }
@@ -235,6 +263,7 @@ namespace lingualink_client.ViewModels
 
                         importedTable.Name = BuildUniqueTableName(importedTable.Name);
                         VocabularyTables.Add(importedTable);
+                        CaptureTableSnapshot(importedTable);
                         if (importedTable.Enabled)
                         {
                             EnforceSingleEnabledTable(importedTable, queueSave: false);
@@ -251,6 +280,7 @@ namespace lingualink_client.ViewModels
                     }
 
                     VocabularyTables.Add(importedTable);
+                    CaptureTableSnapshot(importedTable);
                     if (importedTable.Enabled)
                     {
                         EnforceSingleEnabledTable(importedTable, queueSave: false);
@@ -274,10 +304,11 @@ namespace lingualink_client.ViewModels
             }
         }
 
-        [RelayCommand(CanExecute = nameof(CanExportVocabularyTable))]
-        private async Task ExportVocabularyTableAsync()
+        [RelayCommand]
+        private async Task ExportVocabularyTableAsync(VocabularyTableEditor? table)
         {
-            if (SelectedVocabularyTable == null)
+            var targetTable = table ?? SelectedVocabularyTable;
+            if (targetTable == null)
             {
                 return;
             }
@@ -285,7 +316,7 @@ namespace lingualink_client.ViewModels
             var dialog = new SaveFileDialog
             {
                 Filter = "JSON (*.json)|*.json",
-                FileName = $"{SanitizeFileName(SelectedVocabularyTable.Name)}.json"
+                FileName = $"{SanitizeFileName(targetTable.Name)}.json"
             };
 
             if (dialog.ShowDialog() != true)
@@ -298,7 +329,7 @@ namespace lingualink_client.ViewModels
                 var payload = new VocabularyTableImportEnvelope
                 {
                     Version = 1,
-                    Table = SelectedVocabularyTable.ToModel()
+                    Table = targetTable.ToModel()
                 };
 
                 var json = JsonSerializer.Serialize(
@@ -318,15 +349,16 @@ namespace lingualink_client.ViewModels
             }
         }
 
-        [RelayCommand(CanExecute = nameof(CanAddVocabularyEntry))]
-        private void AddVocabularyEntry()
+        [RelayCommand]
+        private void AddVocabularyEntry(VocabularyTableEditor? table)
         {
-            if (SelectedVocabularyTable == null)
+            var targetTable = table ?? SelectedVocabularyTable;
+            if (targetTable == null)
             {
                 return;
             }
 
-            if (SelectedVocabularyTable.Entries.Count >= AppSettings.MaxEntriesPerVocabularyTable)
+            if (targetTable.Entries.Count >= AppSettings.MaxEntriesPerVocabularyTable)
             {
                 UiMessageBox.ShowWarning(
                     string.Format(
@@ -337,25 +369,55 @@ namespace lingualink_client.ViewModels
 
             var entry = new VocabularyEntryEditor
             {
-                Priority = SelectedVocabularyTable.Entries.Count + 1
+                Priority = targetTable.Entries.Count + 1
             };
 
-            SelectedVocabularyTable.Entries.Add(entry);
+            targetTable.Entries.Add(entry);
+            SelectedVocabularyTable = targetTable;
+            ApplyAccordionState(targetTable);
             SelectedVocabularyEntry = entry;
             QueueVocabularySave("VocabularyPageAddEntry");
         }
 
-        [RelayCommand(CanExecute = nameof(CanRemoveVocabularyEntry))]
-        private void RemoveVocabularyEntry()
+        [RelayCommand]
+        private void RemoveVocabularyEntry(VocabularyEntryEditor? entry)
         {
-            if (SelectedVocabularyTable == null || SelectedVocabularyEntry == null)
+            if (!TryFindOwnerTable(entry ?? SelectedVocabularyEntry, out var owner, out var targetEntry))
             {
                 return;
             }
 
-            SelectedVocabularyTable.Entries.Remove(SelectedVocabularyEntry);
-            SelectedVocabularyEntry = SelectedVocabularyTable.Entries.FirstOrDefault();
+            owner.Entries.Remove(targetEntry);
+            NormalizeEntryPriorities(owner);
+            SelectedVocabularyTable = owner;
+            ApplyAccordionState(owner);
+            SelectedVocabularyEntry = owner.Entries.FirstOrDefault();
             QueueVocabularySave("VocabularyPageRemoveEntry");
+        }
+
+        [RelayCommand]
+        private void MoveVocabularyEntryUp(VocabularyEntryEditor? entry)
+        {
+            MoveVocabularyEntry(entry, -1);
+        }
+
+        [RelayCommand]
+        private void MoveVocabularyEntryDown(VocabularyEntryEditor? entry)
+        {
+            MoveVocabularyEntry(entry, 1);
+        }
+
+        [RelayCommand]
+        private void ToggleVocabularyTableExpansion(VocabularyTableEditor? table)
+        {
+            if (table == null)
+            {
+                return;
+            }
+
+            var shouldExpand = !table.IsExpanded;
+            ApplyAccordionState(shouldExpand ? table : null);
+            SelectedVocabularyTable = table;
         }
 
         public void RefreshSettings()
@@ -363,18 +425,11 @@ namespace lingualink_client.ViewModels
             LoadVocabularyTables(_settingsManager.LoadSettings());
         }
 
-        public async Task LoadVocabularyAsync()
+        public Task LoadVocabularyAsync()
         {
-            await Task.Run(() => LoadVocabularyTables(_settingsManager.LoadSettings()));
+            LoadVocabularyTables(_settingsManager.LoadSettings());
+            return Task.CompletedTask;
         }
-
-        private bool CanRemoveVocabularyTable() => SelectedVocabularyTable != null;
-
-        private bool CanExportVocabularyTable() => SelectedVocabularyTable != null;
-
-        private bool CanAddVocabularyEntry() => SelectedVocabularyTable != null;
-
-        private bool CanRemoveVocabularyEntry() => SelectedVocabularyTable != null && SelectedVocabularyEntry != null;
 
         private void LoadVocabularyTables(AppSettings settings)
         {
@@ -395,8 +450,10 @@ namespace lingualink_client.ViewModels
             EnforceSingleEnabledTable(VocabularyTables.FirstOrDefault(table => table.Enabled), queueSave: false);
 
             VocabularyTables.CollectionChanged += OnVocabularyTablesCollectionChanged;
+            CaptureAllVocabularySnapshots();
 
             SelectedVocabularyTable = VocabularyTables.FirstOrDefault();
+            ApplyAccordionState(SelectedVocabularyTable);
             SelectedVocabularyEntry = SelectedVocabularyTable?.Entries.FirstOrDefault();
             NotifyVocabularyUiChanged();
         }
@@ -468,6 +525,16 @@ namespace lingualink_client.ViewModels
             {
                 var owner = VocabularyTables.FirstOrDefault(table => ReferenceEquals(table.Entries, entries));
                 owner?.RefreshCounts();
+                if (owner != null)
+                {
+                    if (RecoverTableIfOverBudget(owner))
+                    {
+                        QueueVocabularySave("VocabularyPageBudgetRecover");
+                        return;
+                    }
+
+                    CaptureTableSnapshot(owner);
+                }
             }
 
             NotifyVocabularyUiChanged();
@@ -476,11 +543,25 @@ namespace lingualink_client.ViewModels
 
         private void OnVocabularyTablePropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
+            if (sender is VocabularyTableEditor expandedTable
+                && e.PropertyName == nameof(VocabularyTableEditor.IsExpanded)
+                && expandedTable.IsExpanded)
+            {
+                SelectedVocabularyTable = expandedTable;
+                ApplyAccordionState(expandedTable);
+                return;
+            }
+
             if (e.PropertyName == nameof(VocabularyTableEditor.Name) || e.PropertyName == nameof(VocabularyTableEditor.Enabled))
             {
-                if (e.PropertyName == nameof(VocabularyTableEditor.Enabled) && sender is VocabularyTableEditor table)
+                if (sender is VocabularyTableEditor table)
                 {
-                    EnforceSingleEnabledTable(table.Enabled ? table : null, queueSave: false);
+                    if (e.PropertyName == nameof(VocabularyTableEditor.Enabled))
+                    {
+                        EnforceSingleEnabledTable(table.Enabled ? table : null, queueSave: false);
+                    }
+
+                    CaptureTableSnapshot(table);
                 }
 
                 NotifyVocabularyUiChanged();
@@ -494,6 +575,16 @@ namespace lingualink_client.ViewModels
             {
                 var owner = VocabularyTables.FirstOrDefault(table => table.Entries.Contains(entry));
                 owner?.RefreshCounts();
+                if (owner != null)
+                {
+                    if (RecoverTableIfOverBudget(owner))
+                    {
+                        QueueVocabularySave("VocabularyPageBudgetRecover");
+                        return;
+                    }
+
+                    CaptureTableSnapshot(owner);
+                }
             }
 
             NotifyVocabularyUiChanged();
@@ -532,10 +623,21 @@ namespace lingualink_client.ViewModels
             OnPropertyChanged(nameof(SelectedVocabularyEntries));
             OnPropertyChanged(nameof(HasSelectedVocabularyTable));
             OnPropertyChanged(nameof(IsSelectedTableOverCharacterBudget));
-            RemoveVocabularyTableCommand.NotifyCanExecuteChanged();
-            ExportVocabularyTableCommand.NotifyCanExecuteChanged();
-            AddVocabularyEntryCommand.NotifyCanExecuteChanged();
-            RemoveVocabularyEntryCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnSelectedVocabularyTableChanged(VocabularyTableEditor? value)
+        {
+            if (value != null)
+            {
+                ApplyAccordionState(value);
+            }
+
+            SelectedVocabularyEntry = value?.Entries.FirstOrDefault();
+            NotifyVocabularyUiChanged();
+        }
+
+        partial void OnSelectedVocabularyEntryChanged(VocabularyEntryEditor? value)
+        {
         }
 
         private void EnforceSingleEnabledTable(VocabularyTableEditor? preferredTable, bool queueSave)
@@ -571,6 +673,66 @@ namespace lingualink_client.ViewModels
             {
                 QueueVocabularySave("VocabularyPageSingleEnable");
             }
+        }
+
+        private void CaptureAllVocabularySnapshots()
+        {
+            _lastValidTableSnapshots.Clear();
+
+            foreach (var table in VocabularyTables)
+            {
+                CaptureTableSnapshot(table);
+            }
+        }
+
+        private void CaptureTableSnapshot(VocabularyTableEditor table)
+        {
+            if (_suppressBudgetRecovery || table.IsOverCharacterBudget || string.IsNullOrWhiteSpace(table.Id))
+            {
+                return;
+            }
+
+            _lastValidTableSnapshots[table.Id] = table.ToModel();
+        }
+
+        private bool RecoverTableIfOverBudget(VocabularyTableEditor table)
+        {
+            if (_suppressBudgetRecovery || !table.IsOverCharacterBudget)
+            {
+                return false;
+            }
+
+            if (!_lastValidTableSnapshots.TryGetValue(table.Id, out var snapshot))
+            {
+                return false;
+            }
+
+            try
+            {
+                _suppressBudgetRecovery = true;
+
+                var restored = new VocabularyTableEditor(snapshot);
+                var index = VocabularyTables.IndexOf(table);
+                if (index < 0)
+                {
+                    return false;
+                }
+
+                VocabularyTables[index] = restored;
+                if (ReferenceEquals(SelectedVocabularyTable, table) || string.Equals(SelectedVocabularyTable?.Id, restored.Id, StringComparison.OrdinalIgnoreCase))
+                {
+                    SelectedVocabularyTable = restored;
+                }
+            }
+            finally
+            {
+                _suppressBudgetRecovery = false;
+            }
+
+            UiMessageBox.ShowWarning(string.Format(
+                LanguageManager.GetString("CustomVocabularyBudgetExceeded"),
+                AppSettings.MaxCustomVocabularyTableCharacters));
+            return true;
         }
 
         private string BuildUniqueTableName(string baseName)
@@ -688,10 +850,100 @@ namespace lingualink_client.ViewModels
             if (index < 0)
             {
                 VocabularyTables.Add(incoming);
+                CaptureTableSnapshot(incoming);
                 return;
             }
 
             VocabularyTables[index] = incoming;
+            CaptureTableSnapshot(incoming);
+        }
+
+        private void ApplyAccordionState(VocabularyTableEditor? expandedTable)
+        {
+            if (_suppressExpansionSync)
+            {
+                return;
+            }
+
+            try
+            {
+                _suppressExpansionSync = true;
+
+                foreach (var table in VocabularyTables)
+                {
+                    var shouldExpand = expandedTable != null && ReferenceEquals(table, expandedTable);
+                    if (table.IsExpanded != shouldExpand)
+                    {
+                        table.IsExpanded = shouldExpand;
+                    }
+                }
+            }
+            finally
+            {
+                _suppressExpansionSync = false;
+            }
+
+            NotifyVocabularyUiChanged();
+        }
+
+        private bool TryFindOwnerTable(VocabularyEntryEditor? entry, out VocabularyTableEditor owner, out VocabularyEntryEditor targetEntry)
+        {
+            owner = default!;
+            targetEntry = default!;
+
+            if (entry == null)
+            {
+                return false;
+            }
+
+            var matchedOwner = VocabularyTables.FirstOrDefault(table => table.Entries.Contains(entry));
+            if (matchedOwner == null)
+            {
+                return false;
+            }
+
+            owner = matchedOwner;
+            targetEntry = entry;
+            return true;
+        }
+
+        private void MoveVocabularyEntry(VocabularyEntryEditor? entry, int direction)
+        {
+            if (!TryFindOwnerTable(entry, out var owner, out var targetEntry))
+            {
+                return;
+            }
+
+            var currentIndex = owner.Entries.IndexOf(targetEntry);
+            if (currentIndex < 0)
+            {
+                return;
+            }
+
+            var targetIndex = currentIndex + direction;
+            if (targetIndex < 0 || targetIndex >= owner.Entries.Count)
+            {
+                return;
+            }
+
+            owner.Entries.Move(currentIndex, targetIndex);
+            NormalizeEntryPriorities(owner);
+            SelectedVocabularyTable = owner;
+            ApplyAccordionState(owner);
+            SelectedVocabularyEntry = targetEntry;
+            QueueVocabularySave("VocabularyPageMoveEntry");
+        }
+
+        private static void NormalizeEntryPriorities(VocabularyTableEditor table)
+        {
+            for (var index = 0; index < table.Entries.Count; index++)
+            {
+                var expectedPriority = index + 1;
+                if (table.Entries[index].Priority != expectedPriority)
+                {
+                    table.Entries[index].Priority = expectedPriority;
+                }
+            }
         }
 
         public void Dispose()

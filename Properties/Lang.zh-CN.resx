@@ -1608,11 +1608,62 @@
   <data name="CustomVocabularyTableCountSummary" xml:space="preserve">
     <value>{0}/{1} 张词表，共 {2} 条词条，已启用 {3} 张</value>
   </data>
+  <data name="CustomVocabularyTableStatusSummary" xml:space="preserve">
+    <value>{0}/{1} 词条，{2}/{3} 字符</value>
+  </data>
   <data name="CustomVocabularySelectedTableSummary" xml:space="preserve">
     <value>当前词表 {0}/{1} 条词条，其中已启用 {2} 条，已用 {3}/{4} 有效字符</value>
   </data>
   <data name="CustomVocabularyCharacterBudgetSummary" xml:space="preserve">
     <value>字符预算：{0}/{1}</value>
+  </data>
+  <data name="CustomVocabularyEnabledBadge" xml:space="preserve">
+    <value>已启用</value>
+  </data>
+  <data name="CustomVocabularyTableNamePlaceholder" xml:space="preserve">
+    <value>输入词表名称</value>
+  </data>
+  <data name="CustomVocabularyEntryTermHeader" xml:space="preserve">
+    <value>核心词汇</value>
+  </data>
+  <data name="CustomVocabularyEntryAliasesHeader" xml:space="preserve">
+    <value>别名（使用逗号分隔）</value>
+  </data>
+  <data name="CustomVocabularyEntryPronunciationsHeader" xml:space="preserve">
+    <value>发音（使用逗号分隔）</value>
+  </data>
+  <data name="CustomVocabularyEntryActionsHeader" xml:space="preserve">
+    <value>操作</value>
+  </data>
+  <data name="CustomVocabularyTermPlaceholder" xml:space="preserve">
+    <value>例如：终末地</value>
+  </data>
+  <data name="CustomVocabularyAliasesPlaceholder" xml:space="preserve">
+    <value>多个别名请用逗号隔开</value>
+  </data>
+  <data name="CustomVocabularyPronunciationsPlaceholder" xml:space="preserve">
+    <value>多个发音请用逗号隔开</value>
+  </data>
+  <data name="CustomVocabularyNoTablesTitle" xml:space="preserve">
+    <value>还没有词表</value>
+  </data>
+  <data name="CustomVocabularyNoTablesBody" xml:space="preserve">
+    <value>先创建一张本地词表，然后在展开面板里导入或添加词条。</value>
+  </data>
+  <data name="CustomVocabularyMoveEntryUp" xml:space="preserve">
+    <value>上移</value>
+  </data>
+  <data name="CustomVocabularyMoveEntryDown" xml:space="preserve">
+    <value>下移</value>
+  </data>
+  <data name="CustomVocabularyExpandTable" xml:space="preserve">
+    <value>展开词表</value>
+  </data>
+  <data name="CustomVocabularyCollapseTable" xml:space="preserve">
+    <value>收起词表</value>
+  </data>
+  <data name="CustomVocabularyBudgetExceeded" xml:space="preserve">
+    <value>本次修改会超过单张词表 {0} 的字符预算，已回退到上一次合法状态。</value>
   </data>
   <data name="CustomVocabularyMaxTablesReached" xml:space="preserve">
     <value>已达到词表数量上限 {0}。</value>

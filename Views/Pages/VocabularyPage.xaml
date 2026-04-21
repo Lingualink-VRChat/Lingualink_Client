@@ -8,281 +8,363 @@
     xmlns:vm="clr-namespace:lingualink_client.ViewModels"
     Title="VocabularyPage"
     d:DataContext="{d:DesignInstance Type=vm:VocabularyPageViewModel}"
-    d:DesignHeight="700"
-    d:DesignWidth="1100"
+    d:DesignHeight="800"
+    d:DesignWidth="1180"
     mc:Ignorable="d">
 
-    <Grid Margin="{DynamicResource PageContentMargin}">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
+    <Page.Resources>
+        <Style x:Key="HeaderGhostButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="6,4" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
 
-        <!-- Header -->
-        <TextBlock
-            Grid.Row="0"
-            Margin="0,0,0,12"
-            Text="{Binding PageTitle}"
-            Style="{DynamicResource PageTitleTextBlockStyle}" />
+        <Style x:Key="InlineGridTextBoxStyle" TargetType="ui:TextBox">
+            <Setter Property="Margin" Value="2" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+    </Page.Resources>
 
-        <!-- Guidance Info Bar -->
-        <ui:InfoBar
-            Grid.Row="1"
-            Margin="0,0,0,24"
-            Title="{Binding GuidanceTitle}"
-            Message="{Binding SectionHint}"
-            Severity="Informational"
-            IsOpen="True"
-            IsClosable="False">
-            <ui:InfoBar.Content>
-                <StackPanel Margin="0,8,0,0">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="{DynamicResource PageContentMargin}">
+            <Grid Margin="0,0,0,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
                     <TextBlock
+                        Text="{Binding PageTitle}"
+                        Style="{DynamicResource PageTitleTextBlockStyle}" />
+                    <TextBlock
+                        Margin="0,6,0,0"
+                        FontSize="12"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Text="{Binding TableCountSummary}" />
+                </StackPanel>
+
+                <ui:Button
+                    Grid.Column="1"
+                    Margin="12,0,0,0"
+                    Command="{Binding ImportVocabularyTableCommand}"
+                    Content="{Binding ImportLabel}"
+                    Icon="{ui:SymbolIcon Symbol=ArrowImport24}" />
+
+                <ui:Button
+                    Grid.Column="2"
+                    Margin="12,0,0,0"
+                    Command="{Binding ExportVocabularyTableCommand}"
+                    CommandParameter="{Binding SelectedVocabularyTable}"
+                    Content="{Binding ExportLabel}"
+                    Icon="{ui:SymbolIcon Symbol=ArrowExport24}"
+                    IsEnabled="{Binding HasSelectedVocabularyTable}" />
+
+                <ui:Button
+                    Grid.Column="3"
+                    Margin="12,0,0,0"
+                    Command="{Binding AddVocabularyTableCommand}"
+                    Content="{Binding AddTableLabel}"
+                    Appearance="Primary"
+                    Icon="{ui:SymbolIcon Symbol=Add24}" />
+            </Grid>
+
+            <ui:InfoBar
+                Margin="0,0,0,20"
+                Title="{Binding GuidanceTitle}"
+                Message="{Binding SectionHint}"
+                Severity="Informational"
+                IsOpen="True"
+                IsClosable="False">
+                <ui:InfoBar.Content>
+                    <TextBlock
+                        Margin="0,8,0,0"
                         FontSize="12"
                         Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                         Text="{Binding GuidanceBody}"
                         TextWrapping="Wrap" />
-                </StackPanel>
-            </ui:InfoBar.Content>
-        </ui:InfoBar>
+                </ui:InfoBar.Content>
+            </ui:InfoBar>
 
-        <!-- Main Content Layout -->
-        <Grid Grid.Row="2">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="300" />
-                <ColumnDefinition Width="16" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
+            <ItemsControl ItemsSource="{Binding VocabularyTables}" Visibility="{Binding HasSelectedVocabularyTable, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type vm:VocabularyTableEditor}">
+                        <ui:Card Margin="0,0,0,16" Padding="0">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
 
-            <!-- Sidebar: Table Management -->
-            <ui:Card Grid.Column="0" Padding="0">
-                <DockPanel LastChildFill="True">
-                    <Border DockPanel.Dock="Top" Padding="12" Background="{DynamicResource SubtleFillColorSecondaryBrush}" BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="0,0,0,1">
-                        <StackPanel>
-                            <TextBlock FontWeight="SemiBold" Text="词表列表" />
-                            <TextBlock Margin="0,4,0,0" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding TableCountSummary}" />
-                            <WrapPanel Margin="0,12,0,0">
-                                <ui:Button
-                                    Padding="8,4"
-                                    Margin="0,0,4,4"
-                                    Command="{Binding AddVocabularyTableCommand}"
-                                    Icon="{ui:SymbolIcon Symbol=Add24}">
-                                    <ui:Button.ToolTip>
-                                        <ToolTip Content="{Binding AddTableLabel}" />
-                                    </ui:Button.ToolTip>
-                                </ui:Button>
-                                <ui:Button
-                                    Padding="8,4"
-                                    Margin="0,0,4,4"
-                                    Command="{Binding ImportVocabularyTableCommand}"
-                                    Icon="{ui:SymbolIcon Symbol=ArrowImport24}">
-                                    <ui:Button.ToolTip>
-                                        <ToolTip Content="{Binding ImportLabel}" />
-                                    </ui:Button.ToolTip>
-                                </ui:Button>
-                                <ui:Button
-                                    Padding="8,4"
-                                    Margin="0,0,4,4"
-                                    Command="{Binding ExportVocabularyTableCommand}"
-                                    Icon="{ui:SymbolIcon Symbol=ArrowExport24}">
-                                    <ui:Button.ToolTip>
-                                        <ToolTip Content="{Binding ExportLabel}" />
-                                    </ui:Button.ToolTip>
-                                </ui:Button>
-                                <ui:Button
-                                    Padding="8,4"
-                                    Margin="0,0,0,4"
-                                    Command="{Binding RemoveVocabularyTableCommand}"
-                                    Icon="{ui:SymbolIcon Symbol=Delete24}"
-                                    Appearance="Danger">
-                                    <ui:Button.ToolTip>
-                                        <ToolTip Content="{Binding DeleteTableLabel}" />
-                                    </ui:Button.ToolTip>
-                                </ui:Button>
-                            </WrapPanel>
-                        </StackPanel>
-                    </Border>
+                                <Border
+                                    Grid.Row="0"
+                                    Padding="16"
+                                    Background="{DynamicResource SubtleFillColorSecondaryBrush}"
+                                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                                    BorderThickness="0,0,0,1">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
 
-                    <ListBox
-                        BorderThickness="0"
-                        Background="Transparent"
-                        ItemsSource="{Binding VocabularyTables}"
-                        SelectedItem="{Binding SelectedVocabularyTable, Mode=TwoWay}">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <Grid Margin="4,2">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <ui:ToggleSwitch
-                                        Grid.Column="0"
-                                        Margin="0,0,12,0"
-                                        VerticalAlignment="Center"
-                                        IsChecked="{Binding Enabled, Mode=TwoWay}" />
-                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                        <TextBlock FontWeight="Medium" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
-                                        <TextBlock FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding EffectiveCharacterCount, StringFormat={}{0} chars}" />
-                                    </StackPanel>
+                                        <Button
+                                            Grid.Column="0"
+                                            Margin="0,0,12,0"
+                                            Command="{Binding DataContext.ToggleVocabularyTableExpansionCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                            CommandParameter="{Binding}"
+                                            Style="{StaticResource HeaderGhostButtonStyle}"
+                                            ToolTip="{Binding DataContext.ExpandTableLabel, RelativeSource={RelativeSource AncestorType=Page}}">
+                                            <TextBlock
+                                                FontSize="14"
+                                                FontWeight="SemiBold"
+                                                Text="{Binding ExpandGlyph}" />
+                                        </Button>
+
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                            <ui:TextBox
+                                                MinWidth="220"
+                                                MaxWidth="360"
+                                                Margin="0"
+                                                Padding="0"
+                                                BorderThickness="0"
+                                                Background="Transparent"
+                                                FontSize="16"
+                                                FontWeight="SemiBold"
+                                                PlaceholderText="{Binding DataContext.TableNamePlaceholder, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                            <Border
+                                                Margin="12,0,0,0"
+                                                Padding="8,3"
+                                                Background="{DynamicResource AccentFillColorSecondaryBrush}"
+                                                CornerRadius="10"
+                                                Visibility="{Binding Enabled, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                <TextBlock
+                                                    FontSize="11"
+                                                    FontWeight="SemiBold"
+                                                    Foreground="White"
+                                                    Text="{Binding DataContext.EnabledBadgeLabel, RelativeSource={RelativeSource AncestorType=Page}}" />
+                                            </Border>
+                                        </StackPanel>
+
+                                        <TextBlock
+                                            Grid.Column="2"
+                                            Margin="20,0"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                            Text="{Binding HeaderSummary}" />
+
+                                        <RadioButton
+                                            Grid.Column="3"
+                                            Margin="0,0,16,0"
+                                            VerticalAlignment="Center"
+                                            GroupName="VocabularyEnabledGroup"
+                                            IsChecked="{Binding Enabled, Mode=TwoWay}">
+                                            <TextBlock Text="{Binding DataContext.TableEnabledLabel, RelativeSource={RelativeSource AncestorType=Page}}" />
+                                        </RadioButton>
+
+                                        <ui:Button
+                                            Grid.Column="4"
+                                            Command="{Binding DataContext.RemoveVocabularyTableCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                            CommandParameter="{Binding}"
+                                            Appearance="Danger"
+                                            Content="{Binding DataContext.DeleteTableLabel, RelativeSource={RelativeSource AncestorType=Page}}"
+                                            Icon="{ui:SymbolIcon Symbol=Delete24}" />
+                                    </Grid>
+                                </Border>
+
+                                <Grid
+                                    Grid.Row="1"
+                                    Margin="16"
+                                    Visibility="{Binding IsExpanded, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <Grid Grid.Row="0" Margin="0,0,0,12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel>
+                                            <TextBlock
+                                                Style="{DynamicResource BodyStrongTextBlockStyle}"
+                                                Text="{Binding DataContext.SelectedTableSummary, RelativeSource={RelativeSource AncestorType=Page}}" />
+                                            <TextBlock
+                                                Margin="0,4,0,0"
+                                                FontSize="11"
+                                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                Text="{Binding DataContext.AliasesHint, RelativeSource={RelativeSource AncestorType=Page}}" />
+                                        </StackPanel>
+
+                                        <ui:Button
+                                            Grid.Column="1"
+                                            Command="{Binding DataContext.AddVocabularyEntryCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                            CommandParameter="{Binding}"
+                                            Content="{Binding DataContext.AddEntryLabel, RelativeSource={RelativeSource AncestorType=Page}}"
+                                            Appearance="Primary"
+                                            Icon="{ui:SymbolIcon Symbol=Add24}" />
+                                    </Grid>
+
+                                    <DataGrid
+                                        Grid.Row="1"
+                                        AutoGenerateColumns="False"
+                                        CanUserAddRows="False"
+                                        CanUserResizeRows="False"
+                                        HeadersVisibility="Column"
+                                        ItemsSource="{Binding Entries}"
+                                        SelectedItem="{Binding DataContext.SelectedVocabularyEntry, RelativeSource={RelativeSource AncestorType=Page}, Mode=TwoWay}"
+                                        RowHeaderWidth="0"
+                                        MaxHeight="420"
+                                        RowHeight="42"
+                                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                                        BorderThickness="1"
+                                        Background="Transparent"
+                                        GridLinesVisibility="Horizontal"
+                                        HorizontalGridLinesBrush="{DynamicResource CardStrokeColorDefaultBrush}">
+                                        <DataGrid.Columns>
+                                            <DataGridCheckBoxColumn Binding="{Binding Enabled, Mode=TwoWay}" Width="60">
+                                                <DataGridCheckBoxColumn.Header>
+                                                    <TextBlock Text="{Binding DataContext.TableEnabledLabel, RelativeSource={RelativeSource AncestorType=Page}}" />
+                                                </DataGridCheckBoxColumn.Header>
+                                                <DataGridCheckBoxColumn.ElementStyle>
+                                                    <Style TargetType="CheckBox">
+                                                        <Setter Property="HorizontalAlignment" Value="Center" />
+                                                        <Setter Property="VerticalAlignment" Value="Center" />
+                                                    </Style>
+                                                </DataGridCheckBoxColumn.ElementStyle>
+                                            </DataGridCheckBoxColumn>
+
+                                            <DataGridTemplateColumn Width="180">
+                                                <DataGridTemplateColumn.Header>
+                                                    <TextBlock Text="{Binding DataContext.EntryTermHeader, RelativeSource={RelativeSource AncestorType=Page}}" />
+                                                </DataGridTemplateColumn.Header>
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <ui:TextBox
+                                                            Style="{StaticResource InlineGridTextBoxStyle}"
+                                                            PlaceholderText="{Binding DataContext.TermPlaceholder, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                            ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
+                                                            Text="{Binding Term, UpdateSourceTrigger=PropertyChanged}" />
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
+
+                                            <DataGridTemplateColumn Width="*">
+                                                <DataGridTemplateColumn.Header>
+                                                    <TextBlock Text="{Binding DataContext.EntryAliasesHeader, RelativeSource={RelativeSource AncestorType=Page}}" />
+                                                </DataGridTemplateColumn.Header>
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <ui:TextBox
+                                                            Style="{StaticResource InlineGridTextBoxStyle}"
+                                                            PlaceholderText="{Binding DataContext.AliasesPlaceholder, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                            ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
+                                                            Text="{Binding AliasesText, UpdateSourceTrigger=PropertyChanged}" />
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
+
+                                            <DataGridTemplateColumn Width="*">
+                                                <DataGridTemplateColumn.Header>
+                                                    <TextBlock Text="{Binding DataContext.EntryPronunciationsHeader, RelativeSource={RelativeSource AncestorType=Page}}" />
+                                                </DataGridTemplateColumn.Header>
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <ui:TextBox
+                                                            Style="{StaticResource InlineGridTextBoxStyle}"
+                                                            PlaceholderText="{Binding DataContext.PronunciationsPlaceholder, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                            ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
+                                                            Text="{Binding PronunciationsText, UpdateSourceTrigger=PropertyChanged}" />
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
+
+                                            <DataGridTemplateColumn Width="120">
+                                                <DataGridTemplateColumn.Header>
+                                                    <TextBlock Text="{Binding DataContext.EntryActionsHeader, RelativeSource={RelativeSource AncestorType=Page}}" />
+                                                </DataGridTemplateColumn.Header>
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                            <Button
+                                                                Command="{Binding DataContext.MoveVocabularyEntryUpCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                                CommandParameter="{Binding}"
+                                                                Style="{StaticResource HeaderGhostButtonStyle}"
+                                                                ToolTip="{Binding DataContext.MoveEntryUpLabel, RelativeSource={RelativeSource AncestorType=Page}}">
+                                                                <TextBlock Text="↑" />
+                                                            </Button>
+                                                            <Button
+                                                                Command="{Binding DataContext.MoveVocabularyEntryDownCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                                CommandParameter="{Binding}"
+                                                                Style="{StaticResource HeaderGhostButtonStyle}"
+                                                                ToolTip="{Binding DataContext.MoveEntryDownLabel, RelativeSource={RelativeSource AncestorType=Page}}">
+                                                                <TextBlock Text="↓" />
+                                                            </Button>
+                                                            <Button
+                                                                Command="{Binding DataContext.RemoveVocabularyEntryCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                                CommandParameter="{Binding}"
+                                                                Style="{StaticResource HeaderGhostButtonStyle}"
+                                                                ToolTip="{Binding DataContext.DeleteEntryLabel, RelativeSource={RelativeSource AncestorType=Page}}">
+                                                                <TextBlock Foreground="#C42B1C" Text="✕" />
+                                                            </Button>
+                                                        </StackPanel>
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
                                 </Grid>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-                </DockPanel>
-            </ui:Card>
+                            </Grid>
+                        </ui:Card>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
 
-            <!-- Main Panel: Entry Editor -->
-            <ui:Card Grid.Column="2" Padding="20">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-
-                    <StackPanel Visibility="{Binding HasSelectedVocabularyTable, Converter={StaticResource BooleanToVisibilityConverter}}">
-                        <!-- Table Settings Row -->
-                        <Grid Margin="0,0,0,16">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-
-                            <StackPanel Grid.Column="0" Margin="0,0,16,0">
-                                <TextBlock Text="{Binding TableNameLabel}" Style="{DynamicResource BodyStrongTextBlockStyle}" Margin="0,0,0,8" />
-                                <ui:TextBox
-                                    PlaceholderText="输入词表名称"
-                                    Text="{Binding SelectedVocabularyTable.Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                            </StackPanel>
-
-                            <ui:ToggleSwitch
-                                Grid.Column="1"
-                                VerticalAlignment="Bottom"
-                                Margin="0,0,0,4"
-                                Content="{Binding TableEnabledLabel}"
-                                IsChecked="{Binding SelectedVocabularyTable.Enabled, Mode=TwoWay}" />
-                        </Grid>
-
-                        <Separator Margin="0,0,0,16" />
-
-                        <!-- Entry Management Header -->
-                        <Grid Margin="0,0,0,12">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <StackPanel>
-                                <TextBlock Text="词条管理" Style="{DynamicResource BodyStrongTextBlockStyle}" />
-                                <TextBlock FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding SelectedTableSummary}" />
-                                <TextBlock FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding SelectedTableBudgetSummary}" />
-                                <TextBlock
-                                    FontSize="11"
-                                    Foreground="{DynamicResource SystemFillColorCautionBrush}"
-                                    Text="{Binding SelectedTableBudgetSummary}"
-                                    Visibility="{Binding IsSelectedTableOverCharacterBudget, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                            </StackPanel>
-                            <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                <ui:Button
-                                    Margin="8,0,0,0"
-                                    Command="{Binding AddVocabularyEntryCommand}"
-                                    Content="{Binding AddEntryLabel}"
-                                    Appearance="Primary"
-                                    Icon="{ui:SymbolIcon Symbol=Add24}" />
-                                <ui:Button
-                                    Margin="8,0,0,0"
-                                    Command="{Binding RemoveVocabularyEntryCommand}"
-                                    Content="{Binding DeleteEntryLabel}"
-                                    Appearance="Secondary"
-                                    Icon="{ui:SymbolIcon Symbol=Delete24}" />
-                            </StackPanel>
-                        </Grid>
+            <ui:Card
+                Padding="32"
+                Visibility="{Binding HasSelectedVocabularyTable, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=invert}">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <ui:SymbolIcon
+                        Symbol="TextBulletListLtr24"
+                        FontSize="48"
+                        Margin="0,0,0,16"
+                        Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                    <TextBlock
+                        Style="{DynamicResource SubtitleTextBlockStyle}"
+                        Text="{Binding NoTablesTitle}"
+                        TextAlignment="Center" />
+                    <TextBlock
+                        Margin="0,8,0,20"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Text="{Binding NoTablesBody}"
+                        TextAlignment="Center"
+                        TextWrapping="Wrap" />
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <ui:Button
+                            Margin="0,0,12,0"
+                            Command="{Binding AddVocabularyTableCommand}"
+                            Content="{Binding AddTableLabel}"
+                            Appearance="Primary"
+                            Icon="{ui:SymbolIcon Symbol=Add24}" />
+                        <ui:Button
+                            Command="{Binding ImportVocabularyTableCommand}"
+                            Content="{Binding ImportLabel}"
+                            Icon="{ui:SymbolIcon Symbol=ArrowImport24}" />
                     </StackPanel>
-
-                    <!-- Data Grid for Entries -->
-                    <DataGrid
-                        Grid.Row="2"
-                        AutoGenerateColumns="False"
-                        CanUserAddRows="False"
-                        HeadersVisibility="Column"
-                        ItemsSource="{Binding SelectedVocabularyEntries}"
-                        SelectedItem="{Binding SelectedVocabularyEntry, Mode=TwoWay}"
-                        Visibility="{Binding HasSelectedVocabularyTable, Converter={StaticResource BooleanToVisibilityConverter}}"
-                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
-                        BorderThickness="1"
-                        Background="Transparent"
-                        RowHeaderWidth="0">
-                        <DataGrid.Columns>
-                            <DataGridCheckBoxColumn Binding="{Binding Enabled, Mode=TwoWay}" Header="启" Width="40" />
-                            <DataGridTemplateColumn Header="核心词汇 (Term)" Width="1.5*">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <ui:TextBox BorderThickness="0" Margin="2" Text="{Binding Term, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="例如：终末地" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="别名 (Aliases)" Width="2*">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <ui:TextBox BorderThickness="0" Margin="2" Text="{Binding AliasesText, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="逗号分隔" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="发音 (Pronunciations)" Width="2*">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <ui:TextBox BorderThickness="0" Margin="2" Text="{Binding PronunciationsText, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="逗号分隔" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="优先级" Width="80">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <ui:NumberBox BorderThickness="0" Margin="2" Value="{Binding Priority, UpdateSourceTrigger=PropertyChanged}" Minimum="1" Maximum="100" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
-
-                    <!-- Empty State -->
-                    <StackPanel
-                        Grid.Row="2"
-                        VerticalAlignment="Center"
-                        HorizontalAlignment="Center"
-                        Visibility="{Binding HasSelectedVocabularyTable, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=invert}">
-                        <ui:SymbolIcon Symbol="TextBulletListLtr24" FontSize="48" Margin="0,0,0,16" Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
-                        <TextBlock
-                            Style="{DynamicResource SubtitleTextBlockStyle}"
-                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                            Text="{Binding NoTableSelectedHint}"
-                            TextAlignment="Center" />
-                    </StackPanel>
-
-                    <!-- Footer Tip -->
-                    <ui:Card
-                        Grid.Row="3"
-                        Margin="0,16,0,0"
-                        Padding="12"
-                        Background="{DynamicResource SubtleFillColorSecondaryBrush}"
-                        BorderThickness="0">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <ui:SymbolIcon Grid.Column="0" Symbol="Lightbulb24" Margin="0,0,12,0" />
-                            <TextBlock
-                                Grid.Column="1"
-                                FontSize="11"
-                                VerticalAlignment="Center"
-                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                Text="{Binding AliasesHint}"
-                                TextWrapping="Wrap" />
-                        </Grid>
-                    </ui:Card>
-                </Grid>
+                </StackPanel>
             </ui:Card>
-        </Grid>
-    </Grid>
+        </StackPanel>
+    </ScrollViewer>
 </Page>
