@@ -1480,8 +1480,14 @@
   <data name="CustomVocabularySectionTitle" xml:space="preserve">
     <value>カスタム用語集</value>
   </data>
+  <data name="CustomVocabularyGuidanceTitle" xml:space="preserve">
+    <value>用語集の使い方</value>
+  </data>
+  <data name="CustomVocabularyGuidanceBody" xml:space="preserve">
+    <value>用語集は、ゲーム名などを似た発音の別語として認識してしまうような、繰り返し発生する ASR 誤認識を補正するために使います。ローカルに複数保持できますが、同時に有効化できるのは 1 テーブルだけです。</value>
+  </data>
   <data name="CustomVocabularySectionHint" xml:space="preserve">
-    <value>ASR 補正用のローカル用語集を管理します。最大 {0} テーブル、各テーブル最大 {1} エントリ、1 リクエストあたり最大 {2} 件の有効エントリを送信します。</value>
+    <value>ASR 補正用のローカル用語集を管理します。最大 {0} テーブル、同時に有効化できるのは {1} テーブル、各テーブルは最大 {2} エントリ・{3} 文字です。</value>
   </data>
   <data name="CustomVocabularyAddTable" xml:space="preserve">
     <value>テーブル追加</value>
@@ -1517,10 +1523,13 @@
     <value>別名と発音ヒントはカンマまたは改行で区切ってください。1 エントリあたり aliases は最大 {0} 件、pronunciations は最大 {1} 件です。</value>
   </data>
   <data name="CustomVocabularyTableCountSummary" xml:space="preserve">
-    <value>{0}/{1} テーブル、合計 {2} エントリ</value>
+    <value>{0}/{1} テーブル、合計 {2} エントリ、有効 {3} テーブル</value>
   </data>
   <data name="CustomVocabularySelectedTableSummary" xml:space="preserve">
-    <value>このテーブルは {0}/{1} エントリ、うち {2} 件が有効です</value>
+    <value>このテーブルは {0}/{1} エントリ、うち {2} 件が有効、使用中 {3}/{4} 文字です</value>
+  </data>
+  <data name="CustomVocabularyCharacterBudgetSummary" xml:space="preserve">
+    <value>文字予算: {0}/{1}</value>
   </data>
   <data name="CustomVocabularyMaxTablesReached" xml:space="preserve">
     <value>用語集テーブルの上限 {0} に達しました。</value>

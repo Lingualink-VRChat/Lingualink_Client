@@ -13,7 +13,8 @@ using CommunityToolkit.Mvvm.Input;
 using lingualink_client.Models;
 using lingualink_client.Services;
 using lingualink_client.Services.Interfaces;
-using Microsoft.Win32;
+using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
+using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 using UiMessageBox = lingualink_client.Services.MessageBox;
 
 namespace lingualink_client.ViewModels
@@ -23,14 +24,17 @@ namespace lingualink_client.ViewModels
         private readonly ISettingsManager _settingsManager;
         private readonly DispatcherTimer _vocabularySaveTimer;
         private string _pendingVocabularyChangeSource = "VocabularyPage";
+        private bool _suppressEnabledSync;
 
         public string PageTitle => LanguageManager.GetString("CustomVocabularySectionTitle");
         public string GuidanceTitle => LanguageManager.GetString("CustomVocabularyGuidanceTitle");
+        public string GuidanceBody => LanguageManager.GetString("CustomVocabularyGuidanceBody");
         public string SectionHint => string.Format(
             LanguageManager.GetString("CustomVocabularySectionHint"),
             AppSettings.MaxCustomVocabularyTables,
+            AppSettings.MaxEnabledCustomVocabularyTables,
             AppSettings.MaxEntriesPerVocabularyTable,
-            AppSettings.MaxCustomVocabularyPayloadEntries);
+            AppSettings.MaxCustomVocabularyTableCharacters);
 
         public string AddTableLabel => LanguageManager.GetString("CustomVocabularyAddTable");
         public string ImportLabel => LanguageManager.GetString("CustomVocabularyImport");
@@ -51,7 +55,8 @@ namespace lingualink_client.ViewModels
             LanguageManager.GetString("CustomVocabularyTableCountSummary"),
             VocabularyTables.Count,
             AppSettings.MaxCustomVocabularyTables,
-            VocabularyTables.Sum(table => table.TotalEntries));
+            VocabularyTables.Sum(table => table.TotalEntries),
+            VocabularyTables.Count(table => table.Enabled));
 
         public string SelectedTableSummary => SelectedVocabularyTable == null
             ? NoTableSelectedHint
@@ -59,9 +64,19 @@ namespace lingualink_client.ViewModels
                 LanguageManager.GetString("CustomVocabularySelectedTableSummary"),
                 SelectedVocabularyTable.TotalEntries,
                 AppSettings.MaxEntriesPerVocabularyTable,
-                SelectedVocabularyTable.EnabledEntries);
+                SelectedVocabularyTable.EnabledEntries,
+                SelectedVocabularyTable.EffectiveCharacterCount,
+                AppSettings.MaxCustomVocabularyTableCharacters);
+
+        public string SelectedTableBudgetSummary => SelectedVocabularyTable == null
+            ? string.Empty
+            : string.Format(
+                LanguageManager.GetString("CustomVocabularyCharacterBudgetSummary"),
+                SelectedVocabularyTable.EffectiveCharacterCount,
+                AppSettings.MaxCustomVocabularyTableCharacters);
 
         public bool HasSelectedVocabularyTable => SelectedVocabularyTable != null;
+        public bool IsSelectedTableOverCharacterBudget => SelectedVocabularyTable?.IsOverCharacterBudget == true;
 
         public ObservableCollection<VocabularyTableEditor> VocabularyTables { get; } = new();
 
@@ -111,10 +126,15 @@ namespace lingualink_client.ViewModels
 
             var table = new VocabularyTableEditor
             {
-                Name = BuildUniqueTableName(LanguageManager.GetString("CustomVocabularyDefaultTableName"))
+                Name = BuildUniqueTableName(LanguageManager.GetString("CustomVocabularyDefaultTableName")),
+                Enabled = !VocabularyTables.Any(existingTable => existingTable.Enabled)
             };
 
             VocabularyTables.Add(table);
+            if (table.Enabled)
+            {
+                EnforceSingleEnabledTable(table, queueSave: false);
+            }
             SelectedVocabularyTable = table;
             QueueVocabularySave("VocabularyPageAddTable");
         }
@@ -148,7 +168,7 @@ namespace lingualink_client.ViewModels
         [RelayCommand]
         private async Task ImportVocabularyTableAsync()
         {
-            var dialog = new Microsoft.Win32.OpenFileDialog
+            var dialog = new OpenFileDialog
             {
                 Filter = "JSON (*.json)|*.json",
                 CheckFileExists = true,
@@ -199,6 +219,10 @@ namespace lingualink_client.ViewModels
                     if (conflictResult == MessageBoxResult.Yes)
                     {
                         ReplaceTable(existing, importedTable);
+                        if (importedTable.Enabled)
+                        {
+                            EnforceSingleEnabledTable(importedTable, queueSave: false);
+                        }
                     }
                     else
                     {
@@ -211,6 +235,10 @@ namespace lingualink_client.ViewModels
 
                         importedTable.Name = BuildUniqueTableName(importedTable.Name);
                         VocabularyTables.Add(importedTable);
+                        if (importedTable.Enabled)
+                        {
+                            EnforceSingleEnabledTable(importedTable, queueSave: false);
+                        }
                     }
                 }
                 else
@@ -223,6 +251,10 @@ namespace lingualink_client.ViewModels
                     }
 
                     VocabularyTables.Add(importedTable);
+                    if (importedTable.Enabled)
+                    {
+                        EnforceSingleEnabledTable(importedTable, queueSave: false);
+                    }
                 }
 
                 SelectedVocabularyTable = VocabularyTables.FirstOrDefault(
@@ -250,7 +282,7 @@ namespace lingualink_client.ViewModels
                 return;
             }
 
-            var dialog = new Microsoft.Win32.SaveFileDialog
+            var dialog = new SaveFileDialog
             {
                 Filter = "JSON (*.json)|*.json",
                 FileName = $"{SanitizeFileName(SelectedVocabularyTable.Name)}.json"
@@ -360,6 +392,8 @@ namespace lingualink_client.ViewModels
                 SubscribeVocabularyTable(table);
             }
 
+            EnforceSingleEnabledTable(VocabularyTables.FirstOrDefault(table => table.Enabled), queueSave: false);
+
             VocabularyTables.CollectionChanged += OnVocabularyTablesCollectionChanged;
 
             SelectedVocabularyTable = VocabularyTables.FirstOrDefault();
@@ -444,6 +478,11 @@ namespace lingualink_client.ViewModels
         {
             if (e.PropertyName == nameof(VocabularyTableEditor.Name) || e.PropertyName == nameof(VocabularyTableEditor.Enabled))
             {
+                if (e.PropertyName == nameof(VocabularyTableEditor.Enabled) && sender is VocabularyTableEditor table)
+                {
+                    EnforceSingleEnabledTable(table.Enabled ? table : null, queueSave: false);
+                }
+
                 NotifyVocabularyUiChanged();
                 QueueVocabularySave("VocabularyPageTableEdited");
             }
@@ -471,6 +510,7 @@ namespace lingualink_client.ViewModels
         private void PersistVocabularyTables(string changeSource)
         {
             _vocabularySaveTimer.Stop();
+            EnforceSingleEnabledTable(VocabularyTables.FirstOrDefault(table => table.Enabled), queueSave: false);
             _settingsManager.TryUpdateAndSave(
                 changeSource,
                 settings =>
@@ -488,12 +528,49 @@ namespace lingualink_client.ViewModels
         {
             OnPropertyChanged(nameof(TableCountSummary));
             OnPropertyChanged(nameof(SelectedTableSummary));
+            OnPropertyChanged(nameof(SelectedTableBudgetSummary));
             OnPropertyChanged(nameof(SelectedVocabularyEntries));
             OnPropertyChanged(nameof(HasSelectedVocabularyTable));
+            OnPropertyChanged(nameof(IsSelectedTableOverCharacterBudget));
             RemoveVocabularyTableCommand.NotifyCanExecuteChanged();
             ExportVocabularyTableCommand.NotifyCanExecuteChanged();
             AddVocabularyEntryCommand.NotifyCanExecuteChanged();
             RemoveVocabularyEntryCommand.NotifyCanExecuteChanged();
+        }
+
+        private void EnforceSingleEnabledTable(VocabularyTableEditor? preferredTable, bool queueSave)
+        {
+            if (_suppressEnabledSync)
+            {
+                return;
+            }
+
+            try
+            {
+                _suppressEnabledSync = true;
+
+                VocabularyTableEditor? activeTable = preferredTable?.Enabled == true
+                    ? preferredTable
+                    : VocabularyTables.FirstOrDefault(table => table.Enabled);
+
+                foreach (var table in VocabularyTables)
+                {
+                    var shouldEnable = activeTable != null && ReferenceEquals(table, activeTable);
+                    if (table.Enabled != shouldEnable)
+                    {
+                        table.Enabled = shouldEnable;
+                    }
+                }
+            }
+            finally
+            {
+                _suppressEnabledSync = false;
+            }
+
+            if (queueSave)
+            {
+                QueueVocabularySave("VocabularyPageSingleEnable");
+            }
         }
 
         private string BuildUniqueTableName(string baseName)
@@ -546,27 +623,50 @@ namespace lingualink_client.ViewModels
                 Enabled = table.Enabled
             };
 
+            var totalCharacters = 0;
             foreach (var entry in (table.Entries ?? new System.Collections.Generic.List<CustomVocabularyEntry>()).Take(AppSettings.MaxEntriesPerVocabularyTable))
             {
-                if (string.IsNullOrWhiteSpace(entry.Term))
+                var normalizedTerm = AppSettings.NormalizeVocabularyTerm(entry.Term);
+                if (string.IsNullOrWhiteSpace(normalizedTerm))
                 {
                     truncated = true;
                     continue;
                 }
 
+                var normalizedAliases = AppSettings.NormalizeVocabularyValues(
+                    entry.Aliases ?? new System.Collections.Generic.List<string>(),
+                    AppSettings.MaxAliasesPerVocabularyEntry,
+                    AppSettings.MaxAliasesCharactersPerVocabularyEntry);
+                var normalizedPronunciations = AppSettings.NormalizeVocabularyValues(
+                    entry.Pronunciations ?? new System.Collections.Generic.List<string>(),
+                    AppSettings.MaxPronunciationsPerVocabularyEntry,
+                    AppSettings.MaxPronunciationsCharactersPerVocabularyEntry);
+                var entryCharacters = AppSettings.CountVocabularyEntryCharacters(
+                    normalizedTerm,
+                    normalizedAliases,
+                    normalizedPronunciations);
+
+                if (totalCharacters + entryCharacters > AppSettings.MaxCustomVocabularyTableCharacters)
+                {
+                    truncated = true;
+                    break;
+                }
+
                 var sanitizedEntry = new VocabularyEntryEditor
                 {
-                    Term = entry.Term.Trim(),
-                    AliasesText = string.Join(", ", (entry.Aliases ?? new System.Collections.Generic.List<string>()).Where(value => !string.IsNullOrWhiteSpace(value)).Select(value => value.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).Take(AppSettings.MaxAliasesPerVocabularyEntry)),
-                    PronunciationsText = string.Join(", ", (entry.Pronunciations ?? new System.Collections.Generic.List<string>()).Where(value => !string.IsNullOrWhiteSpace(value)).Select(value => value.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).Take(AppSettings.MaxPronunciationsPerVocabularyEntry)),
+                    Term = normalizedTerm,
+                    AliasesText = string.Join(", ", normalizedAliases),
+                    PronunciationsText = string.Join(", ", normalizedPronunciations),
                     Note = entry.Note?.Trim() ?? string.Empty,
                     Priority = entry.Priority,
                     Enabled = entry.Enabled
                 };
 
                 editor.Entries.Add(sanitizedEntry);
+                totalCharacters += entryCharacters;
 
-                if ((entry.Aliases?.Count ?? 0) > AppSettings.MaxAliasesPerVocabularyEntry
+                if (!string.Equals(normalizedTerm, entry.Term?.Trim(), StringComparison.Ordinal)
+                    || (entry.Aliases?.Count ?? 0) > AppSettings.MaxAliasesPerVocabularyEntry
                     || (entry.Pronunciations?.Count ?? 0) > AppSettings.MaxPronunciationsPerVocabularyEntry)
                 {
                     truncated = true;

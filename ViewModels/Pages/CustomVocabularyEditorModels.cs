@@ -24,6 +24,13 @@ namespace lingualink_client.ViewModels
 
         public int EnabledEntries => Entries.Count(entry => entry.Enabled && !string.IsNullOrWhiteSpace(entry.Term));
 
+        public int EffectiveCharacterCount => Entries
+            .Select(entry => entry.ToNormalizedModel())
+            .Where(entry => entry.Enabled && !string.IsNullOrWhiteSpace(entry.Term))
+            .Sum(entry => AppSettings.CountVocabularyEntryCharacters(entry.Term, entry.Aliases, entry.Pronunciations));
+
+        public bool IsOverCharacterBudget => EffectiveCharacterCount > AppSettings.MaxCustomVocabularyTableCharacters;
+
         public VocabularyTableEditor()
         {
             Entries = new ObservableCollection<VocabularyEntryEditor>();
@@ -42,20 +49,34 @@ namespace lingualink_client.ViewModels
         {
             OnPropertyChanged(nameof(TotalEntries));
             OnPropertyChanged(nameof(EnabledEntries));
+            OnPropertyChanged(nameof(EffectiveCharacterCount));
+            OnPropertyChanged(nameof(IsOverCharacterBudget));
         }
 
         public CustomVocabularyTable ToModel()
         {
+            var normalizedEntries = new List<CustomVocabularyEntry>();
+            var totalCharacters = 0;
+
+            foreach (var entry in Entries.Select(item => item.ToNormalizedModel()).Where(item => !string.IsNullOrWhiteSpace(item.Term)))
+            {
+                var entryCharacters = AppSettings.CountVocabularyEntryCharacters(entry.Term, entry.Aliases, entry.Pronunciations);
+                if (normalizedEntries.Count >= AppSettings.MaxEntriesPerVocabularyTable
+                    || totalCharacters + entryCharacters > AppSettings.MaxCustomVocabularyTableCharacters)
+                {
+                    break;
+                }
+
+                normalizedEntries.Add(entry);
+                totalCharacters += entryCharacters;
+            }
+
             return new CustomVocabularyTable
             {
                 Id = string.IsNullOrWhiteSpace(Id) ? Guid.NewGuid().ToString("N") : Id.Trim(),
                 Name = string.IsNullOrWhiteSpace(Name) ? "新词表" : Name.Trim(),
                 Enabled = Enabled,
-                Entries = Entries
-                    .Select(entry => entry.ToModel())
-                    .Where(entry => !string.IsNullOrWhiteSpace(entry.Term))
-                    .Take(AppSettings.MaxEntriesPerVocabularyTable)
-                    .ToList()
+                Entries = normalizedEntries
             };
         }
     }
@@ -94,7 +115,7 @@ namespace lingualink_client.ViewModels
             Enabled = entry.Enabled;
         }
 
-        public CustomVocabularyEntry ToModel()
+        public CustomVocabularyEntry ToNormalizedModel()
         {
             return new CustomVocabularyEntry
             {
@@ -111,6 +132,11 @@ namespace lingualink_client.ViewModels
                 Priority = Priority,
                 Enabled = Enabled
             };
+        }
+
+        public CustomVocabularyEntry ToModel()
+        {
+            return ToNormalizedModel();
         }
 
         private static string JoinList(IEnumerable<string>? values)

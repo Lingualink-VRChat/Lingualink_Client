@@ -37,10 +37,11 @@
             IsClosable="False">
             <ui:InfoBar.Content>
                 <StackPanel Margin="0,8,0,0">
-                    <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextWrapping="Wrap">
-                        词表用于向模型提供热词（Hotwords），帮助纠正特定的语音识别错误（例如将“终末地”识别为“周末帝”）。
-                        启用词表后，其中的词汇将优先被识别。
-                    </TextBlock>
+                    <TextBlock
+                        FontSize="12"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Text="{Binding GuidanceBody}"
+                        TextWrapping="Wrap" />
                 </StackPanel>
             </ui:InfoBar.Content>
         </ui:InfoBar>
@@ -121,7 +122,7 @@
                                         IsChecked="{Binding Enabled, Mode=TwoWay}" />
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock FontWeight="Medium" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
-                                        <TextBlock FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding TotalEntries, StringFormat={}{0} entries}" />
+                                        <TextBlock FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding EffectiveCharacterCount, StringFormat={}{0} chars}" />
                                     </StackPanel>
                                 </Grid>
                             </DataTemplate>
@@ -174,6 +175,12 @@
                             <StackPanel>
                                 <TextBlock Text="词条管理" Style="{DynamicResource BodyStrongTextBlockStyle}" />
                                 <TextBlock FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding SelectedTableSummary}" />
+                                <TextBlock FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding SelectedTableBudgetSummary}" />
+                                <TextBlock
+                                    FontSize="11"
+                                    Foreground="{DynamicResource SystemFillColorCautionBrush}"
+                                    Text="{Binding SelectedTableBudgetSummary}"
+                                    Visibility="{Binding IsSelectedTableOverCharacterBudget, Converter={StaticResource BooleanToVisibilityConverter}}" />
                             </StackPanel>
                             <StackPanel Grid.Column="1" Orientation="Horizontal">
                                 <ui:Button

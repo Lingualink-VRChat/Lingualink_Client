@@ -1567,8 +1567,11 @@ Update now?</value>
   <data name="CustomVocabularyGuidanceTitle" xml:space="preserve">
     <value>How to use Vocabulary?</value>
   </data>
+  <data name="CustomVocabularyGuidanceBody" xml:space="preserve">
+    <value>Vocabulary tables help the model correct recurring ASR mistakes such as recognizing a game title as a similar-sounding meme word. You can keep multiple local tables, but only one table can be enabled at a time.</value>
+  </data>
   <data name="CustomVocabularySectionHint" xml:space="preserve">
-    <value>Manage local vocabulary tables for ASR correction. Up to {0} tables, {1} entries per table, and {2} active entries sent per request.</value>
+    <value>Manage local vocabulary tables for ASR correction. Up to {0} tables, only {1} enabled at a time, with {2} entries and {3} effective characters per table.</value>
   </data>
   <data name="CustomVocabularyAddTable" xml:space="preserve">
     <value>Add Table</value>
@@ -1604,10 +1607,13 @@ Update now?</value>
     <value>Separate aliases and pronunciation hints with commas or new lines. Up to {0} aliases and {1} pronunciation hints per entry.</value>
   </data>
   <data name="CustomVocabularyTableCountSummary" xml:space="preserve">
-    <value>{0}/{1} tables, {2} total entries</value>
+    <value>{0}/{1} tables, {2} total entries, {3} enabled</value>
   </data>
   <data name="CustomVocabularySelectedTableSummary" xml:space="preserve">
-    <value>{0}/{1} entries in this table, {2} enabled</value>
+    <value>{0}/{1} entries in this table, {2} enabled, {3}/{4} effective characters</value>
+  </data>
+  <data name="CustomVocabularyCharacterBudgetSummary" xml:space="preserve">
+    <value>Character budget: {0}/{1}</value>
   </data>
   <data name="CustomVocabularyMaxTablesReached" xml:space="preserve">
     <value>You have reached the maximum of {0} vocabulary tables.</value>

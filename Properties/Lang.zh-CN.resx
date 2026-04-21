@@ -1566,8 +1566,11 @@
   <data name="CustomVocabularyGuidanceTitle" xml:space="preserve">
     <value>如何使用词表？</value>
   </data>
+  <data name="CustomVocabularyGuidanceBody" xml:space="preserve">
+    <value>词表用于帮助模型纠正反复出现的 ASR 误识别，比如把游戏名识别成同音梗词。你可以保留多张本地词表，但同一时刻只能启用一张。</value>
+  </data>
   <data name="CustomVocabularySectionHint" xml:space="preserve">
-    <value>管理仅保存在本地的 ASR 纠错词表。最多 {0} 张词表，每张最多 {1} 条词条，每次请求最多发送 {2} 条启用词条。</value>
+    <value>管理仅保存在本地的 ASR 纠错词表。最多 {0} 张词表，同一时刻最多启用 {1} 张；每张词表最多 {2} 条词条、{3} 个有效字符。</value>
   </data>
   <data name="CustomVocabularyAddTable" xml:space="preserve">
     <value>新建词表</value>
@@ -1603,10 +1606,13 @@
     <value>别名和发音提示可用逗号或换行分隔。每条最多 {0} 个 aliases，最多 {1} 个 pronunciations。</value>
   </data>
   <data name="CustomVocabularyTableCountSummary" xml:space="preserve">
-    <value>{0}/{1} 张词表，共 {2} 条词条</value>
+    <value>{0}/{1} 张词表，共 {2} 条词条，已启用 {3} 张</value>
   </data>
   <data name="CustomVocabularySelectedTableSummary" xml:space="preserve">
-    <value>当前词表 {0}/{1} 条词条，其中已启用 {2} 条</value>
+    <value>当前词表 {0}/{1} 条词条，其中已启用 {2} 条，已用 {3}/{4} 有效字符</value>
+  </data>
+  <data name="CustomVocabularyCharacterBudgetSummary" xml:space="preserve">
+    <value>字符预算：{0}/{1}</value>
   </data>
   <data name="CustomVocabularyMaxTablesReached" xml:space="preserve">
     <value>已达到词表数量上限 {0}。</value>
