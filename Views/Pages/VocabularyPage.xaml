@@ -75,15 +75,11 @@
                     Icon="{ui:SymbolIcon Symbol=Add24}" />
             </Grid>
 
-            <ui:InfoBar
+            <StackPanel
                 Margin="0,0,0,20"
                 ToolTipService.InitialShowDelay="150"
-                Title="{Binding GuidanceTitle}"
-                Message="{Binding GuidanceSummary}"
-                Severity="Informational"
-                IsOpen="True"
-                IsClosable="False">
-                <ui:InfoBar.ToolTip>
+                >
+                <StackPanel.ToolTip>
                     <ToolTip Placement="Mouse" MaxWidth="520" IsHitTestVisible="False" Focusable="False">
                         <StackPanel>
                             <TextBlock
@@ -111,30 +107,43 @@
                                 TextWrapping="Wrap" />
                         </StackPanel>
                     </ToolTip>
-                </ui:InfoBar.ToolTip>
-                <ui:InfoBar.Content>
-                    <StackPanel Margin="0,8,0,0">
-                        <TextBlock
-                            FontSize="11"
-                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                            Opacity="0.85"
-                            Text="{Binding GuidanceHint}"
-                            TextWrapping="Wrap" />
-                        <TextBlock
-                            Margin="0,8,0,0"
-                            FontSize="12"
-                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                            Text="{Binding GuidanceBody}"
-                            TextWrapping="Wrap" />
-                        <TextBlock
-                            Margin="0,8,0,0"
-                            FontSize="12"
-                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                            Text="{Binding SectionHint}"
-                            TextWrapping="Wrap" />
-                    </StackPanel>
-                </ui:InfoBar.Content>
-            </ui:InfoBar>
+                </StackPanel.ToolTip>
+
+                <ui:InfoBar
+                    Title="{Binding GuidanceTitle}"
+                    Severity="Informational"
+                    IsOpen="True"
+                    IsClosable="False" />
+
+                <TextBlock
+                    Margin="12,8,12,0"
+                    FontSize="11"
+                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                    Opacity="0.85"
+                    Text="{Binding GuidanceHint}"
+                    TextWrapping="Wrap" />
+
+                <TextBlock
+                    Margin="12,8,12,0"
+                    FontSize="12"
+                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                    Text="{Binding GuidanceSummary}"
+                    TextWrapping="Wrap" />
+
+                <TextBlock
+                    Margin="12,8,12,0"
+                    FontSize="12"
+                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                    Text="{Binding GuidanceBody}"
+                    TextWrapping="Wrap" />
+
+                <TextBlock
+                    Margin="12,8,12,0"
+                    FontSize="12"
+                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                    Text="{Binding SectionHint}"
+                    TextWrapping="Wrap" />
+            </StackPanel>
 
             <ItemsControl ItemsSource="{Binding VocabularyTables}" Visibility="{Binding HasSelectedVocabularyTable, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <ItemsControl.ItemTemplate>
