@@ -84,7 +84,7 @@
                 IsOpen="True"
                 IsClosable="False">
                 <ui:InfoBar.ToolTip>
-                    <ToolTip Placement="Mouse" MaxWidth="520" StaysOpen="False" IsHitTestVisible="False" Focusable="False">
+                    <ToolTip Placement="Mouse" MaxWidth="520" IsHitTestVisible="False" Focusable="False">
                         <StackPanel>
                             <TextBlock
                                 FontWeight="SemiBold"
