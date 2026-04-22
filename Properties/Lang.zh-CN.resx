@@ -1617,6 +1617,9 @@
   <data name="CustomVocabularyTableEnabled" xml:space="preserve">
     <value>启用该词表</value>
   </data>
+  <data name="CustomVocabularyEntryEnabled" xml:space="preserve">
+    <value>启用该词条</value>
+  </data>
   <data name="CustomVocabularyEntries" xml:space="preserve">
     <value>词条</value>
   </data>
@@ -1630,7 +1633,7 @@
     <value>请选择或新建一张词表后再编辑。</value>
   </data>
   <data name="CustomVocabularyAliasesHint" xml:space="preserve">
-    <value>别名和发音提示可用逗号或换行分隔。每条最多 {0} 个 aliases，最多 {1} 个 pronunciations。</value>
+    <value>别名和发音提示可用逗号或换行分隔。每条最多 {0} 个别名，最多 {1} 个发音提示。</value>
   </data>
   <data name="CustomVocabularyTableCountSummary" xml:space="preserve">
     <value>{0}/{1} 张词表，共 {2} 条词条，已启用 {3} 张</value>

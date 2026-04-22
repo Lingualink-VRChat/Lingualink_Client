@@ -1618,6 +1618,9 @@ Update now?</value>
   <data name="CustomVocabularyTableEnabled" xml:space="preserve">
     <value>Enabled</value>
   </data>
+  <data name="CustomVocabularyEntryEnabled" xml:space="preserve">
+    <value>Enable Entry</value>
+  </data>
   <data name="CustomVocabularyEntries" xml:space="preserve">
     <value>Entries</value>
   </data>

@@ -163,6 +163,7 @@
                                             <ColumnDefinition Width="Auto" />
                                             <ColumnDefinition Width="Auto" />
                                             <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
 
                                         <Button
@@ -172,14 +173,17 @@
                                             CommandParameter="{Binding}"
                                             Style="{StaticResource HeaderGhostButtonStyle}"
                                             ToolTip="{Binding DataContext.ExpandTableLabel, RelativeSource={RelativeSource AncestorType=Page}}">
-                                            <Grid>
+                                            <Grid VerticalAlignment="Center">
                                                 <ui:SymbolIcon
                                                     FontSize="14"
                                                     Symbol="ChevronDown24"
+                                                    VerticalAlignment="Center"
                                                     Visibility="{Binding IsExpanded, Converter={StaticResource BooleanToVisibilityConverter}}" />
                                                 <ui:SymbolIcon
                                                     FontSize="14"
                                                     Symbol="ChevronDown24"
+                                                    VerticalAlignment="Center"
+                                                    RenderTransformOrigin="0.5,0.5"
                                                     Visibility="{Binding IsExpanded, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=invert}">
                                                     <ui:SymbolIcon.RenderTransform>
                                                         <RotateTransform Angle="-90" />
@@ -232,6 +236,14 @@
 
                                         <ui:Button
                                             Grid.Column="4"
+                                            Margin="0,0,8,0"
+                                            Command="{Binding DataContext.ExportVocabularyTableCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                            CommandParameter="{Binding}"
+                                            Content="{Binding DataContext.ExportLabel, RelativeSource={RelativeSource AncestorType=Page}}"
+                                            Icon="{ui:SymbolIcon Symbol=ArrowExport24}" />
+
+                                        <ui:Button
+                                            Grid.Column="5"
                                             Command="{Binding DataContext.RemoveVocabularyTableCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                             CommandParameter="{Binding}"
                                             Content="{Binding DataContext.DeleteTableLabel, RelativeSource={RelativeSource AncestorType=Page}}"
@@ -293,7 +305,7 @@
                                         <DataGrid.Columns>
                                             <DataGridTemplateColumn Width="60">
                                                 <DataGridTemplateColumn.Header>
-                                                    <TextBlock Text="{Binding DataContext.TableEnabledLabel, RelativeSource={RelativeSource AncestorType=Page}}" />
+                                                    <TextBlock Text="{Binding DataContext.EntryEnabledLabel, RelativeSource={RelativeSource AncestorType=Page}}" />
                                                 </DataGridTemplateColumn.Header>
                                                 <DataGridTemplateColumn.CellTemplate>
                                                     <DataTemplate>

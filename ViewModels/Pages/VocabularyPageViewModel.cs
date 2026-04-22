@@ -55,6 +55,7 @@ namespace lingualink_client.ViewModels
         public string DeleteTableLabel => LanguageManager.GetString("CustomVocabularyDeleteTable");
         public string TableNameLabel => LanguageManager.GetString("CustomVocabularyTableName");
         public string TableEnabledLabel => LanguageManager.GetString("CustomVocabularyTableEnabled");
+        public string EntryEnabledLabel => LanguageManager.GetString("CustomVocabularyEntryEnabled");
         public string AddEntryLabel => LanguageManager.GetString("CustomVocabularyAddEntry");
         public string DeleteEntryLabel => LanguageManager.GetString("CustomVocabularyDeleteEntry");
         public string NoTableSelectedHint => LanguageManager.GetString("CustomVocabularyNoTableSelected");

@@ -1534,6 +1534,9 @@
   <data name="CustomVocabularyTableEnabled" xml:space="preserve">
     <value>このテーブルを有効化</value>
   </data>
+  <data name="CustomVocabularyEntryEnabled" xml:space="preserve">
+    <value>この項目を有効化</value>
+  </data>
   <data name="CustomVocabularyEntries" xml:space="preserve">
     <value>エントリ</value>
   </data>
@@ -1547,7 +1550,7 @@
     <value>編集するには、用語集テーブルを選択または作成してください。</value>
   </data>
   <data name="CustomVocabularyAliasesHint" xml:space="preserve">
-    <value>別名と発音ヒントはカンマまたは改行で区切ってください。1 エントリあたり aliases は最大 {0} 件、pronunciations は最大 {1} 件です。</value>
+    <value>別名と発音ヒントはカンマまたは改行で区切ってください。1 エントリあたり別名は最大 {0} 件、発音ヒントは最大 {1} 件です。</value>
   </data>
   <data name="CustomVocabularyTableCountSummary" xml:space="preserve">
     <value>{0}/{1} テーブル、合計 {2} エントリ、有効 {3} テーブル</value>
