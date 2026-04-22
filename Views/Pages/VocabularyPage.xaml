@@ -281,17 +281,19 @@
                                         GridLinesVisibility="Horizontal"
                                         HorizontalGridLinesBrush="{DynamicResource CardStrokeColorDefaultBrush}">
                                         <DataGrid.Columns>
-                                            <DataGridCheckBoxColumn Binding="{Binding Enabled, Mode=TwoWay}" Width="60">
-                                                <DataGridCheckBoxColumn.Header>
+                                            <DataGridTemplateColumn Width="60">
+                                                <DataGridTemplateColumn.Header>
                                                     <TextBlock Text="{Binding DataContext.TableEnabledLabel, RelativeSource={RelativeSource AncestorType=Page}}" />
-                                                </DataGridCheckBoxColumn.Header>
-                                                <DataGridCheckBoxColumn.ElementStyle>
-                                                    <Style TargetType="CheckBox">
-                                                        <Setter Property="HorizontalAlignment" Value="Center" />
-                                                        <Setter Property="VerticalAlignment" Value="Center" />
-                                                    </Style>
-                                                </DataGridCheckBoxColumn.ElementStyle>
-                                            </DataGridCheckBoxColumn>
+                                                </DataGridTemplateColumn.Header>
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <CheckBox
+                                                            HorizontalAlignment="Center"
+                                                            VerticalAlignment="Center"
+                                                            IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
 
                                             <DataGridTemplateColumn Width="180">
                                                 <DataGridTemplateColumn.Header>

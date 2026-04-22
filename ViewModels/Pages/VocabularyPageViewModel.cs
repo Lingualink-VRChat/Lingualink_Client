@@ -959,7 +959,13 @@ namespace lingualink_client.ViewModels
 
         public void Dispose()
         {
+            var hadPendingSave = _vocabularySaveTimer.IsEnabled;
             _vocabularySaveTimer.Stop();
+            if (hadPendingSave)
+            {
+                PersistVocabularyTables(_pendingVocabularyChangeSource);
+            }
+
             LanguageManager.LanguageChanged -= OnLanguageChanged;
             GC.SuppressFinalize(this);
         }
