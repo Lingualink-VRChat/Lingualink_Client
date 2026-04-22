@@ -172,10 +172,20 @@
                                             CommandParameter="{Binding}"
                                             Style="{StaticResource HeaderGhostButtonStyle}"
                                             ToolTip="{Binding DataContext.ExpandTableLabel, RelativeSource={RelativeSource AncestorType=Page}}">
-                                            <TextBlock
-                                                FontSize="14"
-                                                FontWeight="SemiBold"
-                                                Text="{Binding ExpandGlyph}" />
+                                            <Grid>
+                                                <ui:SymbolIcon
+                                                    FontSize="14"
+                                                    Symbol="ChevronDown24"
+                                                    Visibility="{Binding IsExpanded, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                                <ui:SymbolIcon
+                                                    FontSize="14"
+                                                    Symbol="ChevronDown24"
+                                                    Visibility="{Binding IsExpanded, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=invert}">
+                                                    <ui:SymbolIcon.RenderTransform>
+                                                        <RotateTransform Angle="-90" />
+                                                    </ui:SymbolIcon.RenderTransform>
+                                                </ui:SymbolIcon>
+                                            </Grid>
                                         </Button>
 
                                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
@@ -367,21 +377,21 @@
                                                                 CommandParameter="{Binding}"
                                                                 Style="{StaticResource HeaderGhostButtonStyle}"
                                                                 ToolTip="{Binding DataContext.MoveEntryUpLabel, RelativeSource={RelativeSource AncestorType=Page}}">
-                                                                <TextBlock Text="↑" />
+                                                                <ui:SymbolIcon FontSize="14" Symbol="ChevronUp24" />
                                                             </Button>
                                                             <Button
                                                                 Command="{Binding DataContext.MoveVocabularyEntryDownCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                                                 CommandParameter="{Binding}"
                                                                 Style="{StaticResource HeaderGhostButtonStyle}"
                                                                 ToolTip="{Binding DataContext.MoveEntryDownLabel, RelativeSource={RelativeSource AncestorType=Page}}">
-                                                                <TextBlock Text="↓" />
+                                                                <ui:SymbolIcon FontSize="14" Symbol="ChevronDown24" />
                                                             </Button>
                                                             <Button
                                                                 Command="{Binding DataContext.RemoveVocabularyEntryCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                                                 CommandParameter="{Binding}"
                                                                 Style="{StaticResource HeaderGhostButtonStyle}"
                                                                 ToolTip="{Binding DataContext.DeleteEntryLabel, RelativeSource={RelativeSource AncestorType=Page}}">
-                                                                <TextBlock Foreground="#C42B1C" Text="✕" />
+                                                                <ui:SymbolIcon FontSize="14" Foreground="#C42B1C" Symbol="Delete24" />
                                                             </Button>
                                                         </StackPanel>
                                                     </DataTemplate>
