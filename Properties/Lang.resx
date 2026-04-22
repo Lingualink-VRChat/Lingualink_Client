@@ -1588,6 +1588,9 @@ Update now?</value>
   <data name="CustomVocabularyPronunciationsGuideText" xml:space="preserve">
     <value>Pronunciations: pinyin or English-style readings that can significantly improve recognition. Separate multiple items with commas.</value>
   </data>
+  <data name="CustomVocabularyNoteGuideText" xml:space="preserve">
+    <value>Meaning / Note: optional. Helps the AI understand what the term refers to, such as “a video game” or “an in-game character name”.</value>
+  </data>
   <data name="CustomVocabularyExampleTitle" xml:space="preserve">
     <value>Common Example</value>
   </data>
@@ -1657,6 +1660,9 @@ Update now?</value>
   <data name="CustomVocabularyEntryPronunciationsHeader" xml:space="preserve">
     <value>Pronunciations (comma separated)</value>
   </data>
+  <data name="CustomVocabularyEntryNoteHeader" xml:space="preserve">
+    <value>Meaning / Note (optional)</value>
+  </data>
   <data name="CustomVocabularyEntryActionsHeader" xml:space="preserve">
     <value>Actions</value>
   </data>
@@ -1668,6 +1674,9 @@ Update now?</value>
   </data>
   <data name="CustomVocabularyPronunciationsPlaceholder" xml:space="preserve">
     <value>Pinyin or English-style readings, separated with commas</value>
+  </data>
+  <data name="CustomVocabularyNotePlaceholder" xml:space="preserve">
+    <value>For example: a video game, an in-game character name</value>
   </data>
   <data name="CustomVocabularyNoTablesTitle" xml:space="preserve">
     <value>No vocabulary table yet</value>

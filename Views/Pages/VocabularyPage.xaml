@@ -101,6 +101,10 @@
                                 Margin="0,4,0,0"
                                 Text="{Binding PronunciationsGuideText}"
                                 TextWrapping="Wrap" />
+                            <TextBlock
+                                Margin="0,4,0,0"
+                                Text="{Binding NoteGuideText}"
+                                TextWrapping="Wrap" />
                             <Separator Margin="0,10,0,10" />
                             <TextBlock
                                 FontWeight="SemiBold"
@@ -330,6 +334,21 @@
                                                             PlaceholderText="{Binding DataContext.PronunciationsPlaceholder, RelativeSource={RelativeSource AncestorType=Page}}"
                                                             ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
                                                             Text="{Binding PronunciationsText, UpdateSourceTrigger=PropertyChanged}" />
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
+
+                                            <DataGridTemplateColumn Width="220">
+                                                <DataGridTemplateColumn.Header>
+                                                    <TextBlock Text="{Binding DataContext.EntryNoteHeader, RelativeSource={RelativeSource AncestorType=Page}}" />
+                                                </DataGridTemplateColumn.Header>
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <ui:TextBox
+                                                            Style="{StaticResource InlineGridTextBoxStyle}"
+                                                            PlaceholderText="{Binding DataContext.NotePlaceholder, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                            ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
+                                                            Text="{Binding Note, UpdateSourceTrigger=PropertyChanged}" />
                                                     </DataTemplate>
                                                 </DataGridTemplateColumn.CellTemplate>
                                             </DataGridTemplateColumn>

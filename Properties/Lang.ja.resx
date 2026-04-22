@@ -1504,6 +1504,9 @@
   <data name="CustomVocabularyPronunciationsGuideText" xml:space="preserve">
     <value>発音：ピンインや英語風の読みです。認識精度の向上に役立ちます。複数ある場合はカンマで区切ってください。</value>
   </data>
+  <data name="CustomVocabularyNoteGuideText" xml:space="preserve">
+    <value>意味 / メモ：任意です。この語が何を指すかを AI に伝える補助情報で、「ゲーム名」や「ゲーム内キャラクター名」などを書けます。</value>
+  </data>
   <data name="CustomVocabularyExampleTitle" xml:space="preserve">
     <value>よくある利用例</value>
   </data>
@@ -1573,6 +1576,9 @@
   <data name="CustomVocabularyEntryPronunciationsHeader" xml:space="preserve">
     <value>発音（カンマ区切り）</value>
   </data>
+  <data name="CustomVocabularyEntryNoteHeader" xml:space="preserve">
+    <value>意味 / メモ（任意）</value>
+  </data>
   <data name="CustomVocabularyEntryActionsHeader" xml:space="preserve">
     <value>操作</value>
   </data>
@@ -1584,6 +1590,9 @@
   </data>
   <data name="CustomVocabularyPronunciationsPlaceholder" xml:space="preserve">
     <value>ピンインや英語風の読みをカンマ区切りで入力</value>
+  </data>
+  <data name="CustomVocabularyNotePlaceholder" xml:space="preserve">
+    <value>例：ゲーム名、ゲーム内キャラクター名</value>
   </data>
   <data name="CustomVocabularyNoTablesTitle" xml:space="preserve">
     <value>用語集テーブルがありません</value>

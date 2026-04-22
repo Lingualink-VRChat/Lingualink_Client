@@ -428,7 +428,8 @@ namespace lingualink_client.Services
                                 entry.Pronunciations ?? new List<string>(),
                                 AppSettings.MaxPronunciationsPerVocabularyEntry,
                                 AppSettings.MaxPronunciationsCharactersPerVocabularyEntry)
-                            .ToArray()
+                            .ToArray(),
+                        note = string.IsNullOrWhiteSpace(entry.Note) ? null : entry.Note.Trim()
                     })
                     .Where(entry => !string.IsNullOrWhiteSpace(entry.term))
                     .Cast<object>()

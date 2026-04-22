@@ -1587,6 +1587,9 @@
   <data name="CustomVocabularyPronunciationsGuideText" xml:space="preserve">
     <value>发音：词汇的拼音或英文读音，能大幅提升识别成功率。多个请用逗号隔开。</value>
   </data>
+  <data name="CustomVocabularyNoteGuideText" xml:space="preserve">
+    <value>词义/备注：可选。用于告诉 AI 这个词大概是什么，例如“一款电子游戏”或“游戏内角色名”。</value>
+  </data>
   <data name="CustomVocabularyExampleTitle" xml:space="preserve">
     <value>常见使用场景举例</value>
   </data>
@@ -1656,6 +1659,9 @@
   <data name="CustomVocabularyEntryPronunciationsHeader" xml:space="preserve">
     <value>发音（使用逗号分隔）</value>
   </data>
+  <data name="CustomVocabularyEntryNoteHeader" xml:space="preserve">
+    <value>词义/备注（可选）</value>
+  </data>
   <data name="CustomVocabularyEntryActionsHeader" xml:space="preserve">
     <value>操作</value>
   </data>
@@ -1667,6 +1673,9 @@
   </data>
   <data name="CustomVocabularyPronunciationsPlaceholder" xml:space="preserve">
     <value>拼音或英文读音，多个用逗号隔开</value>
+  </data>
+  <data name="CustomVocabularyNotePlaceholder" xml:space="preserve">
+    <value>例如：一款电子游戏、游戏内角色名</value>
   </data>
   <data name="CustomVocabularyNoTablesTitle" xml:space="preserve">
     <value>还没有词表</value>

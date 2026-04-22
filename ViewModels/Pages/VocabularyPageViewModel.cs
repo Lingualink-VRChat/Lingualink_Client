@@ -39,6 +39,7 @@ namespace lingualink_client.ViewModels
         public string TermGuideText => LanguageManager.GetString("CustomVocabularyTermGuideText");
         public string AliasesGuideText => LanguageManager.GetString("CustomVocabularyAliasesGuideText");
         public string PronunciationsGuideText => LanguageManager.GetString("CustomVocabularyPronunciationsGuideText");
+        public string NoteGuideText => LanguageManager.GetString("CustomVocabularyNoteGuideText");
         public string ExampleTitle => LanguageManager.GetString("CustomVocabularyExampleTitle");
         public string ExampleBody => LanguageManager.GetString("CustomVocabularyExampleBody");
         public string SectionHint => string.Format(
@@ -61,10 +62,12 @@ namespace lingualink_client.ViewModels
         public string EntryTermHeader => LanguageManager.GetString("CustomVocabularyEntryTermHeader");
         public string EntryAliasesHeader => LanguageManager.GetString("CustomVocabularyEntryAliasesHeader");
         public string EntryPronunciationsHeader => LanguageManager.GetString("CustomVocabularyEntryPronunciationsHeader");
+        public string EntryNoteHeader => LanguageManager.GetString("CustomVocabularyEntryNoteHeader");
         public string EntryActionsHeader => LanguageManager.GetString("CustomVocabularyEntryActionsHeader");
         public string TermPlaceholder => LanguageManager.GetString("CustomVocabularyTermPlaceholder");
         public string AliasesPlaceholder => LanguageManager.GetString("CustomVocabularyAliasesPlaceholder");
         public string PronunciationsPlaceholder => LanguageManager.GetString("CustomVocabularyPronunciationsPlaceholder");
+        public string NotePlaceholder => LanguageManager.GetString("CustomVocabularyNotePlaceholder");
         public string EnabledBadgeLabel => LanguageManager.GetString("CustomVocabularyEnabledBadge");
         public string NoTablesTitle => LanguageManager.GetString("CustomVocabularyNoTablesTitle");
         public string NoTablesBody => LanguageManager.GetString("CustomVocabularyNoTablesBody");
