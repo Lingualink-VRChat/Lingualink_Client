@@ -1511,16 +1511,16 @@
     <value>ホバーして入力方法と例を表示</value>
   </data>
   <data name="CustomVocabularyGuidanceSummary" xml:space="preserve">
-    <value>音声認識が特定の単語を聞き間違えたり、AI がネットスラングを理解できないときは、この用語集で教えることができます。</value>
+    <value>音声認識が特定の語句を聞き間違えるときは、正しい標準表記をこの用語集に追加して原文補正に使えます。</value>
   </data>
   <data name="CustomVocabularyGuidanceBody" xml:space="preserve">
-    <value>アプリはあなたの話した表現を自動で「標準語句」に置き換えてから AI に送信します。</value>
+    <value>入力するのは補正後にしたい標準語句だけです。アプリが自動で発音キーを生成し、文全体の発音から候補を絞ってからモデルに渡します。</value>
   </data>
   <data name="CustomVocabularyEntryGuideTitle" xml:space="preserve">
     <value>各項目の入力方法</value>
   </data>
   <data name="CustomVocabularyTermGuideText" xml:space="preserve">
-    <value>コア用語：最終的に AI に見せたい、正しい標準語句です。</value>
+    <value>標準語句：最終的に原文を補正したい正しい表記です。各エントリはこの項目だけ入力します。</value>
   </data>
   <data name="CustomVocabularyAliasesGuideText" xml:space="preserve">
     <value>別名：音声認識がよく書き間違える語、ネットスラング、略称です。複数ある場合はカンマで区切ってください。</value>
@@ -1535,10 +1535,10 @@
     <value>よくある利用例</value>
   </data>
   <data name="CustomVocabularyExampleBody" xml:space="preserve">
-    <value>同音語の補正例：「原神」がいつも「元神」と誤認識されるなら、コア用語に「原神」、別名に「元神, 圆神」、発音に「yuan shen」、意味 / メモに「ゲーム名」と入力します。</value>
+    <value>例：「明日方舟终末地」がいつも「明日方舟周末帝」と誤認識されるなら、標準語句として「明日方舟终末地」だけ追加します。システムが文全体の発音から自動で照合します。</value>
   </data>
   <data name="CustomVocabularySectionHint" xml:space="preserve">
-    <value>ASR 補正用のローカル用語集を管理します。同時に有効化できるのは {0} テーブル、各テーブルは最大 {1} エントリ・{2} 文字です。</value>
+    <value>ASR 補正用のローカル用語集を管理します。各エントリは標準語句のみ保持します。同時に有効化できるのは {0} テーブル、各テーブルは最大 {1} エントリ・{2} 文字です。</value>
   </data>
   <data name="CustomVocabularyAddTable" xml:space="preserve">
     <value>テーブル追加</value>
@@ -1574,7 +1574,7 @@
     <value>編集するには、用語集テーブルを選択または作成してください。</value>
   </data>
   <data name="CustomVocabularyAliasesHint" xml:space="preserve">
-    <value>別名と発音ヒントはカンマまたは改行で区切ってください。1 エントリあたり別名は最大 {0} 件、発音ヒントは最大 {1} 件です。</value>
+    <value>別名、発音ヒント、メモは不要です。現在の文全体の発音から、あり得る標準語句を自動で候補化します。</value>
   </data>
   <data name="CustomVocabularyTableCountSummary" xml:space="preserve">
     <value>{0} テーブル、合計 {1} エントリ、有効 {2} テーブル</value>
@@ -1595,7 +1595,7 @@
     <value>用語集テーブル名を入力</value>
   </data>
   <data name="CustomVocabularyEntryTermHeader" xml:space="preserve">
-    <value>コア用語</value>
+    <value>標準語句</value>
   </data>
   <data name="CustomVocabularyEntryAliasesHeader" xml:space="preserve">
     <value>別名（カンマ区切り）</value>
@@ -1610,7 +1610,7 @@
     <value>操作</value>
   </data>
   <data name="CustomVocabularyTermPlaceholder" xml:space="preserve">
-    <value>最終的に AI に見せたい標準語句</value>
+    <value>補正後にしたい標準語句を入力</value>
   </data>
   <data name="CustomVocabularyAliasesPlaceholder" xml:space="preserve">
     <value>誤字、スラング、略称をカンマ区切りで入力</value>

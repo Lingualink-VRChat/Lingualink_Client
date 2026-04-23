@@ -9,13 +9,9 @@ namespace lingualink_client.Models
     {
         public const int MaxEnabledCustomVocabularyTables = 1;
         public const int MaxEntriesPerVocabularyTable = 80;
-        public const int MaxAliasesPerVocabularyEntry = 6;
-        public const int MaxPronunciationsPerVocabularyEntry = 4;
         public const int MaxCustomVocabularyTableCharacters = 2500;
         public const int MaxCustomVocabularyPayloadEntries = MaxEntriesPerVocabularyTable;
         public const int MaxTermCharactersPerVocabularyEntry = 24;
-        public const int MaxAliasesCharactersPerVocabularyEntry = 48;
-        public const int MaxPronunciationsCharactersPerVocabularyEntry = 64;
         public const string OfficialProductionServerUrl = AppEndpoints.OfficialApiBaseUrl;
         public const string DefaultAuthServerUrl = AppEndpoints.DefaultAuthServerUrl;
 
@@ -170,15 +166,9 @@ namespace lingualink_client.Models
         }
 
         public static int CountVocabularyEntryCharacters(
-            string term,
-            IEnumerable<string>? aliases,
-            IEnumerable<string>? pronunciations,
-            string? note = null)
+            string term)
         {
-            return (term?.Length ?? 0)
-                   + (aliases?.Sum(alias => alias?.Length ?? 0) ?? 0)
-                   + (pronunciations?.Sum(item => item?.Length ?? 0) ?? 0)
-                   + (note?.Trim().Length ?? 0);
+            return term?.Length ?? 0;
         }
 
         // Get the currently selected template
@@ -206,9 +196,6 @@ namespace lingualink_client.Models
     public class CustomVocabularyEntry
     {
         public string Term { get; set; } = string.Empty;
-        public List<string> Aliases { get; set; } = new();
-        public List<string> Pronunciations { get; set; } = new();
-        public string Note { get; set; } = string.Empty;
         public int Priority { get; set; }
         public bool Enabled { get; set; } = true;
     }

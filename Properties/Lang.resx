@@ -1595,16 +1595,16 @@ Update now?</value>
     <value>Hover to view filling tips and examples</value>
   </data>
   <data name="CustomVocabularyGuidanceSummary" xml:space="preserve">
-    <value>When speech recognition keeps mishearing your specific terms, or the AI does not understand certain slang, use this vocabulary table to teach it.</value>
+    <value>When speech recognition keeps mishearing your specific terms, add the correct standard form here so the system can correct the source text earlier.</value>
   </data>
   <data name="CustomVocabularyGuidanceBody" xml:space="preserve">
-    <value>The app will automatically map your spoken wording to the standard term before sending it to the AI.</value>
+    <value>You only need to enter the standard term you want. The app generates pronunciation keys automatically, recalls a few candidates from the full sentence, and lets the model decide whether replacement is appropriate.</value>
   </data>
   <data name="CustomVocabularyEntryGuideTitle" xml:space="preserve">
     <value>What should I fill in?</value>
   </data>
   <data name="CustomVocabularyTermGuideText" xml:space="preserve">
-    <value>Core Term: the standard answer you ultimately want the AI to see and understand.</value>
+    <value>Standard Term: the correct written form you want the source text to be corrected into. Each entry only needs this field.</value>
   </data>
   <data name="CustomVocabularyAliasesGuideText" xml:space="preserve">
     <value>Aliases: common ASR mistakes, slang, or short forms you often say. Separate multiple items with commas.</value>
@@ -1619,10 +1619,10 @@ Update now?</value>
     <value>Common Example</value>
   </data>
   <data name="CustomVocabularyExampleBody" xml:space="preserve">
-    <value>Example for homophone correction: if “Genshin” keeps being recognized as a wrong same-sounding word, set Core Term to “原神”, Aliases to “元神, 圆神”, Pronunciations to “yuan shen”, and Meaning / Note to “a video game title”.</value>
+    <value>Example: if “明日方舟终末地” keeps being recognized as “明日方舟周末帝”, just add the standard term “明日方舟终末地”. The system will match it from sentence-level pronunciation automatically.</value>
   </data>
   <data name="CustomVocabularySectionHint" xml:space="preserve">
-    <value>Manage local vocabulary tables for ASR correction. Only {0} enabled at a time, with {1} entries and {2} effective characters per table.</value>
+    <value>Manage local vocabulary tables for ASR correction. Each entry only stores a standard term. Only {0} table can be enabled at a time, with up to {1} entries and {2} effective characters per table.</value>
   </data>
   <data name="CustomVocabularyAddTable" xml:space="preserve">
     <value>Add Table</value>
@@ -1658,7 +1658,7 @@ Update now?</value>
     <value>Select or create a vocabulary table to start editing.</value>
   </data>
   <data name="CustomVocabularyAliasesHint" xml:space="preserve">
-    <value>Separate aliases and pronunciation hints with commas or new lines. Up to {0} aliases and {1} pronunciation hints per entry.</value>
+    <value>No aliases, pronunciation hints, or notes are needed. The system recalls likely standard terms from the pronunciation of the current sentence.</value>
   </data>
   <data name="CustomVocabularyTableCountSummary" xml:space="preserve">
     <value>{0} tables, {1} total entries, {2} enabled</value>
@@ -1679,7 +1679,7 @@ Update now?</value>
     <value>Enter vocabulary table name</value>
   </data>
   <data name="CustomVocabularyEntryTermHeader" xml:space="preserve">
-    <value>Core Term</value>
+    <value>Standard Term</value>
   </data>
   <data name="CustomVocabularyEntryAliasesHeader" xml:space="preserve">
     <value>Aliases (comma separated)</value>
@@ -1694,7 +1694,7 @@ Update now?</value>
     <value>Actions</value>
   </data>
   <data name="CustomVocabularyTermPlaceholder" xml:space="preserve">
-    <value>The standard term you want the AI to see</value>
+    <value>Enter the standard term you want the source text corrected to</value>
   </data>
   <data name="CustomVocabularyAliasesPlaceholder" xml:space="preserve">
     <value>Typos, slang, or short forms, separated with commas</value>

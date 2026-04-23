@@ -92,17 +92,7 @@ namespace lingualink_client.Services
                     continue;
                 }
 
-                var aliases = AppSettings.NormalizeVocabularyValues(
-                    entry.Aliases,
-                    AppSettings.MaxAliasesPerVocabularyEntry,
-                    AppSettings.MaxAliasesCharactersPerVocabularyEntry);
-                var pronunciations = AppSettings.NormalizeVocabularyValues(
-                    entry.Pronunciations,
-                    AppSettings.MaxPronunciationsPerVocabularyEntry,
-                    AppSettings.MaxPronunciationsCharactersPerVocabularyEntry);
-                var note = entry.Note?.Trim() ?? string.Empty;
-
-                var entryCharacters = AppSettings.CountVocabularyEntryCharacters(term, aliases, pronunciations, note);
+                var entryCharacters = AppSettings.CountVocabularyEntryCharacters(term);
                 if (entryCharacters <= 0)
                 {
                     continue;
@@ -118,9 +108,6 @@ namespace lingualink_client.Services
                 entries.Add(new CustomVocabularyEntry
                 {
                     Term = term,
-                    Aliases = aliases,
-                    Pronunciations = pronunciations,
-                    Note = note,
                     Priority = entry.Priority,
                     Enabled = true
                 });

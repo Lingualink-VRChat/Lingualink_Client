@@ -31,7 +31,7 @@ namespace lingualink_client.ViewModels
         public int EffectiveCharacterCount => Entries
             .Select(entry => entry.ToNormalizedModel())
             .Where(entry => entry.Enabled && !string.IsNullOrWhiteSpace(entry.Term))
-            .Sum(entry => AppSettings.CountVocabularyEntryCharacters(entry.Term, entry.Aliases, entry.Pronunciations, entry.Note));
+            .Sum(entry => AppSettings.CountVocabularyEntryCharacters(entry.Term));
 
         public bool IsOverCharacterBudget => EffectiveCharacterCount > AppSettings.MaxCustomVocabularyTableCharacters;
 
@@ -80,7 +80,7 @@ namespace lingualink_client.ViewModels
 
             foreach (var entry in Entries.Select(item => item.ToNormalizedModel()).Where(item => !string.IsNullOrWhiteSpace(item.Term)))
             {
-                var entryCharacters = AppSettings.CountVocabularyEntryCharacters(entry.Term, entry.Aliases, entry.Pronunciations, entry.Note);
+                var entryCharacters = AppSettings.CountVocabularyEntryCharacters(entry.Term);
                 if (normalizedEntries.Count >= AppSettings.MaxEntriesPerVocabularyTable
                     || totalCharacters + entryCharacters > AppSettings.MaxCustomVocabularyTableCharacters)
                 {
@@ -107,15 +107,6 @@ namespace lingualink_client.ViewModels
         private string term = string.Empty;
 
         [ObservableProperty]
-        private string aliasesText = string.Empty;
-
-        [ObservableProperty]
-        private string pronunciationsText = string.Empty;
-
-        [ObservableProperty]
-        private string note = string.Empty;
-
-        [ObservableProperty]
         private int priority;
 
         [ObservableProperty]
@@ -128,9 +119,6 @@ namespace lingualink_client.ViewModels
         public VocabularyEntryEditor(CustomVocabularyEntry entry)
         {
             Term = entry.Term ?? string.Empty;
-            AliasesText = JoinList(entry.Aliases);
-            PronunciationsText = JoinList(entry.Pronunciations);
-            Note = entry.Note ?? string.Empty;
             Priority = entry.Priority;
             Enabled = entry.Enabled;
         }
@@ -140,15 +128,6 @@ namespace lingualink_client.ViewModels
             return new CustomVocabularyEntry
             {
                 Term = AppSettings.NormalizeVocabularyTerm(Term),
-                Aliases = AppSettings.NormalizeVocabularyValues(
-                    SplitMultiValueText(AliasesText, AppSettings.MaxAliasesPerVocabularyEntry),
-                    AppSettings.MaxAliasesPerVocabularyEntry,
-                    AppSettings.MaxAliasesCharactersPerVocabularyEntry),
-                Pronunciations = AppSettings.NormalizeVocabularyValues(
-                    SplitMultiValueText(PronunciationsText, AppSettings.MaxPronunciationsPerVocabularyEntry),
-                    AppSettings.MaxPronunciationsPerVocabularyEntry,
-                    AppSettings.MaxPronunciationsCharactersPerVocabularyEntry),
-                Note = Note?.Trim() ?? string.Empty,
                 Priority = Priority,
                 Enabled = Enabled
             };
@@ -157,28 +136,6 @@ namespace lingualink_client.ViewModels
         public CustomVocabularyEntry ToModel()
         {
             return ToNormalizedModel();
-        }
-
-        private static string JoinList(IEnumerable<string>? values)
-        {
-            return values == null ? string.Empty : string.Join(", ", values.Where(value => !string.IsNullOrWhiteSpace(value)).Select(value => value.Trim()));
-        }
-
-        private static List<string> SplitMultiValueText(string? raw, int limit)
-        {
-            if (string.IsNullOrWhiteSpace(raw))
-            {
-                return new List<string>();
-            }
-
-            var separators = new[] { ',', '，', ';', '；', '|', '\n', '\r', '\t' };
-
-            return raw
-                .Split(separators, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .Where(value => !string.IsNullOrWhiteSpace(value))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .Take(limit)
-                .ToList();
         }
     }
 }

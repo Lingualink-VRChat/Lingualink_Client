@@ -37,9 +37,6 @@ namespace lingualink_client.ViewModels
         public string GuidanceBody => LanguageManager.GetString("CustomVocabularyGuidanceBody");
         public string EntryGuideTitle => LanguageManager.GetString("CustomVocabularyEntryGuideTitle");
         public string TermGuideText => LanguageManager.GetString("CustomVocabularyTermGuideText");
-        public string AliasesGuideText => LanguageManager.GetString("CustomVocabularyAliasesGuideText");
-        public string PronunciationsGuideText => LanguageManager.GetString("CustomVocabularyPronunciationsGuideText");
-        public string NoteGuideText => LanguageManager.GetString("CustomVocabularyNoteGuideText");
         public string ExampleTitle => LanguageManager.GetString("CustomVocabularyExampleTitle");
         public string ExampleBody => LanguageManager.GetString("CustomVocabularyExampleBody");
         public string SectionHint => string.Format(
@@ -60,14 +57,8 @@ namespace lingualink_client.ViewModels
         public string NoTableSelectedHint => LanguageManager.GetString("CustomVocabularyNoTableSelected");
         public string TableNamePlaceholder => LanguageManager.GetString("CustomVocabularyTableNamePlaceholder");
         public string EntryTermHeader => LanguageManager.GetString("CustomVocabularyEntryTermHeader");
-        public string EntryAliasesHeader => LanguageManager.GetString("CustomVocabularyEntryAliasesHeader");
-        public string EntryPronunciationsHeader => LanguageManager.GetString("CustomVocabularyEntryPronunciationsHeader");
-        public string EntryNoteHeader => LanguageManager.GetString("CustomVocabularyEntryNoteHeader");
         public string EntryActionsHeader => LanguageManager.GetString("CustomVocabularyEntryActionsHeader");
         public string TermPlaceholder => LanguageManager.GetString("CustomVocabularyTermPlaceholder");
-        public string AliasesPlaceholder => LanguageManager.GetString("CustomVocabularyAliasesPlaceholder");
-        public string PronunciationsPlaceholder => LanguageManager.GetString("CustomVocabularyPronunciationsPlaceholder");
-        public string NotePlaceholder => LanguageManager.GetString("CustomVocabularyNotePlaceholder");
         public string EnabledBadgeLabel => LanguageManager.GetString("CustomVocabularyEnabledBadge");
         public string NoTablesTitle => LanguageManager.GetString("CustomVocabularyNoTablesTitle");
         public string NoTablesBody => LanguageManager.GetString("CustomVocabularyNoTablesBody");
@@ -75,11 +66,8 @@ namespace lingualink_client.ViewModels
         public string MoveEntryDownLabel => LanguageManager.GetString("CustomVocabularyMoveEntryDown");
         public string ExpandTableLabel => LanguageManager.GetString("CustomVocabularyExpandTable");
         public string CollapseTableLabel => LanguageManager.GetString("CustomVocabularyCollapseTable");
-        
-        public string AliasesHint => string.Format(
-            LanguageManager.GetString("CustomVocabularyAliasesHint"),
-            AppSettings.MaxAliasesPerVocabularyEntry,
-            AppSettings.MaxPronunciationsPerVocabularyEntry);
+
+        public string TermMatchingHint => LanguageManager.GetString("CustomVocabularyAliasesHint");
 
         public string TableCountSummary => string.Format(
             LanguageManager.GetString("CustomVocabularyTableCountSummary"),
@@ -782,20 +770,7 @@ namespace lingualink_client.ViewModels
                     continue;
                 }
 
-                var normalizedAliases = AppSettings.NormalizeVocabularyValues(
-                    entry.Aliases ?? new System.Collections.Generic.List<string>(),
-                    AppSettings.MaxAliasesPerVocabularyEntry,
-                    AppSettings.MaxAliasesCharactersPerVocabularyEntry);
-                var normalizedPronunciations = AppSettings.NormalizeVocabularyValues(
-                    entry.Pronunciations ?? new System.Collections.Generic.List<string>(),
-                    AppSettings.MaxPronunciationsPerVocabularyEntry,
-                    AppSettings.MaxPronunciationsCharactersPerVocabularyEntry);
-                var normalizedNote = entry.Note?.Trim() ?? string.Empty;
-                var entryCharacters = AppSettings.CountVocabularyEntryCharacters(
-                    normalizedTerm,
-                    normalizedAliases,
-                    normalizedPronunciations,
-                    normalizedNote);
+                var entryCharacters = AppSettings.CountVocabularyEntryCharacters(normalizedTerm);
 
                 if (totalCharacters + entryCharacters > AppSettings.MaxCustomVocabularyTableCharacters)
                 {
@@ -806,9 +781,6 @@ namespace lingualink_client.ViewModels
                 var sanitizedEntry = new VocabularyEntryEditor
                 {
                     Term = normalizedTerm,
-                    AliasesText = string.Join(", ", normalizedAliases),
-                    PronunciationsText = string.Join(", ", normalizedPronunciations),
-                    Note = normalizedNote,
                     Priority = entry.Priority,
                     Enabled = entry.Enabled
                 };
@@ -816,9 +788,7 @@ namespace lingualink_client.ViewModels
                 editor.Entries.Add(sanitizedEntry);
                 totalCharacters += entryCharacters;
 
-                if (!string.Equals(normalizedTerm, entry.Term?.Trim(), StringComparison.Ordinal)
-                    || (entry.Aliases?.Count ?? 0) > AppSettings.MaxAliasesPerVocabularyEntry
-                    || (entry.Pronunciations?.Count ?? 0) > AppSettings.MaxPronunciationsPerVocabularyEntry)
+                if (!string.Equals(normalizedTerm, entry.Term?.Trim(), StringComparison.Ordinal))
                 {
                     truncated = true;
                 }

@@ -1594,16 +1594,16 @@
     <value>鼠标悬停查看使用方法</value>
   </data>
   <data name="CustomVocabularyGuidanceSummary" xml:space="preserve">
-    <value>当语音识别总是把您的特定词汇听错，或者 AI 听不懂某些“网络黑话”时，您可以通过这张词表来“教”它。</value>
+    <value>当语音识别总是把您的特定词汇听错时，您可以把正确写法加入词表，帮助系统优先纠正原文。</value>
   </data>
   <data name="CustomVocabularyGuidanceBody" xml:space="preserve">
-    <value>系统会自动把您的口语替换成“标准词”，再发送给 AI。</value>
+    <value>您只需要填写希望纠正成的标准词。系统会自动生成发音键，先做发音召回，再把少量候选词交给模型决定是否替换。</value>
   </data>
   <data name="CustomVocabularyEntryGuideTitle" xml:space="preserve">
     <value>各项该怎么填？</value>
   </data>
   <data name="CustomVocabularyTermGuideText" xml:space="preserve">
-    <value>核心词汇：您最终希望 AI 看到、且能听懂的标准答案。</value>
+    <value>标准词：您最终希望原文被纠正成的正确写法。每条词条只需要填这一项。</value>
   </data>
   <data name="CustomVocabularyAliasesGuideText" xml:space="preserve">
     <value>别名：语音识别经常写错的错别字，或者您常说的网络黑话 / 简称。多个请用逗号隔开。</value>
@@ -1618,10 +1618,10 @@
     <value>常见使用场景举例</value>
   </data>
   <data name="CustomVocabularyExampleBody" xml:space="preserve">
-    <value>例如纠正同音字：如果“原神”总被识别成“元神”，可填写为 核心词汇：原神；别名：元神，圆神；发音：yuan shen；词义/备注：一款电子游戏名。</value>
+    <value>例如“明日方舟终末地”总被识别成“明日方舟周末帝”，那就直接新增一条标准词：明日方舟终末地。系统会自动根据整句发音做匹配。</value>
   </data>
   <data name="CustomVocabularySectionHint" xml:space="preserve">
-    <value>管理仅保存在本地的 ASR 纠错词表。同一时刻最多启用 {0} 张；每张词表最多 {1} 条词条、{2} 个有效字符。</value>
+    <value>管理仅保存在本地的 ASR 纠错词表。用户每条只需填写标准词；同一时刻最多启用 {0} 张，每张词表最多 {1} 条词条、{2} 个有效字符。</value>
   </data>
   <data name="CustomVocabularyAddTable" xml:space="preserve">
     <value>新建词表</value>
@@ -1657,7 +1657,7 @@
     <value>请选择或新建一张词表后再编辑。</value>
   </data>
   <data name="CustomVocabularyAliasesHint" xml:space="preserve">
-    <value>别名和发音提示可用逗号或换行分隔。每条最多 {0} 个别名，最多 {1} 个发音提示。</value>
+    <value>无需填写别名、发音或备注。系统会根据当前整句发音自动召回可能的标准词。</value>
   </data>
   <data name="CustomVocabularyTableCountSummary" xml:space="preserve">
     <value>{0} 张词表，共 {1} 条词条，已启用 {2} 张</value>
@@ -1678,7 +1678,7 @@
     <value>输入词表名称</value>
   </data>
   <data name="CustomVocabularyEntryTermHeader" xml:space="preserve">
-    <value>核心词汇</value>
+    <value>标准词</value>
   </data>
   <data name="CustomVocabularyEntryAliasesHeader" xml:space="preserve">
     <value>别名（使用逗号分隔）</value>
@@ -1693,7 +1693,7 @@
     <value>操作</value>
   </data>
   <data name="CustomVocabularyTermPlaceholder" xml:space="preserve">
-    <value>最终希望 AI 看到的标准词</value>
+    <value>输入希望纠正成的标准词</value>
   </data>
   <data name="CustomVocabularyAliasesPlaceholder" xml:space="preserve">
     <value>错别字、黑话或简称，多个用逗号隔开</value>

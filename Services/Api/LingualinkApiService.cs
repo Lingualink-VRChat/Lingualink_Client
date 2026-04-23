@@ -418,18 +418,7 @@ namespace lingualink_client.Services
                     .Where(entry => entry != null && entry.Enabled && !string.IsNullOrWhiteSpace(entry.Term))
                     .Select(entry => new
                     {
-                        term = AppSettings.NormalizeVocabularyTerm(entry.Term),
-                        aliases = AppSettings.NormalizeVocabularyValues(
-                                entry.Aliases ?? new List<string>(),
-                                AppSettings.MaxAliasesPerVocabularyEntry,
-                                AppSettings.MaxAliasesCharactersPerVocabularyEntry)
-                            .ToArray(),
-                        pronunciations = AppSettings.NormalizeVocabularyValues(
-                                entry.Pronunciations ?? new List<string>(),
-                                AppSettings.MaxPronunciationsPerVocabularyEntry,
-                                AppSettings.MaxPronunciationsCharactersPerVocabularyEntry)
-                            .ToArray(),
-                        note = string.IsNullOrWhiteSpace(entry.Note) ? null : entry.Note.Trim()
+                        term = AppSettings.NormalizeVocabularyTerm(entry.Term)
                     })
                     .Where(entry => !string.IsNullOrWhiteSpace(entry.term))
                     .Cast<object>()

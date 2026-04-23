@@ -117,20 +117,6 @@ namespace lingualink_client.Services
                         }
                     }
 
-                    foreach (var entry in table.Entries)
-                    {
-                        if (entry.Aliases == null)
-                        {
-                            entry.Aliases = new System.Collections.Generic.List<string>();
-                            changed = true;
-                        }
-
-                        if (entry.Pronunciations == null)
-                        {
-                            entry.Pronunciations = new System.Collections.Generic.List<string>();
-                            changed = true;
-                        }
-                    }
                 }
             }
             return changed;
