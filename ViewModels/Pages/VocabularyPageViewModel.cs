@@ -44,7 +44,6 @@ namespace lingualink_client.ViewModels
         public string ExampleBody => LanguageManager.GetString("CustomVocabularyExampleBody");
         public string SectionHint => string.Format(
             LanguageManager.GetString("CustomVocabularySectionHint"),
-            AppSettings.MaxCustomVocabularyTables,
             AppSettings.MaxEnabledCustomVocabularyTables,
             AppSettings.MaxEntriesPerVocabularyTable,
             AppSettings.MaxCustomVocabularyTableCharacters);
@@ -85,7 +84,6 @@ namespace lingualink_client.ViewModels
         public string TableCountSummary => string.Format(
             LanguageManager.GetString("CustomVocabularyTableCountSummary"),
             VocabularyTables.Count,
-            AppSettings.MaxCustomVocabularyTables,
             VocabularyTables.Sum(table => table.TotalEntries),
             VocabularyTables.Count(table => table.Enabled));
 
@@ -153,13 +151,6 @@ namespace lingualink_client.ViewModels
         [RelayCommand]
         private void AddVocabularyTable()
         {
-            if (VocabularyTables.Count >= AppSettings.MaxCustomVocabularyTables)
-            {
-                UiMessageBox.ShowWarning(
-                    string.Format(LanguageManager.GetString("CustomVocabularyMaxTablesReached"), AppSettings.MaxCustomVocabularyTables));
-                return;
-            }
-
             var table = new VocabularyTableEditor
             {
                 Name = BuildUniqueTableName(LanguageManager.GetString("CustomVocabularyDefaultTableName")),
@@ -266,13 +257,6 @@ namespace lingualink_client.ViewModels
                     }
                     else
                     {
-                        if (VocabularyTables.Count >= AppSettings.MaxCustomVocabularyTables)
-                        {
-                            UiMessageBox.ShowWarning(
-                                string.Format(LanguageManager.GetString("CustomVocabularyMaxTablesReached"), AppSettings.MaxCustomVocabularyTables));
-                            return;
-                        }
-
                         importedTable.Name = BuildUniqueTableName(importedTable.Name);
                         VocabularyTables.Add(importedTable);
                         CaptureTableSnapshot(importedTable);
@@ -284,13 +268,6 @@ namespace lingualink_client.ViewModels
                 }
                 else
                 {
-                    if (VocabularyTables.Count >= AppSettings.MaxCustomVocabularyTables)
-                    {
-                        UiMessageBox.ShowWarning(
-                            string.Format(LanguageManager.GetString("CustomVocabularyMaxTablesReached"), AppSettings.MaxCustomVocabularyTables));
-                        return;
-                    }
-
                     VocabularyTables.Add(importedTable);
                     CaptureTableSnapshot(importedTable);
                     if (importedTable.Enabled)
@@ -620,7 +597,6 @@ namespace lingualink_client.ViewModels
                 {
                     settings.CustomVocabularyTables = VocabularyTables
                         .Select(table => table.ToModel())
-                        .Take(AppSettings.MaxCustomVocabularyTables)
                         .ToList();
                     return true;
                 },
@@ -758,7 +734,7 @@ namespace lingualink_client.ViewModels
                 return normalizedBaseName;
             }
 
-            for (var index = 2; index <= AppSettings.MaxCustomVocabularyTables + 1; index++)
+            for (var index = 2; ; index++)
             {
                 var candidate = $"{normalizedBaseName} {index}";
                 if (!VocabularyTables.Any(table => string.Equals(table.Name, candidate, StringComparison.OrdinalIgnoreCase)))
@@ -767,7 +743,6 @@ namespace lingualink_client.ViewModels
                 }
             }
 
-            return $"{normalizedBaseName} {Guid.NewGuid():N}";
         }
 
         private static string SanitizeFileName(string fileName)
@@ -815,10 +790,12 @@ namespace lingualink_client.ViewModels
                     entry.Pronunciations ?? new System.Collections.Generic.List<string>(),
                     AppSettings.MaxPronunciationsPerVocabularyEntry,
                     AppSettings.MaxPronunciationsCharactersPerVocabularyEntry);
+                var normalizedNote = entry.Note?.Trim() ?? string.Empty;
                 var entryCharacters = AppSettings.CountVocabularyEntryCharacters(
                     normalizedTerm,
                     normalizedAliases,
-                    normalizedPronunciations);
+                    normalizedPronunciations,
+                    normalizedNote);
 
                 if (totalCharacters + entryCharacters > AppSettings.MaxCustomVocabularyTableCharacters)
                 {
@@ -831,7 +808,7 @@ namespace lingualink_client.ViewModels
                     Term = normalizedTerm,
                     AliasesText = string.Join(", ", normalizedAliases),
                     PronunciationsText = string.Join(", ", normalizedPronunciations),
-                    Note = entry.Note?.Trim() ?? string.Empty,
+                    Note = normalizedNote,
                     Priority = entry.Priority,
                     Enabled = entry.Enabled
                 };

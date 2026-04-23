@@ -589,6 +589,30 @@
   <data name="LanguageHint" xml:space="preserve">
     <value>お好みのインターフェース言語を選択してください。これはすべてのUIテキストとデフォルトテンプレートに影響します。</value>
   </data>
+  <data name="RecognitionHotkeySectionTitle" xml:space="preserve">
+    <value>認識ショートカット</value>
+  </data>
+  <data name="RecognitionHotkeyLabel" xml:space="preserve">
+    <value>認識の開始 / 停止</value>
+  </data>
+  <data name="RecognitionHotkeyHint" xml:space="preserve">
+    <value>入力欄をクリックしてから単独キーまたはショートカットの組み合わせをそのまま押してください。誤操作しにくいキー、または Ctrl / Alt / Shift / Win との組み合わせを推奨します。クリアするとグローバルショートカットは無効になります。</value>
+  </data>
+  <data name="RecognitionHotkeySaveLabel" xml:space="preserve">
+    <value>ショートカットを保存</value>
+  </data>
+  <data name="RecognitionHotkeyClearLabel" xml:space="preserve">
+    <value>クリア</value>
+  </data>
+  <data name="RecognitionHotkeyNotSet" xml:space="preserve">
+    <value>未設定（無効）</value>
+  </data>
+  <data name="RecognitionHotkeySaved" xml:space="preserve">
+    <value>認識ショートカットを保存しました。</value>
+  </data>
+  <data name="RecognitionHotkeyInvalid" xml:space="preserve">
+    <value>修飾キー単体（Ctrl / Alt / Shift / Win）はショートカットに設定できません。</value>
+  </data>
   <data name="MessageTemplates" xml:space="preserve">
     <value>メッセージテンプレート</value>
   </data>
@@ -1514,7 +1538,7 @@
     <value>同音語の補正例：「原神」がいつも「元神」と誤認識されるなら、コア用語に「原神」、別名に「元神, 圆神」、発音に「yuan shen」、意味 / メモに「ゲーム名」と入力します。</value>
   </data>
   <data name="CustomVocabularySectionHint" xml:space="preserve">
-    <value>ASR 補正用のローカル用語集を管理します。最大 {0} テーブル、同時に有効化できるのは {1} テーブル、各テーブルは最大 {2} エントリ・{3} 文字です。</value>
+    <value>ASR 補正用のローカル用語集を管理します。同時に有効化できるのは {0} テーブル、各テーブルは最大 {1} エントリ・{2} 文字です。</value>
   </data>
   <data name="CustomVocabularyAddTable" xml:space="preserve">
     <value>テーブル追加</value>
@@ -1553,7 +1577,7 @@
     <value>別名と発音ヒントはカンマまたは改行で区切ってください。1 エントリあたり別名は最大 {0} 件、発音ヒントは最大 {1} 件です。</value>
   </data>
   <data name="CustomVocabularyTableCountSummary" xml:space="preserve">
-    <value>{0}/{1} テーブル、合計 {2} エントリ、有効 {3} テーブル</value>
+    <value>{0} テーブル、合計 {1} エントリ、有効 {2} テーブル</value>
   </data>
   <data name="CustomVocabularyTableStatusSummary" xml:space="preserve">
     <value>{0}/{1} エントリ、{2}/{3} 文字</value>
@@ -1617,9 +1641,6 @@
   </data>
   <data name="CustomVocabularyBudgetExceeded" xml:space="preserve">
     <value>この変更はテーブルの文字予算 {0} を超えるため、直前の有効な状態に戻しました。</value>
-  </data>
-  <data name="CustomVocabularyMaxTablesReached" xml:space="preserve">
-    <value>用語集テーブルの上限 {0} に達しました。</value>
   </data>
   <data name="CustomVocabularyDefaultTableName" xml:space="preserve">
     <value>新しい用語集</value>

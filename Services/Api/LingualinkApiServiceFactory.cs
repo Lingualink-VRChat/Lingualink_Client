@@ -100,8 +100,9 @@ namespace lingualink_client.Services
                     entry.Pronunciations,
                     AppSettings.MaxPronunciationsPerVocabularyEntry,
                     AppSettings.MaxPronunciationsCharactersPerVocabularyEntry);
+                var note = entry.Note?.Trim() ?? string.Empty;
 
-                var entryCharacters = AppSettings.CountVocabularyEntryCharacters(term, aliases, pronunciations);
+                var entryCharacters = AppSettings.CountVocabularyEntryCharacters(term, aliases, pronunciations, note);
                 if (entryCharacters <= 0)
                 {
                     continue;
@@ -119,7 +120,7 @@ namespace lingualink_client.Services
                     Term = term,
                     Aliases = aliases,
                     Pronunciations = pronunciations,
-                    Note = entry.Note,
+                    Note = note,
                     Priority = entry.Priority,
                     Enabled = true
                 });

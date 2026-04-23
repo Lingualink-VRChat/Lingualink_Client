@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:servicesUi="clr-namespace:lingualink_client.Services.Ui"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:vm="clr-namespace:lingualink_client.ViewModels"
     Title="VocabularyPage"
@@ -13,6 +14,8 @@
     mc:Ignorable="d">
 
     <Page.Resources>
+        <servicesUi:BindingProxy x:Key="VocabularyPageDataContextProxy" Data="{Binding}" />
+
         <Style x:Key="HeaderGhostButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
@@ -23,10 +26,26 @@
 
         <Style x:Key="InlineGridTextBoxStyle" TargetType="ui:TextBox">
             <Setter Property="Margin" Value="2" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Padding" Value="8,4" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Background" Value="{DynamicResource ControlFillColorDefaultBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
         </Style>
+
+        <Style x:Key="VocabularyDataGridColumnHeaderStyle" TargetType="DataGridColumnHeader">
+            <Setter Property="Height" Value="52" />
+            <Setter Property="Padding" Value="12,8" />
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+
     </Page.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -34,7 +53,6 @@
             <Grid Margin="0,0,0,12">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
@@ -50,19 +68,10 @@
                     Margin="12,0,0,0"
                     Command="{Binding ImportVocabularyTableCommand}"
                     Content="{Binding ImportLabel}"
-                    Icon="{ui:SymbolIcon Symbol=ArrowImport24}" />
+                    Icon="{ui:SymbolIcon Symbol=FolderOpen24}" />
 
                 <ui:Button
                     Grid.Column="2"
-                    Margin="12,0,0,0"
-                    Command="{Binding ExportVocabularyTableCommand}"
-                    CommandParameter="{Binding SelectedVocabularyTable}"
-                    Content="{Binding ExportLabel}"
-                    Icon="{ui:SymbolIcon Symbol=ArrowExport24}"
-                    IsEnabled="{Binding HasSelectedVocabularyTable}" />
-
-                <ui:Button
-                    Grid.Column="3"
                     Margin="12,0,0,0"
                     Command="{Binding AddVocabularyTableCommand}"
                     Content="{Binding AddTableLabel}"
@@ -70,15 +79,15 @@
                     Icon="{ui:SymbolIcon Symbol=Add24}" />
             </Grid>
 
-            <ui:InfoBar
+            <Border
                 Margin="0,0,0,20"
+                Padding="16"
                 ToolTipService.InitialShowDelay="150"
-                Title="{Binding GuidanceTitle}"
-                Message="{Binding GuidanceSummary}"
-                Severity="Informational"
-                IsOpen="True"
-                IsClosable="False">
-                <ui:InfoBar.ToolTip>
+                Background="{DynamicResource SubtleFillColorSecondaryBrush}"
+                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8">
+                <Border.ToolTip>
                     <ToolTip Placement="Mouse" MaxWidth="520" IsHitTestVisible="False" Focusable="False">
                         <StackPanel>
                             <TextBlock
@@ -110,30 +119,47 @@
                                 TextWrapping="Wrap" />
                         </StackPanel>
                     </ToolTip>
-                </ui:InfoBar.ToolTip>
-                <ui:InfoBar.Content>
-                    <StackPanel Margin="0,8,0,0">
+                </Border.ToolTip>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="16" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="16" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <ui:SymbolIcon
+                        Grid.Column="0"
+                        Margin="0,0,0,0"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"
+                        FontSize="18"
+                        Symbol="Info24" />
+
+                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                        <TextBlock
+                            FontSize="14"
+                            FontWeight="SemiBold"
+                            Text="{Binding GuidanceTitle}" />
                         <TextBlock
                             FontSize="11"
                             Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                            Opacity="0.85"
                             Text="{Binding GuidanceHint}"
                             TextWrapping="Wrap" />
-                        <TextBlock
-                            Margin="0,8,0,0"
-                            FontSize="12"
-                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                            Text="{Binding GuidanceBody}"
-                            TextWrapping="Wrap" />
-                        <TextBlock
-                            Margin="0,8,0,0"
-                            FontSize="12"
-                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                            Text="{Binding SectionHint}"
-                            TextWrapping="Wrap" />
                     </StackPanel>
-                </ui:InfoBar.Content>
-            </ui:InfoBar>
+
+                    <TextBlock
+                        Grid.Column="4"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Right"
+                        FontSize="11"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Text="{Binding GuidanceSummary}"
+                        TextAlignment="Right"
+                        TextWrapping="Wrap" />
+                </Grid>
+            </Border>
 
             <ItemsControl ItemsSource="{Binding VocabularyTables}" Visibility="{Binding HasSelectedVocabularyTable, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <ItemsControl.ItemTemplate>
@@ -228,7 +254,7 @@
                                             Command="{Binding DataContext.ExportVocabularyTableCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                             CommandParameter="{Binding}"
                                             Content="{Binding DataContext.ExportLabel, RelativeSource={RelativeSource AncestorType=Page}}"
-                                            Icon="{ui:SymbolIcon Symbol=ArrowExport24}" />
+                                            Icon="{ui:SymbolIcon Symbol=DocumentSave24}" />
 
                                         <ui:Button
                                             Grid.Column="4"
@@ -275,130 +301,126 @@
                                     </Grid>
 
                                     <DataGrid
-                                        Grid.Row="1"
-                                        AutoGenerateColumns="False"
-                                        CanUserAddRows="False"
-                                        CanUserResizeRows="False"
-                                        HeadersVisibility="Column"
-                                        ItemsSource="{Binding Entries}"
-                                        SelectedItem="{Binding DataContext.SelectedVocabularyEntry, RelativeSource={RelativeSource AncestorType=Page}, Mode=TwoWay}"
-                                        RowHeaderWidth="0"
-                                        MaxHeight="420"
-                                        RowHeight="42"
-                                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
-                                        BorderThickness="1"
-                                        Background="Transparent"
-                                        GridLinesVisibility="Horizontal"
-                                        HorizontalGridLinesBrush="{DynamicResource CardStrokeColorDefaultBrush}">
-                                        <DataGrid.Columns>
-                                            <DataGridTemplateColumn Width="60">
-                                                <DataGridTemplateColumn.Header>
-                                                    <TextBlock Text="{Binding DataContext.EntryEnabledLabel, RelativeSource={RelativeSource AncestorType=Page}}" />
-                                                </DataGridTemplateColumn.Header>
-                                                <DataGridTemplateColumn.CellTemplate>
-                                                    <DataTemplate>
-                                                        <CheckBox
-                                                            HorizontalAlignment="Center"
-                                                            VerticalAlignment="Center"
-                                                            IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                                    </DataTemplate>
-                                                </DataGridTemplateColumn.CellTemplate>
-                                            </DataGridTemplateColumn>
+                                            Grid.Row="1"
+                                            AutoGenerateColumns="False"
+                                            CanUserAddRows="False"
+                                            CanUserResizeRows="False"
+                                            ColumnHeaderStyle="{StaticResource VocabularyDataGridColumnHeaderStyle}"
+                                            ColumnHeaderHeight="52"
+                                            HeadersVisibility="Column"
+                                            ItemsSource="{Binding Entries}"
+                                            SelectedItem="{Binding DataContext.SelectedVocabularyEntry, RelativeSource={RelativeSource AncestorType=Page}, Mode=TwoWay}"
+                                            RowHeaderWidth="0"
+                                            MaxHeight="420"
+                                            RowHeight="42"
+                                            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                                            BorderThickness="1"
+                                            Background="Transparent"
+                                            GridLinesVisibility="Horizontal"
+                                            HorizontalGridLinesBrush="{DynamicResource CardStrokeColorDefaultBrush}">
+                                            <DataGrid.Columns>
+                                                <DataGridTemplateColumn
+                                                    Width="60"
+                                                    Header="{Binding Data.EntryEnabledLabel, Source={StaticResource VocabularyPageDataContextProxy}}">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <CheckBox
+                                                                HorizontalAlignment="Center"
+                                                                VerticalAlignment="Center"
+                                                                IsChecked="{Binding Enabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
 
-                                            <DataGridTemplateColumn Width="180">
-                                                <DataGridTemplateColumn.Header>
-                                                    <TextBlock Text="{Binding DataContext.EntryTermHeader, RelativeSource={RelativeSource AncestorType=Page}}" />
-                                                </DataGridTemplateColumn.Header>
-                                                <DataGridTemplateColumn.CellTemplate>
-                                                    <DataTemplate>
-                                                        <ui:TextBox
-                                                            Style="{StaticResource InlineGridTextBoxStyle}"
-                                                            PlaceholderText="{Binding DataContext.TermPlaceholder, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                            ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
-                                                            Text="{Binding Term, UpdateSourceTrigger=PropertyChanged}" />
-                                                    </DataTemplate>
-                                                </DataGridTemplateColumn.CellTemplate>
-                                            </DataGridTemplateColumn>
+                                                <DataGridTemplateColumn
+                                                    Width="180"
+                                                    Header="{Binding Data.EntryTermHeader, Source={StaticResource VocabularyPageDataContextProxy}}">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <ui:TextBox
+                                                                Style="{StaticResource InlineGridTextBoxStyle}"
+                                                                PlaceholderText="{Binding DataContext.TermPlaceholder, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                                ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
+                                                                Text="{Binding Term, UpdateSourceTrigger=PropertyChanged}" />
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
 
-                                            <DataGridTemplateColumn Width="*">
-                                                <DataGridTemplateColumn.Header>
-                                                    <TextBlock Text="{Binding DataContext.EntryAliasesHeader, RelativeSource={RelativeSource AncestorType=Page}}" />
-                                                </DataGridTemplateColumn.Header>
-                                                <DataGridTemplateColumn.CellTemplate>
-                                                    <DataTemplate>
-                                                        <ui:TextBox
-                                                            Style="{StaticResource InlineGridTextBoxStyle}"
-                                                            PlaceholderText="{Binding DataContext.AliasesPlaceholder, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                            ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
-                                                            Text="{Binding AliasesText, UpdateSourceTrigger=PropertyChanged}" />
-                                                    </DataTemplate>
-                                                </DataGridTemplateColumn.CellTemplate>
-                                            </DataGridTemplateColumn>
+                                                <DataGridTemplateColumn
+                                                    Width="*"
+                                                    Header="{Binding Data.EntryAliasesHeader, Source={StaticResource VocabularyPageDataContextProxy}}">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <ui:TextBox
+                                                                Style="{StaticResource InlineGridTextBoxStyle}"
+                                                                PlaceholderText="{Binding DataContext.AliasesPlaceholder, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                                ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
+                                                                Text="{Binding AliasesText, UpdateSourceTrigger=PropertyChanged}" />
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
 
-                                            <DataGridTemplateColumn Width="*">
-                                                <DataGridTemplateColumn.Header>
-                                                    <TextBlock Text="{Binding DataContext.EntryPronunciationsHeader, RelativeSource={RelativeSource AncestorType=Page}}" />
-                                                </DataGridTemplateColumn.Header>
-                                                <DataGridTemplateColumn.CellTemplate>
-                                                    <DataTemplate>
-                                                        <ui:TextBox
-                                                            Style="{StaticResource InlineGridTextBoxStyle}"
-                                                            PlaceholderText="{Binding DataContext.PronunciationsPlaceholder, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                            ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
-                                                            Text="{Binding PronunciationsText, UpdateSourceTrigger=PropertyChanged}" />
-                                                    </DataTemplate>
-                                                </DataGridTemplateColumn.CellTemplate>
-                                            </DataGridTemplateColumn>
+                                                <DataGridTemplateColumn
+                                                    Width="*"
+                                                    Header="{Binding Data.EntryPronunciationsHeader, Source={StaticResource VocabularyPageDataContextProxy}}">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <ui:TextBox
+                                                                Style="{StaticResource InlineGridTextBoxStyle}"
+                                                                PlaceholderText="{Binding DataContext.PronunciationsPlaceholder, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                                ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
+                                                                Text="{Binding PronunciationsText, UpdateSourceTrigger=PropertyChanged}" />
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
 
-                                            <DataGridTemplateColumn Width="220">
-                                                <DataGridTemplateColumn.Header>
-                                                    <TextBlock Text="{Binding DataContext.EntryNoteHeader, RelativeSource={RelativeSource AncestorType=Page}}" />
-                                                </DataGridTemplateColumn.Header>
-                                                <DataGridTemplateColumn.CellTemplate>
-                                                    <DataTemplate>
-                                                        <ui:TextBox
-                                                            Style="{StaticResource InlineGridTextBoxStyle}"
-                                                            PlaceholderText="{Binding DataContext.NotePlaceholder, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                            ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
-                                                            Text="{Binding Note, UpdateSourceTrigger=PropertyChanged}" />
-                                                    </DataTemplate>
-                                                </DataGridTemplateColumn.CellTemplate>
-                                            </DataGridTemplateColumn>
+                                                <DataGridTemplateColumn
+                                                    Width="220"
+                                                    Header="{Binding Data.EntryNoteHeader, Source={StaticResource VocabularyPageDataContextProxy}}">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <ui:TextBox
+                                                                Style="{StaticResource InlineGridTextBoxStyle}"
+                                                                PlaceholderText="{Binding DataContext.NotePlaceholder, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                                ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
+                                                                Text="{Binding Note, UpdateSourceTrigger=PropertyChanged}" />
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
 
-                                            <DataGridTemplateColumn Width="120">
-                                                <DataGridTemplateColumn.Header>
-                                                    <TextBlock Text="{Binding DataContext.EntryActionsHeader, RelativeSource={RelativeSource AncestorType=Page}}" />
-                                                </DataGridTemplateColumn.Header>
-                                                <DataGridTemplateColumn.CellTemplate>
-                                                    <DataTemplate>
-                                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                            <Button
-                                                                Command="{Binding DataContext.MoveVocabularyEntryUpCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                                CommandParameter="{Binding}"
-                                                                Style="{StaticResource HeaderGhostButtonStyle}"
-                                                                ToolTip="{Binding DataContext.MoveEntryUpLabel, RelativeSource={RelativeSource AncestorType=Page}}">
-                                                                <ui:SymbolIcon FontSize="14" Symbol="ChevronUp24" />
-                                                            </Button>
-                                                            <Button
-                                                                Command="{Binding DataContext.MoveVocabularyEntryDownCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                                CommandParameter="{Binding}"
-                                                                Style="{StaticResource HeaderGhostButtonStyle}"
-                                                                ToolTip="{Binding DataContext.MoveEntryDownLabel, RelativeSource={RelativeSource AncestorType=Page}}">
-                                                                <ui:SymbolIcon FontSize="14" Symbol="ChevronDown24" />
-                                                            </Button>
-                                                            <Button
-                                                                Command="{Binding DataContext.RemoveVocabularyEntryCommand, RelativeSource={RelativeSource AncestorType=Page}}"
-                                                                CommandParameter="{Binding}"
-                                                                Style="{StaticResource HeaderGhostButtonStyle}"
-                                                                ToolTip="{Binding DataContext.DeleteEntryLabel, RelativeSource={RelativeSource AncestorType=Page}}">
-                                                                <ui:SymbolIcon FontSize="14" Foreground="#C42B1C" Symbol="Delete24" />
-                                                            </Button>
-                                                        </StackPanel>
-                                                    </DataTemplate>
-                                                </DataGridTemplateColumn.CellTemplate>
-                                            </DataGridTemplateColumn>
-                                        </DataGrid.Columns>
-                                    </DataGrid>
+                                                <DataGridTemplateColumn
+                                                    Width="120"
+                                                    Header="{Binding Data.EntryActionsHeader, Source={StaticResource VocabularyPageDataContextProxy}}">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                                <Button
+                                                                    Command="{Binding DataContext.MoveVocabularyEntryUpCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                                    CommandParameter="{Binding}"
+                                                                    Style="{StaticResource HeaderGhostButtonStyle}"
+                                                                    ToolTip="{Binding DataContext.MoveEntryUpLabel, RelativeSource={RelativeSource AncestorType=Page}}">
+                                                                    <ui:SymbolIcon FontSize="14" Symbol="ChevronUp24" />
+                                                                </Button>
+                                                                <Button
+                                                                    Command="{Binding DataContext.MoveVocabularyEntryDownCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                                    CommandParameter="{Binding}"
+                                                                    Style="{StaticResource HeaderGhostButtonStyle}"
+                                                                    ToolTip="{Binding DataContext.MoveEntryDownLabel, RelativeSource={RelativeSource AncestorType=Page}}">
+                                                                    <ui:SymbolIcon FontSize="14" Symbol="ChevronDown24" />
+                                                                </Button>
+                                                                <Button
+                                                                    Command="{Binding DataContext.RemoveVocabularyEntryCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                                                                    CommandParameter="{Binding}"
+                                                                    Style="{StaticResource HeaderGhostButtonStyle}"
+                                                                    ToolTip="{Binding DataContext.DeleteEntryLabel, RelativeSource={RelativeSource AncestorType=Page}}">
+                                                                    <ui:SymbolIcon FontSize="14" Foreground="#C42B1C" Symbol="Delete24" />
+                                                                </Button>
+                                                            </StackPanel>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                            </DataGrid.Columns>
+                                        </DataGrid>
                                 </Grid>
                             </Grid>
                         </ui:Card>
@@ -435,7 +457,7 @@
                         <ui:Button
                             Command="{Binding ImportVocabularyTableCommand}"
                             Content="{Binding ImportLabel}"
-                            Icon="{ui:SymbolIcon Symbol=ArrowImport24}" />
+                            Icon="{ui:SymbolIcon Symbol=FolderOpen24}" />
                     </StackPanel>
                 </StackPanel>
             </ui:Card>

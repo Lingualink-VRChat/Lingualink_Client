@@ -614,6 +614,30 @@
   <data name="LanguageHint" xml:space="preserve">
     <value>Select your preferred interface language. This affects all UI text and default templates.</value>
   </data>
+  <data name="RecognitionHotkeySectionTitle" xml:space="preserve">
+    <value>Recognition Hotkey</value>
+  </data>
+  <data name="RecognitionHotkeyLabel" xml:space="preserve">
+    <value>Start / Stop Recognition</value>
+  </data>
+  <data name="RecognitionHotkeyHint" xml:space="preserve">
+    <value>Click the box and press either a single key or a shortcut combination to record it. Less accident-prone keys or Ctrl/Alt/Shift/Win combinations are recommended. Clearing it disables the global hotkey.</value>
+  </data>
+  <data name="RecognitionHotkeySaveLabel" xml:space="preserve">
+    <value>Save Hotkey</value>
+  </data>
+  <data name="RecognitionHotkeyClearLabel" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="RecognitionHotkeyNotSet" xml:space="preserve">
+    <value>Not set (disabled)</value>
+  </data>
+  <data name="RecognitionHotkeySaved" xml:space="preserve">
+    <value>Recognition hotkey saved.</value>
+  </data>
+  <data name="RecognitionHotkeyInvalid" xml:space="preserve">
+    <value>Modifier keys alone (Ctrl / Alt / Shift / Win) cannot be used as the hotkey.</value>
+  </data>
   <data name="MessageTemplates" xml:space="preserve">
     <value>Message Templates</value>
   </data>
@@ -1598,7 +1622,7 @@ Update now?</value>
     <value>Example for homophone correction: if “Genshin” keeps being recognized as a wrong same-sounding word, set Core Term to “原神”, Aliases to “元神, 圆神”, Pronunciations to “yuan shen”, and Meaning / Note to “a video game title”.</value>
   </data>
   <data name="CustomVocabularySectionHint" xml:space="preserve">
-    <value>Manage local vocabulary tables for ASR correction. Up to {0} tables, only {1} enabled at a time, with {2} entries and {3} effective characters per table.</value>
+    <value>Manage local vocabulary tables for ASR correction. Only {0} enabled at a time, with {1} entries and {2} effective characters per table.</value>
   </data>
   <data name="CustomVocabularyAddTable" xml:space="preserve">
     <value>Add Table</value>
@@ -1637,7 +1661,7 @@ Update now?</value>
     <value>Separate aliases and pronunciation hints with commas or new lines. Up to {0} aliases and {1} pronunciation hints per entry.</value>
   </data>
   <data name="CustomVocabularyTableCountSummary" xml:space="preserve">
-    <value>{0}/{1} tables, {2} total entries, {3} enabled</value>
+    <value>{0} tables, {1} total entries, {2} enabled</value>
   </data>
   <data name="CustomVocabularyTableStatusSummary" xml:space="preserve">
     <value>{0}/{1} entries, {2}/{3} characters</value>
@@ -1701,9 +1725,6 @@ Update now?</value>
   </data>
   <data name="CustomVocabularyBudgetExceeded" xml:space="preserve">
     <value>This change would exceed the table character budget of {0}, so it was reverted.</value>
-  </data>
-  <data name="CustomVocabularyMaxTablesReached" xml:space="preserve">
-    <value>You have reached the maximum of {0} vocabulary tables.</value>
   </data>
   <data name="CustomVocabularyDefaultTableName" xml:space="preserve">
     <value>New Vocabulary</value>

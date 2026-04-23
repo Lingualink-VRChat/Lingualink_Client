@@ -49,6 +49,35 @@
             </StackPanel>
 
             <StackPanel Grid.Row="2" Margin="0,0,0,30">
+                <Label Content="{Binding RecognitionHotkeySectionTitle}" FontSize="14" FontWeight="Bold" />
+                <TextBlock
+                    Margin="0,6,0,0"
+                    FontWeight="SemiBold"
+                    Text="{Binding RecognitionHotkeyLabel}" />
+                <ui:TextBox
+                    x:Name="RecognitionHotkeyTextBox"
+                    Margin="0,6,0,0"
+                    IsReadOnly="True"
+                    PreviewKeyDown="RecognitionHotkeyTextBox_PreviewKeyDown" />
+                <TextBlock
+                    Margin="0,5,0,0"
+                    FontSize="11"
+                    FontStyle="Italic"
+                    Foreground="Gray"
+                    Text="{Binding RecognitionHotkeyHint}"
+                    TextWrapping="Wrap" />
+                <StackPanel Margin="0,12,0,0" Orientation="Horizontal">
+                    <ui:Button
+                        Margin="0,0,12,0"
+                        Click="SaveRecognitionHotkey_Click"
+                        Content="{Binding RecognitionHotkeySaveLabel}" />
+                    <ui:Button
+                        Click="ClearRecognitionHotkey_Click"
+                        Content="{Binding RecognitionHotkeyClearLabel}" />
+                </StackPanel>
+            </StackPanel>
+
+            <StackPanel Grid.Row="3" Margin="0,0,0,30">
                 <Label Content="{Binding UpdateSectionTitle}" FontSize="14" FontWeight="Bold" />
 
                 <Grid Margin="0,10,0,0">

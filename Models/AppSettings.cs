@@ -8,7 +8,6 @@ namespace lingualink_client.Models
     public class AppSettings
     {
         public const int MaxEnabledCustomVocabularyTables = 1;
-        public const int MaxCustomVocabularyTables = 20;
         public const int MaxEntriesPerVocabularyTable = 80;
         public const int MaxAliasesPerVocabularyEntry = 6;
         public const int MaxPronunciationsPerVocabularyEntry = 4;
@@ -85,6 +84,9 @@ namespace lingualink_client.Models
 
         // Microphone selection - remember last used device
         public string LastSelectedMicrophoneId { get; set; } = string.Empty;
+
+        // Global hotkey used to toggle start/stop recognition
+        public string ToggleRecognitionHotkey { get; set; } = "Ctrl+Alt+F10";
 
         public string PendingSubscriptionOrderOutTradeNo { get; set; } = string.Empty;
 
@@ -170,11 +172,13 @@ namespace lingualink_client.Models
         public static int CountVocabularyEntryCharacters(
             string term,
             IEnumerable<string>? aliases,
-            IEnumerable<string>? pronunciations)
+            IEnumerable<string>? pronunciations,
+            string? note = null)
         {
             return (term?.Length ?? 0)
                    + (aliases?.Sum(alias => alias?.Length ?? 0) ?? 0)
-                   + (pronunciations?.Sum(item => item?.Length ?? 0) ?? 0);
+                   + (pronunciations?.Sum(item => item?.Length ?? 0) ?? 0)
+                   + (note?.Trim().Length ?? 0);
         }
 
         // Get the currently selected template

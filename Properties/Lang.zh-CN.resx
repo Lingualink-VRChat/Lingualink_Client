@@ -614,6 +614,30 @@
   <data name="LanguageHint" xml:space="preserve">
     <value>选择您偏好的界面语言。这会影响所有UI文本和默认模板。</value>
   </data>
+  <data name="RecognitionHotkeySectionTitle" xml:space="preserve">
+    <value>识别快捷键</value>
+  </data>
+  <data name="RecognitionHotkeyLabel" xml:space="preserve">
+    <value>开始/停止识别</value>
+  </data>
+  <data name="RecognitionHotkeyHint" xml:space="preserve">
+    <value>点击输入框后直接按下单个按键或组合键即可录入。建议优先使用不易误触的按键或 Ctrl/Alt/Shift/Win 组合键，清空后表示禁用全局快捷键。</value>
+  </data>
+  <data name="RecognitionHotkeySaveLabel" xml:space="preserve">
+    <value>保存快捷键</value>
+  </data>
+  <data name="RecognitionHotkeyClearLabel" xml:space="preserve">
+    <value>清空</value>
+  </data>
+  <data name="RecognitionHotkeyNotSet" xml:space="preserve">
+    <value>未设置（已禁用）</value>
+  </data>
+  <data name="RecognitionHotkeySaved" xml:space="preserve">
+    <value>识别快捷键已保存。</value>
+  </data>
+  <data name="RecognitionHotkeyInvalid" xml:space="preserve">
+    <value>纯修饰键（Ctrl / Alt / Shift / Win）不能单独作为快捷键。</value>
+  </data>
   <data name="MessageTemplates" xml:space="preserve">
     <value>消息模板</value>
   </data>
@@ -1567,7 +1591,7 @@
     <value>如何使用自定义词表？</value>
   </data>
   <data name="CustomVocabularyGuidanceHint" xml:space="preserve">
-    <value>悬停查看填写说明与示例</value>
+    <value>鼠标悬停查看使用方法</value>
   </data>
   <data name="CustomVocabularyGuidanceSummary" xml:space="preserve">
     <value>当语音识别总是把您的特定词汇听错，或者 AI 听不懂某些“网络黑话”时，您可以通过这张词表来“教”它。</value>
@@ -1597,7 +1621,7 @@
     <value>例如纠正同音字：如果“原神”总被识别成“元神”，可填写为 核心词汇：原神；别名：元神，圆神；发音：yuan shen；词义/备注：一款电子游戏名。</value>
   </data>
   <data name="CustomVocabularySectionHint" xml:space="preserve">
-    <value>管理仅保存在本地的 ASR 纠错词表。最多 {0} 张词表，同一时刻最多启用 {1} 张；每张词表最多 {2} 条词条、{3} 个有效字符。</value>
+    <value>管理仅保存在本地的 ASR 纠错词表。同一时刻最多启用 {0} 张；每张词表最多 {1} 条词条、{2} 个有效字符。</value>
   </data>
   <data name="CustomVocabularyAddTable" xml:space="preserve">
     <value>新建词表</value>
@@ -1636,7 +1660,7 @@
     <value>别名和发音提示可用逗号或换行分隔。每条最多 {0} 个别名，最多 {1} 个发音提示。</value>
   </data>
   <data name="CustomVocabularyTableCountSummary" xml:space="preserve">
-    <value>{0}/{1} 张词表，共 {2} 条词条，已启用 {3} 张</value>
+    <value>{0} 张词表，共 {1} 条词条，已启用 {2} 张</value>
   </data>
   <data name="CustomVocabularyTableStatusSummary" xml:space="preserve">
     <value>{0}/{1} 词条，{2}/{3} 字符</value>
@@ -1700,9 +1724,6 @@
   </data>
   <data name="CustomVocabularyBudgetExceeded" xml:space="preserve">
     <value>本次修改会超过单张词表 {0} 的字符预算，已回退到上一次合法状态。</value>
-  </data>
-  <data name="CustomVocabularyMaxTablesReached" xml:space="preserve">
-    <value>已达到词表数量上限 {0}。</value>
   </data>
   <data name="CustomVocabularyDefaultTableName" xml:space="preserve">
     <value>新词表</value>

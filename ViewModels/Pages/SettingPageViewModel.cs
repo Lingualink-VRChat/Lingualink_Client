@@ -28,6 +28,12 @@ namespace lingualink_client.ViewModels
         public string PageTitle => LanguageManager.GetString("GeneralSettings");
         public string InterfaceLanguage => LanguageManager.GetString("InterfaceLanguage");
         public string LanguageHint => LanguageManager.GetString("LanguageHint");
+        public string RecognitionHotkeySectionTitle => LanguageManager.GetString("RecognitionHotkeySectionTitle");
+        public string RecognitionHotkeyLabel => LanguageManager.GetString("RecognitionHotkeyLabel");
+        public string RecognitionHotkeyHint => LanguageManager.GetString("RecognitionHotkeyHint");
+        public string RecognitionHotkeySaveLabel => LanguageManager.GetString("RecognitionHotkeySaveLabel");
+        public string RecognitionHotkeyClearLabel => LanguageManager.GetString("RecognitionHotkeyClearLabel");
+        public string RecognitionHotkeyNotSetLabel => LanguageManager.GetString("RecognitionHotkeyNotSet");
         public string UpdateSectionTitle => LanguageManager.GetString("UpdateSettings");
         public string CurrentVersionLabel => LanguageManager.GetString("UpdateCurrentVersion");
         public string LatestVersionLabel => LanguageManager.GetString("UpdateLatestVersion");

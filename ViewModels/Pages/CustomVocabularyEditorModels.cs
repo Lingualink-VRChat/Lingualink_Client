@@ -31,7 +31,7 @@ namespace lingualink_client.ViewModels
         public int EffectiveCharacterCount => Entries
             .Select(entry => entry.ToNormalizedModel())
             .Where(entry => entry.Enabled && !string.IsNullOrWhiteSpace(entry.Term))
-            .Sum(entry => AppSettings.CountVocabularyEntryCharacters(entry.Term, entry.Aliases, entry.Pronunciations));
+            .Sum(entry => AppSettings.CountVocabularyEntryCharacters(entry.Term, entry.Aliases, entry.Pronunciations, entry.Note));
 
         public bool IsOverCharacterBudget => EffectiveCharacterCount > AppSettings.MaxCustomVocabularyTableCharacters;
 
@@ -80,7 +80,7 @@ namespace lingualink_client.ViewModels
 
             foreach (var entry in Entries.Select(item => item.ToNormalizedModel()).Where(item => !string.IsNullOrWhiteSpace(item.Term)))
             {
-                var entryCharacters = AppSettings.CountVocabularyEntryCharacters(entry.Term, entry.Aliases, entry.Pronunciations);
+                var entryCharacters = AppSettings.CountVocabularyEntryCharacters(entry.Term, entry.Aliases, entry.Pronunciations, entry.Note);
                 if (normalizedEntries.Count >= AppSettings.MaxEntriesPerVocabularyTable
                     || totalCharacters + entryCharacters > AppSettings.MaxCustomVocabularyTableCharacters)
                 {
