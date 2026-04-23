@@ -1594,7 +1594,7 @@
     <value>常见使用场景举例</value>
   </data>
   <data name="CustomVocabularyExampleBody" xml:space="preserve">
-    <value>例如纠正同音字：如果“原神”总被识别成“元神”，可填写为 核心词汇：原神；别名：元神，圆神；发音：yuan shen。</value>
+    <value>例如纠正同音字：如果“原神”总被识别成“元神”，可填写为 核心词汇：原神；别名：元神，圆神；发音：yuan shen；词义/备注：一款电子游戏名。</value>
   </data>
   <data name="CustomVocabularySectionHint" xml:space="preserve">
     <value>管理仅保存在本地的 ASR 纠错词表。最多 {0} 张词表，同一时刻最多启用 {1} 张；每张词表最多 {2} 条词条、{3} 个有效字符。</value>

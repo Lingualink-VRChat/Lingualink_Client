@@ -43,11 +43,6 @@
                     <TextBlock
                         Text="{Binding PageTitle}"
                         Style="{DynamicResource PageTitleTextBlockStyle}" />
-                    <TextBlock
-                        Margin="0,6,0,0"
-                        FontSize="12"
-                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                        Text="{Binding TableCountSummary}" />
                 </StackPanel>
 
                 <ui:Button
@@ -218,15 +213,8 @@
                                             </Border>
                                         </StackPanel>
 
-                                        <TextBlock
-                                            Grid.Column="2"
-                                            Margin="20,0"
-                                            VerticalAlignment="Center"
-                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                            Text="{Binding HeaderSummary}" />
-
                                         <RadioButton
-                                            Grid.Column="3"
+                                            Grid.Column="2"
                                             Margin="0,0,16,0"
                                             VerticalAlignment="Center"
                                             GroupName="VocabularyEnabledGroup"
@@ -235,7 +223,7 @@
                                         </RadioButton>
 
                                         <ui:Button
-                                            Grid.Column="4"
+                                            Grid.Column="3"
                                             Margin="0,0,8,0"
                                             Command="{Binding DataContext.ExportVocabularyTableCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                             CommandParameter="{Binding}"
@@ -243,7 +231,7 @@
                                             Icon="{ui:SymbolIcon Symbol=ArrowExport24}" />
 
                                         <ui:Button
-                                            Grid.Column="5"
+                                            Grid.Column="4"
                                             Command="{Binding DataContext.RemoveVocabularyTableCommand, RelativeSource={RelativeSource AncestorType=Page}}"
                                             CommandParameter="{Binding}"
                                             Content="{Binding DataContext.DeleteTableLabel, RelativeSource={RelativeSource AncestorType=Page}}"

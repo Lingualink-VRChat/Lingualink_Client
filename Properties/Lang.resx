@@ -1595,7 +1595,7 @@ Update now?</value>
     <value>Common Example</value>
   </data>
   <data name="CustomVocabularyExampleBody" xml:space="preserve">
-    <value>Example for homophone correction: if “Genshin” keeps being recognized as a wrong same-sounding word, set Core Term to “原神”, Aliases to “元神, 圆神”, and Pronunciations to “yuan shen”.</value>
+    <value>Example for homophone correction: if “Genshin” keeps being recognized as a wrong same-sounding word, set Core Term to “原神”, Aliases to “元神, 圆神”, Pronunciations to “yuan shen”, and Meaning / Note to “a video game title”.</value>
   </data>
   <data name="CustomVocabularySectionHint" xml:space="preserve">
     <value>Manage local vocabulary tables for ASR correction. Up to {0} tables, only {1} enabled at a time, with {2} entries and {3} effective characters per table.</value>

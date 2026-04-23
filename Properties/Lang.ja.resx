@@ -1511,7 +1511,7 @@
     <value>よくある利用例</value>
   </data>
   <data name="CustomVocabularyExampleBody" xml:space="preserve">
-    <value>同音語の補正例：「原神」がいつも「元神」と誤認識されるなら、コア用語に「原神」、別名に「元神, 圆神」、発音に「yuan shen」と入力します。</value>
+    <value>同音語の補正例：「原神」がいつも「元神」と誤認識されるなら、コア用語に「原神」、別名に「元神, 圆神」、発音に「yuan shen」、意味 / メモに「ゲーム名」と入力します。</value>
   </data>
   <data name="CustomVocabularySectionHint" xml:space="preserve">
     <value>ASR 補正用のローカル用語集を管理します。最大 {0} テーブル、同時に有効化できるのは {1} テーブル、各テーブルは最大 {2} エントリ・{3} 文字です。</value>
