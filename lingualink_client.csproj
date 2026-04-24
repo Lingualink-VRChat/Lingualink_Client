@@ -19,7 +19,7 @@
     <NoWarn>$(NoWarn);CA1416</NoWarn>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
-    <Configurations>Debug;Release;ReleaseSelfContained</Configurations>
+    <Configurations>Debug;Release;ReleaseSelfContained;ReleaseFrameworkDependent</Configurations>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)'=='ReleaseSelfContained'">
     <DebugType>pdbonly</DebugType>
@@ -152,7 +152,6 @@
   </ItemGroup>
 
 </Project>
-
 
 
 
