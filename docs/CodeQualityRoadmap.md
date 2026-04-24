@@ -5,7 +5,8 @@
 ## 当前观察
 
 - 2026-04-24 更新：`lingualink_client.sln` 已接入 `tests/LinguaLink.Client.Tests`，`Debug|Any CPU` 不再误映射到 Release；API/Auth 高风险日志已开始脱敏，新增了 `LogSanitizer` 单元测试。
-- 仓库中约有 `52` 处 `ServiceContainer.Resolve/TryResolve` 调用，说明依赖注入和服务定位器目前处于混用状态。
+- 2026-04-24 更新：账号页已剥离输入校验、订阅展示、订单状态、二维码生成和结算地址解析等 helper；账号页与日志页开始通过 `ServiceInitializer` 注册的 ViewModel 工厂组装。
+- 仓库中约有 `51` 处 `ServiceContainer.Resolve/TryResolve` 调用，说明依赖注入和服务定位器目前处于混用状态。
 - 仓库中约有 `559` 处 `LanguageManager.GetString(...)` 调用，本地化能力完整，但也带来了大量重复标签属性和刷新逻辑。
 - 体量最大的热点文件集中在页面级 ViewModel 和流程服务：
   - [ViewModels/Pages/AccountPageViewModel.cs](../ViewModels/Pages/AccountPageViewModel.cs)
@@ -23,10 +24,10 @@
 - [ViewModels/Pages/AccountPageViewModel.cs:1234](../ViewModels/Pages/AccountPageViewModel.cs#L1234) 到 [ViewModels/Pages/AccountPageViewModel.cs:1435](../ViewModels/Pages/AccountPageViewModel.cs#L1435) 又单独承载了一套设置加载、自动保存和校验流程。
 
 建议拆分为：
-- `AccountServerSettingsEditor`
-- `AccountProfileEditor`
-- `SubscriptionCheckoutController`
-- `AccountConnectionTester`
+- `AccountProfileEditor`：继续承接用户名、邮箱、社交账号绑定命令。
+- `SubscriptionCheckoutController`：继续承接套餐加载、下单和支付轮询。
+- `AccountServerSettingsEditor`：如果账号页恢复服务器设置项，再统一接入设置编辑公共流程。
+- `AccountConnectionTester`：如果账号页恢复连接测试，再下沉到独立服务。
 
 ### 2. 会话历史页面可继续下沉
 
