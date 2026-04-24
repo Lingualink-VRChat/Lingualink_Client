@@ -4,7 +4,8 @@
 
 ## 当前观察
 
-- 仓库中约有 `48` 处 `ServiceContainer.Resolve/TryResolve` 调用，说明依赖注入和服务定位器目前处于混用状态。
+- 2026-04-24 更新：`lingualink_client.sln` 已接入 `tests/LinguaLink.Client.Tests`，`Debug|Any CPU` 不再误映射到 Release；API/Auth 高风险日志已开始脱敏，新增了 `LogSanitizer` 单元测试。
+- 仓库中约有 `52` 处 `ServiceContainer.Resolve/TryResolve` 调用，说明依赖注入和服务定位器目前处于混用状态。
 - 仓库中约有 `559` 处 `LanguageManager.GetString(...)` 调用，本地化能力完整，但也带来了大量重复标签属性和刷新逻辑。
 - 体量最大的热点文件集中在页面级 ViewModel 和流程服务：
   - [ViewModels/Pages/AccountPageViewModel.cs](../ViewModels/Pages/AccountPageViewModel.cs)
