@@ -27,8 +27,13 @@ namespace lingualink_client.ViewModels.Components
         private bool _suppressRefresh;
 
         public LogViewModel()
+            : this(ServiceContainer.Resolve<ILoggingManager>())
         {
-            _loggingManager = ServiceContainer.Resolve<ILoggingManager>();
+        }
+
+        public LogViewModel(ILoggingManager loggingManager)
+        {
+            _loggingManager = loggingManager ?? throw new ArgumentNullException(nameof(loggingManager));
 
             EntriesView = CollectionViewSource.GetDefaultView(_loggingManager.LogEntries);
             EntriesView.SortDescriptions.Add(new SortDescription(nameof(LogEntry.Timestamp), ListSortDirection.Ascending));

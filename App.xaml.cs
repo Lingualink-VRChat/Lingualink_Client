@@ -66,7 +66,10 @@ namespace lingualink_client
             AppLanguageHelper.ApplyLanguage(appSettings);
 
             // 3. ???ViewModel (???????????????ViewModel????)
-            SharedIndexWindowViewModel = new IndexWindowViewModel();
+            SharedIndexWindowViewModel = ServiceContainer.TryResolve<IndexWindowViewModel>(out var indexViewModel)
+                && indexViewModel != null
+                    ? indexViewModel
+                    : new IndexWindowViewModel();
 
             // ? Velopack ???????????????????
             if (ServiceContainer.TryResolve<ILoggingManager>(out var loggingManager) && loggingManager is not null)

@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using lingualink_client.Services;
-using lingualink_client.Services.Interfaces;
 using lingualink_client.ViewModels;
 
 namespace lingualink_client.Views
@@ -23,9 +22,7 @@ namespace lingualink_client.Views
 
         private async void OnLoaded(object sender, RoutedEventArgs e)
         {
-            _viewModel ??= new AccountPageViewModel(
-                ServiceContainer.Resolve<ISettingsManager>(),
-                ServiceContainer.TryResolve<IAuthService>(out var authService) ? authService : null);
+            _viewModel ??= CreateViewModel();
             DataContext = _viewModel;
             var viewModel = _viewModel;
 
@@ -37,6 +34,13 @@ namespace lingualink_client.Views
             {
                 Debug.WriteLine($"[AccountPage] EnsureProfileFreshOnPageEnterAsync failed: {ex.Message}");
             }
+        }
+
+        private static AccountPageViewModel CreateViewModel()
+        {
+            return ServiceContainer.TryResolve<AccountPageViewModel>(out var viewModel) && viewModel != null
+                ? viewModel
+                : throw new InvalidOperationException("AccountPageViewModel is not registered.");
         }
     }
 }
