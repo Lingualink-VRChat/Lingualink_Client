@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.IO;
-using System.Net.Mail;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -16,7 +14,6 @@ using lingualink_client.Models.Auth;
 using lingualink_client.Services;
 using lingualink_client.Services.Interfaces;
 using lingualink_client.Views;
-using QRCoder;
 using MessageBox = lingualink_client.Services.MessageBox;
 
 namespace lingualink_client.ViewModels
@@ -248,22 +245,17 @@ namespace lingualink_client.ViewModels
         public string EmailActionButtonText => string.IsNullOrWhiteSpace(UserProfile?.Email)
             ? LanguageManager.GetString("AccountBind")
             : LanguageManager.GetString("AccountRebind");
-        public string UserStatusDisplay => MapUserStatus(UserProfile?.Status);
+        public string UserStatusDisplay => AccountSubscriptionPresentation.MapUserStatus(UserProfile?.Status);
         public bool IsWechatBound => UserProfile?.SocialBindings?.Wechat?.Bound == true;
         public bool IsQqBound => UserProfile?.SocialBindings?.Qq?.Bound == true;
-        public string WechatBindingStatusDisplay => BuildSocialBindingStatusDisplay(UserProfile?.SocialBindings?.Wechat);
-        public string QqBindingStatusDisplay => BuildSocialBindingStatusDisplay(UserProfile?.SocialBindings?.Qq);
-        public string WalletBalanceDisplay => FormatCurrencyAmount(WalletBalanceCents);
+        public string WechatBindingStatusDisplay => AccountBindingDisplayFormatter.BuildSocialBindingStatusDisplay(UserProfile?.SocialBindings?.Wechat);
+        public string QqBindingStatusDisplay => AccountBindingDisplayFormatter.BuildSocialBindingStatusDisplay(UserProfile?.SocialBindings?.Qq);
+        public string WalletBalanceDisplay => AccountSubscriptionPresentation.FormatCurrencyAmount(WalletBalanceCents);
         public string AutoRenewStatusDisplay => UserProfile?.Subscription?.AutoRenew == true
             ? LanguageManager.GetString("AccountWalletAutoRenewEnabledStatus")
             : LanguageManager.GetString("AccountWalletAutoRenewDisabledStatus");
         public string AutoRenewActionText => UserProfile?.Subscription?.AutoRenew == true ? WalletDisableAutoRenewLabel : WalletEnableAutoRenewLabel;
         public bool HasRenewalWarning => !string.IsNullOrWhiteSpace(RenewalWarning);
-
-        public AccountPageViewModel()
-            : this(CreateSettingsManager(), TryResolveAuthService())
-        {
-        }
 
         public AccountPageViewModel(ISettingsManager settingsManager, IAuthService? authService = null)
         {
@@ -296,18 +288,6 @@ namespace lingualink_client.ViewModels
             }
         }
 
-        private static ISettingsManager CreateSettingsManager()
-        {
-            return ServiceContainer.TryResolve<ISettingsManager>(out var settingsManager) && settingsManager != null
-                ? settingsManager
-                : new SettingsManager();
-        }
-
-        private static IAuthService? TryResolveAuthService()
-        {
-            return ServiceContainer.TryResolve<IAuthService>(out var authService) ? authService : null;
-        }
-
         private void SyncProfileEditorWithUser(UserProfile? profile)
         {
             if (profile == null)
@@ -331,49 +311,11 @@ namespace lingualink_client.ViewModels
             EmailCodeCountdownSeconds = 0;
         }
 
-        private static bool TryValidateEmailInput(string? email)
-        {
-            if (string.IsNullOrWhiteSpace(email))
-            {
-                return false;
-            }
-
-            try
-            {
-                var parsed = new MailAddress(email.Trim());
-                return string.Equals(parsed.Address, email.Trim(), StringComparison.OrdinalIgnoreCase);
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
         private bool HasValidBindEmailPassword()
         {
-            var password = BindEmailPasswordInput ?? string.Empty;
-            if (password.Length < 8 || password.Length > 128)
-            {
-                return false;
-            }
-
-            return string.Equals(password, BindEmailConfirmPasswordInput ?? string.Empty, StringComparison.Ordinal);
-        }
-
-        private static string BuildSocialBindingStatusDisplay(SocialBindingInfo? binding)
-        {
-            if (binding?.Bound != true)
-            {
-                return LanguageManager.GetString("AccountUnbound");
-            }
-
-            var masked = binding.AccountMasked?.Trim();
-            if (string.IsNullOrWhiteSpace(masked))
-            {
-                return LanguageManager.GetString("AccountBound");
-            }
-
-            return string.Format(LanguageManager.GetString("AccountBoundMaskedFormat"), masked);
+            return AccountProfileInputValidator.HasValidBindEmailPassword(
+                BindEmailPasswordInput,
+                BindEmailConfirmPasswordInput);
         }
 
         partial void OnUserProfileChanged(UserProfile? value)
@@ -533,7 +475,7 @@ namespace lingualink_client.ViewModels
         partial void OnLatestOrderCodeUrlChanged(string value)
         {
             OnPropertyChanged(nameof(HasLatestOrderCodeUrl));
-            LatestOrderQrImage = BuildQrCodeImage(value);
+            LatestOrderQrImage = AccountQrCodeImageBuilder.Build(value);
         }
 
         partial void OnLatestOrderQrImageChanged(BitmapImage? value)
@@ -632,9 +574,9 @@ namespace lingualink_client.ViewModels
             HasActiveSubscription = subscription.IsPaidActiveNow;
             HasPaidSubscriptionPlan = subscription.IsPaidPlan;
             CurrentPlanDisplay = subscription.DisplayPlanName;
-            SubscriptionStatus = BuildSubscriptionStatusText(subscription);
-            SubscriptionRemainingDisplay = BuildSubscriptionRemainingText(subscription);
-            ExpiryReminder = BuildExpiryReminderText(subscription);
+            SubscriptionStatus = AccountSubscriptionPresentation.BuildSubscriptionStatusText(subscription);
+            SubscriptionRemainingDisplay = AccountSubscriptionPresentation.BuildSubscriptionRemainingText(subscription);
+            ExpiryReminder = AccountSubscriptionPresentation.BuildExpiryReminderText(subscription);
             RenewalWarning = subscription.RenewalWarning ?? string.Empty;
         }
 
@@ -679,167 +621,6 @@ namespace lingualink_client.ViewModels
             }
         }
 
-        private static string BuildSubscriptionStatusText(SubscriptionInfo subscription)
-        {
-            if (!subscription.IsPaidPlan)
-            {
-                return LanguageManager.GetString("AccountPlanUnsubscribed");
-            }
-
-            if (subscription.IsPaidActiveNow)
-            {
-                return LanguageManager.GetString("AccountSubscriptionStatusActive");
-            }
-
-            var now = DateTime.UtcNow;
-            if (subscription.StartDate.HasValue && subscription.StartDate.Value.ToUniversalTime() > now)
-            {
-                return LanguageManager.GetString("AccountSubscriptionStatusPending");
-            }
-
-            if (subscription.EffectiveEndDate.HasValue && subscription.EffectiveEndDate.Value.ToUniversalTime() < now)
-            {
-                return LanguageManager.GetString("AccountSubscriptionStatusExpired");
-            }
-
-            return string.IsNullOrWhiteSpace(subscription.Status)
-                ? LanguageManager.GetString("AccountSubscriptionStatusNotOpened")
-                : subscription.Status;
-        }
-
-        private static string BuildExpiryReminderText(SubscriptionInfo subscription)
-        {
-            if (!subscription.IsPaidPlan)
-            {
-                return LanguageManager.GetString("AccountSubscriptionPromptNoSubscription");
-            }
-
-            if (subscription.AutoRenew && subscription.IsPaidActiveNow)
-            {
-                return LanguageManager.GetString("AccountSubscriptionPromptAutoRenew");
-            }
-
-            var endDate = subscription.EffectiveEndDate;
-            if (!endDate.HasValue)
-            {
-                return subscription.IsPaidActiveNow
-                    ? LanguageManager.GetString("AccountSubscriptionPromptUnavailable")
-                    : LanguageManager.GetString("AccountSubscriptionPromptNoActiveSubscription");
-            }
-
-            var daysRemaining = (endDate.Value.ToLocalTime().Date - DateTime.Now.Date).Days;
-            if (daysRemaining < 0)
-            {
-                return LanguageManager.GetString("AccountSubscriptionPromptExpired");
-            }
-
-            if (!subscription.IsPaidActiveNow)
-            {
-                return LanguageManager.GetString("AccountSubscriptionPromptPending");
-            }
-
-            if (daysRemaining == 0)
-            {
-                return LanguageManager.GetString("AccountSubscriptionPromptExpireToday");
-            }
-
-            if (daysRemaining <= 7)
-            {
-                return string.Format(LanguageManager.GetString("AccountSubscriptionPromptExpireInDaysFormat"), daysRemaining);
-            }
-
-            return string.Empty;
-        }
-
-        private static string BuildSubscriptionRemainingText(SubscriptionInfo subscription)
-        {
-            if (!subscription.IsPaidPlan)
-            {
-                return LanguageManager.GetString("AccountPlanUnsubscribed");
-            }
-
-            var endDate = subscription.EffectiveEndDate;
-            if (!endDate.HasValue)
-            {
-                return subscription.IsPaidActiveNow
-                    ? LanguageManager.GetString("AccountRemainingUnknown")
-                    : LanguageManager.GetString("AccountRemainingPending");
-            }
-
-            var now = DateTime.UtcNow;
-            var endUtc = endDate.Value.ToUniversalTime();
-            var remaining = endUtc - now;
-            if (remaining <= TimeSpan.Zero)
-            {
-                return LanguageManager.GetString("AccountRemainingExpired");
-            }
-
-            if (remaining.TotalDays >= 1)
-            {
-                return string.Format(LanguageManager.GetString("AccountRemainingDaysFormat"), Math.Floor(remaining.TotalDays));
-            }
-
-            if (remaining.TotalHours >= 1)
-            {
-                return string.Format(LanguageManager.GetString("AccountRemainingHoursFormat"), Math.Floor(remaining.TotalHours));
-            }
-
-            return string.Format(LanguageManager.GetString("AccountRemainingMinutesFormat"), Math.Max(1, Math.Floor(remaining.TotalMinutes)));
-        }
-
-        private static string FormatDate(DateTime value)
-        {
-            return value.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
-        }
-
-        private static string FormatCurrencyAmount(int amountCents)
-        {
-            return $"¥{amountCents / 100.0:0.00}";
-        }
-
-        private static string MapUserStatus(string? status)
-        {
-            if (string.IsNullOrWhiteSpace(status))
-            {
-                return LanguageManager.GetString("AccountStatusUnknown");
-            }
-
-            return status.Trim().ToLowerInvariant() switch
-            {
-                "active" => LanguageManager.GetString("AccountStatusNormal"),
-                "inactive" => LanguageManager.GetString("AccountStatusInactive"),
-                "disabled" => LanguageManager.GetString("AccountStatusDisabled"),
-                _ => status
-            };
-        }
-
-        private static bool TryValidateUsernameInput(string? value, out string? errorMessage)
-        {
-            if (string.IsNullOrWhiteSpace(value))
-            {
-                errorMessage = LanguageManager.GetString("AccountUsernameRequired");
-                return false;
-            }
-
-            if (value.Length > 100)
-            {
-                errorMessage = LanguageManager.GetString("AccountUsernameTooLong");
-                return false;
-            }
-
-            foreach (var c in value)
-            {
-                if (c == '/')
-                {
-                    errorMessage = LanguageManager.GetString("AccountUsernameSlashInvalid");
-                    return false;
-                }
-            }
-
-            errorMessage = null;
-            return true;
-        }
-
         private void ClearPlans()
         {
             AvailablePlans = Array.Empty<SubscriptionPlanInfo>();
@@ -864,7 +645,9 @@ namespace lingualink_client.ViewModels
             LatestOrderOutTradeNo = order.OutTradeNo ?? string.Empty;
             LatestOrderStatus = string.IsNullOrWhiteSpace(order.Status) ? "unknown" : order.Status;
             LatestOrderAmountDisplay = order.AmountDisplay;
-            LatestOrderExpireAtDisplay = order.ExpireAt.HasValue ? FormatDate(order.ExpireAt.Value) : string.Empty;
+            LatestOrderExpireAtDisplay = order.ExpireAt.HasValue
+                ? AccountSubscriptionPresentation.FormatDate(order.ExpireAt.Value)
+                : string.Empty;
 
             if (payment != null)
             {
@@ -874,42 +657,13 @@ namespace lingualink_client.ViewModels
 
                 if (!order.ExpireAt.HasValue && payment.OrderExpireAt.HasValue)
                 {
-                    LatestOrderExpireAtDisplay = FormatDate(payment.OrderExpireAt.Value);
+                    LatestOrderExpireAtDisplay = AccountSubscriptionPresentation.FormatDate(payment.OrderExpireAt.Value);
                 }
 
                 if (!string.IsNullOrWhiteSpace(payment.Message))
                 {
                     LatestOrderMessage = payment.Message;
                 }
-            }
-        }
-
-        private static BitmapImage? BuildQrCodeImage(string? codeUrl)
-        {
-            if (string.IsNullOrWhiteSpace(codeUrl))
-            {
-                return null;
-            }
-
-            try
-            {
-                using var generator = new QRCodeGenerator();
-                using var qrData = generator.CreateQrCode(codeUrl, QRCodeGenerator.ECCLevel.Q);
-                var qrCode = new PngByteQRCode(qrData);
-                var pngBytes = qrCode.GetGraphic(20);
-
-                using var memoryStream = new MemoryStream(pngBytes);
-                var image = new BitmapImage();
-                image.BeginInit();
-                image.CacheOption = BitmapCacheOption.OnLoad;
-                image.StreamSource = memoryStream;
-                image.EndInit();
-                image.Freeze();
-                return image;
-            }
-            catch
-            {
-                return null;
             }
         }
 
@@ -944,16 +698,7 @@ namespace lingualink_client.ViewModels
 
         private static bool IsTerminalOrderStatus(string status)
         {
-            if (string.IsNullOrWhiteSpace(status))
-            {
-                return false;
-            }
-
-            return string.Equals(status, "paid", StringComparison.OrdinalIgnoreCase)
-                   || string.Equals(status, "failed", StringComparison.OrdinalIgnoreCase)
-                   || string.Equals(status, "canceled", StringComparison.OrdinalIgnoreCase)
-                   || string.Equals(status, "cancelled", StringComparison.OrdinalIgnoreCase)
-                   || string.Equals(status, "expired", StringComparison.OrdinalIgnoreCase);
+            return AccountOrderStatus.IsTerminal(status);
         }
 
         private async Task ApplyTerminalOrderStateAsync(SubscriptionOrderInfo order, bool refreshSubscriptionIfPaid)
@@ -1295,7 +1040,7 @@ namespace lingualink_client.ViewModels
                 return;
             }
 
-            var checkoutWindow = new CheckoutWindow(accessToken, ResolveCheckoutAuthHost(_authService.AuthServerUrl))
+            var checkoutWindow = new CheckoutWindow(accessToken, AccountCheckoutHostResolver.Resolve(_authService.AuthServerUrl))
             {
                 Owner = Application.Current.MainWindow
             };
@@ -1359,7 +1104,7 @@ namespace lingualink_client.ViewModels
                 return;
             }
 
-            var checkoutWindow = new CheckoutWindow(accessToken, ResolveCheckoutAuthHost(_authService.AuthServerUrl), "recharge")
+            var checkoutWindow = new CheckoutWindow(accessToken, AccountCheckoutHostResolver.Resolve(_authService.AuthServerUrl), "recharge")
             {
                 Owner = Application.Current.MainWindow
             };
@@ -1411,16 +1156,6 @@ namespace lingualink_client.ViewModels
             return IsLoggedIn && _authService != null && UserProfile?.Subscription?.IsPaidPlan == true && !IsUpdatingAutoRenew && !IsLoadingWallet;
         }
 
-        private static string ResolveCheckoutAuthHost(string? authServerUrl)
-        {
-            if (string.IsNullOrWhiteSpace(authServerUrl))
-            {
-                return AppSettings.GetEffectiveAuthServerUrl();
-            }
-
-            return authServerUrl.Trim().TrimEnd('/');
-        }
-
         [RelayCommand(CanExecute = nameof(CanRefreshUserProfile))]
         private async Task RefreshUserProfileAsync()
         {
@@ -1468,7 +1203,7 @@ namespace lingualink_client.ViewModels
             }
 
             var trimmedUsername = string.IsNullOrWhiteSpace(EditUsername) ? string.Empty : EditUsername.Trim();
-            if (!TryValidateUsernameInput(trimmedUsername, out var validationError))
+            if (!AccountProfileInputValidator.TryValidateUsername(trimmedUsername, out var validationError))
             {
                 MessageBox.Show(validationError ?? LanguageManager.GetString("AccountUsernameInvalid"), LanguageManager.GetString("ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
@@ -1500,7 +1235,7 @@ namespace lingualink_client.ViewModels
                 return false;
             }
 
-            return TryValidateUsernameInput(EditUsername.Trim(), out _);
+            return AccountProfileInputValidator.TryValidateUsername(EditUsername.Trim(), out _);
         }
 
         [RelayCommand(CanExecute = nameof(CanBeginEditEmail))]
@@ -1533,7 +1268,7 @@ namespace lingualink_client.ViewModels
                 return;
             }
 
-            if (!TryValidateEmailInput(BindEmailInput))
+            if (!AccountProfileInputValidator.IsValidEmail(BindEmailInput))
             {
                 MessageBox.Show(
                     LanguageManager.GetString("BindEmailInvalidFormat"),
@@ -1581,7 +1316,7 @@ namespace lingualink_client.ViewModels
                    && !IsUpdatingUserProfile
                    && !IsSendingEmailCode
                    && EmailCodeCountdownSeconds == 0
-                   && TryValidateEmailInput(BindEmailInput);
+                   && AccountProfileInputValidator.IsValidEmail(BindEmailInput);
         }
 
         [RelayCommand(CanExecute = nameof(CanSaveEmail))]
@@ -1592,7 +1327,7 @@ namespace lingualink_client.ViewModels
                 return;
             }
 
-            if (!TryValidateEmailInput(BindEmailInput))
+            if (!AccountProfileInputValidator.IsValidEmail(BindEmailInput))
             {
                 MessageBox.Show(
                     LanguageManager.GetString("BindEmailInvalidFormat"),
@@ -1681,7 +1416,7 @@ namespace lingualink_client.ViewModels
                    && _authService != null
                    && !IsUpdatingUserProfile
                    && IsEmailCodeSent
-                   && TryValidateEmailInput(BindEmailInput)
+                   && AccountProfileInputValidator.IsValidEmail(BindEmailInput)
                    && !string.IsNullOrWhiteSpace(BindEmailCodeInput)
                    && HasValidBindEmailPassword();
         }
@@ -1752,7 +1487,7 @@ namespace lingualink_client.ViewModels
             }
 
             var trimmedUsername = string.IsNullOrWhiteSpace(EditUsername) ? null : EditUsername.Trim();
-            if (trimmedUsername != null && !TryValidateUsernameInput(trimmedUsername, out var validationError))
+            if (trimmedUsername != null && !AccountProfileInputValidator.TryValidateUsername(trimmedUsername, out var validationError))
             {
                 MessageBox.Show(
                     validationError ?? LanguageManager.GetString("AccountUsernameInvalid"),
@@ -1802,7 +1537,7 @@ namespace lingualink_client.ViewModels
         private bool CanUpdateUserProfile()
         {
             var hasUsername = !string.IsNullOrWhiteSpace(EditUsername);
-            if (hasUsername && !TryValidateUsernameInput(EditUsername.Trim(), out _))
+            if (hasUsername && !AccountProfileInputValidator.TryValidateUsername(EditUsername.Trim(), out _))
             {
                 return false;
             }

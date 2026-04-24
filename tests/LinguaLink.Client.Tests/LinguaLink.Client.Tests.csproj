@@ -23,6 +23,7 @@
     <Compile Include="../../Services/Auth/SubscriptionPlanFilter.cs" Link="Source/SubscriptionPlanFilter.cs" />
     <Compile Include="../../Services/Updates/UpdateFeedResolver.cs" Link="Source/UpdateFeedResolver.cs" />
     <Compile Include="../../Services/Logging/LogSanitizer.cs" Link="Source/LogSanitizer.cs" />
+    <Compile Include="../../ViewModels/Pages/AccountOrderStatus.cs" Link="Source/AccountOrderStatus.cs" />
     <Compile Include="../../ViewModels/Components/ConversationHistoryLogic.cs" Link="Source/ConversationHistoryLogic.cs" />
   </ItemGroup>
 </Project>
