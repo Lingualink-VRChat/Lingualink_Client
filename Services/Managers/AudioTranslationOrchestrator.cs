@@ -211,7 +211,7 @@ namespace lingualink_client.Services.Managers
             if (!string.IsNullOrEmpty(apiResult.RawResponse))
             {
                 _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogServerRawResponse"),
-                    e.TriggerReason, apiResult.RawResponse), LogLevel.Trace, ApiCategory);
+                    e.TriggerReason, $"[redacted, chars={apiResult.RawResponse.Length}]"), LogLevel.Trace, ApiCategory);
             }
 
             if (!apiResult.IsSuccess)

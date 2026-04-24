@@ -72,7 +72,7 @@ namespace lingualink_client.Services.Managers
             }
 
             OnStatusUpdated(LanguageManager.GetString("StatusSendingText"));
-            _loggingManager.AddMessage($"Processing text input: {text.Substring(0, Math.Min(text.Length, 50))}...", LogLevel.Info, TextCategory);
+            _loggingManager.AddMessage($"Processing text input: [redacted, chars={text.Length}]", LogLevel.Info, TextCategory);
 
             // --- 智能判断任务类型和目标语言 ---
             List<string> targetLanguageCodes;
@@ -148,7 +148,10 @@ namespace lingualink_client.Services.Managers
 
             if (!string.IsNullOrEmpty(apiResult.RawResponse))
             {
-                _loggingManager.AddMessage($"Server raw response: {apiResult.RawResponse}", LogLevel.Trace, ApiCategory);
+                _loggingManager.AddMessage(
+                    $"Server raw response: [redacted, chars={apiResult.RawResponse.Length}]",
+                    LogLevel.Trace,
+                    ApiCategory);
             }
 
             if (!apiResult.IsSuccess)

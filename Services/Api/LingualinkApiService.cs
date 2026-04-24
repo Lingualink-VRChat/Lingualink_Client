@@ -159,8 +159,7 @@ namespace lingualink_client.Services
                     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
                 });
 
-                // [详细日志] 记录请求JSON内容
-                Debug.WriteLine($"[LingualinkApiService] Request JSON: {jsonContent}");
+                Debug.WriteLine($"[LingualinkApiService] Request Summary: {LogSanitizer.SanitizeJsonPayload(jsonContent)}");
 
                 var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
                 using var request = new HttpRequestMessage(HttpMethod.Post, requestUrl)
@@ -170,9 +169,8 @@ namespace lingualink_client.Services
                 var response = await SendAsync(request, cancellationToken);
                 var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
 
-                // [详细日志] 记录响应状态和完整JSON内容
                 Debug.WriteLine($"[LingualinkApiService] Response Status: {response.StatusCode} ({(int)response.StatusCode})");
-                Debug.WriteLine($"[LingualinkApiService] Response JSON: {responseContent}");
+                Debug.WriteLine($"[LingualinkApiService] Response Summary: {LogSanitizer.SanitizeJsonPayload(responseContent)}");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -183,19 +181,18 @@ namespace lingualink_client.Services
 
                     if (apiResponse != null)
                     {
-                        // [详细日志] 记录解析后的API响应详情
                         var isSuccessful = apiResponse.Status == "success" || apiResponse.Status == "partial_success";
                         Debug.WriteLine($"[LingualinkApiService] Parsed API Response:");
                         Debug.WriteLine($"  - Status: {apiResponse.Status} (IsSuccess: {isSuccessful})");
                         Debug.WriteLine($"  - RequestId: {apiResponse.RequestId}");
-                        Debug.WriteLine($"  - Transcription: {apiResponse.Transcription}");
-                        Debug.WriteLine($"  - CorrectedText: {apiResponse.CorrectedText}");
+                        Debug.WriteLine($"  - {LogSanitizer.DescribeValue(apiResponse.Transcription, "Transcription")}");
+                        Debug.WriteLine($"  - {LogSanitizer.DescribeValue(apiResponse.CorrectedText, "CorrectedText")}");
                         Debug.WriteLine($"  - Translations Count: {apiResponse.Translations?.Count ?? 0}");
                         if (apiResponse.Translations != null)
                         {
                             foreach (var translation in apiResponse.Translations)
                             {
-                                Debug.WriteLine($"    - {translation.Key}: {translation.Value}");
+                                Debug.WriteLine($"    - {translation.Key}: [redacted, chars={translation.Value?.Length ?? 0}]");
                             }
                         }
                         Debug.WriteLine($"  - ProcessingTime: {apiResponse.ProcessingTime}ms");
@@ -302,8 +299,7 @@ namespace lingualink_client.Services
                     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
                 });
 
-                // [详细日志] 记录请求JSON内容
-                Debug.WriteLine($"[LingualinkApiService] Text Request JSON: {jsonContent}");
+                Debug.WriteLine($"[LingualinkApiService] Text Request Summary: {LogSanitizer.SanitizeJsonPayload(jsonContent)}");
 
                 var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
                 using var request = new HttpRequestMessage(HttpMethod.Post, requestUrl)
@@ -313,9 +309,8 @@ namespace lingualink_client.Services
                 var response = await SendAsync(request, cancellationToken);
                 var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
 
-                // [详细日志] 记录响应状态和完整JSON内容
                 Debug.WriteLine($"[LingualinkApiService] Text Response Status: {response.StatusCode} ({(int)response.StatusCode})");
-                Debug.WriteLine($"[LingualinkApiService] Text Response JSON: {responseContent}");
+                Debug.WriteLine($"[LingualinkApiService] Text Response Summary: {LogSanitizer.SanitizeJsonPayload(responseContent)}");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -326,19 +321,18 @@ namespace lingualink_client.Services
 
                     if (apiResponse != null)
                     {
-                        // [详细日志] 记录解析后的文本API响应详情
                         var isSuccessful = apiResponse.Status == "success" || apiResponse.Status == "partial_success";
                         Debug.WriteLine($"[LingualinkApiService] Parsed Text API Response:");
                         Debug.WriteLine($"  - Status: {apiResponse.Status} (IsSuccess: {isSuccessful})");
                         Debug.WriteLine($"  - RequestId: {apiResponse.RequestId}");
-                        Debug.WriteLine($"  - SourceText: {apiResponse.SourceText}");
-                        Debug.WriteLine($"  - CorrectedText: {apiResponse.CorrectedText}");
+                        Debug.WriteLine($"  - {LogSanitizer.DescribeValue(apiResponse.SourceText, "SourceText")}");
+                        Debug.WriteLine($"  - {LogSanitizer.DescribeValue(apiResponse.CorrectedText, "CorrectedText")}");
                         Debug.WriteLine($"  - Translations Count: {apiResponse.Translations?.Count ?? 0}");
                         if (apiResponse.Translations != null)
                         {
                             foreach (var translation in apiResponse.Translations)
                             {
-                                Debug.WriteLine($"    - {translation.Key}: {translation.Value}");
+                                Debug.WriteLine($"    - {translation.Key}: [redacted, chars={translation.Value?.Length ?? 0}]");
                             }
                         }
                         Debug.WriteLine($"  - ProcessingTime: {apiResponse.ProcessingTime}ms");
@@ -539,7 +533,7 @@ namespace lingualink_client.Services
                     await HandleUnauthorizedResponseAsync();
                 }
 
-                Debug.WriteLine($"[LingualinkApiService] Failed to get quota status: {(int)response.StatusCode}, {content}");
+                Debug.WriteLine($"[LingualinkApiService] Failed to get quota status: {(int)response.StatusCode}, {LogSanitizer.SanitizeJsonPayload(content)}");
                 return null;
             }
             catch (Exception ex)
@@ -613,10 +607,9 @@ namespace lingualink_client.Services
 
         private async Task<ApiResult> HandleErrorResponse(HttpResponseMessage response, string responseContent)
         {
-            // [详细日志] 记录错误响应的详细信息
             Debug.WriteLine($"[LingualinkApiService] Error Response Details:");
             Debug.WriteLine($"  - Status Code: {response.StatusCode} ({(int)response.StatusCode})");
-            Debug.WriteLine($"  - Response Content: {responseContent}");
+            Debug.WriteLine($"  - Response Content: {LogSanitizer.SanitizeJsonPayload(responseContent)}");
 
             try
             {

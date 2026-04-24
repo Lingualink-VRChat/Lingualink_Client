@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using lingualink_client.Models.Auth;
+using lingualink_client.Services;
 using lingualink_client.Services.Interfaces;
 using lingualink_client.Views;
 
@@ -130,7 +131,7 @@ namespace lingualink_client.Services.Auth
                     loginUrl = BuildRedirectLoginUrl();
                 }
 
-                Debug.WriteLine($"[AuthService] Login URL: {loginUrl}");
+                Debug.WriteLine($"[AuthService] Login URL: {LogSanitizer.SummarizeUrl(loginUrl)}");
 
                 var callbackResult = await ShowLoginWindowAsync(loginUrl);
                 if (callbackResult == null)
@@ -1447,7 +1448,7 @@ namespace lingualink_client.Services.Auth
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    Debug.WriteLine($"[AuthService] Failed to load plans: {response.StatusCode}, {responseContent}");
+                    Debug.WriteLine($"[AuthService] Failed to load plans: {response.StatusCode}, {LogSanitizer.SanitizeJsonPayload(responseContent)}");
                     return Array.Empty<SubscriptionPlanInfo>();
                 }
 
@@ -1455,10 +1456,10 @@ namespace lingualink_client.Services.Auth
 
                 if (result?.Code == 0 && result.Data != null)
                 {
-                    return FilterPurchasablePlans(result.Data);
+                    return SubscriptionPlanFilter.FilterPurchasablePlans(result.Data);
                 }
 
-                Debug.WriteLine($"[AuthService] Plans response invalid: {responseContent}");
+                Debug.WriteLine($"[AuthService] Plans response invalid: {LogSanitizer.SanitizeJsonPayload(responseContent)}");
             }
             catch (Exception ex)
             {
@@ -1477,7 +1478,7 @@ namespace lingualink_client.Services.Auth
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    Debug.WriteLine($"[AuthService] Failed to load announcements: {response.StatusCode}, {responseContent}");
+                    Debug.WriteLine($"[AuthService] Failed to load announcements: {response.StatusCode}, {LogSanitizer.SanitizeJsonPayload(responseContent)}");
                     return Array.Empty<PublicAnnouncement>();
                 }
 
@@ -1487,7 +1488,7 @@ namespace lingualink_client.Services.Auth
                     return envelope.Data;
                 }
 
-                Debug.WriteLine($"[AuthService] Announcements response invalid: {responseContent}");
+                Debug.WriteLine($"[AuthService] Announcements response invalid: {LogSanitizer.SanitizeJsonPayload(responseContent)}");
             }
             catch (Exception ex)
             {
@@ -1495,42 +1496,6 @@ namespace lingualink_client.Services.Auth
             }
 
             return Array.Empty<PublicAnnouncement>();
-        }
-
-        private static IReadOnlyList<SubscriptionPlanInfo> FilterPurchasablePlans(IReadOnlyList<SubscriptionPlanInfo> plans)
-        {
-            if (plans.Count == 0)
-            {
-                return Array.Empty<SubscriptionPlanInfo>();
-            }
-
-            var filtered = new List<SubscriptionPlanInfo>(plans.Count);
-            foreach (var plan in plans)
-            {
-                if (plan == null)
-                {
-                    continue;
-                }
-
-                if (plan.IsActive.HasValue && !plan.IsActive.Value)
-                {
-                    continue;
-                }
-
-                if (plan.IsFreePlan)
-                {
-                    continue;
-                }
-
-                if (string.IsNullOrWhiteSpace(plan.Id))
-                {
-                    continue;
-                }
-
-                filtered.Add(plan);
-            }
-
-            return filtered;
         }
 
         /// <summary>
@@ -1654,7 +1619,7 @@ namespace lingualink_client.Services.Auth
                         return result.Data;
                     }
 
-                    Debug.WriteLine($"[AuthService] Query order status failed: {responseContent}");
+                    Debug.WriteLine($"[AuthService] Query order status failed: {LogSanitizer.SanitizeJsonPayload(responseContent)}");
                     return null;
                 }
             }
@@ -1744,7 +1709,7 @@ namespace lingualink_client.Services.Auth
                     return true;
                 }
 
-                Debug.WriteLine($"[AuthService] Refresh token failed: HTTP={(int)response.StatusCode}, Payload={responseContent}");
+                Debug.WriteLine($"[AuthService] Refresh token failed: HTTP={(int)response.StatusCode}, Payload={LogSanitizer.SanitizeJsonPayload(responseContent)}");
                 return false;
             }
             catch (Exception ex)
