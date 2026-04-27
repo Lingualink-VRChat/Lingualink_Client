@@ -59,13 +59,13 @@ namespace lingualink_client.Services.Managers
                 var statusKey = effectiveTarget.ProcessId.HasValue
                     ? "PeerAudioStatusListeningProcessFormat"
                     : "PeerAudioStatusListening";
-                StatusUpdated?.Invoke(effectiveTarget.ProcessId.HasValue
+                StatusUpdated?.Invoke(this, effectiveTarget.ProcessId.HasValue
                     ? string.Format(LanguageManager.GetString(statusKey), effectiveTarget.DisplayName)
                     : LanguageManager.GetString(statusKey));
             }
             else
             {
-                StatusUpdated?.Invoke(LanguageManager.GetString("PeerAudioStatusStartFailed"));
+                StatusUpdated?.Invoke(this, LanguageManager.GetString("PeerAudioStatusStartFailed"));
             }
 
             return success;
@@ -74,12 +74,12 @@ namespace lingualink_client.Services.Managers
         public void Stop()
         {
             _audioService.Stop();
-            StatusUpdated?.Invoke(LanguageManager.GetString("PeerAudioStatusStopped"));
+            StatusUpdated?.Invoke(this, LanguageManager.GetString("PeerAudioStatusStopped"));
         }
 
         private void OnAudioStatusUpdated(object? sender, string status)
         {
-            StatusUpdated?.Invoke(status);
+            StatusUpdated?.Invoke(this, status);
         }
 
         private async void OnAudioSegmentReady(object? sender, AudioSegmentEventArgs e)
@@ -92,7 +92,7 @@ namespace lingualink_client.Services.Managers
 
             try
             {
-                StatusUpdated?.Invoke(LanguageManager.GetString("PeerAudioStatusTranslating"));
+                StatusUpdated?.Invoke(this, LanguageManager.GetString("PeerAudioStatusTranslating"));
                 var waveFormat = new WaveFormat(AudioService.APP_SAMPLE_RATE, 16, AudioService.APP_CHANNELS);
                 var targetLanguages = ResolveTargetLanguageCodes();
                 var task = targetLanguages.Count > 0 ? "translate" : "transcribe";
@@ -117,19 +117,19 @@ namespace lingualink_client.Services.Managers
                     var error = string.IsNullOrWhiteSpace(apiResult.ErrorMessage)
                         ? LanguageManager.GetString("PeerAudioUnknownError")
                         : apiResult.ErrorMessage;
-                    StatusUpdated?.Invoke(string.Format(LanguageManager.GetString("PeerAudioStatusFailedFormat"), error));
+                    StatusUpdated?.Invoke(this, string.Format(LanguageManager.GetString("PeerAudioStatusFailedFormat"), error));
                     TranslationReceived?.Invoke(this, PeerAudioTranslationResultEventArgs.FromError(error));
                     return;
                 }
 
                 var displayText = BuildDisplayText(apiResult, stopwatch.Elapsed.TotalSeconds);
                 TranslationReceived?.Invoke(this, new PeerAudioTranslationResultEventArgs(displayText, true, null));
-                StatusUpdated?.Invoke(LanguageManager.GetString("PeerAudioStatusTranslated"));
+                StatusUpdated?.Invoke(this, LanguageManager.GetString("PeerAudioStatusTranslated"));
             }
             catch (Exception ex)
             {
                 _loggingManager.AddMessage($"Peer audio translation failed: {ex.Message}", LogLevel.Error, AudioCategory);
-                StatusUpdated?.Invoke(string.Format(LanguageManager.GetString("PeerAudioStatusFailedFormat"), ex.Message));
+                StatusUpdated?.Invoke(this, string.Format(LanguageManager.GetString("PeerAudioStatusFailedFormat"), ex.Message));
                 TranslationReceived?.Invoke(this, PeerAudioTranslationResultEventArgs.FromError(ex.Message));
             }
             finally
