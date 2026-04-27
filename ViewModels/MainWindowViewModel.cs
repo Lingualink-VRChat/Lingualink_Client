@@ -21,6 +21,7 @@ namespace lingualink_client.ViewModels
         public string ConversationHistory => LanguageManager.GetString("ConversationHistory");
         public string Logs => LanguageManager.GetString("Logs");
         public string CustomVocabulary => LanguageManager.GetString("CustomVocabularySectionTitle");
+        public string PeerAudioTranslation => LanguageManager.GetString("PeerAudioTranslation");
         public string AppTitle => LanguageManager.GetString("AppTitle");
         public string AppTitleBar => LanguageManager.GetString("AppTitleBar");
 
@@ -49,6 +50,7 @@ namespace lingualink_client.ViewModels
             OnPropertyChanged(nameof(ConversationHistory));
             OnPropertyChanged(nameof(Logs));
             OnPropertyChanged(nameof(CustomVocabulary));
+            OnPropertyChanged(nameof(PeerAudioTranslation));
             OnPropertyChanged(nameof(AppTitle));
             OnPropertyChanged(nameof(AppTitleBar));
             RefreshAnnouncementBindings();

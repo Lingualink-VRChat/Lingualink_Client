@@ -36,14 +36,22 @@
             Grid.Row="0"
             Icon="{ui:ImageIcon 'pack://application:,,,/lingualink_client;component/Assets/Icons/icon_128x128.ico'}">
             <ui:TitleBar.TrailingContent>
-                <ToggleButton
-                    VerticalAlignment="Top"
-                    BorderThickness="0"
-                    Background="Transparent"
-                    Checked="ThemesChanged"
-                    Unchecked="ThemesChanged">
-                    <ui:SymbolIcon Symbol="DarkTheme24" />
-                </ToggleButton>
+                <StackPanel Orientation="Horizontal">
+                    <ui:Button
+                        Margin="0,0,8,0"
+                        Content="{Binding PeerAudioTranslation}"
+                        Appearance="Secondary"
+                        Icon="{ui:SymbolIcon Speaker224}"
+                        Click="OpenPeerAudioTranslationWindow_Click" />
+                    <ToggleButton
+                        VerticalAlignment="Top"
+                        BorderThickness="0"
+                        Background="Transparent"
+                        Checked="ThemesChanged"
+                        Unchecked="ThemesChanged">
+                        <ui:SymbolIcon Symbol="DarkTheme24" />
+                    </ToggleButton>
+                </StackPanel>
             </ui:TitleBar.TrailingContent>
         </ui:TitleBar>
 

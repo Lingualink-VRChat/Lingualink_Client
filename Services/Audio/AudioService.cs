@@ -5,6 +5,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using lingualink_client.Models;
+using lingualink_client.Services.Audio;
 using lingualink_client.Services.Interfaces;
 using WebRtcVadSharp;
 
@@ -107,7 +108,10 @@ namespace lingualink_client.Services
         private DateTime _postRecordingShouldEndTime;
 
         private WaveInEvent? _waveSource;
+        private WasapiLoopbackCapture? _loopbackSource;
+        private ProcessLoopbackCapture? _processLoopbackSource;
         private readonly object _vadLock = new object();
+        private readonly List<byte> _pendingVadBytes = new List<byte>();
         private bool _isCurrentlyWorking = false;
         private bool _isPaused = false; // 新增：暂停标志
 
@@ -174,17 +178,11 @@ namespace lingualink_client.Services
 
             _isSpeaking = false;
             _currentAudioSegment.Clear();
+            _pendingVadBytes.Clear();
 
             try
             {
-                EnsureVadNativeLibraryLoaded(_logger);
-
-                _vadInstance = new WebRtcVad
-                {
-                    OperatingMode = OperatingMode.Aggressive,
-                    FrameLength = VAD_FRAME_LENGTH,
-                    SampleRate = VAD_SAMPLE_RATE_ENUM
-                };
+                InitializeVad();
 
                 _waveSource = new WaveInEvent
                 {
@@ -210,9 +208,82 @@ namespace lingualink_client.Services
             }
         }
 
+        public bool StartSystemLoopback()
+        {
+            if (_isCurrentlyWorking) return true;
+
+            _isSpeaking = false;
+            _currentAudioSegment.Clear();
+            _pendingVadBytes.Clear();
+
+            try
+            {
+                InitializeVad();
+
+                _loopbackSource = new WasapiLoopbackCapture();
+                _loopbackSource.DataAvailable += OnLoopbackDataAvailable;
+                _loopbackSource.RecordingStopped += OnRecordingStoppedHandler;
+                _loopbackSource.StartRecording();
+                _isCurrentlyWorking = true;
+
+                UpdateVadState(VadState.Listening);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                StatusUpdated?.Invoke(this, string.Format(LanguageManager.GetString("AudioStatusStartFailed"), ex.Message));
+                System.Diagnostics.Debug.WriteLine($"AudioService StartSystemLoopback Error: {ex.Message}");
+                Stop(true);
+                return false;
+            }
+        }
+
+        public bool StartProcessLoopback(int processId)
+        {
+            if (_isCurrentlyWorking) return true;
+
+            _isSpeaking = false;
+            _currentAudioSegment.Clear();
+            _pendingVadBytes.Clear();
+
+            try
+            {
+                InitializeVad();
+
+                _processLoopbackSource = new ProcessLoopbackCapture(processId);
+                _processLoopbackSource.DataAvailable += OnLoopbackDataAvailable;
+                _processLoopbackSource.RecordingStopped += OnRecordingStoppedHandler;
+                _processLoopbackSource.StartRecording();
+                _isCurrentlyWorking = true;
+
+                UpdateVadState(VadState.Listening);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                StatusUpdated?.Invoke(this, string.Format(LanguageManager.GetString("AudioStatusStartFailed"), ex.Message));
+                System.Diagnostics.Debug.WriteLine($"AudioService StartProcessLoopback Error: {ex.Message}");
+                Stop(true);
+                return false;
+            }
+        }
+
+        private void InitializeVad()
+        {
+            EnsureVadNativeLibraryLoaded(_logger);
+
+            _vadInstance?.Dispose();
+            _vadInstance = new WebRtcVad
+            {
+                OperatingMode = OperatingMode.Aggressive,
+                FrameLength = VAD_FRAME_LENGTH,
+                SampleRate = VAD_SAMPLE_RATE_ENUM
+            };
+        }
+
         public void Stop(bool processFinalSegment = true)
         {
-            if (!_isCurrentlyWorking && _waveSource == null && _vadInstance == null) return; 
+            if (!_isCurrentlyWorking && _waveSource == null && _loopbackSource == null && _processLoopbackSource == null && _vadInstance == null) return;
 
             _isCurrentlyWorking = false; 
 
@@ -223,7 +294,24 @@ namespace lingualink_client.Services
                     System.Diagnostics.Debug.WriteLine($"Error stopping waveSource: {ex.Message}");
                     CleanupWaveSourceResources(); 
                 }
-            } else {
+            }
+            else if (_loopbackSource != null)
+            {
+                try { _loopbackSource.StopRecording(); }
+                catch (Exception ex) {
+                    System.Diagnostics.Debug.WriteLine($"Error stopping loopbackSource: {ex.Message}");
+                    CleanupWaveSourceResources();
+                }
+            }
+            else if (_processLoopbackSource != null)
+            {
+                try { _processLoopbackSource.StopRecording(); }
+                catch (Exception ex) {
+                    System.Diagnostics.Debug.WriteLine($"Error stopping processLoopbackSource: {ex.Message}");
+                    CleanupWaveSourceResources();
+                }
+            }
+            else {
                 CleanupWaveSourceResources(); 
             }
 
@@ -234,6 +322,7 @@ namespace lingualink_client.Services
             else
             {
                 _currentAudioSegment.Clear();
+                _pendingVadBytes.Clear();
                 _isSpeaking = false;
                 _isPostRecordingActive = false;
             }
@@ -295,95 +384,167 @@ namespace lingualink_client.Services
 
         private void OnVadDataAvailable(object? sender, WaveInEventArgs e)
         {
-            // 在方法开头检查暂停状态
-            if (_isPaused || !_isCurrentlyWorking || _vadInstance == null) return;
+            ProcessVadPcmData(e.Buffer, e.BytesRecorded);
+        }
 
-            for (int offset = 0; offset < e.BytesRecorded; offset += _vadFrameSizeInBytes)
+        private void OnLoopbackDataAvailable(object? sender, WaveInEventArgs e)
+        {
+            if (e.BytesRecorded <= 0)
             {
-                int bytesInCurrentVadFrame = Math.Min(_vadFrameSizeInBytes, e.BytesRecorded - offset);
-                if (bytesInCurrentVadFrame < _vadFrameSizeInBytes && bytesInCurrentVadFrame > 0)
+                return;
+            }
+
+            try
+            {
+                var sourceFormat = sender switch
                 {
-                    break;
+                    WasapiLoopbackCapture capture => capture.WaveFormat,
+                    ProcessLoopbackCapture capture => capture.WaveFormat,
+                    _ => null
+                };
+                if (sourceFormat == null)
+                {
+                    return;
                 }
-                if (bytesInCurrentVadFrame == 0) break;
 
-                byte[] frameForVad = new byte[_vadFrameSizeInBytes];
-                Buffer.BlockCopy(e.Buffer, offset, frameForVad, 0, _vadFrameSizeInBytes);
+                var pcmData = ConvertToAppPcm(e.Buffer, e.BytesRecorded, sourceFormat);
+                ProcessVadPcmData(pcmData, pcmData.Length);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Loopback audio conversion error: {ex.Message}");
+            }
+        }
 
-                bool voiceDetectedThisFrame;
+        private byte[] ConvertToAppPcm(byte[] inputBuffer, int bytesRecorded, WaveFormat sourceFormat)
+        {
+            if (bytesRecorded <= 0)
+            {
+                return Array.Empty<byte>();
+            }
 
-                double peakVolume = CalculatePeakVolume(frameForVad, _vadFrameSizeInBytes);
+            using var inputStream = new RawSourceWaveStream(
+                new MemoryStream(inputBuffer, 0, bytesRecorded, writable: false),
+                sourceFormat);
+            using var resampler = new MediaFoundationResampler(
+                inputStream,
+                new WaveFormat(APP_SAMPLE_RATE, APP_BITS_PER_SAMPLE, APP_CHANNELS))
+            {
+                ResamplerQuality = 60
+            };
+            using var outputStream = new MemoryStream();
+            var convertedBuffer = new byte[_vadFrameSizeInBytes * 8];
+            int read;
+            while ((read = resampler.Read(convertedBuffer, 0, convertedBuffer.Length)) > 0)
+            {
+                outputStream.Write(convertedBuffer, 0, read);
+            }
 
-                if (peakVolume < _minRecordingVolumeThreshold && _minRecordingVolumeThreshold > 0)
+            return outputStream.ToArray();
+        }
+
+        private void ProcessVadPcmData(byte[] buffer, int bytesRecorded)
+        {
+            // 在方法开头检查暂停状态
+            if (_isPaused || !_isCurrentlyWorking || _vadInstance == null || bytesRecorded <= 0) return;
+
+            var frames = new List<byte[]>();
+            lock (_vadLock)
+            {
+                var chunk = new byte[bytesRecorded];
+                Buffer.BlockCopy(buffer, 0, chunk, 0, bytesRecorded);
+                _pendingVadBytes.AddRange(chunk);
+
+                while (_pendingVadBytes.Count >= _vadFrameSizeInBytes)
                 {
+                    var frameForVad = new byte[_vadFrameSizeInBytes];
+                    _pendingVadBytes.CopyTo(0, frameForVad, 0, _vadFrameSizeInBytes);
+                    _pendingVadBytes.RemoveRange(0, _vadFrameSizeInBytes);
+                    frames.Add(frameForVad);
+                }
+            }
+
+            foreach (var frameForVad in frames)
+            {
+                ProcessVadFrame(frameForVad);
+            }
+
+            // 每次处理完一整个数据块后，检查是否需要发送片段
+            CheckAndFinalizeSegmentIfNeeded();
+        }
+
+        private void ProcessVadFrame(byte[] frameForVad)
+        {
+            bool voiceDetectedThisFrame;
+
+            double peakVolume = CalculatePeakVolume(frameForVad, _vadFrameSizeInBytes);
+
+            if (peakVolume < _minRecordingVolumeThreshold && _minRecordingVolumeThreshold > 0)
+            {
+                voiceDetectedThisFrame = false;
+            }
+            else
+            {
+                try
+                {
+                    voiceDetectedThisFrame = _vadInstance?.HasSpeech(frameForVad) ?? false;
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"WebRtcVad.HasSpeech error: {ex.Message}");
                     voiceDetectedThisFrame = false;
                 }
-                else
+            }
+
+            lock (_vadLock)
+            {
+                if (voiceDetectedThisFrame) // --- 情况1：当前帧检测到有效语音 ---
                 {
-                    try
+                    if (!_isSpeaking && _currentAudioSegment.Count == 0) // a) 如果之前未说话且片段为空 (刚开始说话)
                     {
-                        voiceDetectedThisFrame = _vadInstance.HasSpeech(frameForVad);
+                        _isSpeaking = true;
+                        UpdateVadState(VadState.SpeechDetected);
+                        System.Diagnostics.Debug.WriteLine($"[VAD_LOG] 语音开始");
                     }
-                    catch (Exception ex)
+
+                    // 即使之前是追加录音状态，一旦检测到有效语音，就重置追加录音状态，回到正常说话状态
+                    if (_isPostRecordingActive)
                     {
-                        System.Diagnostics.Debug.WriteLine($"WebRtcVad.HasSpeech error: {ex.Message}");
-                        voiceDetectedThisFrame = false;
+                        _isPostRecordingActive = false; // 取消追加录音
+                        UpdateVadState(VadState.SpeechDetected); // 重新设置为语音检测状态
+                        System.Diagnostics.Debug.WriteLine($"[VAD_LOG] 追加录音期间检测到新语音，重置追加状态。");
+                    }
+
+                    _isSpeaking = true; // 确保标记为正在说话
+                    _currentAudioSegment.AddRange(frameForVad); // 累积音频数据
+                    _lastVoiceActivityTime = DateTime.UtcNow; // 更新最后有效语音活动时间 (主要用于最大时长判断等)
+
+                    // 如果累积的音频超过了最大时长，则强制分割发送 (这部分逻辑依然需要)
+                    if (GetSegmentDurationSeconds(_currentAudioSegment.Count) >= _maxVoiceDurationSeconds)
+                    {
+                        ProcessAndSendSegment("max_duration_split", true); // 强制发送
+                        // 状态已在 ProcessAndSendSegment 中处理
                     }
                 }
-
-                lock (_vadLock)
+                else // --- 情况2：当前帧未检测到有效语音 ---
                 {
-                    if (voiceDetectedThisFrame) // --- 情况1：当前帧检测到有效语音 ---
+                    if (_isSpeaking) // a) 如果之前正在说话 (这是VAD判断语音可能结束的拐点)
                     {
-                        if (!_isSpeaking && _currentAudioSegment.Count == 0) // a) 如果之前未说话且片段为空 (刚开始说话)
-                        {
-                            _isSpeaking = true;
-                            UpdateVadState(VadState.SpeechDetected);
-                            System.Diagnostics.Debug.WriteLine($"[VAD_LOG] 语音开始");
-                        }
-
-                        // 即使之前是追加录音状态，一旦检测到有效语音，就重置追加录音状态，回到正常说话状态
-                        if (_isPostRecordingActive)
-                        {
-                            _isPostRecordingActive = false; // 取消追加录音
-                            UpdateVadState(VadState.SpeechDetected); // 重新设置为语音检测状态
-                            System.Diagnostics.Debug.WriteLine($"[VAD_LOG] 追加录音期间检测到新语音，重置追加状态。");
-                        }
-
-                        _isSpeaking = true; // 确保标记为正在说话
-                        _currentAudioSegment.AddRange(frameForVad); // 累积音频数据
-                        _lastVoiceActivityTime = DateTime.UtcNow; // 更新最后有效语音活动时间 (主要用于最大时长判断等)
-
-                        // 如果累积的音频超过了最大时长，则强制分割发送 (这部分逻辑依然需要)
-                        if (GetSegmentDurationSeconds(_currentAudioSegment.Count) >= _maxVoiceDurationSeconds)
-                        {
-                            ProcessAndSendSegment("max_duration_split", true); // 强制发送
-                            // 状态已在 ProcessAndSendSegment 中处理
-                        }
+                        _isSpeaking = false; // 标记为不再是"活动语音"
+                        _isPostRecordingActive = true; // 进入追加录音阶段
+                        _postRecordingShouldEndTime = DateTime.UtcNow.AddSeconds(_postSpeechRecordingDurationSeconds);
+                        // 保持 SpeechDetected 状态，不显示追加录音状态
+                        System.Diagnostics.Debug.WriteLine($"[VAD_LOG] VAD判断语音结束，进入追加录音阶段，预计结束于: {_postRecordingShouldEndTime:HH:mm:ss.fff}");
                     }
-                    else // --- 情况2：当前帧未检测到有效语音 ---
+
+                    // b) 无论是刚刚进入追加录音，还是已经在追加录音阶段，都将当前(静音)帧加入片段
+                    if (_isPostRecordingActive)
                     {
-                        if (_isSpeaking) // a) 如果之前正在说话 (这是VAD判断语音可能结束的拐点)
-                        {
-                            _isSpeaking = false; // 标记为不再是"活动语音"
-                            _isPostRecordingActive = true; // 进入追加录音阶段
-                            _postRecordingShouldEndTime = DateTime.UtcNow.AddSeconds(_postSpeechRecordingDurationSeconds);
-                            // 保持 SpeechDetected 状态，不显示追加录音状态
-                            System.Diagnostics.Debug.WriteLine($"[VAD_LOG] VAD判断语音结束，进入追加录音阶段，预计结束于: {_postRecordingShouldEndTime:HH:mm:ss.fff}");
-                        }
-
-                        // b) 无论是刚刚进入追加录音，还是已经在追加录音阶段，都将当前(静音)帧加入片段
-                        if (_isPostRecordingActive)
-                        {
-                            _currentAudioSegment.AddRange(frameForVad);
-                        }
-                        // c) 如果之前就没在说话，也不是追加录音状态（即一直静默），则忽略此静音帧
+                        _currentAudioSegment.AddRange(frameForVad);
                     }
-                } // lock结束
-            } // for循环结束
-
-            // 每次处理完一整个 WaveInEventArgs 数据块后，检查是否需要发送片段
-            CheckAndFinalizeSegmentIfNeeded();
+                    // c) 如果之前就没在说话，也不是追加录音状态（即一直静默），则忽略此静音帧
+                }
+            } // lock结束
         }
 
 
@@ -465,6 +626,22 @@ namespace lingualink_client.Services
                 _waveSource.RecordingStopped -= OnRecordingStoppedHandler;
                 try { _waveSource.Dispose(); } catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"Error disposing waveSource: {ex.Message}"); }
                 _waveSource = null;
+            }
+
+            if (_loopbackSource != null)
+            {
+                _loopbackSource.DataAvailable -= OnLoopbackDataAvailable;
+                _loopbackSource.RecordingStopped -= OnRecordingStoppedHandler;
+                try { _loopbackSource.Dispose(); } catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"Error disposing loopbackSource: {ex.Message}"); }
+                _loopbackSource = null;
+            }
+
+            if (_processLoopbackSource != null)
+            {
+                _processLoopbackSource.DataAvailable -= OnLoopbackDataAvailable;
+                _processLoopbackSource.RecordingStopped -= OnRecordingStoppedHandler;
+                try { _processLoopbackSource.Dispose(); } catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"Error disposing processLoopbackSource: {ex.Message}"); }
+                _processLoopbackSource = null;
             }
         }
 

@@ -1675,4 +1675,67 @@
   <data name="CustomVocabularyMaxEntriesReached" xml:space="preserve">
     <value>このテーブルはエントリ上限 {0} に達しています。</value>
   </data>
+  <data name="PeerAudioTranslation" xml:space="preserve">
+    <value>相手音声</value>
+  </data>
+  <data name="PeerAudioWindowTitle" xml:space="preserve">
+    <value>相手音声翻訳</value>
+  </data>
+  <data name="PeerAudioWindowDescription" xml:space="preserve">
+    <value>既定のシステム再生音声を別ウィンドウで取得し、相手の発話翻訳をここに表示します。OSC は送信しません。</value>
+  </data>
+  <data name="PeerAudioStartListening" xml:space="preserve">
+    <value>開始</value>
+  </data>
+  <data name="PeerAudioStopListening" xml:space="preserve">
+    <value>停止</value>
+  </data>
+  <data name="PeerAudioStatusReady" xml:space="preserve">
+    <value>準備完了。相手の音声を既定の出力デバイスで再生してから開始してください。</value>
+  </data>
+  <data name="PeerAudioStatusListening" xml:space="preserve">
+    <value>既定のシステム音声をリスニング中...</value>
+  </data>
+  <data name="PeerAudioStatusListeningProcessFormat" xml:space="preserve">
+    <value>プロセス音声をリスニング中: {0}</value>
+  </data>
+  <data name="PeerAudioStatusStartFailed" xml:space="preserve">
+    <value>システム音声の取得を開始できませんでした。</value>
+  </data>
+  <data name="PeerAudioStatusStopped" xml:space="preserve">
+    <value>停止しました。</value>
+  </data>
+  <data name="PeerAudioStatusTranslating" xml:space="preserve">
+    <value>相手の発話を翻訳中...</value>
+  </data>
+  <data name="PeerAudioStatusTranslated" xml:space="preserve">
+    <value>翻訳完了。リスニングを継続します...</value>
+  </data>
+  <data name="PeerAudioStatusFailedFormat" xml:space="preserve">
+    <value>翻訳に失敗しました: {0}</value>
+  </data>
+  <data name="PeerAudioUnknownError" xml:space="preserve">
+    <value>不明なエラー</value>
+  </data>
+  <data name="PeerAudioOriginalLabel" xml:space="preserve">
+    <value>原文</value>
+  </data>
+  <data name="PeerAudioErrorLabel" xml:space="preserve">
+    <value>エラー</value>
+  </data>
+  <data name="PeerAudioNoTextResult" xml:space="preserve">
+    <value>テキストが返されませんでした。</value>
+  </data>
+  <data name="PeerAudioElapsedFormat" xml:space="preserve">
+    <value>経過時間: {0:F2}s</value>
+  </data>
+  <data name="PeerAudioCaptureTarget" xml:space="preserve">
+    <value>取得対象</value>
+  </data>
+  <data name="PeerAudioRefreshProcesses" xml:space="preserve">
+    <value>更新</value>
+  </data>
+  <data name="PeerAudioSystemAudioTarget" xml:space="preserve">
+    <value>既定のシステム音声</value>
+  </data>
 </root>

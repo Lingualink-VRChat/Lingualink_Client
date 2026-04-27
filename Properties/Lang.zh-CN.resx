@@ -1758,4 +1758,67 @@
   <data name="CustomVocabularyMaxEntriesReached" xml:space="preserve">
     <value>当前词表已达到词条上限 {0}。</value>
   </data>
+  <data name="PeerAudioTranslation" xml:space="preserve">
+    <value>对方语音</value>
+  </data>
+  <data name="PeerAudioWindowTitle" xml:space="preserve">
+    <value>对方语音翻译</value>
+  </data>
+  <data name="PeerAudioWindowDescription" xml:space="preserve">
+    <value>在独立窗口监听默认系统播放音频，并在此显示对方语音翻译结果；不会发送 OSC 消息。</value>
+  </data>
+  <data name="PeerAudioStartListening" xml:space="preserve">
+    <value>开始监听</value>
+  </data>
+  <data name="PeerAudioStopListening" xml:space="preserve">
+    <value>停止监听</value>
+  </data>
+  <data name="PeerAudioStatusReady" xml:space="preserve">
+    <value>就绪。请让对方声音从默认输出设备播放，然后开始监听。</value>
+  </data>
+  <data name="PeerAudioStatusListening" xml:space="preserve">
+    <value>正在监听默认系统音频...</value>
+  </data>
+  <data name="PeerAudioStatusListeningProcessFormat" xml:space="preserve">
+    <value>正在监听进程音频：{0}</value>
+  </data>
+  <data name="PeerAudioStatusStartFailed" xml:space="preserve">
+    <value>启动系统音频捕获失败。</value>
+  </data>
+  <data name="PeerAudioStatusStopped" xml:space="preserve">
+    <value>已停止。</value>
+  </data>
+  <data name="PeerAudioStatusTranslating" xml:space="preserve">
+    <value>正在翻译对方语音...</value>
+  </data>
+  <data name="PeerAudioStatusTranslated" xml:space="preserve">
+    <value>翻译完成，继续监听...</value>
+  </data>
+  <data name="PeerAudioStatusFailedFormat" xml:space="preserve">
+    <value>翻译失败：{0}</value>
+  </data>
+  <data name="PeerAudioUnknownError" xml:space="preserve">
+    <value>未知错误</value>
+  </data>
+  <data name="PeerAudioOriginalLabel" xml:space="preserve">
+    <value>原文</value>
+  </data>
+  <data name="PeerAudioErrorLabel" xml:space="preserve">
+    <value>错误</value>
+  </data>
+  <data name="PeerAudioNoTextResult" xml:space="preserve">
+    <value>未返回文本。</value>
+  </data>
+  <data name="PeerAudioElapsedFormat" xml:space="preserve">
+    <value>耗时：{0:F2}s</value>
+  </data>
+  <data name="PeerAudioCaptureTarget" xml:space="preserve">
+    <value>捕获目标</value>
+  </data>
+  <data name="PeerAudioRefreshProcesses" xml:space="preserve">
+    <value>刷新</value>
+  </data>
+  <data name="PeerAudioSystemAudioTarget" xml:space="preserve">
+    <value>默认系统音频</value>
+  </data>
 </root>

@@ -1759,4 +1759,67 @@ Update now?</value>
   <data name="CustomVocabularyMaxEntriesReached" xml:space="preserve">
     <value>This table already has the maximum of {0} entries.</value>
   </data>
+  <data name="PeerAudioTranslation" xml:space="preserve">
+    <value>Peer Audio</value>
+  </data>
+  <data name="PeerAudioWindowTitle" xml:space="preserve">
+    <value>Peer Audio Translation</value>
+  </data>
+  <data name="PeerAudioWindowDescription" xml:space="preserve">
+    <value>Captures default system playback in a separate window and shows translated peer speech here. It does not send OSC messages.</value>
+  </data>
+  <data name="PeerAudioStartListening" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="PeerAudioStopListening" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="PeerAudioStatusReady" xml:space="preserve">
+    <value>Ready. Play peer voice on the default output device, then start listening.</value>
+  </data>
+  <data name="PeerAudioStatusListening" xml:space="preserve">
+    <value>Listening to default system audio...</value>
+  </data>
+  <data name="PeerAudioStatusListeningProcessFormat" xml:space="preserve">
+    <value>Listening to process audio: {0}</value>
+  </data>
+  <data name="PeerAudioStatusStartFailed" xml:space="preserve">
+    <value>Failed to start system audio capture.</value>
+  </data>
+  <data name="PeerAudioStatusStopped" xml:space="preserve">
+    <value>Stopped.</value>
+  </data>
+  <data name="PeerAudioStatusTranslating" xml:space="preserve">
+    <value>Translating peer speech...</value>
+  </data>
+  <data name="PeerAudioStatusTranslated" xml:space="preserve">
+    <value>Translated. Listening...</value>
+  </data>
+  <data name="PeerAudioStatusFailedFormat" xml:space="preserve">
+    <value>Translation failed: {0}</value>
+  </data>
+  <data name="PeerAudioUnknownError" xml:space="preserve">
+    <value>Unknown error</value>
+  </data>
+  <data name="PeerAudioOriginalLabel" xml:space="preserve">
+    <value>Original</value>
+  </data>
+  <data name="PeerAudioErrorLabel" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="PeerAudioNoTextResult" xml:space="preserve">
+    <value>No text returned.</value>
+  </data>
+  <data name="PeerAudioElapsedFormat" xml:space="preserve">
+    <value>Elapsed: {0:F2}s</value>
+  </data>
+  <data name="PeerAudioCaptureTarget" xml:space="preserve">
+    <value>Capture target</value>
+  </data>
+  <data name="PeerAudioRefreshProcesses" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="PeerAudioSystemAudioTarget" xml:space="preserve">
+    <value>Default system audio</value>
+  </data>
 </root>
