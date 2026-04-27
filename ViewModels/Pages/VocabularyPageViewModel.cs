@@ -35,6 +35,8 @@ namespace lingualink_client.ViewModels
         public string GuidanceHint => LanguageManager.GetString("CustomVocabularyGuidanceHint");
         public string GuidanceSummary => LanguageManager.GetString("CustomVocabularyGuidanceSummary");
         public string GuidanceBody => LanguageManager.GetString("CustomVocabularyGuidanceBody");
+        public string MemberOnlyNoticeTitle => LanguageManager.GetString("CustomVocabularyMemberOnlyNoticeTitle");
+        public string MemberOnlyNoticeMessage => LanguageManager.GetString("CustomVocabularyMemberOnlyNoticeMessage");
         public string EntryGuideTitle => LanguageManager.GetString("CustomVocabularyEntryGuideTitle");
         public string TermGuideText => LanguageManager.GetString("CustomVocabularyTermGuideText");
         public string ExampleTitle => LanguageManager.GetString("CustomVocabularyExampleTitle");

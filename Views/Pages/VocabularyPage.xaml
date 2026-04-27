@@ -81,6 +81,14 @@
                     Icon="{ui:SymbolIcon Symbol=Add24}" />
             </Grid>
 
+            <ui:InfoBar
+                Margin="0,0,0,12"
+                IsClosable="False"
+                IsOpen="True"
+                Severity="Informational"
+                Title="{Binding MemberOnlyNoticeTitle}"
+                Message="{Binding MemberOnlyNoticeMessage}" />
+
             <Border
                 Margin="0,0,0,20"
                 Padding="16"

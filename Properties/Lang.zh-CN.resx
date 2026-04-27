@@ -1599,6 +1599,12 @@
   <data name="CustomVocabularyGuidanceBody" xml:space="preserve">
     <value>您只需要填写希望纠正成的标准词。系统会自动生成发音键，先做发音召回，再把少量候选词交给模型决定是否替换。</value>
   </data>
+  <data name="CustomVocabularyMemberOnlyNoticeTitle" xml:space="preserve">
+    <value>会员功能说明</value>
+  </data>
+  <data name="CustomVocabularyMemberOnlyNoticeMessage" xml:space="preserve">
+    <value>自定义词表仅付费会员生效。免费用户仍可编辑和导入词表，升级会员后会自动用于语音识别纠错。</value>
+  </data>
   <data name="CustomVocabularyEntryGuideTitle" xml:space="preserve">
     <value>各项该怎么填？</value>
   </data>

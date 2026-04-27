@@ -1600,6 +1600,12 @@ Update now?</value>
   <data name="CustomVocabularyGuidanceBody" xml:space="preserve">
     <value>You only need to enter the standard term you want. The app generates pronunciation keys automatically, recalls a few candidates from the full sentence, and lets the model decide whether replacement is appropriate.</value>
   </data>
+  <data name="CustomVocabularyMemberOnlyNoticeTitle" xml:space="preserve">
+    <value>Member-only effect</value>
+  </data>
+  <data name="CustomVocabularyMemberOnlyNoticeMessage" xml:space="preserve">
+    <value>Custom vocabulary only takes effect for paid members. Free users can still edit and import vocabulary tables, and they will apply automatically after upgrading.</value>
+  </data>
   <data name="CustomVocabularyEntryGuideTitle" xml:space="preserve">
     <value>What should I fill in?</value>
   </data>

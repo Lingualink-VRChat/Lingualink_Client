@@ -1516,6 +1516,12 @@
   <data name="CustomVocabularyGuidanceBody" xml:space="preserve">
     <value>入力するのは補正後にしたい標準語句だけです。アプリが自動で発音キーを生成し、文全体の発音から候補を絞ってからモデルに渡します。</value>
   </data>
+  <data name="CustomVocabularyMemberOnlyNoticeTitle" xml:space="preserve">
+    <value>メンバー限定機能</value>
+  </data>
+  <data name="CustomVocabularyMemberOnlyNoticeMessage" xml:space="preserve">
+    <value>カスタム用語集が実際に適用されるのは有料メンバーのみです。無料ユーザーも編集やインポートは可能で、アップグレード後に音声認識補正へ自動的に適用されます。</value>
+  </data>
   <data name="CustomVocabularyEntryGuideTitle" xml:space="preserve">
     <value>各項目の入力方法</value>
   </data>
