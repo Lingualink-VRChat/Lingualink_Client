@@ -81,13 +81,41 @@
                     Icon="{ui:SymbolIcon Symbol=Add24}" />
             </Grid>
 
-            <ui:InfoBar
+            <Border
                 Margin="0,0,0,12"
-                IsClosable="False"
-                IsOpen="True"
-                Severity="Informational"
-                Title="{Binding MemberOnlyNoticeTitle}"
-                Message="{Binding MemberOnlyNoticeMessage}" />
+                Padding="16"
+                Background="{DynamicResource SubtleFillColorSecondaryBrush}"
+                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="16" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <ui:SymbolIcon
+                        Grid.Column="0"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"
+                        FontSize="18"
+                        Symbol="Info24" />
+
+                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                        <TextBlock
+                            FontSize="14"
+                            FontWeight="SemiBold"
+                            Text="{Binding MemberOnlyNoticeTitle}" />
+                        <TextBlock
+                            Margin="0,4,0,0"
+                            FontSize="11"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            Text="{Binding MemberOnlyNoticeMessage}"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                </Grid>
+            </Border>
 
             <Border
                 Margin="0,0,0,20"
