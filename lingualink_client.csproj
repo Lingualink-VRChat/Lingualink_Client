@@ -12,10 +12,10 @@
     <Platform>x64</Platform>
     <PlatformTarget>x64</PlatformTarget>
     <!-- Version Information -->
-    <Version>4.0.2</Version>
-    <AssemblyVersion>4.0.2.0</AssemblyVersion>
-    <FileVersion>4.0.2.0</FileVersion>
-    <ProductVersion>4.0.2</ProductVersion>
+    <Version>4.1.0</Version>
+    <AssemblyVersion>4.1.0.0</AssemblyVersion>
+    <FileVersion>4.1.0.0</FileVersion>
+    <ProductVersion>4.1.0</ProductVersion>
     <NoWarn>$(NoWarn);CA1416</NoWarn>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
@@ -152,7 +152,4 @@
   </ItemGroup>
 
 </Project>
-
-
-
 
