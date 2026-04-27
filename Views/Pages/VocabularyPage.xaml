@@ -87,9 +87,12 @@
                 Background="{DynamicResource SubtleFillColorSecondaryBrush}"
                 BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
                 BorderThickness="1"
-                CornerRadius="8">
+                CornerRadius="8"
+                Visibility="{Binding IsMemberOnlyNoticeVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <Grid>
                     <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="16" />
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="16" />
                         <ColumnDefinition Width="*" />
@@ -107,13 +110,17 @@
                             FontSize="14"
                             FontWeight="SemiBold"
                             Text="{Binding MemberOnlyNoticeTitle}" />
-                        <TextBlock
-                            Margin="0,4,0,0"
-                            FontSize="11"
-                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                            Text="{Binding MemberOnlyNoticeMessage}"
-                            TextWrapping="Wrap" />
                     </StackPanel>
+
+                    <TextBlock
+                        Grid.Column="4"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Right"
+                        FontSize="11"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Text="{Binding MemberOnlyNoticeMessage}"
+                        TextAlignment="Right"
+                        TextWrapping="Wrap" />
                 </Grid>
             </Border>
 

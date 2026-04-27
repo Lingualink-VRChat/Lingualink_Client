@@ -23,6 +23,7 @@ namespace lingualink_client.ViewModels
     public partial class VocabularyPageViewModel : ViewModelBase, IDisposable
     {
         private readonly ISettingsManager _settingsManager;
+        private readonly IAuthService? _authService;
         private readonly DispatcherTimer _vocabularySaveTimer;
         private readonly Dictionary<string, CustomVocabularyTable> _lastValidTableSnapshots = new(StringComparer.OrdinalIgnoreCase);
         private string _pendingVocabularyChangeSource = "VocabularyPage";
@@ -96,6 +97,7 @@ namespace lingualink_client.ViewModels
 
         public bool HasSelectedVocabularyTable => SelectedVocabularyTable != null;
         public bool IsSelectedTableOverCharacterBudget => SelectedVocabularyTable?.IsOverCharacterBudget == true;
+        public bool IsMemberOnlyNoticeVisible => _authService?.CurrentUser?.Subscription?.IsPaidActiveNow != true;
 
         public ObservableCollection<VocabularyTableEditor> VocabularyTables { get; } = new();
 
@@ -107,12 +109,16 @@ namespace lingualink_client.ViewModels
         [ObservableProperty]
         private VocabularyEntryEditor? selectedVocabularyEntry;
 
-        public VocabularyPageViewModel(ISettingsManager? settingsManager = null)
+        public VocabularyPageViewModel(ISettingsManager? settingsManager = null, IAuthService? authService = null)
         {
             _settingsManager = settingsManager
                                ?? (ServiceContainer.TryResolve<ISettingsManager>(out var resolved) && resolved != null
                                    ? resolved
                                    : new SettingsManager());
+            _authService = authService
+                           ?? (ServiceContainer.TryResolve<IAuthService>(out var resolvedAuth) && resolvedAuth != null
+                               ? resolvedAuth
+                               : null);
 
             _vocabularySaveTimer = new DispatcherTimer
             {
@@ -126,6 +132,10 @@ namespace lingualink_client.ViewModels
 
             LoadVocabularyTables(_settingsManager.LoadSettings());
             LanguageManager.LanguageChanged += OnLanguageChanged;
+            if (_authService != null)
+            {
+                _authService.LoginStateChanged += OnAuthServiceLoginStateChanged;
+            }
         }
 
         private void OnLanguageChanged()
@@ -136,6 +146,12 @@ namespace lingualink_client.ViewModels
             }
 
             OnPropertyChanged(string.Empty);
+        }
+
+        private void OnAuthServiceLoginStateChanged(object? sender, bool isLoggedIn)
+        {
+            var dispatcher = Application.Current?.Dispatcher ?? Dispatcher.CurrentDispatcher;
+            dispatcher.Invoke(() => OnPropertyChanged(nameof(IsMemberOnlyNoticeVisible)));
         }
 
         [RelayCommand]
@@ -917,6 +933,10 @@ namespace lingualink_client.ViewModels
             }
 
             LanguageManager.LanguageChanged -= OnLanguageChanged;
+            if (_authService != null)
+            {
+                _authService.LoginStateChanged -= OnAuthServiceLoginStateChanged;
+            }
             GC.SuppressFinalize(this);
         }
 
