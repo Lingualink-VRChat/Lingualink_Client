@@ -32,9 +32,6 @@
 
         <Grid Grid.Row="1" Margin="20">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
@@ -44,116 +41,30 @@
                 BorderBrush="{DynamicResource ControlElevationBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="10"
-                Padding="16"
-                Margin="0,0,0,12">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-
-                    <StackPanel Grid.Column="0">
-                        <TextBlock
-                            Text="{Binding WindowTitle}"
-                            FontSize="18"
-                            FontWeight="SemiBold" />
-                        <TextBlock
-                            Margin="0,6,0,0"
-                            Text="{Binding Description}"
-                            TextWrapping="Wrap"
-                            Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                    </StackPanel>
-
-                    <StackPanel
-                        Grid.Column="1"
-                        Orientation="Horizontal"
-                        VerticalAlignment="Center"
-                        Margin="16,0,0,0">
-                        <ui:Button
-                            Command="{Binding ToggleCommand}"
-                            Content="{Binding ToggleButtonText}"
-                            Appearance="Primary"
-                            Icon="{ui:SymbolIcon Speaker224}" />
-                        <ui:Button
-                            Margin="8,0,0,0"
-                            Command="{Binding ClearCommand}"
-                            Content="{Binding ClearLabel}"
-                            Appearance="Secondary"
-                            Icon="{ui:SymbolIcon Delete24}" />
-                    </StackPanel>
-                </Grid>
-            </Border>
-
-            <Border
-                Grid.Row="1"
-                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                BorderBrush="{DynamicResource ControlElevationBorderBrush}"
-                BorderThickness="1"
-                CornerRadius="8"
-                Padding="12"
-                Margin="0,0,0,12">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-
-                    <TextBlock
-                        Grid.Column="0"
-                        Margin="0,0,12,0"
-                        VerticalAlignment="Center"
-                        FontWeight="SemiBold"
-                        Text="{Binding CaptureTargetLabel}" />
-
-                    <ComboBox
-                        Grid.Column="1"
-                        DisplayMemberPath="DisplayName"
-                        IsEnabled="{Binding IsCaptureTargetSelectionEnabled}"
-                        ItemsSource="{Binding CaptureTargets}"
-                        SelectedItem="{Binding SelectedCaptureTarget}" />
-
-                    <ui:Button
-                        Grid.Column="2"
-                        Margin="8,0,0,0"
-                        Command="{Binding RefreshCaptureTargetsCommand}"
-                        Content="{Binding RefreshProcessesLabel}"
-                        Appearance="Secondary"
-                        Icon="{ui:SymbolIcon ArrowClockwise24}" />
-                </Grid>
-            </Border>
-
-            <Border
-                Grid.Row="2"
-                Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
-                BorderBrush="{DynamicResource ControlElevationBorderBrush}"
-                BorderThickness="1"
-                CornerRadius="8"
-                Padding="12"
-                Margin="0,0,0,12">
-                <TextBlock
-                    Text="{Binding StatusText}"
-                    TextWrapping="Wrap"
-                    Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-            </Border>
-
-            <Border
-                Grid.Row="3"
-                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                BorderBrush="{DynamicResource ControlElevationBorderBrush}"
-                BorderThickness="1"
-                CornerRadius="10"
                 Padding="12">
-                <ui:TextBox
-                    AcceptsReturn="True"
-                    Background="Transparent"
-                    BorderThickness="0"
-                    FontFamily="Consolas"
-                    FontSize="14"
-                    IsReadOnly="True"
-                    Text="{Binding ResultText, Mode=OneWay}"
-                    TextWrapping="Wrap"
-                    VerticalScrollBarVisibility="Auto" />
+                <ScrollViewer
+                    x:Name="MessagesScrollViewer"
+                    VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding Messages}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type vm:PeerAudioChatMessage}">
+                                <Border
+                                    HorizontalAlignment="Stretch"
+                                    Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
+                                    BorderBrush="{DynamicResource ControlElevationBorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="10"
+                                    Padding="12"
+                                    Margin="0,0,0,10">
+                                    <TextBlock
+                                        Text="{Binding Text}"
+                                        TextWrapping="Wrap"
+                                        FontSize="16" />
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
             </Border>
         </Grid>
     </Grid>

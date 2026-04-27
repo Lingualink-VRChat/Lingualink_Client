@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Specialized;
 using lingualink_client.ViewModels;
 
 namespace lingualink_client.Views
@@ -20,15 +21,29 @@ namespace lingualink_client.Views
             _disposeViewModelOnClose = disposeViewModelOnClose;
             DataContext = _viewModel;
             Closed += OnClosed;
+            Loaded += OnLoaded;
+        }
+
+        private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+        {
+            _viewModel.Messages.CollectionChanged += OnMessagesChanged;
+            MessagesScrollViewer.ScrollToEnd();
         }
 
         private void OnClosed(object? sender, EventArgs e)
         {
+            Loaded -= OnLoaded;
             Closed -= OnClosed;
+            _viewModel.Messages.CollectionChanged -= OnMessagesChanged;
             if (_disposeViewModelOnClose)
             {
                 _viewModel.Dispose();
             }
+        }
+
+        private void OnMessagesChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            Dispatcher.BeginInvoke(() => MessagesScrollViewer.ScrollToEnd());
         }
     }
 }

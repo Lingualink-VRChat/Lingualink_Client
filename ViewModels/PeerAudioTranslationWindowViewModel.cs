@@ -1,8 +1,8 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -21,15 +21,18 @@ namespace lingualink_client.ViewModels
         private readonly SettingsService _settingsService;
         private readonly ILoggingManager _loggingManager;
         private readonly IAuthService? _authService;
-        private readonly StringBuilder _resultBuilder = new StringBuilder();
 
         private PeerAudioTranslationService? _translationService;
         private PeerAudioTranslationWindow? _separateWindow;
         private AppSettings _appSettings;
         private bool _disposed;
         private bool _isApplyingFeatureEnabledChange;
+        private bool _isLoadingPeerTargetLanguages;
+        private bool _isUpdatingPeerLanguageItems;
 
         public ObservableCollection<PeerAudioCaptureTarget> CaptureTargets { get; } = new ObservableCollection<PeerAudioCaptureTarget>();
+        public ObservableCollection<PeerAudioLanguageItemViewModel> PeerTargetLanguages { get; } = new ObservableCollection<PeerAudioLanguageItemViewModel>();
+        public ObservableCollection<PeerAudioChatMessage> Messages { get; } = new ObservableCollection<PeerAudioChatMessage>();
 
         [ObservableProperty]
         private PeerAudioCaptureTarget? _selectedCaptureTarget;
@@ -60,9 +63,13 @@ namespace lingualink_client.ViewModels
         public string EnableFeatureLabel => LanguageManager.GetString("PeerAudioEnableFeature");
         public string SeparateWindowLabel => LanguageManager.GetString("PeerAudioSeparateWindow");
         public string EmbeddedResultLabel => LanguageManager.GetString("PeerAudioEmbeddedResult");
+        public string TargetLanguagesLabel => LanguageManager.GetString("TargetLanguages");
+        public string AddLanguageLabel => LanguageManager.GetString("AddLanguage");
         public bool IsCaptureTargetSelectionEnabled => !IsWorking;
+        public bool IsPeerTargetLanguageSelectionEnabled => !IsWorking;
         public bool IsSeparateWindowOptionVisible => IsFeatureEnabled;
         public bool IsEmbeddedResultVisible => !ShowResultsInSeparateWindow;
+        public bool CanAddPeerTargetLanguage => !IsWorking && PeerTargetLanguages.Count < 3;
 
         public PeerAudioTranslationWindowViewModel()
         {
@@ -77,6 +84,8 @@ namespace lingualink_client.ViewModels
             StatusText = LanguageManager.GetString("PeerAudioStatusReady");
             ToggleButtonText = LanguageManager.GetString("PeerAudioStartListening");
             RefreshCaptureTargets();
+            LoadPeerTargetLanguagesFromSettings();
+            _ = InitializePeerLanguagesAsync();
 
             LanguageManager.LanguageChanged += OnLanguageChanged;
         }
@@ -91,8 +100,23 @@ namespace lingualink_client.ViewModels
         [RelayCommand]
         private void Clear()
         {
-            _resultBuilder.Clear();
+            Messages.Clear();
             ResultText = string.Empty;
+        }
+
+        [RelayCommand(CanExecute = nameof(CanAddPeerTargetLanguage))]
+        private void AddPeerTargetLanguage()
+        {
+            var available = GetAvailablePeerBackendLanguages(null);
+            var backendName = available.FirstOrDefault();
+            if (string.IsNullOrWhiteSpace(backendName))
+            {
+                return;
+            }
+
+            PeerTargetLanguages.Add(CreatePeerTargetLanguageItem(backendName));
+            UpdatePeerLanguageItemState();
+            PersistPeerTargetLanguages();
         }
 
         [RelayCommand(CanExecute = nameof(CanRefreshCaptureTargets))]
@@ -123,7 +147,10 @@ namespace lingualink_client.ViewModels
         partial void OnIsWorkingChanged(bool value)
         {
             OnPropertyChanged(nameof(IsCaptureTargetSelectionEnabled));
+            OnPropertyChanged(nameof(IsPeerTargetLanguageSelectionEnabled));
+            OnPropertyChanged(nameof(CanAddPeerTargetLanguage));
             RefreshCaptureTargetsCommand.NotifyCanExecuteChanged();
+            AddPeerTargetLanguageCommand.NotifyCanExecuteChanged();
         }
 
         partial void OnIsFeatureEnabledChanged(bool value)
@@ -201,7 +228,9 @@ namespace lingualink_client.ViewModels
             }
 
             _appSettings = _settingsService.LoadSettings();
-            _translationService = new PeerAudioTranslationService(_appSettings, _loggingManager);
+            await InitializePeerLanguagesAsync();
+            _appSettings.PeerAudioTargetLanguages = string.Join(",", GetSelectedPeerTargetBackendLanguages());
+            _translationService = new PeerAudioTranslationService(_appSettings, _loggingManager, GetSelectedPeerTargetBackendLanguages());
             _translationService.StatusUpdated += OnStatusUpdated;
             _translationService.TranslationReceived += OnTranslationReceived;
 
@@ -270,15 +299,175 @@ namespace lingualink_client.ViewModels
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
-                if (_resultBuilder.Length > 0)
+                Messages.Add(new PeerAudioChatMessage(e.DisplayText, !e.IsSuccess));
+                ResultText = string.Join($"{Environment.NewLine}{Environment.NewLine}", Messages.Select(message => message.Text));
+            });
+        }
+
+        public void RemovePeerAudioTargetLanguage(PeerAudioLanguageItemViewModel item)
+        {
+            if (IsWorking || !PeerTargetLanguages.Contains(item) || PeerTargetLanguages.Count <= 1)
+            {
+                return;
+            }
+
+            PeerTargetLanguages.Remove(item);
+            UpdatePeerLanguageItemState();
+            PersistPeerTargetLanguages();
+        }
+
+        public void OnPeerAudioTargetLanguageChanged()
+        {
+            if (_isLoadingPeerTargetLanguages || _isUpdatingPeerLanguageItems)
+            {
+                return;
+            }
+
+            UpdatePeerLanguageItemState();
+            PersistPeerTargetLanguages();
+        }
+
+        private void LoadPeerTargetLanguagesFromSettings()
+        {
+            _isLoadingPeerTargetLanguages = true;
+            try
+            {
+                PeerTargetLanguages.Clear();
+                var supported = GetSupportedPeerBackendLanguages();
+                var configured = _appSettings.PeerAudioTargetLanguages
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .Where(name => supported.Contains(name))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .Take(3)
+                    .ToList();
+
+                if (configured.Count == 0)
                 {
-                    _resultBuilder.AppendLine();
-                    _resultBuilder.AppendLine();
+                    configured = supported.Take(2).ToList();
                 }
 
-                _resultBuilder.Append(e.DisplayText);
-                ResultText = _resultBuilder.ToString();
-            });
+                foreach (var backendName in configured)
+                {
+                    PeerTargetLanguages.Add(CreatePeerTargetLanguageItem(backendName));
+                }
+            }
+            finally
+            {
+                _isLoadingPeerTargetLanguages = false;
+            }
+
+            UpdatePeerLanguageItemState();
+        }
+
+        private async Task InitializePeerLanguagesAsync()
+        {
+            if (LanguageDisplayHelper.BackendLanguageNames.Count > 0)
+            {
+                return;
+            }
+
+            try
+            {
+                using var apiService = LingualinkApiServiceFactory.CreateApiService(_appSettings);
+                await LanguageDisplayHelper.InitializeAsync(apiService);
+                await Application.Current.Dispatcher.InvokeAsync(LoadPeerTargetLanguagesFromSettings);
+            }
+            catch (Exception ex)
+            {
+                _loggingManager.AddMessage($"Failed to initialize peer audio target languages: {ex.Message}", LogLevel.Warning, "PeerAudio");
+            }
+        }
+
+        private PeerAudioLanguageItemViewModel CreatePeerTargetLanguageItem(string backendName)
+        {
+            return new PeerAudioLanguageItemViewModel(
+                this,
+                backendName,
+                new ObservableCollection<LanguageDisplayItem>(
+                    GetAvailablePeerBackendLanguages(backendName)
+                        .Select(name => new LanguageDisplayItem
+                        {
+                            BackendName = name,
+                            DisplayName = LanguageDisplayHelper.GetDisplayName(name)
+                        })));
+        }
+
+        private List<string> GetSupportedPeerBackendLanguages()
+        {
+            var languages = LanguageDisplayHelper.BackendLanguageNames
+                .Where(name => !string.IsNullOrWhiteSpace(name) && name != LanguageDisplayHelper.TranscriptionBackendName)
+                .ToList();
+
+            if (languages.Count > 0)
+            {
+                return languages;
+            }
+
+            return new List<string> { "英文", "日文", "中文" };
+        }
+
+        private List<string> GetAvailablePeerBackendLanguages(string? currentBackendName)
+        {
+            var selected = PeerTargetLanguages
+                .Select(item => item.BackendName)
+                .Where(name => !string.IsNullOrWhiteSpace(name) && name != currentBackendName)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            return GetSupportedPeerBackendLanguages()
+                .Where(name => name == currentBackendName || !selected.Contains(name))
+                .ToList();
+        }
+
+        private void UpdatePeerLanguageItemState()
+        {
+            _isUpdatingPeerLanguageItems = true;
+            try
+            {
+                for (var i = 0; i < PeerTargetLanguages.Count; i++)
+                {
+                    var item = PeerTargetLanguages[i];
+                    item.Label = $"{LanguageManager.GetString("TargetLabel")} {i + 1}:";
+                    item.CanRemove = PeerTargetLanguages.Count > 1 && !IsWorking;
+
+                    var selectedBackendName = item.BackendName;
+                    item.AvailableLanguages = new ObservableCollection<LanguageDisplayItem>(
+                        GetAvailablePeerBackendLanguages(selectedBackendName)
+                            .Select(name => new LanguageDisplayItem
+                            {
+                                BackendName = name,
+                                DisplayName = LanguageDisplayHelper.GetDisplayName(name)
+                            }));
+                    item.SelectedDisplayLanguage = item.AvailableLanguages.FirstOrDefault(lang => lang.BackendName == selectedBackendName)
+                        ?? item.AvailableLanguages.FirstOrDefault();
+                }
+            }
+            finally
+            {
+                _isUpdatingPeerLanguageItems = false;
+            }
+
+            OnPropertyChanged(nameof(CanAddPeerTargetLanguage));
+            AddPeerTargetLanguageCommand.NotifyCanExecuteChanged();
+        }
+
+        private IReadOnlyList<string> GetSelectedPeerTargetBackendLanguages()
+        {
+            return PeerTargetLanguages
+                .Select(item => item.BackendName)
+                .Where(name => !string.IsNullOrWhiteSpace(name))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+
+        private void PersistPeerTargetLanguages()
+        {
+            if (_isLoadingPeerTargetLanguages)
+            {
+                return;
+            }
+
+            _appSettings.PeerAudioTargetLanguages = string.Join(",", GetSelectedPeerTargetBackendLanguages());
+            _settingsService.SaveSettings(_appSettings);
         }
 
         private void OnLanguageChanged()
@@ -291,6 +480,9 @@ namespace lingualink_client.ViewModels
             OnPropertyChanged(nameof(EnableFeatureLabel));
             OnPropertyChanged(nameof(SeparateWindowLabel));
             OnPropertyChanged(nameof(EmbeddedResultLabel));
+            OnPropertyChanged(nameof(TargetLanguagesLabel));
+            OnPropertyChanged(nameof(AddLanguageLabel));
+            UpdatePeerLanguageItemState();
             ToggleButtonText = IsWorking
                 ? LanguageManager.GetString("PeerAudioStopListening")
                 : LanguageManager.GetString("PeerAudioStartListening");

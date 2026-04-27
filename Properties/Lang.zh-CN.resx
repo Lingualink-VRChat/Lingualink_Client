@@ -1794,6 +1794,9 @@
   <data name="PeerAudioStatusTranslated" xml:space="preserve">
     <value>翻译完成，继续监听...</value>
   </data>
+  <data name="PeerAudioStatusNoSpeech" xml:space="preserve">
+    <value>未识别到有效语音，继续监听...</value>
+  </data>
   <data name="PeerAudioStatusFailedFormat" xml:space="preserve">
     <value>翻译失败：{0}</value>
   </data>

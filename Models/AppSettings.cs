@@ -41,6 +41,8 @@ namespace lingualink_client.Models
 
         public string TargetLanguages { get; set; } = "英文,日文"; // Default: English, Japanese
 
+        public string PeerAudioTargetLanguages { get; set; } = "英文,日文";
+
         // Optional override for update feed (useful for debugging update service)
         public string UpdateFeedOverride { get; set; } = string.Empty;
 

@@ -20,6 +20,7 @@ namespace lingualink_client.Services.Managers
         private readonly AudioService _audioService;
         private readonly ILingualinkApiService _apiService;
         private readonly SemaphoreSlim _translationGate = new SemaphoreSlim(1, 1);
+        private readonly IReadOnlyList<string> _targetBackendLanguages;
 
         private bool _disposed;
 
@@ -28,10 +29,17 @@ namespace lingualink_client.Services.Managers
 
         public bool IsWorking => _audioService.IsWorking;
 
-        public PeerAudioTranslationService(AppSettings appSettings, ILoggingManager loggingManager)
+        public PeerAudioTranslationService(
+            AppSettings appSettings,
+            ILoggingManager loggingManager,
+            IEnumerable<string>? targetBackendLanguages = null)
         {
             _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
             _loggingManager = loggingManager ?? throw new ArgumentNullException(nameof(loggingManager));
+            _targetBackendLanguages = targetBackendLanguages?
+                .Where(name => !string.IsNullOrWhiteSpace(name))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList() ?? Array.Empty<string>();
             _audioService = new AudioService(_appSettings, _loggingManager);
             _apiService = LingualinkApiServiceFactory.CreateApiService(_appSettings);
 
@@ -98,6 +106,12 @@ namespace lingualink_client.Services.Managers
                     "peer_audio_loopback");
                 stopwatch.Stop();
 
+                if (IsNoSpeechResult(apiResult))
+                {
+                    StatusUpdated?.Invoke(LanguageManager.GetString("PeerAudioStatusNoSpeech"));
+                    return;
+                }
+
                 if (!apiResult.IsSuccess)
                 {
                     var error = string.IsNullOrWhiteSpace(apiResult.ErrorMessage)
@@ -126,12 +140,28 @@ namespace lingualink_client.Services.Managers
 
         private List<string> ResolveTargetLanguageCodes()
         {
-            var selectedBackendNames = _appSettings.TargetLanguages
-                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            var configuredLanguages = _targetBackendLanguages.Count > 0
+                ? _targetBackendLanguages
+                : _appSettings.PeerAudioTargetLanguages
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+            var selectedBackendNames = configuredLanguages
                 .Where(name => name != LanguageDisplayHelper.TranscriptionBackendName)
                 .ToList();
 
             return LanguageDisplayHelper.ConvertChineseNamesToLanguageCodes(selectedBackendNames);
+        }
+
+        private static bool IsNoSpeechResult(ApiResult apiResult)
+        {
+            if (string.Equals(apiResult.Status, "no_speech", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            return !apiResult.IsSuccess
+                && !string.IsNullOrWhiteSpace(apiResult.ErrorMessage)
+                && apiResult.ErrorMessage.Contains("text must be a non-empty string", StringComparison.OrdinalIgnoreCase);
         }
 
         private static string BuildDisplayText(ApiResult apiResult, double elapsedSeconds)

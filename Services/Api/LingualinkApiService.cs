@@ -201,6 +201,7 @@ namespace lingualink_client.Services
                         return new ApiResult
                         {
                             IsSuccess = apiResponse.Status == "success" || apiResponse.Status == "partial_success",
+                            Status = apiResponse.Status,
                             RequestId = apiResponse.RequestId,
                             Transcription = apiResponse.Transcription,
                             CorrectedText = apiResponse.CorrectedText,

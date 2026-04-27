@@ -109,6 +109,59 @@
                         Appearance="Secondary"
                         Icon="{ui:SymbolIcon ArrowClockwise24}" />
                 </Grid>
+
+                <Separator Margin="0,14,0,14" />
+
+                <TextBlock
+                    Margin="0,0,0,8"
+                    Text="{Binding TargetLanguagesLabel}"
+                    FontWeight="SemiBold" />
+
+                <ItemsControl ItemsSource="{Binding PeerTargetLanguages}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type vm:PeerAudioLanguageItemViewModel}">
+                            <Border
+                                Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
+                                BorderBrush="{DynamicResource ControlElevationBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="6"
+                                Padding="10,8"
+                                Margin="0,0,0,8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="80" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock
+                                        Grid.Column="0"
+                                        Text="{Binding Label}"
+                                        VerticalAlignment="Center" />
+                                    <ComboBox
+                                        Grid.Column="1"
+                                        DisplayMemberPath="DisplayName"
+                                        ItemsSource="{Binding AvailableLanguages}"
+                                        SelectedItem="{Binding SelectedDisplayLanguage}"
+                                        IsEnabled="{Binding DataContext.IsPeerTargetLanguageSelectionEnabled, RelativeSource={RelativeSource AncestorType=Page}}" />
+                                    <ui:Button
+                                        Grid.Column="2"
+                                        Margin="8,0,0,0"
+                                        Command="{Binding RemoveCommand}"
+                                        Appearance="Secondary"
+                                        Icon="{ui:SymbolIcon Delete24}"
+                                        ToolTip="{Binding RemoveLabel}" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <ui:Button
+                    HorizontalAlignment="Left"
+                    Command="{Binding AddPeerTargetLanguageCommand}"
+                    Content="{Binding AddLanguageLabel}"
+                    Appearance="Secondary"
+                    Icon="{ui:SymbolIcon Add24}" />
             </StackPanel>
         </Border>
 
@@ -157,17 +210,30 @@
                         Icon="{ui:SymbolIcon Delete24}" />
                 </Grid>
 
-                <ui:TextBox
+                <ScrollViewer
+                    x:Name="MessagesScrollViewer"
                     Grid.Row="1"
-                    AcceptsReturn="True"
-                    Background="Transparent"
-                    BorderThickness="0"
-                    FontFamily="Consolas"
-                    FontSize="14"
-                    IsReadOnly="True"
-                    Text="{Binding ResultText, Mode=OneWay}"
-                    TextWrapping="Wrap"
-                    VerticalScrollBarVisibility="Auto" />
+                    VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding Messages}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type vm:PeerAudioChatMessage}">
+                                <Border
+                                    HorizontalAlignment="Stretch"
+                                    Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
+                                    BorderBrush="{DynamicResource ControlElevationBorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="10"
+                                    Padding="12"
+                                    Margin="0,0,0,10">
+                                    <TextBlock
+                                        Text="{Binding Text}"
+                                        TextWrapping="Wrap"
+                                        FontSize="14" />
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
             </Grid>
         </Border>
     </Grid>

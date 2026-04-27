@@ -1711,6 +1711,9 @@
   <data name="PeerAudioStatusTranslated" xml:space="preserve">
     <value>翻訳完了。リスニングを継続します...</value>
   </data>
+  <data name="PeerAudioStatusNoSpeech" xml:space="preserve">
+    <value>有効な音声を認識できませんでした。リスニングを継続します...</value>
+  </data>
   <data name="PeerAudioStatusFailedFormat" xml:space="preserve">
     <value>翻訳に失敗しました: {0}</value>
   </data>
