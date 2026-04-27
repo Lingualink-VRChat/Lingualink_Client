@@ -31,9 +31,16 @@ namespace lingualink_client.ViewModels.Components
         public string WorkHintLabel => LanguageManager.GetString("WorkHint");
 
         public TranslationResultViewModel()
+            : this(
+                ServiceContainer.Resolve<ILoggingManager>(),
+                ServiceContainer.Resolve<SharedStateViewModel>())
         {
-            _loggingManager = ServiceContainer.Resolve<ILoggingManager>();
-            _sharedStateViewModel = ServiceContainer.Resolve<SharedStateViewModel>(); // 解析共享状态
+        }
+
+        public TranslationResultViewModel(ILoggingManager loggingManager, SharedStateViewModel sharedStateViewModel)
+        {
+            _loggingManager = loggingManager ?? throw new System.ArgumentNullException(nameof(loggingManager));
+            _sharedStateViewModel = sharedStateViewModel ?? throw new System.ArgumentNullException(nameof(sharedStateViewModel));
 
             _loggingManager.EntryAdded += OnLogEntryAdded;
             LanguageManager.LanguageChanged += OnLanguageChanged;

@@ -1,18 +1,45 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace lingualink_client.Models
 {
     public class AppSettings
     {
+        public const int MaxEnabledCustomVocabularyTables = 1;
+        public const int MaxEntriesPerVocabularyTable = 80;
+        public const int MaxCustomVocabularyTableCharacters = 2500;
+        public const int MaxCustomVocabularyPayloadEntries = MaxEntriesPerVocabularyTable;
+        public const int MaxTermCharactersPerVocabularyEntry = 24;
         public const string OfficialProductionServerUrl = AppEndpoints.OfficialApiBaseUrl;
-        public const string LegacyCustomServerUrl = AppEndpoints.LegacyCustomApiBaseUrl;
-        public const string LegacyLocalOfficialServerUrl = AppEndpoints.LegacyLocalOfficialApiBaseUrl;
+        public const string DefaultAuthServerUrl = AppEndpoints.DefaultAuthServerUrl;
+
+        /// <summary>
+        /// 获取有效的官方 Core 服务器 URL。
+        /// 优先使用环境变量 LINGUALINK_CORE_SERVER_URL，未设置则回退到生产默认值。
+        /// </summary>
+        public static string GetEffectiveOfficialServerUrl()
+        {
+            var envUrl = Environment.GetEnvironmentVariable("LINGUALINK_CORE_SERVER_URL");
+            var effectiveUrl = string.IsNullOrWhiteSpace(envUrl) ? OfficialProductionServerUrl : envUrl;
+            return AppEndpoints.EnsureTrailingSlash(effectiveUrl);
+        }
+
+        /// <summary>
+        /// 获取有效的 Auth 服务器 URL。
+        /// 优先使用环境变量 LINGUALINK_AUTH_SERVER_URL，未设置则回退到生产默认值。
+        /// </summary>
+        public static string GetEffectiveAuthServerUrl()
+        {
+            return AppEndpoints.NormalizeBaseUrl(
+                Environment.GetEnvironmentVariable("LINGUALINK_AUTH_SERVER_URL"),
+                DefaultAuthServerUrl);
+        }
 
         public string GlobalLanguage { get; set; } = Services.LanguageManager.DetectSystemLanguage();
 
         public string TargetLanguages { get; set; } = "英文,日文"; // Default: English, Japanese
-        public string ServerUrl { get; set; } = OfficialProductionServerUrl;
-        public string ApiKey { get; set; } = string.Empty;
 
         // Optional override for update feed (useful for debugging update service)
         public string UpdateFeedOverride { get; set; } = string.Empty;
@@ -54,13 +81,95 @@ namespace lingualink_client.Models
         // Microphone selection - remember last used device
         public string LastSelectedMicrophoneId { get; set; } = string.Empty;
 
-        // Account / server selection
-        public bool UseCustomServer { get; set; } = false;
-        public string CustomServerUrl { get; set; } = LegacyCustomServerUrl;
-        public string CustomApiKey { get; set; } = string.Empty;
-        public string OfficialServerUrl { get; set; } = OfficialProductionServerUrl;
-        public string OfficialApiKey { get; set; } = string.Empty;
+        // Global hotkey used to toggle start/stop recognition
+        public string ToggleRecognitionHotkey { get; set; } = "Ctrl+Alt+F10";
+
         public string PendingSubscriptionOrderOutTradeNo { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 用户永久关闭的公告 ID 列表，持久化到 app_settings.json。
+        /// </summary>
+        public List<string> DismissedAnnouncementIds { get; set; } = new();
+
+        /// <summary>
+        /// 本地自定义词表，支持多张词表、导入导出与独立启停。
+        /// </summary>
+        public List<CustomVocabularyTable> CustomVocabularyTables { get; set; } = new();
+
+        [JsonIgnore]
+        public string ActiveServerUrl => GetEffectiveOfficialServerUrl();
+
+        public static string NormalizeVocabularyTerm(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return string.Empty;
+            }
+
+            var trimmed = value.Trim();
+            return trimmed.Length <= MaxTermCharactersPerVocabularyEntry
+                ? trimmed
+                : trimmed[..MaxTermCharactersPerVocabularyEntry];
+        }
+
+        public static List<string> NormalizeVocabularyValues(
+            IEnumerable<string>? values,
+            int maxCount,
+            int maxTotalCharacters)
+        {
+            if (values == null)
+            {
+                return new List<string>();
+            }
+
+            var result = new List<string>();
+            var totalCharacters = 0;
+
+            foreach (var value in values)
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    continue;
+                }
+
+                var trimmed = value.Trim();
+                if (result.Any(existing => string.Equals(existing, trimmed, StringComparison.OrdinalIgnoreCase)))
+                {
+                    continue;
+                }
+
+                if (result.Count >= maxCount)
+                {
+                    break;
+                }
+
+                var remainingCharacters = maxTotalCharacters - totalCharacters;
+                if (remainingCharacters <= 0)
+                {
+                    break;
+                }
+
+                var normalized = trimmed.Length <= remainingCharacters
+                    ? trimmed
+                    : trimmed[..remainingCharacters];
+
+                if (string.IsNullOrWhiteSpace(normalized))
+                {
+                    break;
+                }
+
+                result.Add(normalized);
+                totalCharacters += normalized.Length;
+            }
+
+            return result;
+        }
+
+        public static int CountVocabularyEntryCharacters(
+            string term)
+        {
+            return term?.Length ?? 0;
+        }
 
         // Get the currently selected template
         public MessageTemplate GetSelectedTemplate()
@@ -74,5 +183,20 @@ namespace lingualink_client.Models
             // Default fallback when custom template is disabled
             return new MessageTemplate("完整文本", "{raw_text}", "显示服务器返回的完整原始文本");
         }
+    }
+
+    public class CustomVocabularyTable
+    {
+        public string Id { get; set; } = Guid.NewGuid().ToString("N");
+        public string Name { get; set; } = "新词表";
+        public bool Enabled { get; set; } = true;
+        public List<CustomVocabularyEntry> Entries { get; set; } = new();
+    }
+
+    public class CustomVocabularyEntry
+    {
+        public string Term { get; set; } = string.Empty;
+        public int Priority { get; set; }
+        public bool Enabled { get; set; } = true;
     }
 }

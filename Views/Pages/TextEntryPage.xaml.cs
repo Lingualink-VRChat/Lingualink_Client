@@ -13,7 +13,6 @@ namespace lingualink_client.Views
         {
             InitializeComponent();
             Loaded += OnLoaded;
-            Unloaded += OnUnloaded;
         }
 
         private void OnLoaded(object sender, RoutedEventArgs e)
@@ -56,13 +55,5 @@ namespace lingualink_client.Views
         {
             _viewModel?.HandleTextBoxFocusLost();
         }
-
-        private void OnUnloaded(object sender, RoutedEventArgs e)
-        {
-            DataContext = null;
-            _viewModel?.Dispose();
-            _viewModel = null;
-        }
     }
 }
-

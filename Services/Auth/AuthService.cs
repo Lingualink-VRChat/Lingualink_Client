@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using lingualink_client.Models.Auth;
+using lingualink_client.Services;
 using lingualink_client.Services.Interfaces;
 using lingualink_client.Views;
 
@@ -29,6 +30,7 @@ namespace lingualink_client.Services.Auth
         private TokenResponse? _currentToken;
         private UserProfile? _currentUser;
         private bool _disposed = false;
+        private bool _deviceFingerprintReportedThisSession = false;
 
         private const string ClientCallbackUrl = "http://localhost:23456/callback";
         private const string OAuthLoginEndpoint = "/api/v1/auth/oauth/login";
@@ -97,6 +99,7 @@ namespace lingualink_client.Services.Auth
             _currentUser = await FetchUserProfileAsync();
             if (_currentUser != null)
             {
+                await TryReportDeviceFingerprintOnceAsync();
                 LoginStateChanged?.Invoke(this, true);
                 Debug.WriteLine($"[AuthService] Session restored for user: {DescribeUser(_currentUser)}");
             }
@@ -128,7 +131,7 @@ namespace lingualink_client.Services.Auth
                     loginUrl = BuildRedirectLoginUrl();
                 }
 
-                Debug.WriteLine($"[AuthService] Login URL: {loginUrl}");
+                Debug.WriteLine($"[AuthService] Login URL: {LogSanitizer.SummarizeUrl(loginUrl)}");
 
                 var callbackResult = await ShowLoginWindowAsync(loginUrl);
                 if (callbackResult == null)
@@ -158,7 +161,7 @@ namespace lingualink_client.Services.Auth
                     return new LoginResult
                     {
                         Success = false,
-                        ErrorMessage = "登录流程异常：收到了账号绑定回调"
+                        ErrorMessage = LanguageManager.GetString("AuthLoginUnexpectedBindCallback")
                     };
                 }
 
@@ -182,7 +185,7 @@ namespace lingualink_client.Services.Auth
                 if (string.IsNullOrWhiteSpace(callbackResult.AccessToken))
                 {
                     Debug.WriteLine("[AuthService] Callback payload missing access token");
-                    return new LoginResult { Success = false, ErrorMessage = "登录回调缺少令牌信息" };
+                    return new LoginResult { Success = false, ErrorMessage = LanguageManager.GetString("AuthLoginCallbackMissingToken") };
                 }
 
                 Debug.WriteLine("[AuthService] Received access token from callback");
@@ -190,7 +193,7 @@ namespace lingualink_client.Services.Auth
                 if (tokenResult == null)
                 {
                     Debug.WriteLine("[AuthService] Token exchange failed");
-                    return new LoginResult { Success = false, ErrorMessage = "Token 获取失败" };
+                    return new LoginResult { Success = false, ErrorMessage = LanguageManager.GetString("AuthLoginTokenBuildFailed") };
                 }
 
                 _currentToken = tokenResult;
@@ -205,6 +208,7 @@ namespace lingualink_client.Services.Auth
                     _currentUser = profileFromApi;
                 }
 
+                await TryReportDeviceFingerprintOnceAsync();
                 Debug.WriteLine($"[AuthService] User profile fetched: {DescribeUser(_currentUser)}");
 
                 LoginStateChanged?.Invoke(this, true);
@@ -283,7 +287,7 @@ namespace lingualink_client.Services.Auth
                 {
                     return (null, string.Equals(endpointPath, OAuthBindLoginEndpoint, StringComparison.OrdinalIgnoreCase)
                         ? LanguageManager.GetString("BindRequireLogin")
-                        : "登录状态已失效，请重新登录");
+                        : LanguageManager.GetString("AuthSessionExpiredRelogin"));
                 }
 
                 using (response)
@@ -573,7 +577,8 @@ namespace lingualink_client.Services.Auth
                 EndDate = summary.Subscription?.EndDate,
                 AutoRenew = summary.Subscription?.AutoRenew ?? false,
                 Plan = summary.Plan,
-                LegacyPlanName = summary.Plan?.Name
+                LegacyPlanName = summary.Plan?.Name,
+                RenewalWarning = summary.RenewalWarning
             };
         }
 
@@ -582,8 +587,94 @@ namespace lingualink_client.Services.Auth
         /// </summary>
         public async Task<UserProfile?> RefreshUserProfileAsync()
         {
-            _currentUser = await FetchUserProfileAsync();
+            var refreshedUser = await FetchUserProfileAsync();
+            if (refreshedUser != null)
+            {
+                _currentUser = refreshedUser;
+            }
+
             return _currentUser;
+        }
+
+        public async Task<UserWalletInfo?> GetWalletAsync()
+        {
+            try
+            {
+                var response = await SendAuthorizedWithRefreshRetryAsync(token =>
+                {
+                    var request = new HttpRequestMessage(HttpMethod.Get, $"{_authServerUrl}/api/v1/user/wallet");
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    return request;
+                });
+
+                if (response == null)
+                {
+                    return null;
+                }
+
+                var json = await response.Content.ReadAsStringAsync();
+                var result = JsonSerializer.Deserialize<UserWalletResponse>(json, JsonOptions);
+                if (response.IsSuccessStatusCode && result?.Code == 0)
+                {
+                    return result.Data;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[AuthService] Failed to fetch wallet: {ex.Message}");
+            }
+
+            return null;
+        }
+
+        public async Task<ApiOperationResult> SetSubscriptionAutoRenewAsync(bool enabled)
+        {
+            try
+            {
+                var payload = JsonSerializer.Serialize(new { enabled });
+                var response = await SendAuthorizedWithRefreshRetryAsync(token =>
+                {
+                    var request = new HttpRequestMessage(HttpMethod.Post, $"{_authServerUrl}/api/v1/user/subscription/auto-renew");
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
+                    return request;
+                });
+
+                if (response == null)
+                {
+                    return new ApiOperationResult
+                    {
+                        Success = false,
+                        ErrorMessage = LanguageManager.GetString("AuthSessionExpiredRelogin")
+                    };
+                }
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+                if (response.IsSuccessStatusCode)
+                {
+                    await RefreshUserProfileAsync();
+                    return new ApiOperationResult
+                    {
+                        Success = true,
+                        Message = enabled ? "已开启自动续费" : "已关闭自动续费"
+                    };
+                }
+
+                return new ApiOperationResult
+                {
+                    Success = false,
+                    ErrorMessage = ResolveApiErrorMessage(responseContent, enabled ? "开启自动续费失败" : "关闭自动续费失败")
+                };
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[AuthService] Failed to set auto renew: {ex.Message}");
+                return new ApiOperationResult
+                {
+                    Success = false,
+                    ErrorMessage = ex.Message
+                };
+            }
         }
 
         /// <summary>
@@ -599,7 +690,7 @@ namespace lingualink_client.Services.Auth
                 return new ApiOperationResult
                 {
                     Success = false,
-                    ErrorMessage = usernameError ?? "用户名不合法"
+                    ErrorMessage = usernameError ?? LanguageManager.GetString("AccountUsernameInvalid")
                 };
             }
 
@@ -608,7 +699,7 @@ namespace lingualink_client.Services.Auth
                 return new ApiOperationResult
                 {
                     Success = false,
-                    ErrorMessage = "至少填写一个字段"
+                    ErrorMessage = LanguageManager.GetString("AccountAtLeastOneFieldRequired")
                 };
             }
 
@@ -625,13 +716,13 @@ namespace lingualink_client.Services.Auth
         {
             if (string.IsNullOrWhiteSpace(value))
             {
-                errorMessage = "用户名不能为空";
+                errorMessage = LanguageManager.GetString("AccountUsernameRequired");
                 return false;
             }
 
             if (value.Length > 100)
             {
-                errorMessage = "用户名长度不能超过 100";
+                errorMessage = LanguageManager.GetString("AccountUsernameTooLong");
                 return false;
             }
 
@@ -639,7 +730,7 @@ namespace lingualink_client.Services.Auth
             {
                 if (c == '/')
                 {
-                    errorMessage = "用户名不能包含 /";
+                    errorMessage = LanguageManager.GetString("AccountUsernameSlashInvalid");
                     return false;
                 }
             }
@@ -1301,7 +1392,7 @@ namespace lingualink_client.Services.Auth
                     return new ApiOperationResult
                     {
                         Success = false,
-                        ErrorMessage = "登录状态已失效，请重新登录"
+                        ErrorMessage = LanguageManager.GetString("AuthSessionExpiredRelogin")
                     };
                 }
 
@@ -1357,7 +1448,7 @@ namespace lingualink_client.Services.Auth
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    Debug.WriteLine($"[AuthService] Failed to load plans: {response.StatusCode}, {responseContent}");
+                    Debug.WriteLine($"[AuthService] Failed to load plans: {response.StatusCode}, {LogSanitizer.SanitizeJsonPayload(responseContent)}");
                     return Array.Empty<SubscriptionPlanInfo>();
                 }
 
@@ -1365,10 +1456,10 @@ namespace lingualink_client.Services.Auth
 
                 if (result?.Code == 0 && result.Data != null)
                 {
-                    return FilterPurchasablePlans(result.Data);
+                    return SubscriptionPlanFilter.FilterPurchasablePlans(result.Data);
                 }
 
-                Debug.WriteLine($"[AuthService] Plans response invalid: {responseContent}");
+                Debug.WriteLine($"[AuthService] Plans response invalid: {LogSanitizer.SanitizeJsonPayload(responseContent)}");
             }
             catch (Exception ex)
             {
@@ -1378,40 +1469,33 @@ namespace lingualink_client.Services.Auth
             return Array.Empty<SubscriptionPlanInfo>();
         }
 
-        private static IReadOnlyList<SubscriptionPlanInfo> FilterPurchasablePlans(IReadOnlyList<SubscriptionPlanInfo> plans)
+        public async Task<IReadOnlyList<PublicAnnouncement>> GetActiveAnnouncementsAsync()
         {
-            if (plans.Count == 0)
+            try
             {
-                return Array.Empty<SubscriptionPlanInfo>();
+                var response = await _httpClient.GetAsync($"{_authServerUrl}/api/v1/public/announcements");
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    Debug.WriteLine($"[AuthService] Failed to load announcements: {response.StatusCode}, {LogSanitizer.SanitizeJsonPayload(responseContent)}");
+                    return Array.Empty<PublicAnnouncement>();
+                }
+
+                var envelope = JsonSerializer.Deserialize<ApiEnvelope<List<PublicAnnouncement>>>(responseContent, JsonOptions);
+                if (envelope?.Code == 0 && envelope.Data != null)
+                {
+                    return envelope.Data;
+                }
+
+                Debug.WriteLine($"[AuthService] Announcements response invalid: {LogSanitizer.SanitizeJsonPayload(responseContent)}");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[AuthService] Failed to load announcements: {ex.Message}");
             }
 
-            var filtered = new List<SubscriptionPlanInfo>(plans.Count);
-            foreach (var plan in plans)
-            {
-                if (plan == null)
-                {
-                    continue;
-                }
-
-                if (plan.IsActive.HasValue && !plan.IsActive.Value)
-                {
-                    continue;
-                }
-
-                if (plan.IsFreePlan)
-                {
-                    continue;
-                }
-
-                if (string.IsNullOrWhiteSpace(plan.Id))
-                {
-                    continue;
-                }
-
-                filtered.Add(plan);
-            }
-
-            return filtered;
+            return Array.Empty<PublicAnnouncement>();
         }
 
         /// <summary>
@@ -1421,12 +1505,12 @@ namespace lingualink_client.Services.Auth
         {
             if (string.IsNullOrWhiteSpace(planId))
             {
-                return new CreateSubscriptionOrderResult
-                {
-                    Success = false,
-                    ErrorMessage = "缺少套餐 ID"
-                };
-            }
+                    return new CreateSubscriptionOrderResult
+                    {
+                        Success = false,
+                        ErrorMessage = LanguageManager.GetString("AccountPlanIdRequired")
+                    };
+                }
 
             if (durationMonths <= 0)
             {
@@ -1455,7 +1539,7 @@ namespace lingualink_client.Services.Auth
                     return new CreateSubscriptionOrderResult
                     {
                         Success = false,
-                        ErrorMessage = "登录状态已失效，请重新登录"
+                        ErrorMessage = LanguageManager.GetString("AccountSubscriptionReloginRequired")
                     };
                 }
 
@@ -1535,7 +1619,7 @@ namespace lingualink_client.Services.Auth
                         return result.Data;
                     }
 
-                    Debug.WriteLine($"[AuthService] Query order status failed: {responseContent}");
+                    Debug.WriteLine($"[AuthService] Query order status failed: {LogSanitizer.SanitizeJsonPayload(responseContent)}");
                     return null;
                 }
             }
@@ -1625,7 +1709,7 @@ namespace lingualink_client.Services.Auth
                     return true;
                 }
 
-                Debug.WriteLine($"[AuthService] Refresh token failed: HTTP={(int)response.StatusCode}, Payload={responseContent}");
+                Debug.WriteLine($"[AuthService] Refresh token failed: HTTP={(int)response.StatusCode}, Payload={LogSanitizer.SanitizeJsonPayload(responseContent)}");
                 return false;
             }
             catch (Exception ex)
@@ -1774,12 +1858,52 @@ namespace lingualink_client.Services.Auth
             return Task.CompletedTask;
         }
 
+        private async Task TryReportDeviceFingerprintOnceAsync()
+        {
+            if (_deviceFingerprintReportedThisSession || _currentToken == null)
+            {
+                return;
+            }
+
+            try
+            {
+                var fingerprint = DeviceFingerprintService.Generate();
+                if (string.IsNullOrWhiteSpace(fingerprint))
+                {
+                    return;
+                }
+
+                var payload = JsonSerializer.Serialize(new
+                {
+                    fingerprint
+                });
+
+                var response = await SendAuthorizedWithRefreshRetryAsync(token =>
+                {
+                    var request = new HttpRequestMessage(HttpMethod.Post, $"{_authServerUrl}/api/v1/user/device-fingerprint");
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
+                    return request;
+                });
+
+                if (response != null && response.IsSuccessStatusCode)
+                {
+                    _deviceFingerprintReportedThisSession = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[AuthService] Device fingerprint report skipped: {ex.Message}");
+            }
+        }
+
         private void ClearLocalSession()
         {
             var hadSession = _currentToken != null || _currentUser != null;
 
             _currentToken = null;
             _currentUser = null;
+            _deviceFingerprintReportedThisSession = false;
             _tokenStorage.ClearToken();
 
             if (hadSession)

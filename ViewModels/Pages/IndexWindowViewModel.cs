@@ -36,6 +36,8 @@ namespace lingualink_client.ViewModels
         private readonly IMicrophoneManager _microphoneManager;
         private readonly IEventAggregator _eventAggregator;
         private readonly IUpdateService _updateService;
+        private readonly ILoggingManager _loggingManager;
+        private readonly SharedStateViewModel _sharedStateViewModel;
         [ObservableProperty]
         private bool isUpdateAvailable;
 
@@ -44,23 +46,32 @@ namespace lingualink_client.ViewModels
 
         private UpdateSession? _activeUpdateSession;
 
-        public IndexWindowViewModel(ISettingsManager? settingsManager = null)
+        public IndexWindowViewModel(
+            ISettingsManager? settingsManager = null,
+            ITargetLanguageManager? targetLanguageManager = null,
+            IMicrophoneManager? microphoneManager = null,
+            IEventAggregator? eventAggregator = null,
+            IUpdateService? updateService = null,
+            ILoggingManager? loggingManager = null,
+            SharedStateViewModel? sharedStateViewModel = null)
         {
             // 初始化服务/管理器
             _settingsManager = settingsManager
                                ?? (ServiceContainer.TryResolve<ISettingsManager>(out var resolved) && resolved != null
                                    ? resolved
                                    : new SettingsManager());
-            _targetLanguageManager = ServiceContainer.Resolve<ITargetLanguageManager>();
-            _microphoneManager = ServiceContainer.Resolve<IMicrophoneManager>();
-            _eventAggregator = ServiceContainer.Resolve<IEventAggregator>();
-            _updateService = ServiceContainer.Resolve<IUpdateService>();
+            _targetLanguageManager = targetLanguageManager ?? ServiceContainer.Resolve<ITargetLanguageManager>();
+            _microphoneManager = microphoneManager ?? ServiceContainer.Resolve<IMicrophoneManager>();
+            _eventAggregator = eventAggregator ?? ServiceContainer.Resolve<IEventAggregator>();
+            _updateService = updateService ?? ServiceContainer.Resolve<IUpdateService>();
+            _loggingManager = loggingManager ?? ServiceContainer.Resolve<ILoggingManager>();
+            _sharedStateViewModel = sharedStateViewModel ?? ServiceContainer.Resolve<SharedStateViewModel>();
 
             // 初始化组件ViewModels
             MainControl = new MainControlViewModel();
-            MicrophoneSelection = new MicrophoneSelectionViewModel();
-            TargetLanguage = new TargetLanguageViewModel();
-            TranslationResult = new TranslationResultViewModel();
+            MicrophoneSelection = new MicrophoneSelectionViewModel(_microphoneManager, _eventAggregator);
+            TargetLanguage = new TargetLanguageViewModel(_targetLanguageManager);
+            TranslationResult = new TranslationResultViewModel(_loggingManager, _sharedStateViewModel);
 
             _appSettings = _settingsManager.LoadSettings();
             LanguageManager.LanguageChanged += OnLanguageChanged;
@@ -97,8 +108,7 @@ namespace lingualink_client.ViewModels
             catch (Exception ex)
             {
                 // 日志记录错误
-                var logger = ServiceContainer.Resolve<ILoggingManager>();
-                logger.AddMessage($"[CRITICAL] Failed to initialize languages from API: {ex.Message}");
+                _loggingManager.AddMessage($"[CRITICAL] Failed to initialize languages from API: {ex.Message}");
             }
             finally
             {

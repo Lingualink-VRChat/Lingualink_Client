@@ -17,17 +17,22 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Threading;
 using lingualink_client.Models;
+using lingualink_client.Services.Interfaces;
+using lingualink_client.Services.Ui;
+using UiMessageBox = lingualink_client.Services.MessageBox;
 
 namespace lingualink_client.Views
 {
     /// <summary>
     /// SettingPage.xaml 的交互逻辑
     /// </summary>
-    public partial class SettingPage : Page
-    {
-        private SettingPageViewModel? _viewModel;
-        private readonly SettingsService _settingsService;
-        private AppSettings _appSettings;
+        public partial class SettingPage : Page
+        {
+            private SettingPageViewModel? _viewModel;
+            private readonly SettingsService _settingsService;
+            private readonly ISettingsManager _settingsManager;
+            private AppSettings _appSettings;
+            private string _pendingRecognitionHotkey = string.Empty;
 
         public List<CultureInfo> Languages { get; set; }
 
@@ -39,6 +44,9 @@ namespace lingualink_client.Views
             this.Unloaded += SettingPage_Unloaded;
 
             _settingsService = new SettingsService();
+            _settingsManager = ServiceContainer.TryResolve<ISettingsManager>(out var resolvedSettingsManager) && resolvedSettingsManager != null
+                ? resolvedSettingsManager
+                : new SettingsManager(_settingsService, ServiceContainer.TryResolve<IEventAggregator>(out var eventAggregator) ? eventAggregator : null);
             _appSettings = _settingsService.LoadSettings();
 
             Languages = LanguageManager.GetAvailableLanguages();
@@ -55,6 +63,7 @@ namespace lingualink_client.Views
             DataContext = _viewModel;
             _appSettings = _settingsService.LoadSettings();
             _viewModel.RefreshSettings();
+            LoadRecognitionHotkeyFromSettings();
         }
 
         private void SettingPage_Unloaded(object sender, RoutedEventArgs e)
@@ -72,6 +81,72 @@ namespace lingualink_client.Views
                 AppLanguageHelper.ApplyLanguage(_appSettings);
                 _settingsService.SaveSettings(_appSettings);
             }
+        }
+
+        private void RecognitionHotkeyTextBox_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == Key.Tab)
+            {
+                return;
+            }
+
+            var key = e.Key == Key.System ? e.SystemKey : e.Key;
+            if (HotkeyGesture.IsModifierKey(key))
+            {
+                e.Handled = true;
+                return;
+            }
+
+            if (!HotkeyGesture.TryCreate(Keyboard.Modifiers, key, out var gesture))
+            {
+                UiMessageBox.ShowWarning(LanguageManager.GetString("RecognitionHotkeyInvalid"));
+                e.Handled = true;
+                return;
+            }
+
+            if (gesture == null)
+            {
+                e.Handled = true;
+                return;
+            }
+
+            _pendingRecognitionHotkey = gesture.ToConfigString();
+            RecognitionHotkeyTextBox.Text = gesture.ToDisplayString();
+            e.Handled = true;
+        }
+
+        private void SaveRecognitionHotkey_Click(object sender, RoutedEventArgs e)
+        {
+            if (!_settingsManager.TryUpdateAndSave(
+                    "SettingPageRecognitionHotkey",
+                    settings =>
+                    {
+                        settings.ToggleRecognitionHotkey = _pendingRecognitionHotkey;
+                        return true;
+                    },
+                    out var updatedSettings)
+                || updatedSettings == null)
+            {
+                return;
+            }
+
+            _appSettings = updatedSettings;
+            LoadRecognitionHotkeyFromSettings();
+            UiMessageBox.ShowSuccess(LanguageManager.GetString("RecognitionHotkeySaved"));
+        }
+
+        private void ClearRecognitionHotkey_Click(object sender, RoutedEventArgs e)
+        {
+            _pendingRecognitionHotkey = string.Empty;
+            RecognitionHotkeyTextBox.Text = _viewModel?.RecognitionHotkeyNotSetLabel ?? LanguageManager.GetString("RecognitionHotkeyNotSet");
+        }
+
+        private void LoadRecognitionHotkeyFromSettings()
+        {
+            _pendingRecognitionHotkey = _appSettings.ToggleRecognitionHotkey ?? string.Empty;
+            RecognitionHotkeyTextBox.Text = HotkeyGesture.TryParse(_pendingRecognitionHotkey, out var gesture) && gesture != null
+                ? gesture.ToDisplayString()
+                : _viewModel?.RecognitionHotkeyNotSetLabel ?? LanguageManager.GetString("RecognitionHotkeyNotSet");
         }
     }
 }

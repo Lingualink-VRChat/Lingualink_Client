@@ -251,6 +251,39 @@
   <data name="StatusTranslationFailedServer" xml:space="preserve">
     <value>状态：翻译失败 (服务器)。</value>
   </data>
+  <data name="FreeTrialQuotaExhausted" xml:space="preserve">
+    <value>免费试用额度已用完，请订阅后继续使用。</value>
+  </data>
+  <data name="RateLimitExceeded" xml:space="preserve">
+    <value>请求过于频繁，请稍后再试。</value>
+  </data>
+  <data name="FreeQuotaDisplayFormat" xml:space="preserve">
+    <value>免费额度 {0}/{1}</value>
+  </data>
+  <data name="FreeQuotaDisplayRefreshFormat" xml:space="preserve">
+    <value>免费额度 {0}/{1}，每 {2} 刷新</value>
+  </data>
+  <data name="FreeQuotaDisplayExhaustedFormat" xml:space="preserve">
+    <value>免费额度已用完（0/{0}），将于 {1} 刷新（每 {2}）</value>
+  </data>
+  <data name="FreeQuotaSubscribed" xml:space="preserve">
+    <value>已订阅套餐</value>
+  </data>
+  <data name="FreeQuotaStartBlockedFormat" xml:space="preserve">
+    <value>当前免费额度已用完，请等待 {0} 刷新后再试（刷新周期：{1}），或订阅套餐继续使用。</value>
+  </data>
+  <data name="FreeQuotaStartBlockedNoReset" xml:space="preserve">
+    <value>当前免费额度已用完，请等待额度刷新后再试（刷新周期：{0}），或订阅套餐继续使用。</value>
+  </data>
+  <data name="QuotaRefreshIntervalMinutesFormat" xml:space="preserve">
+    <value>{0} 分钟</value>
+  </data>
+  <data name="QuotaRefreshIntervalHoursFormat" xml:space="preserve">
+    <value>{0} 小时</value>
+  </data>
+  <data name="QuotaRefreshIntervalUnknown" xml:space="preserve">
+    <value>当前周期</value>
+  </data>
   <data name="TranslationServerError" xml:space="preserve">
     <value>服务器错误: {0}</value>
   </data>
@@ -345,6 +378,18 @@
   </data>
   <data name="SuccessTitle" xml:space="preserve">
     <value>成功</value>
+  </data>
+  <data name="WarningTitle" xml:space="preserve">
+    <value>警告</value>
+  </data>
+  <data name="ErrorTitle" xml:space="preserve">
+    <value>错误</value>
+  </data>
+  <data name="QuestionTitle" xml:space="preserve">
+    <value>提示</value>
+  </data>
+  <data name="ConfirmTitle" xml:space="preserve">
+    <value>确认</value>
   </data>
   <data name="SettingsSavedSuccess" xml:space="preserve">
     <value>服务相关设置已保存。</value>
@@ -568,6 +613,30 @@
   </data>
   <data name="LanguageHint" xml:space="preserve">
     <value>选择您偏好的界面语言。这会影响所有UI文本和默认模板。</value>
+  </data>
+  <data name="RecognitionHotkeySectionTitle" xml:space="preserve">
+    <value>识别快捷键</value>
+  </data>
+  <data name="RecognitionHotkeyLabel" xml:space="preserve">
+    <value>开始/停止识别</value>
+  </data>
+  <data name="RecognitionHotkeyHint" xml:space="preserve">
+    <value>点击输入框后直接按下单个按键或组合键即可录入。建议优先使用不易误触的按键或 Ctrl/Alt/Shift/Win 组合键，清空后表示禁用全局快捷键。</value>
+  </data>
+  <data name="RecognitionHotkeySaveLabel" xml:space="preserve">
+    <value>保存快捷键</value>
+  </data>
+  <data name="RecognitionHotkeyClearLabel" xml:space="preserve">
+    <value>清空</value>
+  </data>
+  <data name="RecognitionHotkeyNotSet" xml:space="preserve">
+    <value>未设置（已禁用）</value>
+  </data>
+  <data name="RecognitionHotkeySaved" xml:space="preserve">
+    <value>识别快捷键已保存。</value>
+  </data>
+  <data name="RecognitionHotkeyInvalid" xml:space="preserve">
+    <value>纯修饰键（Ctrl / Alt / Shift / Win）不能单独作为快捷键。</value>
   </data>
   <data name="MessageTemplates" xml:space="preserve">
     <value>消息模板</value>
@@ -1195,6 +1264,33 @@
   <data name="AccountVipActionOpen" xml:space="preserve">
     <value>开通 VIP</value>
   </data>
+  <data name="AccountWalletSection" xml:space="preserve">
+    <value>钱包与自动续费</value>
+  </data>
+  <data name="AccountWalletBalance" xml:space="preserve">
+    <value>账户余额</value>
+  </data>
+  <data name="AccountWalletRecharge" xml:space="preserve">
+    <value>余额充值</value>
+  </data>
+  <data name="AccountWalletAutoRenew" xml:space="preserve">
+    <value>自动续费</value>
+  </data>
+  <data name="AccountWalletEnableAutoRenew" xml:space="preserve">
+    <value>开启自动续费</value>
+  </data>
+  <data name="AccountWalletDisableAutoRenew" xml:space="preserve">
+    <value>关闭自动续费</value>
+  </data>
+  <data name="AccountWalletRenewalWarning" xml:space="preserve">
+    <value>续费提醒</value>
+  </data>
+  <data name="AccountWalletAutoRenewEnabledStatus" xml:space="preserve">
+    <value>自动续费中</value>
+  </data>
+  <data name="AccountWalletAutoRenewDisabledStatus" xml:space="preserve">
+    <value>未开启</value>
+  </data>
   <data name="AccountUnbound" xml:space="preserve">
     <value>未绑定</value>
   </data>
@@ -1303,6 +1399,12 @@
   <data name="AccountUsernameInvalid" xml:space="preserve">
     <value>用户名格式不正确</value>
   </data>
+  <data name="AccountAtLeastOneFieldRequired" xml:space="preserve">
+    <value>至少填写一个字段</value>
+  </data>
+  <data name="AccountPlanIdRequired" xml:space="preserve">
+    <value>缺少套餐 ID</value>
+  </data>
   <data name="AccountAuthServiceUnavailable" xml:space="preserve">
     <value>认证服务未初始化</value>
   </data>
@@ -1323,6 +1425,18 @@
   </data>
   <data name="AccountSubscriptionReloginRequired" xml:space="preserve">
     <value>登录状态已失效，请重新登录后再订阅。</value>
+  </data>
+  <data name="AuthSessionExpiredRelogin" xml:space="preserve">
+    <value>登录状态已失效，请重新登录。</value>
+  </data>
+  <data name="AuthLoginUnexpectedBindCallback" xml:space="preserve">
+    <value>登录流程异常：收到了账号绑定回调</value>
+  </data>
+  <data name="AuthLoginCallbackMissingToken" xml:space="preserve">
+    <value>登录回调缺少令牌信息</value>
+  </data>
+  <data name="AuthLoginTokenBuildFailed" xml:space="preserve">
+    <value>Token 获取失败</value>
   </data>
   <data name="AccountSubscribeSuccess" xml:space="preserve">
     <value>订阅成功，订阅状态已刷新。</value>
@@ -1451,5 +1565,197 @@
   </data>
   <data name="CheckoutNavigationFailed" xml:space="preserve">
     <value>无法加载支付页面，请检查网络连接后重试。</value>
+  </data>
+  <data name="AnnouncementPermanentDismiss" xml:space="preserve">
+    <value>不再显示</value>
+  </data>
+  <data name="AnnouncementDismiss" xml:space="preserve">
+    <value>关闭</value>
+  </data>
+  <data name="ApiUnauthorized" xml:space="preserve">
+    <value>认证失败，请重新登录。</value>
+  </data>
+  <data name="ApiForbidden" xml:space="preserve">
+    <value>访问被拒绝，当前权限不足。</value>
+  </data>
+  <data name="ApiEndpointNotFound" xml:space="preserve">
+    <value>未找到 API 端点，请检查服务器地址。</value>
+  </data>
+  <data name="ApiRequestTooLarge" xml:space="preserve">
+    <value>请求内容过大，请减少音频大小或文本长度。</value>
+  </data>
+  <data name="CustomVocabularySectionTitle" xml:space="preserve">
+    <value>自定义词表</value>
+  </data>
+  <data name="CustomVocabularyGuidanceTitle" xml:space="preserve">
+    <value>如何使用自定义词表？</value>
+  </data>
+  <data name="CustomVocabularyGuidanceHint" xml:space="preserve">
+    <value>鼠标悬停查看使用方法</value>
+  </data>
+  <data name="CustomVocabularyGuidanceSummary" xml:space="preserve">
+    <value>当语音识别总是把您的特定词汇听错时，您可以把正确写法加入词表，帮助系统优先纠正原文。</value>
+  </data>
+  <data name="CustomVocabularyGuidanceBody" xml:space="preserve">
+    <value>您只需要填写希望纠正成的标准词。系统会自动生成发音键，先做发音召回，再把少量候选词交给模型决定是否替换。</value>
+  </data>
+  <data name="CustomVocabularyMemberOnlyNoticeTitle" xml:space="preserve">
+    <value>会员功能说明</value>
+  </data>
+  <data name="CustomVocabularyMemberOnlyNoticeMessage" xml:space="preserve">
+    <value>自定义词表仅付费会员生效。免费用户仍可编辑和导入词表，升级会员后会自动用于语音识别纠错。</value>
+  </data>
+  <data name="CustomVocabularyEntryGuideTitle" xml:space="preserve">
+    <value>各项该怎么填？</value>
+  </data>
+  <data name="CustomVocabularyTermGuideText" xml:space="preserve">
+    <value>标准词：您最终希望原文被纠正成的正确写法。每条词条只需要填这一项。</value>
+  </data>
+  <data name="CustomVocabularyAliasesGuideText" xml:space="preserve">
+    <value>别名：语音识别经常写错的错别字，或者您常说的网络黑话 / 简称。多个请用逗号隔开。</value>
+  </data>
+  <data name="CustomVocabularyPronunciationsGuideText" xml:space="preserve">
+    <value>发音：词汇的拼音或英文读音，能大幅提升识别成功率。多个请用逗号隔开。</value>
+  </data>
+  <data name="CustomVocabularyNoteGuideText" xml:space="preserve">
+    <value>词义/备注：可选。用于告诉 AI 这个词大概是什么，例如“一款电子游戏”或“游戏内角色名”。</value>
+  </data>
+  <data name="CustomVocabularyExampleTitle" xml:space="preserve">
+    <value>常见使用场景举例</value>
+  </data>
+  <data name="CustomVocabularyExampleBody" xml:space="preserve">
+    <value>例如“明日方舟终末地”总被识别成“明日方舟周末帝”，那就直接新增一条标准词：明日方舟终末地。系统会自动根据整句发音做匹配。</value>
+  </data>
+  <data name="CustomVocabularySectionHint" xml:space="preserve">
+    <value>管理仅保存在本地的 ASR 纠错词表。用户每条只需填写标准词；同一时刻最多启用 {0} 张，每张词表最多 {1} 条词条、{2} 个有效字符。</value>
+  </data>
+  <data name="CustomVocabularyAddTable" xml:space="preserve">
+    <value>新建词表</value>
+  </data>
+  <data name="CustomVocabularyImport" xml:space="preserve">
+    <value>导入</value>
+  </data>
+  <data name="CustomVocabularyExport" xml:space="preserve">
+    <value>导出</value>
+  </data>
+  <data name="CustomVocabularyDeleteTable" xml:space="preserve">
+    <value>删除词表</value>
+  </data>
+  <data name="CustomVocabularyTableName" xml:space="preserve">
+    <value>词表名称</value>
+  </data>
+  <data name="CustomVocabularyTableEnabled" xml:space="preserve">
+    <value>启用该词表</value>
+  </data>
+  <data name="CustomVocabularyEntryEnabled" xml:space="preserve">
+    <value>启用该词条</value>
+  </data>
+  <data name="CustomVocabularyEntries" xml:space="preserve">
+    <value>词条</value>
+  </data>
+  <data name="CustomVocabularyAddEntry" xml:space="preserve">
+    <value>新增词条</value>
+  </data>
+  <data name="CustomVocabularyDeleteEntry" xml:space="preserve">
+    <value>删除词条</value>
+  </data>
+  <data name="CustomVocabularyNoTableSelected" xml:space="preserve">
+    <value>请选择或新建一张词表后再编辑。</value>
+  </data>
+  <data name="CustomVocabularyAliasesHint" xml:space="preserve">
+    <value>无需填写别名、发音或备注。系统会根据当前整句发音自动召回可能的标准词。</value>
+  </data>
+  <data name="CustomVocabularyTableCountSummary" xml:space="preserve">
+    <value>{0} 张词表，共 {1} 条词条，已启用 {2} 张</value>
+  </data>
+  <data name="CustomVocabularyTableStatusSummary" xml:space="preserve">
+    <value>{0}/{1} 词条，{2}/{3} 字符</value>
+  </data>
+  <data name="CustomVocabularySelectedTableSummary" xml:space="preserve">
+    <value>当前词表 {0}/{1} 条词条，其中已启用 {2} 条，已用 {3}/{4} 有效字符</value>
+  </data>
+  <data name="CustomVocabularyCharacterBudgetSummary" xml:space="preserve">
+    <value>字符预算：{0}/{1}</value>
+  </data>
+  <data name="CustomVocabularyEnabledBadge" xml:space="preserve">
+    <value>已启用</value>
+  </data>
+  <data name="CustomVocabularyTableNamePlaceholder" xml:space="preserve">
+    <value>输入词表名称</value>
+  </data>
+  <data name="CustomVocabularyEntryTermHeader" xml:space="preserve">
+    <value>标准词</value>
+  </data>
+  <data name="CustomVocabularyEntryAliasesHeader" xml:space="preserve">
+    <value>别名（使用逗号分隔）</value>
+  </data>
+  <data name="CustomVocabularyEntryPronunciationsHeader" xml:space="preserve">
+    <value>发音（使用逗号分隔）</value>
+  </data>
+  <data name="CustomVocabularyEntryNoteHeader" xml:space="preserve">
+    <value>词义/备注（可选）</value>
+  </data>
+  <data name="CustomVocabularyEntryActionsHeader" xml:space="preserve">
+    <value>操作</value>
+  </data>
+  <data name="CustomVocabularyTermPlaceholder" xml:space="preserve">
+    <value>输入希望纠正成的标准词</value>
+  </data>
+  <data name="CustomVocabularyAliasesPlaceholder" xml:space="preserve">
+    <value>错别字、黑话或简称，多个用逗号隔开</value>
+  </data>
+  <data name="CustomVocabularyPronunciationsPlaceholder" xml:space="preserve">
+    <value>拼音或英文读音，多个用逗号隔开</value>
+  </data>
+  <data name="CustomVocabularyNotePlaceholder" xml:space="preserve">
+    <value>例如：一款电子游戏、游戏内角色名</value>
+  </data>
+  <data name="CustomVocabularyNoTablesTitle" xml:space="preserve">
+    <value>还没有词表</value>
+  </data>
+  <data name="CustomVocabularyNoTablesBody" xml:space="preserve">
+    <value>先创建一张本地词表，然后在展开面板里导入或添加词条。</value>
+  </data>
+  <data name="CustomVocabularyMoveEntryUp" xml:space="preserve">
+    <value>上移</value>
+  </data>
+  <data name="CustomVocabularyMoveEntryDown" xml:space="preserve">
+    <value>下移</value>
+  </data>
+  <data name="CustomVocabularyExpandTable" xml:space="preserve">
+    <value>展开词表</value>
+  </data>
+  <data name="CustomVocabularyCollapseTable" xml:space="preserve">
+    <value>收起词表</value>
+  </data>
+  <data name="CustomVocabularyBudgetExceeded" xml:space="preserve">
+    <value>本次修改会超过单张词表 {0} 的字符预算，已回退到上一次合法状态。</value>
+  </data>
+  <data name="CustomVocabularyDefaultTableName" xml:space="preserve">
+    <value>新词表</value>
+  </data>
+  <data name="CustomVocabularyDeleteTableConfirm" xml:space="preserve">
+    <value>确认删除词表“{0}”吗？</value>
+  </data>
+  <data name="CustomVocabularyImportInvalid" xml:space="preserve">
+    <value>导入文件无效，或缺少有效的词表数据。</value>
+  </data>
+  <data name="CustomVocabularyImportConflict" xml:space="preserve">
+    <value>已存在同名词表“{0}”。选择“是”覆盖，选择“否”导入为副本，选择“取消”中止。</value>
+  </data>
+  <data name="CustomVocabularyImportTruncated" xml:space="preserve">
+    <value>导入内容超过限制，已在导入时自动截断。</value>
+  </data>
+  <data name="CustomVocabularyImportFailed" xml:space="preserve">
+    <value>导入词表失败：{0}</value>
+  </data>
+  <data name="CustomVocabularyExportSuccess" xml:space="preserve">
+    <value>词表导出成功。</value>
+  </data>
+  <data name="CustomVocabularyExportFailed" xml:space="preserve">
+    <value>词表导出失败：{0}</value>
+  </data>
+  <data name="CustomVocabularyMaxEntriesReached" xml:space="preserve">
+    <value>当前词表已达到词条上限 {0}。</value>
   </data>
 </root>

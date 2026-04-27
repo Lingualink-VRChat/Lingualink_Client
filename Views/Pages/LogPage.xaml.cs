@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using lingualink_client.Models;
+using lingualink_client.Services;
 using lingualink_client.ViewModels.Components;
 
 namespace lingualink_client.Views
@@ -21,10 +22,13 @@ namespace lingualink_client.Views
         {
             if (_viewModel == null)
             {
-                _viewModel = new LogViewModel();
-                _viewModel.EntryAppended += OnEntryAppended;
+                _viewModel = ServiceContainer.TryResolve<LogViewModel>(out var viewModel) && viewModel != null
+                    ? viewModel
+                    : new LogViewModel();
             }
 
+            _viewModel.EntryAppended -= OnEntryAppended;
+            _viewModel.EntryAppended += OnEntryAppended;
             DataContext = _viewModel;
         }
 
@@ -49,16 +53,12 @@ namespace lingualink_client.Views
 
         private void OnUnloaded(object sender, RoutedEventArgs e)
         {
-            DataContext = null;
-
             if (_viewModel == null)
             {
                 return;
             }
 
             _viewModel.EntryAppended -= OnEntryAppended;
-            _viewModel.Dispose();
-            _viewModel = null;
         }
     }
 }

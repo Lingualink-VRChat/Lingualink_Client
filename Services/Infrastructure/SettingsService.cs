@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using lingualink_client.Models;
 
 namespace lingualink_client.Services
@@ -28,13 +29,14 @@ namespace lingualink_client.Services
                 if (File.Exists(_settingsFilePath))
                 {
                     string json = File.ReadAllText(_settingsFilePath);
+                    bool strippedLegacyFields = StripRetiredServerSettings(json, out json);
                     var settings = JsonSerializer.Deserialize<AppSettings>(json);
 
                     if (settings != null)
                     {
                         bool normalized = NormalizeSettings(settings);
-                        System.Diagnostics.Debug.WriteLine($"[SettingsService] Loaded settings - ServerUrl: '{settings.ServerUrl}'");
-                        if (normalized)
+                        System.Diagnostics.Debug.WriteLine($"[SettingsService] Loaded settings - ActiveServerUrl: '{settings.ActiveServerUrl}'");
+                        if (normalized || strippedLegacyFields)
                         {
                             SaveSettings(settings);
                         }
@@ -76,71 +78,99 @@ namespace lingualink_client.Services
         {
             bool changed = false;
 
-            if (string.IsNullOrWhiteSpace(settings.OfficialServerUrl))
+            if (settings.DismissedAnnouncementIds == null)
             {
-                settings.OfficialServerUrl = AppSettings.OfficialProductionServerUrl;
+                settings.DismissedAnnouncementIds = new System.Collections.Generic.List<string>();
                 changed = true;
             }
 
-            bool isLegacyDefaultSelection =
-                settings.UseCustomServer
-                && string.Equals(settings.ServerUrl, AppSettings.LegacyCustomServerUrl, StringComparison.OrdinalIgnoreCase)
-                && string.Equals(settings.CustomServerUrl, AppSettings.LegacyCustomServerUrl, StringComparison.OrdinalIgnoreCase)
-                && string.Equals(settings.OfficialServerUrl, AppSettings.LegacyLocalOfficialServerUrl, StringComparison.OrdinalIgnoreCase)
-                && string.IsNullOrWhiteSpace(settings.ApiKey)
-                && string.IsNullOrWhiteSpace(settings.CustomApiKey)
-                && string.IsNullOrWhiteSpace(settings.OfficialApiKey);
-
-            if (isLegacyDefaultSelection)
+            if (settings.CustomVocabularyTables == null)
             {
-                settings.UseCustomServer = false;
-                settings.OfficialServerUrl = AppSettings.OfficialProductionServerUrl;
-                settings.ServerUrl = AppSettings.OfficialProductionServerUrl;
+                settings.CustomVocabularyTables = new System.Collections.Generic.List<CustomVocabularyTable>();
                 changed = true;
             }
-
-            if (!settings.UseCustomServer
-                && string.Equals(settings.ServerUrl, AppSettings.LegacyLocalOfficialServerUrl, StringComparison.OrdinalIgnoreCase))
+            else
             {
-                settings.ServerUrl = settings.OfficialServerUrl;
-                changed = true;
+                int enabledTableCount = 0;
+                foreach (var table in settings.CustomVocabularyTables)
+                {
+                    if (string.IsNullOrWhiteSpace(table.Id))
+                    {
+                        table.Id = Guid.NewGuid().ToString("N");
+                        changed = true;
+                    }
+
+                    if (table.Entries == null)
+                    {
+                        table.Entries = new System.Collections.Generic.List<CustomVocabularyEntry>();
+                        changed = true;
+                        continue;
+                    }
+
+                    if (table.Enabled)
+                    {
+                        enabledTableCount++;
+                        if (enabledTableCount > AppSettings.MaxEnabledCustomVocabularyTables)
+                        {
+                            table.Enabled = false;
+                            changed = true;
+                        }
+                    }
+
+                }
             }
-
-            var officialUrl = NormalizeUrl(settings.OfficialServerUrl);
-            var currentUrl = NormalizeUrl(settings.ServerUrl);
-            var customUrl = NormalizeUrl(settings.CustomServerUrl);
-
-            // Old desktop builds could persist the official production endpoint inside the
-            // "custom server" branch, which disables OAuth-backed Bearer auth for translation
-            // requests. When that happens, always migrate back to the official mode
-            // automatically so users don't need to delete local settings manually.
-            if (!string.IsNullOrWhiteSpace(officialUrl)
-                && (string.Equals(currentUrl, officialUrl, StringComparison.OrdinalIgnoreCase)
-                    || string.Equals(customUrl, officialUrl, StringComparison.OrdinalIgnoreCase)))
-            {
-                settings.UseCustomServer = false;
-                settings.ServerUrl = settings.OfficialServerUrl;
-                settings.CustomServerUrl = settings.OfficialServerUrl;
-                settings.ApiKey = string.Empty;
-                settings.CustomApiKey = string.Empty;
-                settings.OfficialApiKey = string.Empty;
-                changed = true;
-            }
-
             return changed;
         }
 
-        private static string NormalizeUrl(string? url)
+        private static bool StripRetiredServerSettings(string rawJson, out string sanitizedJson)
         {
-            return (url ?? string.Empty).Trim().TrimEnd('/');
+            sanitizedJson = rawJson;
+
+            if (string.IsNullOrWhiteSpace(rawJson))
+            {
+                return false;
+            }
+
+            JsonNode? root;
+            try
+            {
+                root = JsonNode.Parse(rawJson);
+            }
+            catch
+            {
+                return false;
+            }
+
+            if (root is not JsonObject obj)
+            {
+                return false;
+            }
+
+            bool changed = false;
+            changed |= obj.Remove("UseCustomServer");
+            changed |= obj.Remove("CustomServerUrl");
+            changed |= obj.Remove("CustomApiKey");
+            changed |= obj.Remove("ServerUrl");
+            changed |= obj.Remove("ApiKey");
+            changed |= obj.Remove("OfficialApiKey");
+            changed |= obj.Remove("OfficialServerUrl");
+
+            if (!changed)
+            {
+                return false;
+            }
+
+            sanitizedJson = obj.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
+            return true;
         }
 
         public void SaveSettings(AppSettings settings)
         {
             try
             {
+                NormalizeSettings(settings);
                 System.Diagnostics.Debug.WriteLine($"[SettingsService] Saving settings to: {_settingsFilePath}");
-                System.Diagnostics.Debug.WriteLine($"[SettingsService] ServerUrl: '{settings.ServerUrl}'");
+                System.Diagnostics.Debug.WriteLine($"[SettingsService] ActiveServerUrl: '{settings.ActiveServerUrl}'");
 
                 string json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
                 File.WriteAllText(_settingsFilePath, json);

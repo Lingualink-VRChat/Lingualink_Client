@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Windows;
+using System.Windows.Threading;
 using lingualink_client.Models;
 using lingualink_client.Services;
 using lingualink_client.Services.Interfaces;
@@ -36,9 +37,9 @@ namespace lingualink_client.Services.Managers
 
             var entry = new LogEntry(level, message, category, details);
 
-            Debug.WriteLine($"LoggingManager.AddMessage: [{entry.Level}] {entry.Category} - {entry.Message}");
+            Debug.WriteLine($"LoggingManager.AddMessage: [{entry.Level}] {entry.Category} - {LogSanitizer.DescribeValue(entry.Message, "Message")}");
 
-            Application.Current.Dispatcher.Invoke(() =>
+            ExecuteOnUiThread(() =>
             {
                 lock (_lockObject)
                 {
@@ -61,7 +62,7 @@ namespace lingualink_client.Services.Managers
         {
             Debug.WriteLine("LoggingManager.ClearMessages called");
 
-            Application.Current.Dispatcher.Invoke(() =>
+            ExecuteOnUiThread(() =>
             {
                 lock (_lockObject)
                 {
@@ -74,6 +75,23 @@ namespace lingualink_client.Services.Managers
 
             // 添加清除日志的记录
             AddMessage(LanguageManager.GetString("LogCleared"), LogLevel.Info, "System");
+        }
+
+        private static void ExecuteOnUiThread(Action action)
+        {
+            var dispatcher = Application.Current?.Dispatcher;
+            if (dispatcher == null || dispatcher.CheckAccess())
+            {
+                action();
+                return;
+            }
+
+            if (dispatcher.HasShutdownStarted || dispatcher.HasShutdownFinished)
+            {
+                return;
+            }
+
+            dispatcher.Invoke(action, DispatcherPriority.Background);
         }
     }
 } 

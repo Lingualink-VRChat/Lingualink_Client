@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using lingualink_client.Services;
-using lingualink_client.Services.Interfaces;
 using lingualink_client.ViewModels;
 
 namespace lingualink_client.Views
@@ -19,14 +18,11 @@ namespace lingualink_client.Views
         {
             InitializeComponent();
             Loaded += OnLoaded;
-            Unloaded += OnUnloaded;
         }
 
         private async void OnLoaded(object sender, RoutedEventArgs e)
         {
-            _viewModel ??= new AccountPageViewModel(
-                ServiceContainer.Resolve<ISettingsManager>(),
-                ServiceContainer.TryResolve<IAuthService>(out var authService) ? authService : null);
+            _viewModel ??= CreateViewModel();
             DataContext = _viewModel;
             var viewModel = _viewModel;
 
@@ -40,16 +36,11 @@ namespace lingualink_client.Views
             }
         }
 
-        private void OnUnloaded(object sender, RoutedEventArgs e)
+        private static AccountPageViewModel CreateViewModel()
         {
-            if (_viewModel != null)
-            {
-                _viewModel.CancelPendingProfileSync();
-                _viewModel.Dispose();
-                _viewModel = null;
-            }
-
-            DataContext = null;
+            return ServiceContainer.TryResolve<AccountPageViewModel>(out var viewModel) && viewModel != null
+                ? viewModel
+                : throw new InvalidOperationException("AccountPageViewModel is not registered.");
         }
     }
 }

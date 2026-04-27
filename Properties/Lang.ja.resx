@@ -354,6 +354,18 @@
   <data name="SuccessTitle" xml:space="preserve">
     <value>成功</value>
   </data>
+  <data name="WarningTitle" xml:space="preserve">
+    <value>警告</value>
+  </data>
+  <data name="ErrorTitle" xml:space="preserve">
+    <value>エラー</value>
+  </data>
+  <data name="QuestionTitle" xml:space="preserve">
+    <value>確認</value>
+  </data>
+  <data name="ConfirmTitle" xml:space="preserve">
+    <value>確認</value>
+  </data>
   <data name="SettingsSavedSuccess" xml:space="preserve">
     <value>サービス関連の設定が正常に保存されました。</value>
   </data>
@@ -576,6 +588,30 @@
   </data>
   <data name="LanguageHint" xml:space="preserve">
     <value>お好みのインターフェース言語を選択してください。これはすべてのUIテキストとデフォルトテンプレートに影響します。</value>
+  </data>
+  <data name="RecognitionHotkeySectionTitle" xml:space="preserve">
+    <value>認識ショートカット</value>
+  </data>
+  <data name="RecognitionHotkeyLabel" xml:space="preserve">
+    <value>認識の開始 / 停止</value>
+  </data>
+  <data name="RecognitionHotkeyHint" xml:space="preserve">
+    <value>入力欄をクリックしてから単独キーまたはショートカットの組み合わせをそのまま押してください。誤操作しにくいキー、または Ctrl / Alt / Shift / Win との組み合わせを推奨します。クリアするとグローバルショートカットは無効になります。</value>
+  </data>
+  <data name="RecognitionHotkeySaveLabel" xml:space="preserve">
+    <value>ショートカットを保存</value>
+  </data>
+  <data name="RecognitionHotkeyClearLabel" xml:space="preserve">
+    <value>クリア</value>
+  </data>
+  <data name="RecognitionHotkeyNotSet" xml:space="preserve">
+    <value>未設定（無効）</value>
+  </data>
+  <data name="RecognitionHotkeySaved" xml:space="preserve">
+    <value>認識ショートカットを保存しました。</value>
+  </data>
+  <data name="RecognitionHotkeyInvalid" xml:space="preserve">
+    <value>修飾キー単体（Ctrl / Alt / Shift / Win）はショートカットに設定できません。</value>
   </data>
   <data name="MessageTemplates" xml:space="preserve">
     <value>メッセージテンプレート</value>
@@ -1145,6 +1181,33 @@
   <data name="AccountVipActionOpen" xml:space="preserve">
     <value>VIP を有効化</value>
   </data>
+  <data name="AccountWalletSection" xml:space="preserve">
+    <value>ウォレットと自動更新</value>
+  </data>
+  <data name="AccountWalletBalance" xml:space="preserve">
+    <value>ウォレット残高</value>
+  </data>
+  <data name="AccountWalletRecharge" xml:space="preserve">
+    <value>残高チャージ</value>
+  </data>
+  <data name="AccountWalletAutoRenew" xml:space="preserve">
+    <value>自動更新</value>
+  </data>
+  <data name="AccountWalletEnableAutoRenew" xml:space="preserve">
+    <value>自動更新を有効化</value>
+  </data>
+  <data name="AccountWalletDisableAutoRenew" xml:space="preserve">
+    <value>自動更新を無効化</value>
+  </data>
+  <data name="AccountWalletRenewalWarning" xml:space="preserve">
+    <value>更新リマインダー</value>
+  </data>
+  <data name="AccountWalletAutoRenewEnabledStatus" xml:space="preserve">
+    <value>自動更新中</value>
+  </data>
+  <data name="AccountWalletAutoRenewDisabledStatus" xml:space="preserve">
+    <value>未設定</value>
+  </data>
   <data name="AccountUnbound" xml:space="preserve">
     <value>未連携</value>
   </data>
@@ -1253,6 +1316,12 @@
   <data name="AccountUsernameInvalid" xml:space="preserve">
     <value>ユーザー名の形式が正しくありません。</value>
   </data>
+  <data name="AccountAtLeastOneFieldRequired" xml:space="preserve">
+    <value>少なくとも 1 つの項目を入力してください。</value>
+  </data>
+  <data name="AccountPlanIdRequired" xml:space="preserve">
+    <value>プラン ID が必要です。</value>
+  </data>
   <data name="AccountAuthServiceUnavailable" xml:space="preserve">
     <value>認証サービスが初期化されていません。</value>
   </data>
@@ -1273,6 +1342,18 @@
   </data>
   <data name="AccountSubscriptionReloginRequired" xml:space="preserve">
     <value>ログイン状態が失効しました。サブスクリプションの前に再度ログインしてください。</value>
+  </data>
+  <data name="AuthSessionExpiredRelogin" xml:space="preserve">
+    <value>ログイン状態が失効しました。再度ログインしてください。</value>
+  </data>
+  <data name="AuthLoginUnexpectedBindCallback" xml:space="preserve">
+    <value>ログインフローエラー：アカウント連携コールバックを受信しました。</value>
+  </data>
+  <data name="AuthLoginCallbackMissingToken" xml:space="preserve">
+    <value>ログインコールバックにトークン情報がありません。</value>
+  </data>
+  <data name="AuthLoginTokenBuildFailed" xml:space="preserve">
+    <value>トークンの取得に失敗しました。</value>
   </data>
   <data name="AccountSubscribeSuccess" xml:space="preserve">
     <value>サブスクリプションが完了し、状態を更新しました。</value>
@@ -1401,5 +1482,197 @@
   </data>
   <data name="CheckoutNavigationFailed" xml:space="preserve">
     <value>決済ページを読み込めませんでした。ネットワーク接続を確認してから再試行してください。</value>
+  </data>
+  <data name="AnnouncementPermanentDismiss" xml:space="preserve">
+    <value>今後表示しない</value>
+  </data>
+  <data name="AnnouncementDismiss" xml:space="preserve">
+    <value>閉じる</value>
+  </data>
+  <data name="ApiUnauthorized" xml:space="preserve">
+    <value>認証に失敗しました。もう一度サインインしてください。</value>
+  </data>
+  <data name="ApiForbidden" xml:space="preserve">
+    <value>アクセスが拒否されました。権限が不足しています。</value>
+  </data>
+  <data name="ApiEndpointNotFound" xml:space="preserve">
+    <value>API エンドポイントが見つかりません。サーバー URL を確認してください。</value>
+  </data>
+  <data name="ApiRequestTooLarge" xml:space="preserve">
+    <value>リクエストが大きすぎます。音声サイズまたはテキスト長を減らしてください。</value>
+  </data>
+  <data name="CustomVocabularySectionTitle" xml:space="preserve">
+    <value>カスタム用語集</value>
+  </data>
+  <data name="CustomVocabularyGuidanceTitle" xml:space="preserve">
+    <value>カスタム用語集の使い方</value>
+  </data>
+  <data name="CustomVocabularyGuidanceHint" xml:space="preserve">
+    <value>ホバーして入力方法と例を表示</value>
+  </data>
+  <data name="CustomVocabularyGuidanceSummary" xml:space="preserve">
+    <value>音声認識が特定の語句を聞き間違えるときは、正しい標準表記をこの用語集に追加して原文補正に使えます。</value>
+  </data>
+  <data name="CustomVocabularyGuidanceBody" xml:space="preserve">
+    <value>入力するのは補正後にしたい標準語句だけです。アプリが自動で発音キーを生成し、文全体の発音から候補を絞ってからモデルに渡します。</value>
+  </data>
+  <data name="CustomVocabularyMemberOnlyNoticeTitle" xml:space="preserve">
+    <value>メンバー限定機能</value>
+  </data>
+  <data name="CustomVocabularyMemberOnlyNoticeMessage" xml:space="preserve">
+    <value>カスタム用語集が実際に適用されるのは有料メンバーのみです。無料ユーザーも編集やインポートは可能で、アップグレード後に音声認識補正へ自動的に適用されます。</value>
+  </data>
+  <data name="CustomVocabularyEntryGuideTitle" xml:space="preserve">
+    <value>各項目の入力方法</value>
+  </data>
+  <data name="CustomVocabularyTermGuideText" xml:space="preserve">
+    <value>標準語句：最終的に原文を補正したい正しい表記です。各エントリはこの項目だけ入力します。</value>
+  </data>
+  <data name="CustomVocabularyAliasesGuideText" xml:space="preserve">
+    <value>別名：音声認識がよく書き間違える語、ネットスラング、略称です。複数ある場合はカンマで区切ってください。</value>
+  </data>
+  <data name="CustomVocabularyPronunciationsGuideText" xml:space="preserve">
+    <value>発音：ピンインや英語風の読みです。認識精度の向上に役立ちます。複数ある場合はカンマで区切ってください。</value>
+  </data>
+  <data name="CustomVocabularyNoteGuideText" xml:space="preserve">
+    <value>意味 / メモ：任意です。この語が何を指すかを AI に伝える補助情報で、「ゲーム名」や「ゲーム内キャラクター名」などを書けます。</value>
+  </data>
+  <data name="CustomVocabularyExampleTitle" xml:space="preserve">
+    <value>よくある利用例</value>
+  </data>
+  <data name="CustomVocabularyExampleBody" xml:space="preserve">
+    <value>例：「明日方舟终末地」がいつも「明日方舟周末帝」と誤認識されるなら、標準語句として「明日方舟终末地」だけ追加します。システムが文全体の発音から自動で照合します。</value>
+  </data>
+  <data name="CustomVocabularySectionHint" xml:space="preserve">
+    <value>ASR 補正用のローカル用語集を管理します。各エントリは標準語句のみ保持します。同時に有効化できるのは {0} テーブル、各テーブルは最大 {1} エントリ・{2} 文字です。</value>
+  </data>
+  <data name="CustomVocabularyAddTable" xml:space="preserve">
+    <value>テーブル追加</value>
+  </data>
+  <data name="CustomVocabularyImport" xml:space="preserve">
+    <value>インポート</value>
+  </data>
+  <data name="CustomVocabularyExport" xml:space="preserve">
+    <value>エクスポート</value>
+  </data>
+  <data name="CustomVocabularyDeleteTable" xml:space="preserve">
+    <value>テーブル削除</value>
+  </data>
+  <data name="CustomVocabularyTableName" xml:space="preserve">
+    <value>テーブル名</value>
+  </data>
+  <data name="CustomVocabularyTableEnabled" xml:space="preserve">
+    <value>このテーブルを有効化</value>
+  </data>
+  <data name="CustomVocabularyEntryEnabled" xml:space="preserve">
+    <value>この項目を有効化</value>
+  </data>
+  <data name="CustomVocabularyEntries" xml:space="preserve">
+    <value>エントリ</value>
+  </data>
+  <data name="CustomVocabularyAddEntry" xml:space="preserve">
+    <value>エントリ追加</value>
+  </data>
+  <data name="CustomVocabularyDeleteEntry" xml:space="preserve">
+    <value>エントリ削除</value>
+  </data>
+  <data name="CustomVocabularyNoTableSelected" xml:space="preserve">
+    <value>編集するには、用語集テーブルを選択または作成してください。</value>
+  </data>
+  <data name="CustomVocabularyAliasesHint" xml:space="preserve">
+    <value>別名、発音ヒント、メモは不要です。現在の文全体の発音から、あり得る標準語句を自動で候補化します。</value>
+  </data>
+  <data name="CustomVocabularyTableCountSummary" xml:space="preserve">
+    <value>{0} テーブル、合計 {1} エントリ、有効 {2} テーブル</value>
+  </data>
+  <data name="CustomVocabularyTableStatusSummary" xml:space="preserve">
+    <value>{0}/{1} エントリ、{2}/{3} 文字</value>
+  </data>
+  <data name="CustomVocabularySelectedTableSummary" xml:space="preserve">
+    <value>このテーブルは {0}/{1} エントリ、うち {2} 件が有効、使用中 {3}/{4} 文字です</value>
+  </data>
+  <data name="CustomVocabularyCharacterBudgetSummary" xml:space="preserve">
+    <value>文字予算: {0}/{1}</value>
+  </data>
+  <data name="CustomVocabularyEnabledBadge" xml:space="preserve">
+    <value>有効</value>
+  </data>
+  <data name="CustomVocabularyTableNamePlaceholder" xml:space="preserve">
+    <value>用語集テーブル名を入力</value>
+  </data>
+  <data name="CustomVocabularyEntryTermHeader" xml:space="preserve">
+    <value>標準語句</value>
+  </data>
+  <data name="CustomVocabularyEntryAliasesHeader" xml:space="preserve">
+    <value>別名（カンマ区切り）</value>
+  </data>
+  <data name="CustomVocabularyEntryPronunciationsHeader" xml:space="preserve">
+    <value>発音（カンマ区切り）</value>
+  </data>
+  <data name="CustomVocabularyEntryNoteHeader" xml:space="preserve">
+    <value>意味 / メモ（任意）</value>
+  </data>
+  <data name="CustomVocabularyEntryActionsHeader" xml:space="preserve">
+    <value>操作</value>
+  </data>
+  <data name="CustomVocabularyTermPlaceholder" xml:space="preserve">
+    <value>補正後にしたい標準語句を入力</value>
+  </data>
+  <data name="CustomVocabularyAliasesPlaceholder" xml:space="preserve">
+    <value>誤字、スラング、略称をカンマ区切りで入力</value>
+  </data>
+  <data name="CustomVocabularyPronunciationsPlaceholder" xml:space="preserve">
+    <value>ピンインや英語風の読みをカンマ区切りで入力</value>
+  </data>
+  <data name="CustomVocabularyNotePlaceholder" xml:space="preserve">
+    <value>例：ゲーム名、ゲーム内キャラクター名</value>
+  </data>
+  <data name="CustomVocabularyNoTablesTitle" xml:space="preserve">
+    <value>用語集テーブルがありません</value>
+  </data>
+  <data name="CustomVocabularyNoTablesBody" xml:space="preserve">
+    <value>まずローカル用語集を作成し、展開したパネル内でエントリを追加またはインポートしてください。</value>
+  </data>
+  <data name="CustomVocabularyMoveEntryUp" xml:space="preserve">
+    <value>上へ移動</value>
+  </data>
+  <data name="CustomVocabularyMoveEntryDown" xml:space="preserve">
+    <value>下へ移動</value>
+  </data>
+  <data name="CustomVocabularyExpandTable" xml:space="preserve">
+    <value>テーブルを展開</value>
+  </data>
+  <data name="CustomVocabularyCollapseTable" xml:space="preserve">
+    <value>テーブルを折りたたむ</value>
+  </data>
+  <data name="CustomVocabularyBudgetExceeded" xml:space="preserve">
+    <value>この変更はテーブルの文字予算 {0} を超えるため、直前の有効な状態に戻しました。</value>
+  </data>
+  <data name="CustomVocabularyDefaultTableName" xml:space="preserve">
+    <value>新しい用語集</value>
+  </data>
+  <data name="CustomVocabularyDeleteTableConfirm" xml:space="preserve">
+    <value>用語集テーブル「{0}」を削除しますか？</value>
+  </data>
+  <data name="CustomVocabularyImportInvalid" xml:space="preserve">
+    <value>インポートしたファイルが無効か、用語集データが含まれていません。</value>
+  </data>
+  <data name="CustomVocabularyImportConflict" xml:space="preserve">
+    <value>同名のテーブル「{0}」が既に存在します。はい = 上書き、いいえ = コピーとして追加、キャンセル = 中止。</value>
+  </data>
+  <data name="CustomVocabularyImportTruncated" xml:space="preserve">
+    <value>インポート内容が制限を超えていたため、取り込み時に切り詰めました。</value>
+  </data>
+  <data name="CustomVocabularyImportFailed" xml:space="preserve">
+    <value>用語集のインポートに失敗しました: {0}</value>
+  </data>
+  <data name="CustomVocabularyExportSuccess" xml:space="preserve">
+    <value>用語集をエクスポートしました。</value>
+  </data>
+  <data name="CustomVocabularyExportFailed" xml:space="preserve">
+    <value>用語集のエクスポートに失敗しました: {0}</value>
+  </data>
+  <data name="CustomVocabularyMaxEntriesReached" xml:space="preserve">
+    <value>このテーブルはエントリ上限 {0} に達しています。</value>
   </data>
 </root>

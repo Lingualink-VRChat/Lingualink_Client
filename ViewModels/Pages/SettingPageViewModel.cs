@@ -1,21 +1,26 @@
 using System;
+using System.ComponentModel;
+using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using lingualink_client.Services;
+using lingualink_client.Models;
 using lingualink_client.Models.Updates;
+using lingualink_client.Services;
 using lingualink_client.Services.Interfaces;
 using Velopack;
-using MessageBox = lingualink_client.Services.MessageBox;
+using WpfMessageBox = System.Windows.MessageBox;
 
 namespace lingualink_client.ViewModels
 {
     public partial class SettingPageViewModel : ViewModelBase, IDisposable
     {
         private readonly IUpdateService _updateService;
+        private readonly ISettingsManager _settingsManager;
 
         private UpdateSession? _activeSession;
         private UpdateStatus _latestStatus = UpdateStatus.NotChecked;
@@ -23,6 +28,12 @@ namespace lingualink_client.ViewModels
         public string PageTitle => LanguageManager.GetString("GeneralSettings");
         public string InterfaceLanguage => LanguageManager.GetString("InterfaceLanguage");
         public string LanguageHint => LanguageManager.GetString("LanguageHint");
+        public string RecognitionHotkeySectionTitle => LanguageManager.GetString("RecognitionHotkeySectionTitle");
+        public string RecognitionHotkeyLabel => LanguageManager.GetString("RecognitionHotkeyLabel");
+        public string RecognitionHotkeyHint => LanguageManager.GetString("RecognitionHotkeyHint");
+        public string RecognitionHotkeySaveLabel => LanguageManager.GetString("RecognitionHotkeySaveLabel");
+        public string RecognitionHotkeyClearLabel => LanguageManager.GetString("RecognitionHotkeyClearLabel");
+        public string RecognitionHotkeyNotSetLabel => LanguageManager.GetString("RecognitionHotkeyNotSet");
         public string UpdateSectionTitle => LanguageManager.GetString("UpdateSettings");
         public string CurrentVersionLabel => LanguageManager.GetString("UpdateCurrentVersion");
         public string LatestVersionLabel => LanguageManager.GetString("UpdateLatestVersion");
@@ -52,10 +63,14 @@ namespace lingualink_client.ViewModels
         private string updateNotes = string.Empty;
 
         public SettingPageViewModel(
-            SettingsService? settingsService = null,
+            ISettingsManager? settingsManager = null,
             IUpdateService? updateService = null)
         {
             _updateService = updateService ?? ServiceContainer.Resolve<IUpdateService>();
+            _settingsManager = settingsManager
+                               ?? (ServiceContainer.TryResolve<ISettingsManager>(out var resolved) && resolved != null
+                                   ? resolved
+                                   : new SettingsManager());
 
             CurrentVersion = ResolveCurrentVersion();
 
@@ -68,21 +83,12 @@ namespace lingualink_client.ViewModels
             }
 
             RefreshLatestVersionText();
-
             LanguageManager.LanguageChanged += OnLanguageChanged;
         }
 
         private void OnLanguageChanged()
         {
-            OnPropertyChanged(nameof(PageTitle));
-            OnPropertyChanged(nameof(InterfaceLanguage));
-            OnPropertyChanged(nameof(LanguageHint));
-            OnPropertyChanged(nameof(UpdateSectionTitle));
-            OnPropertyChanged(nameof(CurrentVersionLabel));
-            OnPropertyChanged(nameof(LatestVersionLabel));
-            OnPropertyChanged(nameof(CheckForUpdatesLabel));
-            OnPropertyChanged(nameof(DownloadAndUpdateLabel));
-            OnPropertyChanged(nameof(DownloadProgressLabel));
+            OnPropertyChanged(string.Empty);
             RefreshLatestVersionText();
         }
 
@@ -130,14 +136,7 @@ namespace lingualink_client.ViewModels
                     return;
                 }
 
-                if (result.InstalledVersion is { } installed)
-                {
-                    CurrentVersion = installed.ToString();
-                }
-                else
-                {
-                    CurrentVersion = ResolveCurrentVersion();
-                }
+                CurrentVersion = result.InstalledVersion?.ToString() ?? ResolveCurrentVersion();
 
                 if (result.HasUpdate && result.Session is not null)
                 {
@@ -169,7 +168,6 @@ namespace lingualink_client.ViewModels
                 HasUpdate = false;
                 UpdateNotes = string.Empty;
                 RefreshLatestVersionText();
-
                 ShowError(LanguageManager.GetString("UpdateErrorCheck"), ex);
             }
             finally
@@ -191,16 +189,12 @@ namespace lingualink_client.ViewModels
                 IsDownloading = true;
                 DownloadProgress = 0;
 
-                var progress = new Progress<int>(value =>
-                {
-                    DownloadProgress = value;
-                });
-
+                var progress = new Progress<int>(value => { DownloadProgress = value; });
                 await _updateService.DownloadAsync(_activeSession, progress, CancellationToken.None);
 
                 var prompt = LanguageManager.GetString("UpdateDialogDownloadPrompt");
                 var title = LanguageManager.GetString("UpdateReadyTitle");
-                var result = MessageBox.Show(prompt, title, MessageBoxButton.YesNo, MessageBoxImage.Question);
+                var result = WpfMessageBox.Show(prompt, title, MessageBoxButton.YesNo, MessageBoxImage.Question);
 
                 if (result == MessageBoxResult.Yes)
                 {
@@ -209,7 +203,6 @@ namespace lingualink_client.ViewModels
                     HasUpdate = false;
                     _latestStatus = UpdateStatus.UpToDate;
                     RefreshLatestVersionText();
-
                     Application.Current.Shutdown();
                 }
             }
@@ -253,24 +246,15 @@ namespace lingualink_client.ViewModels
                     LatestVersion = LanguageManager.GetString("UpdateStatusUnavailable");
                     break;
                 case UpdateStatus.UpdateAvailable:
-                    if (_activeSession?.TargetVersion is not null)
-                    {
-                        LatestVersion = _activeSession.TargetVersion.ToString();
-                    }
-                    else
-                    {
-                        LatestVersion = LanguageManager.GetString("UpdateStatusUpToDate");
-                    }
+                    LatestVersion = _activeSession?.TargetVersion?.ToString() ?? LanguageManager.GetString("UpdateStatusUpToDate");
                     break;
             }
         }
 
-
-
         private static void ShowError(string message, Exception exception)
         {
             var errorTitle = LanguageManager.GetString("UpdateErrorTitle");
-            MessageBox.Show($"{message}: {exception.Message}", errorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+            WpfMessageBox.Show($"{message}: {exception.Message}", errorTitle, MessageBoxButton.OK, MessageBoxImage.Error);
         }
 
         private string ResolveCurrentVersion()
@@ -304,8 +288,8 @@ namespace lingualink_client.ViewModels
                 }
             }
 
-            CheckForUpdateCommand?.NotifyCanExecuteChanged();
-            DownloadAndUpdateCommand?.NotifyCanExecuteChanged();
+            CheckForUpdateCommand.NotifyCanExecuteChanged();
+            DownloadAndUpdateCommand.NotifyCanExecuteChanged();
             RefreshLatestVersionText();
         }
 
@@ -316,14 +300,14 @@ namespace lingualink_client.ViewModels
                 HasUpdate = false;
             }
 
-            CheckForUpdateCommand?.NotifyCanExecuteChanged();
-            DownloadAndUpdateCommand?.NotifyCanExecuteChanged();
+            CheckForUpdateCommand.NotifyCanExecuteChanged();
+            DownloadAndUpdateCommand.NotifyCanExecuteChanged();
         }
 
         partial void OnIsDownloadingChanged(bool value)
         {
-            CheckForUpdateCommand?.NotifyCanExecuteChanged();
-            DownloadAndUpdateCommand?.NotifyCanExecuteChanged();
+            CheckForUpdateCommand.NotifyCanExecuteChanged();
+            DownloadAndUpdateCommand.NotifyCanExecuteChanged();
         }
 
         private enum UpdateStatus
@@ -339,16 +323,7 @@ namespace lingualink_client.ViewModels
         public void Dispose()
         {
             LanguageManager.LanguageChanged -= OnLanguageChanged;
+            GC.SuppressFinalize(this);
         }
     }
 }
-
-
-
-
-
-
-
-
-
-

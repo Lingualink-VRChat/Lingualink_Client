@@ -21,8 +21,11 @@ namespace lingualink_client.ViewModels.Components
         private readonly IMicrophoneManager _microphoneManager;
         private readonly SettingsService _settingsService;
         private readonly IEventAggregator _eventAggregator;
+        private readonly IAuthService? _authService;
         private IAudioTranslationOrchestrator? _orchestrator;
+        private ILingualinkApiService? _quotaApiService;
         private AppSettings _appSettings = null!;
+        private QuotaStatus? _currentQuotaStatus;
 
         [ObservableProperty]
         private string _statusText = string.Empty;
@@ -36,6 +39,12 @@ namespace lingualink_client.ViewModels.Components
         [ObservableProperty]
         private string _serverModeText = string.Empty;
 
+        [ObservableProperty]
+        private string _freeQuotaDisplay = string.Empty;
+
+        [ObservableProperty]
+        private bool _showFreeQuotaDisplay;
+
         // 本地化标签
         public string WorkHintLabel => LanguageManager.GetString("WorkHint");
 
@@ -46,6 +55,7 @@ namespace lingualink_client.ViewModels.Components
             _microphoneManager = ServiceContainer.Resolve<IMicrophoneManager>();
             _settingsService = settingsService ?? new SettingsService();
             _eventAggregator = ServiceContainer.Resolve<IEventAggregator>();
+            ServiceContainer.TryResolve<IAuthService>(out _authService);
 
             // 设置初始本地化值
             _statusText = LanguageManager.GetString("StatusInitializing");
@@ -55,6 +65,11 @@ namespace lingualink_client.ViewModels.Components
 
             LoadSettingsAndInitializeServices();
             SubscribeToEvents();
+
+            if (_authService != null)
+            {
+                _authService.LoginStateChanged += OnAuthServiceLoginStateChanged;
+            }
 
             // 订阅语言变更事件
             LanguageManager.LanguageChanged += OnLanguageChanged;
@@ -94,6 +109,7 @@ namespace lingualink_client.ViewModels.Components
             // 更新其他本地化标签
             OnPropertyChanged(nameof(WorkHintLabel));
             UpdateServerModeText();
+            UpdateQuotaPresentation(_currentQuotaStatus);
         }
 
         private void OnGlobalSettingsChanged(Services.Events.SettingsChangedEvent e)
@@ -134,8 +150,11 @@ namespace lingualink_client.ViewModels.Components
             int? previouslySelectedMicDeviceNumber = wasWorking ? _microphoneManager.SelectedMicrophone?.WaveInDeviceIndex : null;
 
             _appSettings = latestSettings ?? _settingsService.LoadSettings();
-            System.Diagnostics.Debug.WriteLine($"[MainControlViewModel] Loaded settings - ServerUrl: '{_appSettings.ServerUrl}'");
+            System.Diagnostics.Debug.WriteLine($"[MainControlViewModel] Loaded settings - ActiveServerUrl: '{_appSettings.ActiveServerUrl}'");
             UpdateServerModeText();
+
+            _quotaApiService?.Dispose();
+            _quotaApiService = LingualinkApiServiceFactory.CreateApiService(_appSettings);
 
             // 释放旧的协调器
             if (_orchestrator != null)
@@ -170,6 +189,7 @@ namespace lingualink_client.ViewModels.Components
             }
 
             ToggleWorkCommand.NotifyCanExecuteChanged();
+            _ = RefreshQuotaStatusAsync();
         }
 
         private void OnMicrophoneChanged(Services.Events.MicrophoneChangedEvent e)
@@ -217,8 +237,20 @@ namespace lingualink_client.ViewModels.Components
 
         private void OnTranslationCompleted(Services.Events.TranslationCompletedEvent e)
         {
-            // 事件已经是正确的格式，可以直接处理或转发给其他组件
-            // 这里可以添加额外的处理逻辑
+            if (!e.IsSuccess
+                && (_orchestrator?.IsWorking ?? false)
+                && IsFreeTrialQuotaExhaustedError(e.ErrorMessage))
+            {
+                _orchestrator?.Stop();
+                WorkButtonContent = LanguageManager.GetString("StartListening");
+                IsMicrophoneComboBoxEnabled = true;
+                if (!string.IsNullOrWhiteSpace(e.ErrorMessage))
+                {
+                    StatusText = $"{LanguageManager.GetString("StatusStopped")} {e.ErrorMessage}";
+                }
+            }
+
+            _ = RefreshQuotaStatusAsync();
         }
 
         private void OnOscMessageSent(Services.Events.OscMessageSentEvent e)
@@ -232,6 +264,21 @@ namespace lingualink_client.ViewModels.Components
         {
             if (!(_orchestrator?.IsWorking ?? false))
             {
+                if (_authService?.IsLoggedIn != true)
+                {
+                    MessageBox.Show(
+                        LanguageManager.GetString("BindRequireLogin"),
+                        LanguageManager.GetString("WarningTitle"),
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    return;
+                }
+
+                if (!await EnsureListeningQuotaAvailableAsync())
+                {
+                    return;
+                }
+
                 if (_microphoneManager.SelectedMicrophone?.WaveInDeviceIndex != -1)
                 {
                     bool success = false;
@@ -268,6 +315,159 @@ namespace lingualink_client.ViewModels.Components
             _microphoneManager.SelectedMicrophone.WaveInDeviceIndex != -1 &&
             !_microphoneManager.IsRefreshing;
 
+        private void OnAuthServiceLoginStateChanged(object? sender, bool isLoggedIn)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                if (!isLoggedIn)
+                {
+                    _currentQuotaStatus = null;
+                    UpdateQuotaPresentation(null);
+                    return;
+                }
+
+                _ = RefreshQuotaStatusAsync();
+            });
+        }
+
+        private async Task<bool> EnsureListeningQuotaAvailableAsync()
+        {
+            var status = await RefreshQuotaStatusAsync();
+            if (status == null || status.SubscriptionActive || !status.FreeQuota || status.Limit <= 0)
+            {
+                return true;
+            }
+
+            if (status.Remaining > 0)
+            {
+                return true;
+            }
+
+            var message = LanguageManager.GetString("FreeQuotaStartBlockedNoReset");
+            var refreshIntervalLabel = GetQuotaRefreshIntervalLabel(status);
+            if (status.ResetAt.HasValue)
+            {
+                message = string.Format(
+                    LanguageManager.GetString("FreeQuotaStartBlockedFormat"),
+                    status.ResetAt.Value.ToLocalTime().ToString("HH:mm"),
+                    refreshIntervalLabel);
+            }
+            else if (!string.IsNullOrWhiteSpace(refreshIntervalLabel))
+            {
+                message = string.Format(
+                    LanguageManager.GetString("FreeQuotaStartBlockedNoReset"),
+                    refreshIntervalLabel);
+            }
+
+            MessageBox.Show(
+                message,
+                LanguageManager.GetString("WarningTitle"),
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            return false;
+        }
+
+        private async Task<QuotaStatus?> RefreshQuotaStatusAsync()
+        {
+            if (_quotaApiService == null || _authService?.IsLoggedIn != true)
+            {
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    _currentQuotaStatus = null;
+                    UpdateQuotaPresentation(null);
+                });
+                return null;
+            }
+
+            var status = await _quotaApiService.GetQuotaStatusAsync();
+            await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                _currentQuotaStatus = status;
+                UpdateQuotaPresentation(status);
+            });
+            return status;
+        }
+
+        private void UpdateQuotaPresentation(QuotaStatus? status)
+        {
+            if (status == null)
+            {
+                FreeQuotaDisplay = string.Empty;
+                ShowFreeQuotaDisplay = false;
+                return;
+            }
+
+            if (status.SubscriptionActive)
+            {
+                FreeQuotaDisplay = LanguageManager.GetString("FreeQuotaSubscribed");
+                ShowFreeQuotaDisplay = true;
+                return;
+            }
+
+            if (status.FreeQuota && status.Limit > 0)
+            {
+                var refreshIntervalLabel = GetQuotaRefreshIntervalLabel(status);
+                if (status.Remaining <= 0)
+                {
+                    FreeQuotaDisplay = status.ResetAt.HasValue
+                        ? string.Format(
+                            LanguageManager.GetString("FreeQuotaDisplayExhaustedFormat"),
+                            status.Limit,
+                            status.ResetAt.Value.ToLocalTime().ToString("HH:mm"),
+                            refreshIntervalLabel)
+                        : string.Format(
+                            LanguageManager.GetString("FreeQuotaDisplayRefreshFormat"),
+                            status.Remaining,
+                            status.Limit,
+                            refreshIntervalLabel);
+                }
+                else
+                {
+                    FreeQuotaDisplay = string.Format(
+                        LanguageManager.GetString("FreeQuotaDisplayRefreshFormat"),
+                        status.Remaining,
+                        status.Limit,
+                        refreshIntervalLabel);
+                }
+                ShowFreeQuotaDisplay = true;
+                return;
+            }
+
+            FreeQuotaDisplay = string.Empty;
+            ShowFreeQuotaDisplay = false;
+        }
+
+        private static string GetQuotaRefreshIntervalLabel(QuotaStatus status)
+        {
+            if (status == null || status.WindowSizeSeconds <= 0)
+            {
+                return LanguageManager.GetString("QuotaRefreshIntervalUnknown");
+            }
+
+            if (status.WindowSizeSeconds % 3600 == 0)
+            {
+                return string.Format(
+                    LanguageManager.GetString("QuotaRefreshIntervalHoursFormat"),
+                    status.WindowSizeSeconds / 3600);
+            }
+
+            return string.Format(
+                LanguageManager.GetString("QuotaRefreshIntervalMinutesFormat"),
+                Math.Max(1, status.WindowSizeSeconds / 60));
+        }
+
+        private static bool IsFreeTrialQuotaExhaustedError(string? errorMessage)
+        {
+            if (string.IsNullOrWhiteSpace(errorMessage))
+            {
+                return false;
+            }
+
+            return errorMessage.Contains(
+                LanguageManager.GetString("FreeTrialQuotaExhausted"),
+                StringComparison.CurrentCulture);
+        }
+
         /// <summary>
         /// 因文本输入暂停监听
         /// </summary>
@@ -287,9 +487,7 @@ namespace lingualink_client.ViewModels.Components
         private void UpdateServerModeText()
         {
             if (_appSettings == null) return;
-            ServerModeText = _appSettings.UseCustomServer
-                ? $"⚙ {LanguageManager.GetString("ServerModeCustom")}"
-                : $"☁ {LanguageManager.GetString("ServerModeOfficial")}";
+            ServerModeText = $"☁ {LanguageManager.GetString("ServerModeOfficial")}";
         }
 
         /// <summary>
@@ -302,6 +500,10 @@ namespace lingualink_client.ViewModels.Components
             // 取消订阅事件
             LanguageManager.LanguageChanged -= OnLanguageChanged;
             _microphoneManager.PropertyChanged -= OnMicrophoneManagerPropertyChanged;
+            if (_authService != null)
+            {
+                _authService.LoginStateChanged -= OnAuthServiceLoginStateChanged;
+            }
 
             // 取消订阅事件聚合器事件
             _eventAggregator.Unsubscribe<Services.Events.MicrophoneChangedEvent>(OnMicrophoneChanged);
@@ -311,6 +513,7 @@ namespace lingualink_client.ViewModels.Components
             _eventAggregator.Unsubscribe<Services.Events.OscMessageSentEvent>(OnOscMessageSent);
 
             _orchestrator?.Dispose();
+            _quotaApiService?.Dispose();
         }
     }
 } 

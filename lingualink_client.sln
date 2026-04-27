@@ -5,19 +5,32 @@ VisualStudioVersion = 17.13.35931.197
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "lingualink_client", "lingualink_client.csproj", "{A0D1EC42-85F7-4E73-9511-13E1699E1464}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinguaLink.Client.Tests", "tests\LinguaLink.Client.Tests\LinguaLink.Client.Tests.csproj", "{AFD28F9D-906A-499B-A2EE-97C6D8F3F0F5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
+		ReleaseFrameworkDependent|Any CPU = ReleaseFrameworkDependent|Any CPU
 		ReleaseSelfContained|Any CPU = ReleaseSelfContained|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{A0D1EC42-85F7-4E73-9511-13E1699E1464}.Debug|Any CPU.ActiveCfg = Release|Any CPU
-		{A0D1EC42-85F7-4E73-9511-13E1699E1464}.Debug|Any CPU.Build.0 = Release|Any CPU
+		{A0D1EC42-85F7-4E73-9511-13E1699E1464}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0D1EC42-85F7-4E73-9511-13E1699E1464}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A0D1EC42-85F7-4E73-9511-13E1699E1464}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A0D1EC42-85F7-4E73-9511-13E1699E1464}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A0D1EC42-85F7-4E73-9511-13E1699E1464}.ReleaseFrameworkDependent|Any CPU.ActiveCfg = ReleaseFrameworkDependent|Any CPU
+		{A0D1EC42-85F7-4E73-9511-13E1699E1464}.ReleaseFrameworkDependent|Any CPU.Build.0 = ReleaseFrameworkDependent|Any CPU
 		{A0D1EC42-85F7-4E73-9511-13E1699E1464}.ReleaseSelfContained|Any CPU.ActiveCfg = ReleaseSelfContained|Any CPU
 		{A0D1EC42-85F7-4E73-9511-13E1699E1464}.ReleaseSelfContained|Any CPU.Build.0 = ReleaseSelfContained|Any CPU
+		{AFD28F9D-906A-499B-A2EE-97C6D8F3F0F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AFD28F9D-906A-499B-A2EE-97C6D8F3F0F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AFD28F9D-906A-499B-A2EE-97C6D8F3F0F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AFD28F9D-906A-499B-A2EE-97C6D8F3F0F5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AFD28F9D-906A-499B-A2EE-97C6D8F3F0F5}.ReleaseFrameworkDependent|Any CPU.ActiveCfg = Release|Any CPU
+		{AFD28F9D-906A-499B-A2EE-97C6D8F3F0F5}.ReleaseFrameworkDependent|Any CPU.Build.0 = Release|Any CPU
+		{AFD28F9D-906A-499B-A2EE-97C6D8F3F0F5}.ReleaseSelfContained|Any CPU.ActiveCfg = Release|Any CPU
+		{AFD28F9D-906A-499B-A2EE-97C6D8F3F0F5}.ReleaseSelfContained|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

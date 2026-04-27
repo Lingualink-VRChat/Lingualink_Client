@@ -1,7 +1,9 @@
 using lingualink_client.Models;
 using lingualink_client.Services.Interfaces;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace lingualink_client.Services
@@ -24,81 +26,95 @@ namespace lingualink_client.Services
                 throw new ArgumentNullException(nameof(settings));
             }
 
-            var useOfficialAuthFlow = ShouldUseOfficialAuthFlow(settings);
-            var apiKey = useOfficialAuthFlow ? string.Empty : ResolveCustomServerApiKey(settings);
-            var (accessTokenProvider, unauthorizedHandler) = useOfficialAuthFlow
-                ? ResolveAuthContext()
-                : (null, null);
+            var (accessTokenProvider, unauthorizedHandler, terminologyProvider) = ResolveAuthContext();
 
             Debug.WriteLine($"[LingualinkApiServiceFactory] Creating API service with settings:");
-            Debug.WriteLine($"[LingualinkApiServiceFactory]   ServerUrl: '{settings.ServerUrl}'");
-            Debug.WriteLine($"[LingualinkApiServiceFactory]   UseCustomServer: {settings.UseCustomServer}");
-            Debug.WriteLine($"[LingualinkApiServiceFactory]   UseOfficialAuthFlow: {useOfficialAuthFlow}");
-            Debug.WriteLine($"[LingualinkApiServiceFactory]   HasApiKey: {!string.IsNullOrWhiteSpace(apiKey)}");
+            Debug.WriteLine($"[LingualinkApiServiceFactory]   ActiveServerUrl: '{settings.ActiveServerUrl}'");
+            Debug.WriteLine($"[LingualinkApiServiceFactory]   UseOfficialAuthFlow: true");
+            Debug.WriteLine($"[LingualinkApiServiceFactory]   HasApiKey: false");
             Debug.WriteLine($"[LingualinkApiServiceFactory]   HasTokenProvider: {accessTokenProvider != null}");
             Debug.WriteLine($"[LingualinkApiServiceFactory]   OpusComplexity: {settings.OpusComplexity}");
 
             return new LingualinkApiService(
-                serverUrl: settings.ServerUrl,
-                apiKey: apiKey,
+                serverUrl: settings.ActiveServerUrl,
+                apiKey: string.Empty,
                 accessTokenProvider: accessTokenProvider,
                 unauthorizedHandler: unauthorizedHandler,
+                terminologyProvider: terminologyProvider,
                 opusComplexity: settings.OpusComplexity
             );
         }
 
-        private static bool ShouldUseOfficialAuthFlow(AppSettings settings)
+        private static (Func<Task<string?>>? accessTokenProvider, Func<Task>? unauthorizedHandler, Func<Task<IReadOnlyList<CustomVocabularyEntry>>>? terminologyProvider) ResolveAuthContext()
         {
-            if (!settings.UseCustomServer)
+            Func<Task<IReadOnlyList<CustomVocabularyEntry>>>? terminologyProvider = null;
+
+            if (ServiceContainer.TryResolve<ISettingsManager>(out var settingsManager) && settingsManager != null)
             {
-                return true;
+                terminologyProvider = () => Task.FromResult(BuildActiveVocabularyEntries(settingsManager.LoadSettings()));
             }
 
-            var serverUrl = NormalizeUrl(settings.ServerUrl);
-            var officialUrl = NormalizeUrl(string.IsNullOrWhiteSpace(settings.OfficialServerUrl)
-                ? AppSettings.OfficialProductionServerUrl
-                : settings.OfficialServerUrl);
-
-            return !string.IsNullOrWhiteSpace(serverUrl)
-                && string.Equals(serverUrl, officialUrl, StringComparison.OrdinalIgnoreCase);
-        }
-
-        private static string NormalizeUrl(string? url)
-        {
-            return (url ?? string.Empty).Trim().TrimEnd('/');
-        }
-
-        /// <summary>
-        /// 创建用于测试连接的临时API服务实例
-        /// </summary>
-        /// <param name="serverUrl">服务器URL</param>
-        /// <returns>API服务实例</returns>
-        public static ILingualinkApiService CreateTestApiService(string serverUrl, string? apiKey = null)
-        {
-            Debug.WriteLine($"[LingualinkApiServiceFactory] Creating test API service with URL: {serverUrl}");
-
-            return new LingualinkApiService(
-                serverUrl: serverUrl,
-                apiKey: apiKey,
-                opusComplexity: 7 // 使用默认复杂度
-            );
-        }
-
-        private static string ResolveCustomServerApiKey(AppSettings settings)
-        {
-            return string.IsNullOrWhiteSpace(settings.CustomApiKey)
-                ? settings.ApiKey
-                : settings.CustomApiKey;
-        }
-
-        private static (Func<Task<string?>>? accessTokenProvider, Func<Task>? unauthorizedHandler) ResolveAuthContext()
-        {
             if (ServiceContainer.TryResolve<IAuthService>(out var authService) && authService != null)
             {
-                return (authService.GetAccessTokenAsync, authService.HandleUnauthorizedAsync);
+                return (authService.GetAccessTokenAsync, authService.HandleUnauthorizedAsync, terminologyProvider);
             }
 
-            return (null, null);
+            return (null, null, terminologyProvider);
+        }
+
+        private static IReadOnlyList<CustomVocabularyEntry> BuildActiveVocabularyEntries(AppSettings settings)
+        {
+            if (settings?.CustomVocabularyTables == null || settings.CustomVocabularyTables.Count == 0)
+            {
+                return Array.Empty<CustomVocabularyEntry>();
+            }
+
+            var activeTable = settings.CustomVocabularyTables
+                .FirstOrDefault(table => table != null && table.Enabled && table.Entries != null);
+            if (activeTable == null)
+            {
+                return Array.Empty<CustomVocabularyEntry>();
+            }
+
+            var entries = new List<CustomVocabularyEntry>();
+            int totalCharacters = 0;
+
+            foreach (var entry in activeTable.Entries)
+            {
+                if (entry == null || !entry.Enabled)
+                {
+                    continue;
+                }
+
+                var term = AppSettings.NormalizeVocabularyTerm(entry.Term);
+                if (string.IsNullOrWhiteSpace(term))
+                {
+                    continue;
+                }
+
+                var entryCharacters = AppSettings.CountVocabularyEntryCharacters(term);
+                if (entryCharacters <= 0)
+                {
+                    continue;
+                }
+
+                if (entries.Count >= AppSettings.MaxEntriesPerVocabularyTable
+                    || entries.Count >= AppSettings.MaxCustomVocabularyPayloadEntries
+                    || totalCharacters + entryCharacters > AppSettings.MaxCustomVocabularyTableCharacters)
+                {
+                    break;
+                }
+
+                entries.Add(new CustomVocabularyEntry
+                {
+                    Term = term,
+                    Priority = entry.Priority,
+                    Enabled = true
+                });
+                totalCharacters += entryCharacters;
+            }
+
+            return entries;
         }
     }
 }

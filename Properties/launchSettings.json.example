@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json.schemastore.org/launchsettings.json",
+  "profiles": {
+    "lingualink_client (Dev)": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "LINGUALINK_AUTH_SERVER_URL": "https://<DEV_PUBLIC_AUTH_HOST>",
+        "LINGUALINK_CORE_SERVER_URL": "http://<YOUR_SERVER_IP>:8200/api/v1/"
+      }
+    },
+    "lingualink_client (Prod)": {
+      "commandName": "Project",
+      "environmentVariables": {}
+    }
+  }
+}

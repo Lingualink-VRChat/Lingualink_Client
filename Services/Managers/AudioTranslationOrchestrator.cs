@@ -211,17 +211,21 @@ namespace lingualink_client.Services.Managers
             if (!string.IsNullOrEmpty(apiResult.RawResponse))
             {
                 _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogServerRawResponse"),
-                    e.TriggerReason, apiResult.RawResponse), LogLevel.Trace, ApiCategory);
+                    e.TriggerReason, $"[redacted, chars={apiResult.RawResponse.Length}]"), LogLevel.Trace, ApiCategory);
             }
 
             if (!apiResult.IsSuccess)
             {
                 resultArgs.DurationSeconds = effectiveDuration;
-                currentUiStatus = LanguageManager.GetString("StatusTranslationFailed");
                 resultArgs.IsSuccess = false;
                 resultArgs.ErrorMessage = apiResult.ErrorMessage;
                 // [修复] 失败时不在VRChat输出框显示错误消息，保持为空
                 resultArgs.ProcessedText = string.Empty;
+                currentUiStatus = LanguageManager.GetString("StatusTranslationFailed");
+                if (!string.IsNullOrWhiteSpace(apiResult.ErrorMessage))
+                {
+                    currentUiStatus = $"{currentUiStatus} {apiResult.ErrorMessage}";
+                }
 
                 _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogTranslationError"),
                     e.TriggerReason, apiResult.ErrorMessage), LogLevel.Error, ApiCategory, apiResult.ErrorMessage);
@@ -229,11 +233,11 @@ namespace lingualink_client.Services.Managers
             else
             {
                 // 处理成功的情况
-                if (!string.IsNullOrEmpty(apiResult.Transcription))
+                if (!string.IsNullOrEmpty(apiResult.DisplayTranscription))
                 {
                     currentUiStatus = LanguageManager.GetString("StatusTranslationSuccess");
                     resultArgs.IsSuccess = true;
-                    resultArgs.OriginalText = apiResult.Transcription;
+                    resultArgs.OriginalText = apiResult.DisplayTranscription;
                     resultArgs.DurationSeconds = effectiveDuration;
                     
                     // 生成OSC文本 - 直接使用新API格式
@@ -258,7 +262,7 @@ namespace lingualink_client.Services.Managers
                     resultArgs.ProcessedText = translatedTextForOsc;
                     
                     _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogTranslationSuccess"),
-                        e.TriggerReason, apiResult.Transcription, apiResult.ProcessingTime), LogLevel.Info, ApiCategory);
+                        e.TriggerReason, apiResult.DisplayTranscription, apiResult.ProcessingTime), LogLevel.Info, ApiCategory);
                 }
                 else
                 {

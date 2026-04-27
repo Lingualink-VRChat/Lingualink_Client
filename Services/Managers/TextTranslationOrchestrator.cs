@@ -72,7 +72,7 @@ namespace lingualink_client.Services.Managers
             }
 
             OnStatusUpdated(LanguageManager.GetString("StatusSendingText"));
-            _loggingManager.AddMessage($"Processing text input: {text.Substring(0, Math.Min(text.Length, 50))}...", LogLevel.Info, TextCategory);
+            _loggingManager.AddMessage($"Processing text input: [redacted, chars={text.Length}]", LogLevel.Info, TextCategory);
 
             // --- 智能判断任务类型和目标语言 ---
             List<string> targetLanguageCodes;
@@ -148,24 +148,32 @@ namespace lingualink_client.Services.Managers
 
             if (!string.IsNullOrEmpty(apiResult.RawResponse))
             {
-                _loggingManager.AddMessage($"Server raw response: {apiResult.RawResponse}", LogLevel.Trace, ApiCategory);
+                _loggingManager.AddMessage(
+                    $"Server raw response: [redacted, chars={apiResult.RawResponse.Length}]",
+                    LogLevel.Trace,
+                    ApiCategory);
             }
 
             if (!apiResult.IsSuccess)
             {
-                OnStatusUpdated(LanguageManager.GetString("StatusTranslationFailed"));
                 resultArgs.IsSuccess = false;
                 resultArgs.ErrorMessage = apiResult.ErrorMessage;
                 resultArgs.ProcessedText = string.Empty;
+                var statusText = LanguageManager.GetString("StatusTranslationFailed");
+                if (!string.IsNullOrWhiteSpace(apiResult.ErrorMessage))
+                {
+                    statusText = $"{statusText} {apiResult.ErrorMessage}";
+                }
+                OnStatusUpdated(statusText);
                 _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogTranslationError"), triggerReason, apiResult.ErrorMessage), LogLevel.Error, ApiCategory, apiResult.ErrorMessage);
             }
             else
             {
-                if (!string.IsNullOrEmpty(apiResult.Transcription))
+                if (!string.IsNullOrEmpty(apiResult.DisplayTranscription))
                 {
                     OnStatusUpdated(LanguageManager.GetString("StatusTranslationSuccess"));
                     resultArgs.IsSuccess = true;
-                    resultArgs.OriginalText = apiResult.Transcription;
+                    resultArgs.OriginalText = apiResult.DisplayTranscription;
                     resultArgs.DurationSeconds = effectiveDuration;
 
                     if (_appSettings.UseCustomTemplate)
@@ -184,7 +192,7 @@ namespace lingualink_client.Services.Managers
                     }
 
                     resultArgs.ProcessedText = translatedTextForOsc;
-                    _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogTranslationSuccess"), triggerReason, apiResult.Transcription, apiResult.ProcessingTime), LogLevel.Info, ApiCategory);
+                    _loggingManager.AddMessage(string.Format(LanguageManager.GetString("LogTranslationSuccess"), triggerReason, apiResult.DisplayTranscription, apiResult.ProcessingTime), LogLevel.Info, ApiCategory);
                 }
                 else
                 {

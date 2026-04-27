@@ -15,7 +15,6 @@ namespace lingualink_client.Views
             InitializeComponent();
 
             Loaded += OnLoaded;
-            Unloaded += OnUnloaded;
         }
 
         private void OnLoaded(object sender, RoutedEventArgs e)
@@ -28,19 +27,6 @@ namespace lingualink_client.Views
             }
 
             DataContext = _viewModel;
-        }
-
-        private void OnUnloaded(object sender, RoutedEventArgs e)
-        {
-            DataContext = null;
-
-            if (_viewModel == null)
-            {
-                return;
-            }
-
-            _viewModel.Dispose();
-            _viewModel = null;
         }
     }
 }

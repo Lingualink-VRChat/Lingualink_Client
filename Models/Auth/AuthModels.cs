@@ -111,6 +111,9 @@ namespace lingualink_client.Models.Auth
         [JsonPropertyName("renew_url")]
         public string? RenewUrl { get; set; }
 
+        [JsonPropertyName("renewal_warning")]
+        public string? RenewalWarning { get; set; }
+
         [JsonPropertyName("plan")]
         public SubscriptionPlanInfo? Plan { get; set; }
 
@@ -253,6 +256,33 @@ namespace lingualink_client.Models.Auth
                    || normalized.Contains("试用")
                    || normalized.Contains("未订阅");
         }
+    }
+
+    public class PublicAnnouncement
+    {
+        [JsonPropertyName("id")]
+        public string Id { get; set; } = string.Empty;
+
+        [JsonPropertyName("title")]
+        public string Title { get; set; } = string.Empty;
+
+        [JsonPropertyName("content")]
+        public string Content { get; set; } = string.Empty;
+
+        [JsonPropertyName("type")]
+        public string Type { get; set; } = "info";
+
+        [JsonPropertyName("priority")]
+        public int Priority { get; set; }
+
+        [JsonPropertyName("start_at")]
+        public DateTime? StartAt { get; set; }
+
+        [JsonPropertyName("end_at")]
+        public DateTime? EndAt { get; set; }
+
+        [JsonPropertyName("created_at")]
+        public string CreatedAt { get; set; } = string.Empty;
     }
 
     /// <summary>
@@ -601,6 +631,39 @@ namespace lingualink_client.Models.Auth
 
         [JsonPropertyName("is_active")]
         public bool IsActive { get; set; }
+
+        [JsonPropertyName("renewal_warning")]
+        public string? RenewalWarning { get; set; }
+    }
+
+    public class UserWalletInfo
+    {
+        [JsonPropertyName("user_id")]
+        public string UserId { get; set; } = string.Empty;
+
+        [JsonPropertyName("balance_cents")]
+        public int BalanceCents { get; set; }
+
+        [JsonPropertyName("created_at")]
+        public DateTime? CreatedAt { get; set; }
+
+        [JsonPropertyName("updated_at")]
+        public DateTime? UpdatedAt { get; set; }
+    }
+
+    public class UserWalletResponse
+    {
+        [JsonPropertyName("code")]
+        public int Code { get; set; }
+
+        [JsonPropertyName("message")]
+        public string? Message { get; set; }
+
+        [JsonPropertyName("error")]
+        public string? Error { get; set; }
+
+        [JsonPropertyName("data")]
+        public UserWalletInfo? Data { get; set; }
     }
 
     public class UserSubscriptionRecord

@@ -22,8 +22,13 @@ namespace lingualink_client.ViewModels.Components
         public string TemplateActiveHintLabel => LanguageManager.GetString("TemplateActiveHint");
 
         public TargetLanguageViewModel()
+            : this(ServiceContainer.Resolve<ITargetLanguageManager>())
         {
-            _languageManager = ServiceContainer.Resolve<ITargetLanguageManager>();
+        }
+
+        public TargetLanguageViewModel(ITargetLanguageManager languageManager)
+        {
+            _languageManager = languageManager ?? throw new System.ArgumentNullException(nameof(languageManager));
 
             // 订阅管理器事件
             _languageManager.LanguagesChanged += OnLanguagesChanged;
@@ -97,4 +102,4 @@ namespace lingualink_client.ViewModels.Components
             _languageManager.PropertyChanged -= OnManagerPropertyChanged;
         }
     }
-} 
+}

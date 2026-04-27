@@ -50,6 +50,9 @@ namespace lingualink_client.Models
         [JsonPropertyName("transcription")]
         public string? Transcription { get; set; }
 
+        [JsonPropertyName("corrected_text")]
+        public string? CorrectedText { get; set; }
+
         [JsonPropertyName("translations")]
         public Dictionary<string, string>? Translations { get; set; }
 
@@ -88,6 +91,30 @@ namespace lingualink_client.Models
 
         [JsonPropertyName("conversion_applied")]
         public bool ConversionApplied { get; set; }
+    }
+
+    public class QuotaStatus
+    {
+        [JsonPropertyName("free_quota")]
+        public bool FreeQuota { get; set; }
+
+        [JsonPropertyName("subscription_active")]
+        public bool SubscriptionActive { get; set; }
+
+        [JsonPropertyName("limit")]
+        public int Limit { get; set; }
+
+        [JsonPropertyName("used")]
+        public int Used { get; set; }
+
+        [JsonPropertyName("remaining")]
+        public int Remaining { get; set; }
+
+        [JsonPropertyName("window_size_seconds")]
+        public int WindowSizeSeconds { get; set; }
+
+        [JsonPropertyName("reset_at")]
+        public DateTime? ResetAt { get; set; }
     }
 
     public class TranslationData // Enhanced to support dynamic language fields
