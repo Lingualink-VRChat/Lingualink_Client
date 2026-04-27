@@ -1,0 +1,174 @@
+<Page
+    x:Class="lingualink_client.Views.PeerAudioTranslationPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:vm="clr-namespace:lingualink_client.ViewModels"
+    Title="PeerAudioTranslationPage"
+    d:DataContext="{d:DesignInstance Type=vm:PeerAudioTranslationWindowViewModel}"
+    mc:Ignorable="d">
+
+    <Grid Margin="{DynamicResource PageContentMargin}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Border
+            Grid.Row="0"
+            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+            BorderBrush="{DynamicResource ControlElevationBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="10"
+            Padding="16"
+            Margin="0,0,0,12">
+            <StackPanel>
+                <TextBlock
+                    Text="{Binding WindowTitle}"
+                    FontSize="20"
+                    FontWeight="SemiBold" />
+                <TextBlock
+                    Margin="0,6,0,0"
+                    Text="{Binding Description}"
+                    TextWrapping="Wrap"
+                    Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+            </StackPanel>
+        </Border>
+
+        <Border
+            Grid.Row="1"
+            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+            BorderBrush="{DynamicResource ControlElevationBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="10"
+            Padding="16"
+            Margin="0,0,0,12">
+            <StackPanel>
+                <Grid Margin="0,0,0,14">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock
+                        Grid.Column="0"
+                        Text="{Binding EnableFeatureLabel}"
+                        FontWeight="SemiBold"
+                        VerticalAlignment="Center" />
+                    <ui:ToggleSwitch
+                        Grid.Column="1"
+                        IsChecked="{Binding IsFeatureEnabled, Mode=TwoWay}" />
+                </Grid>
+
+                <Grid
+                    Margin="0,0,0,14"
+                    Visibility="{Binding IsSeparateWindowOptionVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock
+                        Grid.Column="0"
+                        Text="{Binding SeparateWindowLabel}"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    <ui:ToggleSwitch
+                        Grid.Column="1"
+                        IsChecked="{Binding ShowResultsInSeparateWindow, Mode=TwoWay}" />
+                </Grid>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock
+                        Grid.Column="0"
+                        Margin="0,0,12,0"
+                        VerticalAlignment="Center"
+                        FontWeight="SemiBold"
+                        Text="{Binding CaptureTargetLabel}" />
+
+                    <ComboBox
+                        Grid.Column="1"
+                        DisplayMemberPath="DisplayName"
+                        IsEnabled="{Binding IsCaptureTargetSelectionEnabled}"
+                        ItemsSource="{Binding CaptureTargets}"
+                        SelectedItem="{Binding SelectedCaptureTarget}" />
+
+                    <ui:Button
+                        Grid.Column="2"
+                        Margin="8,0,0,0"
+                        Command="{Binding RefreshCaptureTargetsCommand}"
+                        Content="{Binding RefreshProcessesLabel}"
+                        Appearance="Secondary"
+                        Icon="{ui:SymbolIcon ArrowClockwise24}" />
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <Border
+            Grid.Row="2"
+            Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
+            BorderBrush="{DynamicResource ControlElevationBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="8"
+            Padding="12"
+            Margin="0,0,0,12">
+            <TextBlock
+                Text="{Binding StatusText}"
+                TextWrapping="Wrap"
+                Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+        </Border>
+
+        <Border
+            Grid.Row="3"
+            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+            BorderBrush="{DynamicResource ControlElevationBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="10"
+            Padding="12"
+            Visibility="{Binding IsEmbeddedResultVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock
+                        Text="{Binding EmbeddedResultLabel}"
+                        FontWeight="SemiBold"
+                        VerticalAlignment="Center" />
+                    <ui:Button
+                        Grid.Column="1"
+                        Command="{Binding ClearCommand}"
+                        Content="{Binding ClearLabel}"
+                        Appearance="Secondary"
+                        Icon="{ui:SymbolIcon Delete24}" />
+                </Grid>
+
+                <ui:TextBox
+                    Grid.Row="1"
+                    AcceptsReturn="True"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    FontFamily="Consolas"
+                    FontSize="14"
+                    IsReadOnly="True"
+                    Text="{Binding ResultText, Mode=OneWay}"
+                    TextWrapping="Wrap"
+                    VerticalScrollBarVisibility="Auto" />
+            </Grid>
+        </Border>
+    </Grid>
+</Page>

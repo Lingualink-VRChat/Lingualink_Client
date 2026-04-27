@@ -11,6 +11,7 @@ using lingualink_client.Models;
 using lingualink_client.Services;
 using lingualink_client.Services.Interfaces;
 using lingualink_client.Services.Managers;
+using lingualink_client.Views;
 using MessageBox = lingualink_client.Services.MessageBox;
 
 namespace lingualink_client.ViewModels
@@ -23,8 +24,10 @@ namespace lingualink_client.ViewModels
         private readonly StringBuilder _resultBuilder = new StringBuilder();
 
         private PeerAudioTranslationService? _translationService;
+        private PeerAudioTranslationWindow? _separateWindow;
         private AppSettings _appSettings;
         private bool _disposed;
+        private bool _isApplyingFeatureEnabledChange;
 
         public ObservableCollection<PeerAudioCaptureTarget> CaptureTargets { get; } = new ObservableCollection<PeerAudioCaptureTarget>();
 
@@ -43,12 +46,23 @@ namespace lingualink_client.ViewModels
         [ObservableProperty]
         private bool _isWorking;
 
+        [ObservableProperty]
+        private bool _isFeatureEnabled;
+
+        [ObservableProperty]
+        private bool _showResultsInSeparateWindow;
+
         public string WindowTitle => LanguageManager.GetString("PeerAudioWindowTitle");
         public string Description => LanguageManager.GetString("PeerAudioWindowDescription");
         public string ClearLabel => LanguageManager.GetString("ClearLog");
         public string CaptureTargetLabel => LanguageManager.GetString("PeerAudioCaptureTarget");
         public string RefreshProcessesLabel => LanguageManager.GetString("PeerAudioRefreshProcesses");
+        public string EnableFeatureLabel => LanguageManager.GetString("PeerAudioEnableFeature");
+        public string SeparateWindowLabel => LanguageManager.GetString("PeerAudioSeparateWindow");
+        public string EmbeddedResultLabel => LanguageManager.GetString("PeerAudioEmbeddedResult");
         public bool IsCaptureTargetSelectionEnabled => !IsWorking;
+        public bool IsSeparateWindowOptionVisible => IsFeatureEnabled;
+        public bool IsEmbeddedResultVisible => !ShowResultsInSeparateWindow;
 
         public PeerAudioTranslationWindowViewModel()
         {
@@ -68,45 +82,10 @@ namespace lingualink_client.ViewModels
         }
 
         [RelayCommand]
-        private async Task ToggleAsync()
+        private Task ToggleAsync()
         {
-            if (!IsWorking)
-            {
-                if (_authService?.IsLoggedIn != true)
-                {
-                    MessageBox.Show(
-                        LanguageManager.GetString("BindRequireLogin"),
-                        LanguageManager.GetString("WarningTitle"),
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning);
-                    return;
-                }
-
-                _appSettings = _settingsService.LoadSettings();
-                _translationService = new PeerAudioTranslationService(_appSettings, _loggingManager);
-                _translationService.StatusUpdated += OnStatusUpdated;
-                _translationService.TranslationReceived += OnTranslationReceived;
-
-                var target = SelectedCaptureTarget ?? CaptureTargets.FirstOrDefault() ?? CreateSystemAudioTarget();
-                var success = await Task.Run(() => _translationService.Start(target));
-                if (success)
-                {
-                    IsWorking = true;
-                    ToggleButtonText = LanguageManager.GetString("PeerAudioStopListening");
-                }
-                else
-                {
-                    DisposeTranslationService();
-                }
-
-                return;
-            }
-
-            await Task.Run(() => _translationService?.Stop());
-            DisposeTranslationService();
-            IsWorking = false;
-            ToggleButtonText = LanguageManager.GetString("PeerAudioStartListening");
-            StatusText = LanguageManager.GetString("PeerAudioStatusStopped");
+            IsFeatureEnabled = !IsFeatureEnabled;
+            return Task.CompletedTask;
         }
 
         [RelayCommand]
@@ -145,6 +124,112 @@ namespace lingualink_client.ViewModels
         {
             OnPropertyChanged(nameof(IsCaptureTargetSelectionEnabled));
             RefreshCaptureTargetsCommand.NotifyCanExecuteChanged();
+        }
+
+        partial void OnIsFeatureEnabledChanged(bool value)
+        {
+            if (_isApplyingFeatureEnabledChange)
+            {
+                return;
+            }
+
+            _ = ApplyFeatureEnabledChangeAsync(value);
+        }
+
+        partial void OnShowResultsInSeparateWindowChanged(bool value)
+        {
+            OnPropertyChanged(nameof(IsEmbeddedResultVisible));
+            if (!IsFeatureEnabled)
+            {
+                CloseSeparateWindow();
+                return;
+            }
+
+            if (value)
+            {
+                OpenSeparateWindow();
+            }
+            else
+            {
+                CloseSeparateWindow();
+            }
+        }
+
+        private async Task ApplyFeatureEnabledChangeAsync(bool enabled)
+        {
+            if (enabled)
+            {
+                var started = await StartAsync();
+                if (!started)
+                {
+                    _isApplyingFeatureEnabledChange = true;
+                    IsFeatureEnabled = false;
+                    _isApplyingFeatureEnabledChange = false;
+                    OnPropertyChanged(nameof(IsSeparateWindowOptionVisible));
+                    return;
+                }
+
+                OnPropertyChanged(nameof(IsSeparateWindowOptionVisible));
+                if (ShowResultsInSeparateWindow)
+                {
+                    OpenSeparateWindow();
+                }
+                return;
+            }
+
+            await StopAsync();
+            ShowResultsInSeparateWindow = false;
+            CloseSeparateWindow();
+            OnPropertyChanged(nameof(IsSeparateWindowOptionVisible));
+        }
+
+        private async Task<bool> StartAsync()
+        {
+            if (IsWorking)
+            {
+                return true;
+            }
+
+            if (_authService?.IsLoggedIn != true)
+            {
+                MessageBox.Show(
+                    LanguageManager.GetString("BindRequireLogin"),
+                    LanguageManager.GetString("WarningTitle"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return false;
+            }
+
+            _appSettings = _settingsService.LoadSettings();
+            _translationService = new PeerAudioTranslationService(_appSettings, _loggingManager);
+            _translationService.StatusUpdated += OnStatusUpdated;
+            _translationService.TranslationReceived += OnTranslationReceived;
+
+            var target = SelectedCaptureTarget ?? CaptureTargets.FirstOrDefault() ?? CreateSystemAudioTarget();
+            var success = await Task.Run(() => _translationService.Start(target));
+            if (success)
+            {
+                IsWorking = true;
+                ToggleButtonText = LanguageManager.GetString("PeerAudioStopListening");
+                return true;
+            }
+
+            DisposeTranslationService();
+            return false;
+        }
+
+        private async Task StopAsync()
+        {
+            if (!IsWorking && _translationService == null)
+            {
+                return;
+            }
+
+            await Task.Run(() => _translationService?.Stop());
+            DisposeTranslationService();
+            IsWorking = false;
+            ToggleButtonText = LanguageManager.GetString("PeerAudioStartListening");
+            StatusText = LanguageManager.GetString("PeerAudioStatusStopped");
         }
 
         private static PeerAudioCaptureTarget CreateSystemAudioTarget()
@@ -203,9 +288,52 @@ namespace lingualink_client.ViewModels
             OnPropertyChanged(nameof(ClearLabel));
             OnPropertyChanged(nameof(CaptureTargetLabel));
             OnPropertyChanged(nameof(RefreshProcessesLabel));
+            OnPropertyChanged(nameof(EnableFeatureLabel));
+            OnPropertyChanged(nameof(SeparateWindowLabel));
+            OnPropertyChanged(nameof(EmbeddedResultLabel));
             ToggleButtonText = IsWorking
                 ? LanguageManager.GetString("PeerAudioStopListening")
                 : LanguageManager.GetString("PeerAudioStartListening");
+        }
+
+        private void OpenSeparateWindow()
+        {
+            if (_separateWindow != null)
+            {
+                _separateWindow.Activate();
+                return;
+            }
+
+            _separateWindow = new PeerAudioTranslationWindow(this, disposeViewModelOnClose: false)
+            {
+                Owner = Application.Current.MainWindow
+            };
+            _separateWindow.Closed += OnSeparateWindowClosed;
+            _separateWindow.Show();
+        }
+
+        private void CloseSeparateWindow()
+        {
+            if (_separateWindow == null)
+            {
+                return;
+            }
+
+            var window = _separateWindow;
+            _separateWindow = null;
+            window.Closed -= OnSeparateWindowClosed;
+            window.Close();
+        }
+
+        private void OnSeparateWindowClosed(object? sender, EventArgs e)
+        {
+            if (_separateWindow != null)
+            {
+                _separateWindow.Closed -= OnSeparateWindowClosed;
+                _separateWindow = null;
+            }
+
+            ShowResultsInSeparateWindow = false;
         }
 
         private void DisposeTranslationService()
@@ -230,6 +358,7 @@ namespace lingualink_client.ViewModels
 
             _disposed = true;
             LanguageManager.LanguageChanged -= OnLanguageChanged;
+            CloseSeparateWindow();
             DisposeTranslationService();
         }
     }

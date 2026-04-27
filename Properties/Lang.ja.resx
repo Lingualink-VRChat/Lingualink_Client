@@ -1682,7 +1682,7 @@
     <value>相手音声翻訳</value>
   </data>
   <data name="PeerAudioWindowDescription" xml:space="preserve">
-    <value>既定のシステム再生音声を別ウィンドウで取得し、相手の発話翻訳をここに表示します。OSC は送信しません。</value>
+    <value>既定のシステム音声または選択したプロセス音声を取得し、相手の発話翻訳をこのページまたは別ウィンドウに表示します。OSC は送信しません。</value>
   </data>
   <data name="PeerAudioStartListening" xml:space="preserve">
     <value>開始</value>
@@ -1737,5 +1737,14 @@
   </data>
   <data name="PeerAudioSystemAudioTarget" xml:space="preserve">
     <value>既定のシステム音声</value>
+  </data>
+  <data name="PeerAudioEnableFeature" xml:space="preserve">
+    <value>相手音声翻訳を有効化</value>
+  </data>
+  <data name="PeerAudioSeparateWindow" xml:space="preserve">
+    <value>翻訳内容を別ウィンドウで表示</value>
+  </data>
+  <data name="PeerAudioEmbeddedResult" xml:space="preserve">
+    <value>翻訳結果</value>
   </data>
 </root>

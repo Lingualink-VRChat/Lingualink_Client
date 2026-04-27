@@ -22,7 +22,6 @@ namespace lingualink_client
         private readonly MainWindowViewModel _viewModel;
         private readonly SettingsService _settingsService;
         private readonly IEventAggregator? _eventAggregator;
-        private PeerAudioTranslationWindow? _peerAudioTranslationWindow;
         private HwndSource? _hwndSource;
 
         private const int RecognitionHotkeyId = 0x5A01;
@@ -107,7 +106,6 @@ namespace lingualink_client
 
         private void MainWindow_Closed(object sender, EventArgs e)
         {
-            _peerAudioTranslationWindow?.Close();
             UnregisterRecognitionHotkey();
             if (_hwndSource != null)
             {
@@ -117,22 +115,6 @@ namespace lingualink_client
 
             _eventAggregator?.Unsubscribe<SettingsChangedEvent>(OnSettingsChanged);
             _viewModel.Dispose();
-        }
-
-        private void OpenPeerAudioTranslationWindow_Click(object sender, RoutedEventArgs e)
-        {
-            if (_peerAudioTranslationWindow != null)
-            {
-                _peerAudioTranslationWindow.Activate();
-                return;
-            }
-
-            _peerAudioTranslationWindow = new PeerAudioTranslationWindow
-            {
-                Owner = this
-            };
-            _peerAudioTranslationWindow.Closed += (_, _) => _peerAudioTranslationWindow = null;
-            _peerAudioTranslationWindow.Show();
         }
 
         private void OnSettingsChanged(SettingsChangedEvent e)
