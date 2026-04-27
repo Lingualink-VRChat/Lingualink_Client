@@ -39,7 +39,7 @@ namespace lingualink_client.Services.Managers
             _targetBackendLanguages = targetBackendLanguages?
                 .Where(name => !string.IsNullOrWhiteSpace(name))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList() ?? Array.Empty<string>();
+                .ToList() ?? new List<string>();
             _audioService = new AudioService(_appSettings, _loggingManager);
             _apiService = LingualinkApiServiceFactory.CreateApiService(_appSettings);
 
@@ -108,7 +108,7 @@ namespace lingualink_client.Services.Managers
 
                 if (IsNoSpeechResult(apiResult))
                 {
-                    StatusUpdated?.Invoke(LanguageManager.GetString("PeerAudioStatusNoSpeech"));
+                    StatusUpdated?.Invoke(this, LanguageManager.GetString("PeerAudioStatusNoSpeech"));
                     return;
                 }
 
