@@ -1,3 +1,4 @@
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -54,11 +55,14 @@ namespace lingualink_client.ViewModels
     {
         public string Text { get; }
         public bool IsError { get; }
+        public DateTime Timestamp { get; }
+        public string TimestampText => Timestamp.ToString("HH:mm:ss");
 
         public PeerAudioChatMessage(string text, bool isError)
         {
             Text = text;
             IsError = isError;
+            Timestamp = DateTime.Now;
         }
     }
 }

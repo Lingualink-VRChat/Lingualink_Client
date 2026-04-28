@@ -224,19 +224,22 @@ namespace lingualink_client.Services.Managers
         private static string BuildDisplayText(ApiResult apiResult, bool showOriginalText)
         {
             var builder = new StringBuilder();
-            builder.AppendLine($"[{DateTime.Now:HH:mm:ss}]");
             var hasContent = false;
 
             if (showOriginalText && !string.IsNullOrWhiteSpace(apiResult.DisplayTranscription))
             {
-                builder.AppendLine($"{LanguageManager.GetString("PeerAudioOriginalLabel")}: {apiResult.DisplayTranscription}");
+                builder.AppendLine(apiResult.DisplayTranscription);
                 hasContent = true;
             }
 
             foreach (var translation in apiResult.Translations)
             {
-                var languageName = LanguageDisplayHelper.ConvertLanguageCodeToChineseName(translation.Key);
-                builder.AppendLine($"{languageName}: {translation.Value}");
+                if (string.IsNullOrWhiteSpace(translation.Value))
+                {
+                    continue;
+                }
+
+                builder.AppendLine(translation.Value);
                 hasContent = true;
             }
 
@@ -279,7 +282,7 @@ namespace lingualink_client.Services.Managers
 
         public static PeerAudioTranslationResultEventArgs FromError(string errorMessage)
         {
-            var displayText = $"[{DateTime.Now:HH:mm:ss}]\n{LanguageManager.GetString("PeerAudioErrorLabel")}: {errorMessage}";
+            var displayText = $"{LanguageManager.GetString("PeerAudioErrorLabel")}: {errorMessage}";
             return new PeerAudioTranslationResultEventArgs(displayText, false, errorMessage);
         }
     }
