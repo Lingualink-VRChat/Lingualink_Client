@@ -17,7 +17,7 @@
     Icon="/Assets/Icons/icon_128x128.ico"
     WindowBackdropType="Mica"
     WindowCornerPreference="Round"
-    WindowStartupLocation="CenterOwner"
+    WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
     <Grid>
         <Grid.RowDefinitions>

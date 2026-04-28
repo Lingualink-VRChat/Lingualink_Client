@@ -343,7 +343,15 @@ namespace lingualink_client.ViewModels
 
                 if (configured.Count == 0)
                 {
-                    configured = supported.Take(2).ToList();
+                    configured = supported
+                        .Where(name => name != LanguageDisplayHelper.TranscriptionBackendName)
+                        .Take(2)
+                        .ToList();
+                }
+
+                if (configured.Count == 0)
+                {
+                    configured = supported.Take(1).ToList();
                 }
 
                 foreach (var backendName in configured)
@@ -395,7 +403,7 @@ namespace lingualink_client.ViewModels
         private List<string> GetSupportedPeerBackendLanguages()
         {
             var languages = LanguageDisplayHelper.BackendLanguageNames
-                .Where(name => !string.IsNullOrWhiteSpace(name) && name != LanguageDisplayHelper.TranscriptionBackendName)
+                .Where(name => !string.IsNullOrWhiteSpace(name))
                 .ToList();
 
             if (languages.Count > 0)
@@ -403,7 +411,7 @@ namespace lingualink_client.ViewModels
                 return languages;
             }
 
-            return new List<string> { "英文", "日文", "中文" };
+            return new List<string> { LanguageDisplayHelper.TranscriptionBackendName, "英文", "日文", "中文" };
         }
 
         private List<string> GetAvailablePeerBackendLanguages(string? currentBackendName)
@@ -496,10 +504,7 @@ namespace lingualink_client.ViewModels
                 return;
             }
 
-            _separateWindow = new PeerAudioTranslationWindow(this, disposeViewModelOnClose: false)
-            {
-                Owner = Application.Current.MainWindow
-            };
+            _separateWindow = new PeerAudioTranslationWindow(this, disposeViewModelOnClose: false);
             _separateWindow.Closed += OnSeparateWindowClosed;
             _separateWindow.Show();
         }
