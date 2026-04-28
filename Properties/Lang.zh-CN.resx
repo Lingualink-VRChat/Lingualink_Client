@@ -1759,13 +1759,13 @@
     <value>当前词表已达到词条上限 {0}。</value>
   </data>
   <data name="PeerAudioTranslation" xml:space="preserve">
-    <value>对方语音</value>
+    <value>他人语音翻译</value>
   </data>
   <data name="PeerAudioWindowTitle" xml:space="preserve">
-    <value>对方语音翻译</value>
+    <value>他人语音翻译</value>
   </data>
   <data name="PeerAudioWindowDescription" xml:space="preserve">
-    <value>监听默认系统音频或指定进程音频，翻译对方语音，并在本页或独立窗口展示；不会发送 OSC 消息。</value>
+    <value>监听默认系统音频或指定进程音频，翻译他人语音，并在本页或独立窗口展示；不会发送 OSC 消息。</value>
   </data>
   <data name="PeerAudioStartListening" xml:space="preserve">
     <value>开始监听</value>
@@ -1774,7 +1774,7 @@
     <value>停止监听</value>
   </data>
   <data name="PeerAudioStatusReady" xml:space="preserve">
-    <value>就绪。请让对方声音从默认输出设备播放，然后开始监听。</value>
+    <value>就绪。请让他人语音从默认输出设备播放，然后开始监听。</value>
   </data>
   <data name="PeerAudioStatusListening" xml:space="preserve">
     <value>正在监听默认系统音频...</value>
@@ -1789,7 +1789,7 @@
     <value>已停止。</value>
   </data>
   <data name="PeerAudioStatusTranslating" xml:space="preserve">
-    <value>正在翻译对方语音...</value>
+    <value>正在翻译他人语音...</value>
   </data>
   <data name="PeerAudioStatusTranslated" xml:space="preserve">
     <value>翻译完成，继续监听...</value>
@@ -1825,7 +1825,7 @@
     <value>默认系统音频</value>
   </data>
   <data name="PeerAudioEnableFeature" xml:space="preserve">
-    <value>启用对方语音翻译</value>
+    <value>启用他人语音翻译</value>
   </data>
   <data name="PeerAudioSeparateWindow" xml:space="preserve">
     <value>将翻译内容单独用新窗口展示</value>
