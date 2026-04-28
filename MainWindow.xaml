@@ -153,6 +153,14 @@
                     </ui:NavigationViewItem.Icon>
                 </ui:NavigationViewItem>
                 <ui:NavigationViewItem
+                    Content="{Binding PeerAudioTranslation}"
+                    NavigationCacheMode="Enabled"
+                    TargetPageType="{x:Type pages:PeerAudioTranslationPage}">
+                    <ui:NavigationViewItem.Icon>
+                        <ui:SymbolIcon Symbol="Speaker224" />
+                    </ui:NavigationViewItem.Icon>
+                </ui:NavigationViewItem>
+                <ui:NavigationViewItem
                     Content="{Binding CustomVocabulary}"
                     NavigationCacheMode="Enabled"
                     TargetPageType="{x:Type pages:VocabularyPage}">
@@ -166,14 +174,6 @@
                     TargetPageType="{x:Type pages:ConversationHistoryPage}">
                     <ui:NavigationViewItem.Icon>
                         <ui:SymbolIcon Symbol="History24" />
-                    </ui:NavigationViewItem.Icon>
-                </ui:NavigationViewItem>
-                <ui:NavigationViewItem
-                    Content="{Binding PeerAudioTranslation}"
-                    NavigationCacheMode="Enabled"
-                    TargetPageType="{x:Type pages:PeerAudioTranslationPage}">
-                    <ui:NavigationViewItem.Icon>
-                        <ui:SymbolIcon Symbol="Speaker224" />
                     </ui:NavigationViewItem.Icon>
                 </ui:NavigationViewItem>
                 <ui:NavigationViewItem
