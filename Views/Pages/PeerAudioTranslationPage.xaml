@@ -48,6 +48,49 @@
             Padding="16"
             Margin="0,0,0,12">
             <StackPanel>
+                <Border
+                    Margin="0,0,0,14"
+                    Padding="16"
+                    Background="{DynamicResource SubtleFillColorSecondaryBrush}"
+                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Visibility="{Binding IsMemberOnlyNoticeVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="16" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="16" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <ui:SymbolIcon
+                            Grid.Column="0"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"
+                            FontSize="18"
+                            Symbol="Info24" />
+
+                        <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                            <TextBlock
+                                FontSize="14"
+                                FontWeight="SemiBold"
+                                Text="{Binding MemberOnlyNoticeTitle}" />
+                        </StackPanel>
+
+                        <TextBlock
+                            Grid.Column="4"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Right"
+                            FontSize="11"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            Text="{Binding MemberOnlyNoticeMessage}"
+                            TextAlignment="Right"
+                            TextWrapping="Wrap" />
+                    </Grid>
+                </Border>
+
                 <Grid Margin="0,0,0,14">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
@@ -60,6 +103,7 @@
                         VerticalAlignment="Center" />
                     <ui:ToggleSwitch
                         Grid.Column="1"
+                        IsEnabled="{Binding IsFeatureToggleEnabled}"
                         IsChecked="{Binding IsFeatureEnabled, Mode=TwoWay}" />
                 </Grid>
 

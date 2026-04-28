@@ -1684,6 +1684,12 @@
   <data name="PeerAudioWindowDescription" xml:space="preserve">
     <value>既定のシステム音声または選択したプロセス音声を取得し、相手の発話翻訳をこのページまたは別ウィンドウに表示します。OSC は送信しません。</value>
   </data>
+  <data name="PeerAudioMemberOnlyNoticeTitle" xml:space="preserve">
+    <value>メンバー機能</value>
+  </data>
+  <data name="PeerAudioMemberOnlyNoticeMessage" xml:space="preserve">
+    <value>相手音声翻訳は有料メンバーのみ利用できます。メンバーシップをアップグレードすると、他の話者の音声を取得して翻訳できます。</value>
+  </data>
   <data name="PeerAudioStartListening" xml:space="preserve">
     <value>開始</value>
   </data>

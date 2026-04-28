@@ -1768,6 +1768,12 @@ Update now?</value>
   <data name="PeerAudioWindowDescription" xml:space="preserve">
     <value>Captures default system audio or a selected process, translates peer speech, and displays it here or in a separate window. It does not send OSC messages.</value>
   </data>
+  <data name="PeerAudioMemberOnlyNoticeTitle" xml:space="preserve">
+    <value>Member Feature</value>
+  </data>
+  <data name="PeerAudioMemberOnlyNoticeMessage" xml:space="preserve">
+    <value>Peer audio translation is available to paid members only. Upgrade your membership to capture and translate audio from other speakers.</value>
+  </data>
   <data name="PeerAudioStartListening" xml:space="preserve">
     <value>Start</value>
   </data>

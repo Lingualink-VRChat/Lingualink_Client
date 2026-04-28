@@ -1767,6 +1767,12 @@
   <data name="PeerAudioWindowDescription" xml:space="preserve">
     <value>监听默认系统音频或指定进程音频，翻译他人语音，并在本页或独立窗口展示；不会发送 OSC 消息。</value>
   </data>
+  <data name="PeerAudioMemberOnlyNoticeTitle" xml:space="preserve">
+    <value>会员功能说明</value>
+  </data>
+  <data name="PeerAudioMemberOnlyNoticeMessage" xml:space="preserve">
+    <value>他人语音翻译仅付费会员可用。升级会员后即可捕获并翻译其他说话人的音频内容。</value>
+  </data>
   <data name="PeerAudioStartListening" xml:space="preserve">
     <value>开始监听</value>
   </data>
