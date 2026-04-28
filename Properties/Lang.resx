@@ -1774,11 +1774,17 @@ Update now?</value>
   <data name="PeerAudioMemberOnlyNoticeMessage" xml:space="preserve">
     <value>Peer audio translation is available to paid members only. Upgrade your membership to capture and translate audio from other speakers.</value>
   </data>
+  <data name="PeerAudioSteamVrWristHintMessage" xml:space="preserve">
+    <value>Can be pinned near your wrist from the SteamVR desktop panel.</value>
+  </data>
+  <data name="PeerAudioSeparateWindowResultNotice" xml:space="preserve">
+    <value>Translation results are shown in the separate window.</value>
+  </data>
   <data name="PeerAudioStartListening" xml:space="preserve">
-    <value>Start</value>
+    <value>Start Recognition</value>
   </data>
   <data name="PeerAudioStopListening" xml:space="preserve">
-    <value>Stop</value>
+    <value>Stop Recognition</value>
   </data>
   <data name="PeerAudioStatusReady" xml:space="preserve">
     <value>Ready. Play peer voice on the default output device, then start listening.</value>
@@ -1835,7 +1841,7 @@ Update now?</value>
     <value>Enable peer audio translation</value>
   </data>
   <data name="PeerAudioSeparateWindow" xml:space="preserve">
-    <value>Show translation in a separate window</value>
+    <value>Separate window</value>
   </data>
   <data name="PeerAudioEmbeddedResult" xml:space="preserve">
     <value>Translation result</value>

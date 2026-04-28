@@ -67,6 +67,8 @@ namespace lingualink_client.ViewModels
         public string AddLanguageLabel => LanguageManager.GetString("AddLanguage");
         public string MemberOnlyNoticeTitle => LanguageManager.GetString("PeerAudioMemberOnlyNoticeTitle");
         public string MemberOnlyNoticeMessage => LanguageManager.GetString("PeerAudioMemberOnlyNoticeMessage");
+        public string SteamVrWristHintMessage => LanguageManager.GetString("PeerAudioSteamVrWristHintMessage");
+        public string SeparateWindowResultNotice => LanguageManager.GetString("PeerAudioSeparateWindowResultNotice");
         public bool IsPeerAudioFeatureAvailable => _authService?.CurrentUser?.Subscription?.IsPaidActiveNow == true;
         public bool IsMemberOnlyNoticeVisible => !IsPeerAudioFeatureAvailable;
         public bool IsFeatureToggleEnabled => IsPeerAudioFeatureAvailable;
@@ -184,10 +186,11 @@ namespace lingualink_client.ViewModels
             AddPeerTargetLanguageCommand.NotifyCanExecuteChanged();
         }
 
-        private async Task RefreshEntitlementAsync()
+        public async Task RefreshEntitlementAsync()
         {
             if (_authService?.IsLoggedIn != true)
             {
+                await Application.Current.Dispatcher.InvokeAsync(RefreshEntitlementDependentState);
                 return;
             }
 
@@ -227,11 +230,6 @@ namespace lingualink_client.ViewModels
         partial void OnShowResultsInSeparateWindowChanged(bool value)
         {
             OnPropertyChanged(nameof(IsEmbeddedResultVisible));
-            if (!IsFeatureEnabled)
-            {
-                CloseSeparateWindow();
-                return;
-            }
 
             if (value)
             {
@@ -266,8 +264,6 @@ namespace lingualink_client.ViewModels
             }
 
             await StopAsync();
-            ShowResultsInSeparateWindow = false;
-            CloseSeparateWindow();
             OnPropertyChanged(nameof(IsSeparateWindowOptionVisible));
         }
 
@@ -565,6 +561,8 @@ namespace lingualink_client.ViewModels
             OnPropertyChanged(nameof(AddLanguageLabel));
             OnPropertyChanged(nameof(MemberOnlyNoticeTitle));
             OnPropertyChanged(nameof(MemberOnlyNoticeMessage));
+            OnPropertyChanged(nameof(SteamVrWristHintMessage));
+            OnPropertyChanged(nameof(SeparateWindowResultNotice));
             UpdatePeerLanguageItemState();
             ToggleButtonText = IsWorking
                 ? LanguageManager.GetString("PeerAudioStopListening")

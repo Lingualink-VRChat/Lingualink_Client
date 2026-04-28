@@ -1690,11 +1690,17 @@
   <data name="PeerAudioMemberOnlyNoticeMessage" xml:space="preserve">
     <value>相手音声翻訳は有料メンバーのみ利用できます。メンバーシップをアップグレードすると、他の話者の音声を取得して翻訳できます。</value>
   </data>
+  <data name="PeerAudioSteamVrWristHintMessage" xml:space="preserve">
+    <value>SteamVR のデスクトップパネルから手首付近に固定できます。</value>
+  </data>
+  <data name="PeerAudioSeparateWindowResultNotice" xml:space="preserve">
+    <value>翻訳結果は別ウィンドウに表示されています。</value>
+  </data>
   <data name="PeerAudioStartListening" xml:space="preserve">
-    <value>開始</value>
+    <value>認識開始</value>
   </data>
   <data name="PeerAudioStopListening" xml:space="preserve">
-    <value>停止</value>
+    <value>認識停止</value>
   </data>
   <data name="PeerAudioStatusReady" xml:space="preserve">
     <value>準備完了。相手の音声を既定の出力デバイスで再生してから開始してください。</value>
@@ -1751,7 +1757,7 @@
     <value>相手音声翻訳を有効化</value>
   </data>
   <data name="PeerAudioSeparateWindow" xml:space="preserve">
-    <value>翻訳内容を別ウィンドウで表示</value>
+    <value>別ウィンドウ表示</value>
   </data>
   <data name="PeerAudioEmbeddedResult" xml:space="preserve">
     <value>翻訳結果</value>

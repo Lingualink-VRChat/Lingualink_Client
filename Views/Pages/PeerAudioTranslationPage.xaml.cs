@@ -21,6 +21,7 @@ namespace lingualink_client.Views
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
             _viewModel.Messages.CollectionChanged += OnMessagesChanged;
+            _ = _viewModel.RefreshEntitlementAsync();
         }
 
         private void OnUnloaded(object sender, RoutedEventArgs e)

@@ -14,7 +14,6 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
@@ -27,29 +26,46 @@
             Padding="16"
             Margin="0,0,0,12">
             <StackPanel>
-                <TextBlock
-                    Text="{Binding WindowTitle}"
-                    FontSize="20"
-                    FontWeight="SemiBold" />
-                <TextBlock
-                    Margin="0,6,0,0"
-                    Text="{Binding Description}"
-                    TextWrapping="Wrap"
-                    Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-            </StackPanel>
-        </Border>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
 
-        <Border
-            Grid.Row="1"
-            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-            BorderBrush="{DynamicResource ControlElevationBorderBrush}"
-            BorderThickness="1"
-            CornerRadius="10"
-            Padding="16"
-            Margin="0,0,0,12">
-            <StackPanel>
+                    <TextBlock
+                        Grid.Row="0"
+                        Grid.Column="0"
+                        Text="{Binding WindowTitle}"
+                        FontSize="20"
+                        FontWeight="SemiBold"
+                        VerticalAlignment="Center" />
+
+                    <ui:Button
+                        Grid.Row="0"
+                        Grid.Column="1"
+                        HorizontalAlignment="Right"
+                        Command="{Binding ToggleCommand}"
+                        Content="{Binding ToggleButtonText}"
+                        IsEnabled="{Binding IsFeatureToggleEnabled}"
+                        Appearance="Primary"
+                        Icon="{ui:SymbolIcon Mic24}" />
+
+                    <TextBlock
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="2"
+                        Margin="0,6,0,0"
+                        Text="{Binding Description}"
+                        TextWrapping="Wrap"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                </Grid>
+
                 <Border
-                    Margin="0,0,0,14"
+                    Margin="0,12,0,14"
                     Padding="16"
                     Background="{DynamicResource SubtleFillColorSecondaryBrush}"
                     BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
@@ -91,40 +107,7 @@
                     </Grid>
                 </Border>
 
-                <Grid Margin="0,0,0,14">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock
-                        Grid.Column="0"
-                        Text="{Binding EnableFeatureLabel}"
-                        FontWeight="SemiBold"
-                        VerticalAlignment="Center" />
-                    <ui:ToggleSwitch
-                        Grid.Column="1"
-                        IsEnabled="{Binding IsFeatureToggleEnabled}"
-                        IsChecked="{Binding IsFeatureEnabled, Mode=TwoWay}" />
-                </Grid>
-
-                <Grid
-                    Margin="0,0,0,14"
-                    Visibility="{Binding IsSeparateWindowOptionVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock
-                        Grid.Column="0"
-                        Text="{Binding SeparateWindowLabel}"
-                        VerticalAlignment="Center"
-                        Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                    <ui:ToggleSwitch
-                        Grid.Column="1"
-                        IsChecked="{Binding ShowResultsInSeparateWindow, Mode=TwoWay}" />
-                </Grid>
-
-                <Grid>
+                <Grid Margin="0,16,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
@@ -154,10 +137,8 @@
                         Icon="{ui:SymbolIcon ArrowClockwise24}" />
                 </Grid>
 
-                <Separator Margin="0,14,0,14" />
-
                 <TextBlock
-                    Margin="0,0,0,8"
+                    Margin="0,16,0,8"
                     Text="{Binding TargetLanguagesLabel}"
                     FontWeight="SemiBold" />
 
@@ -210,7 +191,7 @@
         </Border>
 
         <Border
-            Grid.Row="2"
+            Grid.Row="1"
             Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
             BorderBrush="{DynamicResource ControlElevationBorderBrush}"
             BorderThickness="1"
@@ -224,13 +205,12 @@
         </Border>
 
         <Border
-            Grid.Row="3"
+            Grid.Row="2"
             Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
             BorderBrush="{DynamicResource ControlElevationBorderBrush}"
             BorderThickness="1"
             CornerRadius="10"
-            Padding="12"
-            Visibility="{Binding IsEmbeddedResultVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+            Padding="12">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -241,13 +221,36 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <TextBlock
-                        Text="{Binding EmbeddedResultLabel}"
-                        FontWeight="SemiBold"
-                        VerticalAlignment="Center" />
-                    <ui:Button
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                        <TextBlock
+                            Text="{Binding EmbeddedResultLabel}"
+                            FontWeight="SemiBold" />
+                        <TextBlock
+                            Margin="0,3,16,0"
+                            Text="{Binding SteamVrWristHintMessage}"
+                            TextWrapping="Wrap"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+
+                    <StackPanel
                         Grid.Column="1"
+                        Margin="12,0,12,0"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal">
+                        <TextBlock
+                            Margin="0,0,8,0"
+                            Text="{Binding SeparateWindowLabel}"
+                            VerticalAlignment="Center" />
+                        <ui:ToggleSwitch
+                            VerticalAlignment="Center"
+                            IsEnabled="{Binding IsFeatureToggleEnabled}"
+                            IsChecked="{Binding ShowResultsInSeparateWindow, Mode=TwoWay}" />
+                    </StackPanel>
+
+                    <ui:Button
+                        Grid.Column="2"
                         Command="{Binding ClearCommand}"
                         Content="{Binding ClearLabel}"
                         Appearance="Secondary"
@@ -257,6 +260,7 @@
                 <ScrollViewer
                     x:Name="MessagesScrollViewer"
                     Grid.Row="1"
+                    Visibility="{Binding IsEmbeddedResultVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
                     VerticalScrollBarVisibility="Auto">
                     <ItemsControl ItemsSource="{Binding Messages}">
                         <ItemsControl.ItemTemplate>
@@ -269,15 +273,39 @@
                                     CornerRadius="10"
                                     Padding="12"
                                     Margin="0,0,0,10">
-                                    <TextBlock
-                                        Text="{Binding Text}"
-                                        TextWrapping="Wrap"
-                                        FontSize="14" />
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock
+                                            Grid.Row="0"
+                                            HorizontalAlignment="Right"
+                                            Text="{Binding TimestampText}"
+                                            FontSize="11"
+                                            Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+
+                                        <TextBlock
+                                            Grid.Row="1"
+                                            Margin="0,6,0,0"
+                                            Text="{Binding Text}"
+                                            TextWrapping="Wrap"
+                                            FontSize="14" />
+                                    </Grid>
                                 </Border>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </ScrollViewer>
+
+                <TextBlock
+                    Grid.Row="1"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Text="{Binding SeparateWindowResultNotice}"
+                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                    Visibility="{Binding ShowResultsInSeparateWindow, Converter={StaticResource BooleanToVisibilityConverter}}" />
             </Grid>
         </Border>
     </Grid>

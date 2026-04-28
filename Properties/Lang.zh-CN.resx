@@ -1773,11 +1773,17 @@
   <data name="PeerAudioMemberOnlyNoticeMessage" xml:space="preserve">
     <value>他人语音翻译仅付费会员可用。升级会员后即可捕获并翻译其他说话人的音频内容。</value>
   </data>
+  <data name="PeerAudioSteamVrWristHintMessage" xml:space="preserve">
+    <value>可在 SteamVR 桌面面板中固定到手腕附近。</value>
+  </data>
+  <data name="PeerAudioSeparateWindowResultNotice" xml:space="preserve">
+    <value>翻译结果正在独立窗口显示。</value>
+  </data>
   <data name="PeerAudioStartListening" xml:space="preserve">
-    <value>开始监听</value>
+    <value>开始识别</value>
   </data>
   <data name="PeerAudioStopListening" xml:space="preserve">
-    <value>停止监听</value>
+    <value>停止识别</value>
   </data>
   <data name="PeerAudioStatusReady" xml:space="preserve">
     <value>就绪。请让他人语音从默认输出设备播放，然后开始监听。</value>
@@ -1834,7 +1840,7 @@
     <value>启用他人语音翻译</value>
   </data>
   <data name="PeerAudioSeparateWindow" xml:space="preserve">
-    <value>将翻译内容单独用新窗口展示</value>
+    <value>独立窗口显示</value>
   </data>
   <data name="PeerAudioEmbeddedResult" xml:space="preserve">
     <value>翻译结果</value>

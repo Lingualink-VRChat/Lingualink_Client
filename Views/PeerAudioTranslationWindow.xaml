@@ -42,29 +42,84 @@
                 BorderThickness="1"
                 CornerRadius="10"
                 Padding="12">
-                <ScrollViewer
-                    x:Name="MessagesScrollViewer"
-                    VerticalScrollBarVisibility="Auto">
-                    <ItemsControl ItemsSource="{Binding Messages}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate DataType="{x:Type vm:PeerAudioChatMessage}">
-                                <Border
-                                    HorizontalAlignment="Stretch"
-                                    Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
-                                    BorderBrush="{DynamicResource ControlElevationBorderBrush}"
-                                    BorderThickness="1"
-                                    CornerRadius="10"
-                                    Padding="12"
-                                    Margin="0,0,0,10">
-                                    <TextBlock
-                                        Text="{Binding Text}"
-                                        TextWrapping="Wrap"
-                                        FontSize="16" />
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock
+                            Grid.Column="0"
+                            Text="{Binding EmbeddedResultLabel}"
+                            FontSize="18"
+                            FontWeight="SemiBold"
+                            VerticalAlignment="Center" />
+
+                        <ui:Button
+                            Grid.Column="1"
+                            HorizontalAlignment="Right"
+                            Command="{Binding ToggleCommand}"
+                            Content="{Binding ToggleButtonText}"
+                            IsEnabled="{Binding IsFeatureToggleEnabled}"
+                            Appearance="Primary"
+                            Icon="{ui:SymbolIcon Mic24}" />
+                    </Grid>
+
+                    <TextBlock
+                        Grid.Row="1"
+                        Margin="0,6,0,12"
+                        Text="{Binding StatusText}"
+                        TextWrapping="Wrap"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+
+                    <ScrollViewer
+                        x:Name="MessagesScrollViewer"
+                        Grid.Row="2"
+                        VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding Messages}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type vm:PeerAudioChatMessage}">
+                                    <Border
+                                        HorizontalAlignment="Stretch"
+                                        Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}"
+                                        BorderBrush="{DynamicResource ControlElevationBorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="10"
+                                        Padding="12"
+                                        Margin="0,0,0,10">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+
+                                            <TextBlock
+                                                Grid.Row="0"
+                                                HorizontalAlignment="Right"
+                                                Text="{Binding TimestampText}"
+                                                FontSize="12"
+                                                Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+
+                                            <TextBlock
+                                                Grid.Row="1"
+                                                Margin="0,6,0,0"
+                                                Text="{Binding Text}"
+                                                TextWrapping="Wrap"
+                                                FontSize="16" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
             </Border>
         </Grid>
     </Grid>
